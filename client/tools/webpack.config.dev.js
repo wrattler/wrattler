@@ -29,6 +29,7 @@ module.exports = {
       new webpack.NamedModulesPlugin()
   ]),
   resolve: {
-    modules: [common.config.nodeModulesDir]
+    modules: [common.config.nodeModulesDir],
+    extensions: [".ts", ".tsx", ".js", ".fs"]
   },
 };

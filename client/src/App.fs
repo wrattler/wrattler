@@ -1,4 +1,4 @@
-module wrattler
+module App
 
 open Fable.Core
 open Fable.Core.JsInterop

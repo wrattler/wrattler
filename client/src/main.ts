@@ -1,3 +1,5 @@
+import 'App';
+
 class Animal {
   constructor(public name) { }
   move(meters) {

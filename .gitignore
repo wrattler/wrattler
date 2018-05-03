@@ -2,3 +2,4 @@ client/node_modules
 client/paket-files
 client/src/obj
 client/tools/obj
+client/build

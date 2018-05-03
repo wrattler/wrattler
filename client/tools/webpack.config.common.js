@@ -9,7 +9,10 @@ var packageJson = JSON.parse(fs.readFileSync(resolve('../package.json')).toStrin
 var errorMsg = "{0} missing in package.json";
 
 var config = {
-  entry: resolve(path.join("..", forceGet(packageJson, "fable.entry", errorMsg))),
+  entry: { 
+    "app": "../src/main.ts",
+    "fs": resolve(path.join("..", forceGet(packageJson, "fable.entry", errorMsg))),
+  },
   publicDir: resolve("../public"),
   buildDir: resolve("../build"),
   nodeModulesDir: resolve("../node_modules"),
@@ -49,6 +52,10 @@ function getModuleRules(isProduction) {
           define: isProduction ? [] : ["DEBUG"]
         }
       }
+    },
+    { 
+      test: /\.tsx?$/, 
+      loader: "ts-loader" 
     },
     {
       test: /\.js$/,
