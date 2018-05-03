@@ -1,4 +1,5 @@
-import 'App';
+//import {init} from 'demo';
+import {init} from 'another';
 
 class Animal {
   constructor(public name) { }
