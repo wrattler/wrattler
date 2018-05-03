@@ -1,5 +1,11 @@
 //import {init} from 'demo';
-import {init} from 'another';
+// import {init} from 'another';
+
+import { init2 } from "./foo";
+
+import { init } from "./demo";
+
+// import * as Elm from './src/Main'
 
 class Animal {
   constructor(public name) { }
@@ -27,3 +33,7 @@ var tom: Animal = new Horse("Tommy the Palomino")
 
 sam.move()
 tom.move(34)
+
+init2();
+
+init();
