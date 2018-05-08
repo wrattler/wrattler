@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "sourceMap": true,
-    "allowJs": true,
     "esModuleInterop": true,
     "declaration": true
   }

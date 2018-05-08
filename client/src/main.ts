@@ -1,5 +1,5 @@
 //import {init} from 'demo';
-// import {init} from 'another';
+//import {init} from './another';
 
 import { init2 } from "./foo";
 
