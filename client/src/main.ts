@@ -17,15 +17,20 @@ import * as Langs from './languages';
 // a lookup table (so that we can find language plugin for a given
 // language quickly):
 
-let languages : Langs.LanguagePlugin[] = 
-  []
+// fill in language plugins dictionary here eg.
+let languagePluginArray: Langs.LanguagePlugin[] = [];
+languagePluginArray['markdown']={name: "markdown_plugin"};
+languagePluginArray['markdown']['parse'] = function (code:string) {
+  return "brain not working";
+}
+console.log(languagePluginArray['markdown']);
 
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
 let document = 
   [ {"language": "markdown", 
      "source": "# Testing\nThis is *some* `markdown`!"}, 
-    {"language": "markdown", 
+    {"language": "markdowns", 
      "source": "## More testing\nThis is _some more_ `markdown`!"}, ]
 
 // Now, to render the document initially, we need to:
@@ -34,7 +39,19 @@ let document =
 //    get the appropriate `LanguagePlugin` and call its `parse` function
 //    to parse the source code. This gives us a list of `BlockKind` values
 //    (with `language` set to the right language)
-//
+
+for (let cell of document) {
+  var language = cell['language'];
+  if (languagePluginArray[language] == null)
+    console.log("No language plugins for "+language);
+  else 
+  {
+    console.log("Language plugin for "+language+" is "+languagePluginArray[language]['name']);
+    let languagePlugin = languagePluginArray[language]; 
+    console.log(languagePlugin['parse']("brain working?"))
+  }
+}
+
 // 2. We collect an array of `BlockKind` objects - these represent the
 //    parsed cells that we can then render (and later, type check, etc.)
 //
