@@ -16,6 +16,7 @@ module.exports = {
   devServer: {
     contentBase: common.config.publicDir,
     publicPath: '/',
+    host: '0.0.0.0',
     port: 8080,
     hot: true,
     inline: true,
