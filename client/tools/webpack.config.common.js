@@ -16,7 +16,7 @@ var config = {
   publicDir: resolve("../public"),
   buildDir: resolve("../build"),
   nodeModulesDir: resolve("../node_modules"),
-  indexHtmlTemplate: resolve("../src/index.html")
+  indexHtmlTemplate: resolve("../public/index.html")
 }
 
 function resolve(filePath) {

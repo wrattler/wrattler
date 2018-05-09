@@ -2,6 +2,7 @@
   "compilerOptions": {
     "sourceMap": true,
     "esModuleInterop": true,
-    "declaration": true
+    "declaration": true,
+    "declarationDir": "exports"
   }
 }
