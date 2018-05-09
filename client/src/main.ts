@@ -11,6 +11,34 @@ tsHello();
 // (these are TypeScript interfaces defined in `languages.ts`)
 import * as Langs from './languages';
 
+class MarkdownBlockKind implements Langs.BlockKind {
+  language : string;
+  source : string;
+  constructor(source:string) {
+    this.language = "markdown";
+    this.source = source;
+  }
+}
+
+class MarkdownEditor implements Langs.Editor {
+  create(id:string, block:Langs.BlockKind) {
+    let markdownBlock = <MarkdownBlockKind>block;
+    console.log(markdownBlock.source);
+  }
+}
+
+class MarkdownLanguagePlugin implements Langs.LanguagePlugin {
+  editor : Langs.Editor;
+  language : string;
+  parse(code:string) : Langs.BlockKind {
+    return new MarkdownBlockKind(code);
+  }
+  constructor() {
+    this.editor = new MarkdownEditor();
+    this.language = "markdown";
+  }
+}
+
 // Wrattler will have a number of language plugins for different
 // languages (including R, Python, TheGamma and Markdown). Probably
 // something like this, except that we might need a dictionary or
@@ -18,12 +46,9 @@ import * as Langs from './languages';
 // language quickly):
 
 // fill in language plugins dictionary here eg.
-let languagePluginArray: Langs.LanguagePlugin[] = [];
-languagePluginArray['markdown']={name: "markdown_plugin"};
-languagePluginArray['markdown']['parse'] = function (code:string) {
-  return "brain not working";
-}
-console.log(languagePluginArray['markdown']);
+var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
+languagePlugins["markdown"] = new MarkdownLanguagePlugin();
+console.log(languagePlugins['markdown']);
 
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
@@ -42,13 +67,14 @@ let document =
 
 for (let cell of document) {
   var language = cell['language'];
-  if (languagePluginArray[language] == null)
+  if (languagePlugins[language] == null)
     console.log("No language plugins for "+language);
   else 
   {
-    console.log("Language plugin for "+language+" is "+languagePluginArray[language]['name']);
-    let languagePlugin = languagePluginArray[language]; 
-    console.log(languagePlugin['parse']("brain working?"))
+    console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
+    let languagePlugin = languagePlugins[language];
+    let block = languagePlugin.parse("brain working?")
+    languagePlugin.editor.create("tbd", block);
   }
 }
 
