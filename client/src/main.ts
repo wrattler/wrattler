@@ -11,6 +11,11 @@ tsHello();
 // (these are TypeScript interfaces defined in `languages.ts`)
 import * as Langs from './languages';
 
+// We define a new class for `MarkdownBlockKind` because we
+// later need to cast `BlockKind` to `MarkdownBlockKind` so that
+// we can access Markdown-specific properties from editor,
+// type checker, etc. (using <MarkdownBlockKind>block)
+
 class MarkdownBlockKind implements Langs.BlockKind {
   language : string;
   source : string;
@@ -20,22 +25,23 @@ class MarkdownBlockKind implements Langs.BlockKind {
   }
 }
 
-class MarkdownEditor implements Langs.Editor {
-  create(id:string, block:Langs.BlockKind) {
+// For the editor and language plugin, we do not need a dedicated
+// class, because we just need to create some implementation of 
+// an interface - and TypeScript lets us do this using a simple 
+// JavaScript record expression - to this is much simpler than a class.
+
+const markdownEditor : Langs.Editor = {
+  create: (id:string, block:Langs.BlockKind) => {
     let markdownBlock = <MarkdownBlockKind>block;
-    console.log(markdownBlock.source);
+    console.log(markdownBlock.source);    
   }
 }
 
-class MarkdownLanguagePlugin implements Langs.LanguagePlugin {
-  editor : Langs.Editor;
-  language : string;
-  parse(code:string) : Langs.BlockKind {
+const markdownLanguagePlugin : Langs.LanguagePlugin = {
+  language: "markdown",
+  editor: markdownEditor,
+  parse: (code:string) => {
     return new MarkdownBlockKind(code);
-  }
-  constructor() {
-    this.editor = new MarkdownEditor();
-    this.language = "markdown";
   }
 }
 
@@ -47,7 +53,7 @@ class MarkdownLanguagePlugin implements Langs.LanguagePlugin {
 
 // fill in language plugins dictionary here eg.
 var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
-languagePlugins["markdown"] = new MarkdownLanguagePlugin();
+languagePlugins["markdown"] = markdownLanguagePlugin;
 console.log(languagePlugins['markdown']);
 
 // A sample document is just an array of records with cells. Each 
