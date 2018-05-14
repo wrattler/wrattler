@@ -7,11 +7,9 @@ interface Editor {
 }
 
 interface LanguagePlugin {
-  readonly [key: string]: any;
   parse(code:string) : BlockKind;
   editor : Editor;
   language : string;
-  name: string;
 }
 
 export { 

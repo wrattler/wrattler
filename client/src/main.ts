@@ -11,6 +11,40 @@ tsHello();
 // (these are TypeScript interfaces defined in `languages.ts`)
 import * as Langs from './languages';
 
+// We define a new class for `MarkdownBlockKind` because we
+// later need to cast `BlockKind` to `MarkdownBlockKind` so that
+// we can access Markdown-specific properties from editor,
+// type checker, etc. (using <MarkdownBlockKind>block)
+
+class MarkdownBlockKind implements Langs.BlockKind {
+  language : string;
+  source : string;
+  constructor(source:string) {
+    this.language = "markdown";
+    this.source = source;
+  }
+}
+
+// For the editor and language plugin, we do not need a dedicated
+// class, because we just need to create some implementation of 
+// an interface - and TypeScript lets us do this using a simple 
+// JavaScript record expression - to this is much simpler than a class.
+
+const markdownEditor : Langs.Editor = {
+  create: (id:string, block:Langs.BlockKind) => {
+    let markdownBlock = <MarkdownBlockKind>block;
+    console.log(markdownBlock.source);    
+  }
+}
+
+const markdownLanguagePlugin : Langs.LanguagePlugin = {
+  language: "markdown",
+  editor: markdownEditor,
+  parse: (code:string) => {
+    return new MarkdownBlockKind(code);
+  }
+}
+
 // Wrattler will have a number of language plugins for different
 // languages (including R, Python, TheGamma and Markdown). Probably
 // something like this, except that we might need a dictionary or
@@ -18,12 +52,9 @@ import * as Langs from './languages';
 // language quickly):
 
 // fill in language plugins dictionary here eg.
-let languagePluginArray: Langs.LanguagePlugin[] = [];
-languagePluginArray['markdown']={name: "markdown_plugin"};
-languagePluginArray['markdown']['parse'] = function (code:string) {
-  return "brain not working";
-}
-console.log(languagePluginArray['markdown']);
+var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
+languagePlugins["markdown"] = markdownLanguagePlugin;
+console.log(languagePlugins['markdown']);
 
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
@@ -42,13 +73,14 @@ let document =
 
 for (let cell of document) {
   var language = cell['language'];
-  if (languagePluginArray[language] == null)
+  if (languagePlugins[language] == null)
     console.log("No language plugins for "+language);
   else 
   {
-    console.log("Language plugin for "+language+" is "+languagePluginArray[language]['name']);
-    let languagePlugin = languagePluginArray[language]; 
-    console.log(languagePlugin['parse']("brain working?"))
+    console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
+    let languagePlugin = languagePlugins[language];
+    let block = languagePlugin.parse("brain working?")
+    languagePlugin.editor.create("tbd", block);
   }
 }
 
