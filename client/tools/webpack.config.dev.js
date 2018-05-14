@@ -1,12 +1,14 @@
 var path = require("path");
 var webpack = require("webpack");
 var common = require("./webpack.config.common");
+// const MonacoWebpackPlugin = require('../node_modules/monaco-editor-webpack-plugin');
 
 console.log("Bundling for development...");
 
 module.exports = {
   devtool: "source-map",
   entry: common.config.entry,
+  mode: "development",
   output: {
     filename: '[name].js',
     path: common.config.buildDir,
@@ -28,6 +30,7 @@ module.exports = {
   plugins: common.getPlugins().concat([
       new webpack.HotModuleReplacementPlugin(),
       new webpack.NamedModulesPlugin()
+      // new MonacoWebpackPlugin()
   ]),
   resolve: {
     modules: [common.config.nodeModulesDir],

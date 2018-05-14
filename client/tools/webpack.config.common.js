@@ -12,6 +12,7 @@ var config = {
   entry: { 
     "app": "../src/main.ts",
     "fs": resolve(path.join("..", forceGet(packageJson, "fable.entry", errorMsg))),
+    // "editor.worker": 'monaco-editor/esm/vs/editor/editor.worker.js',
   },
   publicDir: resolve("../public"),
   buildDir: resolve("../build"),
@@ -75,7 +76,7 @@ function getPlugins(isProduction) {
       template: config.indexHtmlTemplate,
       // minify: isProduction ? {} : false
     }),
-    new HtmlWebpackPolyfillIOPlugin({ features: "es6,fetch" }),
+    // new HtmlWebpackPolyfillIOPlugin({ features: "es6,fetch" }),
     // new DynamicCdnWebpackPlugin({ verbose: true, only: config.cdnModules }),
   ];
 }

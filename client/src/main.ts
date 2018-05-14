@@ -3,9 +3,17 @@
 import { fsHello } from "./demos/fsdemo";
 import { jsHello } from "./demos/jsdemo";
 import { tsHello } from "./demos/tsdemo";
+// import 'monaco-editor/esm/vs/editor/browser/controller/coreCommands.js';
+// import 'monaco-editor/esm/vs/editor/contrib/find/findController.js';
+// import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
+// import 'monaco-editor/esm/vs/basic-languages/python/python.contribution.js';
+// import * as monaco from 'monaco-editor';
+
+
 fsHello();
 jsHello();
 tsHello();
+
 
 // Import interfaces related to language plugins and editors
 // (these are TypeScript interfaces defined in `languages.ts`)
@@ -79,7 +87,7 @@ for (let cell of document) {
   {
     console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
     let languagePlugin = languagePlugins[language];
-    let block = languagePlugin.parse("brain working?")
+    let block = languagePlugin.parse("brain not working?")
     languagePlugin.editor.create("tbd", block);
   }
 }
@@ -111,3 +119,4 @@ for (let cell of document) {
 // Eventually, we will need to make `create` a bit more complex, so that
 // the editor can notify the main code about changes in the source code, 
 // but we can ignore that for now.
+
