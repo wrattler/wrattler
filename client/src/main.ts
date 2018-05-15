@@ -7,13 +7,22 @@ import { tsHello } from "./demos/tsdemo";
 // import 'monaco-editor/esm/vs/editor/contrib/find/findController.js';
 // import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 // import 'monaco-editor/esm/vs/basic-languages/python/python.contribution.js';
-// import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor';
+import $ from 'jquery';
 
 
 fsHello();
 jsHello();
 tsHello();
 
+var con = $('#container');
+console.log(con);
+var pap = $('#paper');
+console.log(pap);
+monaco.editor.create($, {
+  value: 'console.log("Hello, world")',
+  language: 'javascript'
+});
 
 // Import interfaces related to language plugins and editors
 // (these are TypeScript interfaces defined in `languages.ts`)

@@ -2,6 +2,7 @@ var fs = require("fs");
 var path = require("path");
 var fableUtils = require("fable-utils");
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var jQueryPlugin = require('jquery');
 var HtmlWebpackPolyfillIOPlugin = require('html-webpack-polyfill-io-plugin');
 // var DynamicCdnWebpackPlugin = require('dynamic-cdn-webpack-plugin');
 
@@ -55,7 +56,7 @@ function getModuleRules(isProduction) {
       }
     },
     { 
-      test: /\.tsx?$/, 
+      test: /\.ts|\.tsx?$/, 
       loader: "ts-loader" 
     },
     {
@@ -65,6 +66,10 @@ function getModuleRules(isProduction) {
         loader: 'babel-loader',
         options: babelOptions
       },
+    },
+    {
+      test: /\.css$/,
+      use: ['style-loader', 'css-loader'],
     }
   ];
 }
@@ -75,7 +80,7 @@ function getPlugins(isProduction) {
       filename: path.join(config.buildDir, "index.html"),
       template: config.indexHtmlTemplate,
       // minify: isProduction ? {} : false
-    }),
+    })
     // new HtmlWebpackPolyfillIOPlugin({ features: "es6,fetch" }),
     // new DynamicCdnWebpackPlugin({ verbose: true, only: config.cdnModules }),
   ];
