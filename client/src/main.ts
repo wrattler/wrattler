@@ -16,13 +16,11 @@ jsHello();
 tsHello();
 
 var el = $('#paper')[0];
-// var newEl = el.append("<b>Hello World!</b>");
-// newEl.innerHTML = '<b>Hello World!</b>';
 
-monaco.editor.create(el, {
-  value: "function hello() {\n\talert('Hello Tomas!');\n}",
-  language: 'javascript'
-});
+// monaco.editor.create(el, {
+//   value: "function hello() {\n\talert('Hello Tomas!');\n}",
+//   language: 'javascript'
+// });
 
 // Import interfaces related to language plugins and editors
 // (these are TypeScript interfaces defined in `languages.ts`)
@@ -50,7 +48,11 @@ class MarkdownBlockKind implements Langs.BlockKind {
 const markdownEditor : Langs.Editor = {
   create: (id:string, block:Langs.BlockKind) => {
     let markdownBlock = <MarkdownBlockKind>block;
-    console.log(markdownBlock.source);    
+    monaco.editor.create(el, {
+      value: markdownBlock.source,
+      language: 'markdown'
+    });
+    // console.log(markdownBlock.source);    
   }
 }
 
@@ -58,7 +60,7 @@ const markdownLanguagePlugin : Langs.LanguagePlugin = {
   language: "markdown",
   editor: markdownEditor,
   parse: (code:string) => {
-    return new MarkdownBlockKind(code);
+    return new MarkdownBlockKind(code.toUpperCase());
   }
 }
 
@@ -78,8 +80,10 @@ console.log(languagePlugins['markdown']);
 let document = 
   [ {"language": "markdown", 
      "source": "# Testing\nThis is *some* `markdown`!"}, 
+    {"language": "markdown", 
+     "source": "## More testing\nThis is _some more_ `markdown`!"},
     {"language": "markdowns", 
-     "source": "## More testing\nThis is _some more_ `markdown`!"}, ]
+     "source": "## And more testing\nThis is _not_ `markdown`!"}, ]
 
 // Now, to render the document initially, we need to:
 //
@@ -94,9 +98,9 @@ for (let cell of document) {
     console.log("No language plugins for "+language);
   else 
   {
-    console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
+    // console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
     let languagePlugin = languagePlugins[language];
-    let block = languagePlugin.parse("brain not working?")
+    let block = languagePlugin.parse("**Bold I yam**")
     languagePlugin.editor.create("tbd", block);
   }
 }
