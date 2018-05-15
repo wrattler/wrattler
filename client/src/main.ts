@@ -60,7 +60,7 @@ const markdownLanguagePlugin : Langs.LanguagePlugin = {
   language: "markdown",
   editor: markdownEditor,
   parse: (code:string) => {
-    return new MarkdownBlockKind(code.toUpperCase());
+    return new MarkdownBlockKind(code);
   }
 }
 
@@ -100,7 +100,7 @@ for (let cell of document) {
   {
     // console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
     let languagePlugin = languagePlugins[language];
-    let block = languagePlugin.parse("**Bold I yam**")
+    let block = languagePlugin.parse(cell['source'])
     languagePlugin.editor.create("tbd", block);
   }
 }
