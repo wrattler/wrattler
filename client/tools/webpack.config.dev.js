@@ -1,7 +1,7 @@
 var path = require("path");
 var webpack = require("webpack");
 var common = require("./webpack.config.common");
-// const MonacoWebpackPlugin = require('../node_modules/monaco-editor-webpack-plugin');
+const MonacoWebpackPlugin = require('../node_modules/monaco-editor-webpack-plugin');
 
 console.log("Bundling for development...");
 
@@ -29,8 +29,8 @@ module.exports = {
   },
   plugins: common.getPlugins().concat([
       new webpack.HotModuleReplacementPlugin(),
-      new webpack.NamedModulesPlugin()
-      // new MonacoWebpackPlugin()
+      new webpack.NamedModulesPlugin(),
+      new MonacoWebpackPlugin()
   ]),
   resolve: {
     modules: [common.config.nodeModulesDir],
