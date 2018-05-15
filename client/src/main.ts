@@ -3,10 +3,6 @@
 import { fsHello } from "./demos/fsdemo";
 import { jsHello } from "./demos/jsdemo";
 import { tsHello } from "./demos/tsdemo";
-// import 'monaco-editor/esm/vs/editor/browser/controller/coreCommands.js';
-// import 'monaco-editor/esm/vs/editor/contrib/find/findController.js';
-// import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
-// import 'monaco-editor/esm/vs/basic-languages/python/python.contribution.js';
 import * as monaco from 'monaco-editor';
 import $ from 'jquery';
 
@@ -16,6 +12,7 @@ jsHello();
 tsHello();
 
 var el = $('#paper')[0];
+
 
 // monaco.editor.create(el, {
 //   value: "function hello() {\n\talert('Hello Tomas!');\n}",
@@ -48,11 +45,14 @@ class MarkdownBlockKind implements Langs.BlockKind {
 const markdownEditor : Langs.Editor = {
   create: (id:string, block:Langs.BlockKind) => {
     let markdownBlock = <MarkdownBlockKind>block;
-    monaco.editor.create(el, {
+    // console.log("#"+id);
+    // console.log($("#"+id));
+    var ce = monaco.editor.create($("#"+id)[0], {
       value: markdownBlock.source,
       language: 'markdown'
     });
-    // console.log(markdownBlock.source);    
+    // console.log(ce['id']);  
+    // console.log(ce)  
   }
 }
 
@@ -92,6 +92,7 @@ let document =
 //    to parse the source code. This gives us a list of `BlockKind` values
 //    (with `language` set to the right language)
 
+let index = 0;
 for (let cell of document) {
   var language = cell['language'];
   if (languagePlugins[language] == null)
@@ -99,9 +100,12 @@ for (let cell of document) {
   else 
   {
     // console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
+    let editorId = "editor_"+index;
+    $('#paper').append("<div id=\""+editorId+"\" style=\"height:100px;\"></div>")
     let languagePlugin = languagePlugins[language];
     let block = languagePlugin.parse(cell['source'])
-    languagePlugin.editor.create("tbd", block);
+    languagePlugin.editor.create(editorId, block);
+    index++;
   }
 }
 
