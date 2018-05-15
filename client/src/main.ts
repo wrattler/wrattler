@@ -20,7 +20,7 @@ var el = $('#paper')[0];
 // newEl.innerHTML = '<b>Hello World!</b>';
 
 monaco.editor.create(el, {
-  value: 'console.log("Hello, world")',
+  value: "function hello() {\n\talert('Hello Tomas!');\n}",
   language: 'javascript'
 });
 
