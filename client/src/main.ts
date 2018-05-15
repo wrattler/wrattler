@@ -15,11 +15,11 @@ fsHello();
 jsHello();
 tsHello();
 
-var con = $('#container');
-console.log(con);
-var pap = $('#paper');
-console.log(pap);
-monaco.editor.create($, {
+var el = $('#paper')[0];
+// var newEl = el.append("<b>Hello World!</b>");
+// newEl.innerHTML = '<b>Hello World!</b>';
+
+monaco.editor.create(el, {
   value: 'console.log("Hello, world")',
   language: 'javascript'
 });
