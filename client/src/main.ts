@@ -5,6 +5,8 @@ import { jsHello } from "./demos/jsdemo";
 import { tsHello } from "./demos/tsdemo";
 import * as monaco from 'monaco-editor';
 import $ from 'jquery';
+import {h} from 'maquette';
+import {createProjector} from 'maquette';
 
 
 fsHello();
@@ -12,6 +14,7 @@ jsHello();
 tsHello();
 
 var el = $('#paper')[0];
+
 
 
 // monaco.editor.create(el, {
@@ -47,10 +50,17 @@ const markdownEditor : Langs.Editor = {
     let markdownBlock = <MarkdownBlockKind>block;
     // console.log("#"+id);
     // console.log($("#"+id));
-    var ce = monaco.editor.create($("#"+id)[0], {
-      value: markdownBlock.source,
-      language: 'markdown'
-    });
+    // var ce = monaco.editor.create($("#"+id)[0], {
+    //   value: markdownBlock.source,
+    //   language: 'markdown'
+    // });
+    return h('div', [
+      h('input', {
+        type: 'text', placeholder: 'What is your name?',
+        value: yourName, oninput: handleNameInput
+      }),
+      h('p.output', ['Hello ' + (yourName || 'you') + '!'])
+    ]);
     // console.log(ce['id']);  
     // console.log(ce)  
   }
@@ -77,7 +87,7 @@ console.log(languagePlugins['markdown']);
 
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
-let document = 
+let documents = 
   [ {"language": "markdown", 
      "source": "# Testing\nThis is *some* `markdown`!"}, 
     {"language": "markdown", 
@@ -92,22 +102,60 @@ let document =
 //    to parse the source code. This gives us a list of `BlockKind` values
 //    (with `language` set to the right language)
 
-let index = 0;
-for (let cell of document) {
-  var language = cell['language'];
-  if (languagePlugins[language] == null)
-    console.log("No language plugins for "+language);
-  else 
-  {
-    // console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
-    let editorId = "editor_"+index;
-    $('#paper').append("<div id=\""+editorId+"\" style=\"height:100px;\"></div>")
-    let languagePlugin = languagePlugins[language];
-    let block = languagePlugin.parse(cell['source'])
-    languagePlugin.editor.create(editorId, block);
-    index++;
-  }
+var yourName = '';
+
+function handleNameInput(evt) {
+  yourName = evt.target.value;
+  console.log(yourName);
 }
+
+function renderMaquette() {
+  return h('div', [
+    h('input', { 
+      type: 'text', placeholder: 'What is your name?', 
+      value: yourName, oninput: handleNameInput 
+    }),
+    h('p.output', [
+      'Hello ' + (yourName || 'you') + '!'
+    ])
+  ]);
+ };
+
+ createProjector().append(document.body, renderMaquette);
+
+// let index = 0;
+// for (let cell of documents) {
+//   var language = cell['language'];
+//   if (languagePlugins[language] == null)
+//     console.log("No language plugins for "+language);
+//   else 
+//   {
+//     // console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
+//     let editorId = "editor_"+index;
+//     $('#paper').append("<div id=\""+editorId+"\" style=\"height:100px;\"></div>")
+//     let languagePlugin = languagePlugins[language];
+//     let block = languagePlugin.parse(cell['source'])
+//     languagePlugin.editor.create(editorId, block);
+//     index++;
+//   }
+// }
+
+// let index = 0;
+// for (let cell of documents) {
+//   var language = cell['language'];
+//   if (languagePlugins[language] == null)
+//     console.log("No language plugins for "+language);
+//   else 
+//   {
+//     // console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
+//     let editorId = "editor_"+index;
+//     $('#paper').append("<div id=\""+editorId+"\" style=\"height:100px;\"></div>")
+//     let languagePlugin = languagePlugins[language];
+//     let block = languagePlugin.parse(cell['source'])
+//     languagePlugin.editor.create(editorId, block);
+//     index++;
+//   }
+// }
 
 // 2. We collect an array of `BlockKind` objects - these represent the
 //    parsed cells that we can then render (and later, type check, etc.)

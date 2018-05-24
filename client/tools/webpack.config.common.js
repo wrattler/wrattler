@@ -80,7 +80,7 @@ function getPlugins(isProduction) {
       filename: path.join(config.buildDir, "index.html"),
       template: config.indexHtmlTemplate,
       // minify: isProduction ? {} : false
-    })
+    }),
     // new HtmlWebpackPolyfillIOPlugin({ features: "es6,fetch" }),
     // new DynamicCdnWebpackPlugin({ verbose: true, only: config.cdnModules }),
   ];

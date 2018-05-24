@@ -29,6 +29,7 @@
     "webpack-dev-server": "^3.1.1"
   },
   "dependencies": {
+    "maquette": "^3.3.0",
     "monaco-editor-webpack-plugin": "^1.1.0",
     "typescript": "^2.8.3"
   }
