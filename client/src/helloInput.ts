@@ -9,13 +9,13 @@ import {VNode} from 'maquette';
 
 
 
-var yourName = '';
+var yourName = 'May';
 
 function handleNameInput(evt) {
   yourName = evt.target.value;
 }
 
-export function renderMaquette() {
+export function renderMaquette(test:string) {
   return h('div', [
     h('input', { 
       type: 'text', placeholder: 'What is your name?', 

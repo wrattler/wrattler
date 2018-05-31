@@ -5,8 +5,10 @@ import { jsHello } from "./demos/jsdemo";
 import { tsHello } from "./demos/tsdemo";
 import * as monaco from 'monaco-editor';
 import $ from 'jquery';
-import {renderMaquette} from './helloInput';
+import {h} from 'maquette';
 import {createProjector} from 'maquette';
+import {VNode} from 'maquette';
+// import * as styles from "./editor.css";
 
 
 fsHello();
@@ -14,7 +16,7 @@ jsHello();
 tsHello();
 
 var el = $('#paper')[0];
-
+const s = require('./editor.css');
 
 
 // monaco.editor.create(el, {
@@ -48,13 +50,39 @@ class MarkdownBlockKind implements Langs.BlockKind {
 const markdownEditor : Langs.Editor = {
   create: (id:string, block:Langs.BlockKind) => {
     let markdownBlock = <MarkdownBlockKind>block;
+    var editor = monaco.editor.create($("#"+id)[0], {
+      value: markdownBlock.source,
+      language: 'markdown',
+      theme:'vs'
+    });
+
+    let initInput = function(evt) {
+      markdownBlock.source = evt.target.value;
+    }
+
+    editor.onMouseDown(function (e) {
+      console.log(editor.getValue());
+      markdownBlock.source = editor.getValue();
+      var render = function() {
+          return h('div', 
+        [ h('textarea', { 
+            placeholder: 'Place markdown code here;', rows: 5, cols:50,
+            value: markdownBlock.source, oninput: initInput,  
+          }),
+          h('p.output', [
+            'Hello ' + (markdownBlock.source || 'you') + '!'
+          ])
+        ]);
+      }
+      createProjector().append(el, render);
+    });
+
+    
+    
     // console.log("#"+id);
     // console.log($("#"+id));
-    // var ce = monaco.editor.create($("#"+id)[0], {
-    //   value: markdownBlock.source,
-    //   language: 'markdown'
-    // });
-    createProjector().append(el, renderMaquette);
+    
+    
     // console.log(ce['id']);  
     // console.log(ce)  
   }
@@ -77,7 +105,7 @@ const markdownLanguagePlugin : Langs.LanguagePlugin = {
 // fill in language plugins dictionary here eg.
 var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
-console.log(languagePlugins['markdown']);
+// console.log(languagePlugins['markdown']);
 
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
@@ -96,9 +124,6 @@ let documents =
 //    to parse the source code. This gives us a list of `BlockKind` values
 //    (with `language` set to the right language)
 
-
-
- 
 let index = 0;
 for (let cell of documents) {
   var language = cell['language'];
@@ -108,7 +133,7 @@ for (let cell of documents) {
   {
     // console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
     let editorId = "editor_"+index;
-    // $('#paper').append("<div id=\""+editorId+"\" style=\"height:100px;\"></div>")
+    $('#paper').append("<div id=\""+editorId+"\" class=\"editor\" ></div>")
     let languagePlugin = languagePlugins[language];
     let block = languagePlugin.parse(cell['source'])
     languagePlugin.editor.create(editorId, block);
