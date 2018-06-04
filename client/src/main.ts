@@ -68,16 +68,16 @@ const markdownEditor : Langs.Editor = {
     // append output onto block div
     let outputId = "output_"+id;
     
-    // let initInput = function(evt) {
-    //   markdownBlock.source = evt.target.value;
-    // }
+    let initInput = function(evt) {
+      markdownBlock.source = evt.target.value;
+    }
     var render = function() {
       return h('div', {id:outputId}, 
       [ 
-        // h('textarea', { 
-        //   placeholder: 'Place markdown code here;', rows: 5, cols:50,
-        //   value: markdownBlock.source, oninput: initInput,  
-        // }),
+        h('textarea', { 
+          placeholder: 'Place markdown code here;', rows: 5, cols:50,
+          value: (editor.getValue() || ''), oninput: initInput,  
+        }),
         h('p.output', [
           'Output: ' + (editor.getValue() || '')
         ])
@@ -87,17 +87,17 @@ const markdownEditor : Langs.Editor = {
     var myCondition1 = editor.createContextKey(/*key name*/'myCondition1', /*default value*/true);
     
     // callback to update output when triggered
-    let myBinding = editor.addCommand(monaco.KeyCode.Enter,function (e) {
-      var outputEl = $('#'+outputId)[0];
-      markdownBlock.source = editor.getValue();
-      createProjector().replace(outputEl, render);
-      console.log("entered");
-    },'myCondition1');
-    // editor.onMouseDown(function (e) {
+    // let myBinding = editor.addCommand(monaco.KeyCode.Enter,function (e) {
     //   var outputEl = $('#'+outputId)[0];
     //   markdownBlock.source = editor.getValue();
     //   createProjector().replace(outputEl, render);
-    // });
+    //   console.log("entered");
+    // },'myCondition1');
+    editor.onMouseDown(function (e) {
+      var outputEl = $('#'+outputId)[0];
+      markdownBlock.source = editor.getValue();
+      createProjector().replace(outputEl, render);
+    });
 
     
   }
