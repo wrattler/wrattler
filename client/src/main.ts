@@ -91,12 +91,12 @@ const markdownEditor : Langs.Editor = {
     var myCondition1 = editor.createContextKey(/*key name*/'myCondition1', /*default value*/true);
     
     // callback to update output when triggered
-    // let myBinding = editor.addCommand(monaco.KeyCode.Enter,function (e) {
-    //   var outputEl = $('#'+outputId)[0];
-    //   markdownBlock.source = editor.getValue();
-    //   createProjector().replace(outputEl, render);
-    //   console.log("entered");
-    // },'myCondition1');
+    let myBinding = editor.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
+      var outputEl = $('#'+outputId)[0];
+      markdownBlock.source = editor.getValue();
+      createProjector().replace(outputEl, render);
+      console.log("entered");
+    },'myCondition1');
     editor.onMouseDown(function (e) {
       var outputEl = $('#'+outputId)[0];
       markdownBlock.source = editor.getValue();
@@ -128,7 +128,7 @@ languagePlugins["markdown"] = markdownLanguagePlugin;
 // cell has a language and source code (here, just Markdown):
 let documents = 
   [ {"language": "markdown", 
-     "source": "# Testing\nThis is *some* `markdown`!"}, 
+     "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"}, 
     {"language": "markdowns", 
      "source": "## More testing\nThis is _some more_ `markdown`!"},
     {"language": "markdowns", 
