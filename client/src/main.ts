@@ -8,6 +8,7 @@ import $ from 'jquery';
 import {h} from 'maquette';
 import {createProjector} from 'maquette';
 import {VNode} from 'maquette';
+import marked from 'marked';
 // import * as styles from "./editor.css";
 
 
@@ -15,7 +16,7 @@ fsHello();
 jsHello();
 tsHello();
 
-var el = $('#paper')[0];
+// var el = $('#paper')[0];
 const s = require('./editor.css');
 
 
@@ -68,20 +69,23 @@ const markdownEditor : Langs.Editor = {
     // append output onto block div
     let outputId = "output_"+id;
     
-    let initInput = function(evt) {
-      markdownBlock.source = evt.target.value;
-    }
+    // let initInput = function(evt) {
+    //   markdownBlock.source = evt.target.value;
+    // }
     var render = function() {
-      return h('div', {id:outputId}, 
-      [ 
-        h('textarea', { 
-          placeholder: 'Place markdown code here;', rows: 5, cols:50,
-          value: (editor.getValue() || ''), oninput: initInput,  
-        }),
-        h('p.output', [
-          'Output: ' + (editor.getValue() || '')
-        ])
-      ]);
+      // return h('div', {id:outputId}, 
+      // [ 
+      //   h('textarea', { 
+      //     placeholder: 'Place markdown code here;', rows: 5, cols:50,
+      //     value: (editor.getValue() || ''), oninput: initInput,  
+      //   }),
+      //   h('p.output', [
+      //     'Output: ' + (editor.getValue() || '')
+      //   ])
+      // ]);
+      let display = marked(editor.getValue());
+      return h('div', {id:outputId, innerHTML:display|| '' })
+
     }
     createProjector().append(blockEl, render);
     var myCondition1 = editor.createContextKey(/*key name*/'myCondition1', /*default value*/true);
@@ -98,8 +102,6 @@ const markdownEditor : Langs.Editor = {
       markdownBlock.source = editor.getValue();
       createProjector().replace(outputEl, render);
     });
-
-    
   }
 }
 
