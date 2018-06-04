@@ -3,5 +3,22 @@ div.editor {
     border-left-color: grey;
     padding: 5px;
     margin: 10px;
-    height: 120px;
+    height: 50vh;
+    /* overflow: scroll; */
+}
+
+div.output.rendered {
+    display: block;
+}
+
+div.output {
+    display: none;
+}
+
+div.editor.editable {
+    display: block;
+}
+
+div.editor {
+    display: none;
 }

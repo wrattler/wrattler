@@ -52,27 +52,43 @@ const markdownEditor : Langs.Editor = {
   create: (id:number, blockcode:Langs.BlockKind) => {
     // cast code into BlockKind
     let markdownBlock = <MarkdownBlockKind>blockcode;
+    let editing = true;
+    let outputId = "output_"+id;
+    let blockId = "block_"+index;
+    let editorId = "editor_"+index;
 
     // create div for this block
-    let blockId = "block_"+index;
-    $('#paper').append("<div id=\""+blockId+"\" class=\"editor\" ></div>")
+    $('#paper').append("<div id=\""+blockId+"\" class=\"block\" ></div>")
     
     // append editor onto block div
-    let blockEl = $('#'+blockId)[0];
-    let editor = monaco.editor.create(blockEl, {
+    let blockEl = $('#'+blockId);
+    blockEl.append("<div id=\""+editorId+"\" class=\"editor\" ></div>")
+
+    // create editor element
+    let editorEl = $('#'+editorId);
+    editorEl[0].classList.add('editable');
+  
+    // create editor, append onto editor element
+    let editor = monaco.editor.create(editorEl[0], {
       value: markdownBlock.source,
       language: 'markdown',
       scrollBeyondLastLine: false,
       theme:'vs',
     });
-    
-    // append output onto block div
-    let outputId = "output_"+id;
-    
+
+    // old code for initialising textarea
     // let initInput = function(evt) {
     //   markdownBlock.source = evt.target.value;
     // }
-    var render = function() {
+
+    let toggleVisible = function () {
+      editing = !editing;
+      if (editing===true)
+        editorEl[0].classList.add("editable");
+      // console.log(editing);
+    }
+
+    let renderOutput = function() {
       // return h('div', {id:outputId}, 
       // [ 
       //   h('textarea', { 
@@ -83,25 +99,33 @@ const markdownEditor : Langs.Editor = {
       //     'Output: ' + (editor.getValue() || '')
       //   ])
       // ]);
-      let display = marked(editor.getValue());
-      return h('div', {id:outputId, innerHTML:display|| '' })
-
+      let mdText = editor.getValue() ? marked(editor.getValue()) : '';
+      return h('div.output', {
+        id:outputId, 
+        innerHTML:mdText,
+        onclick: toggleVisible,
+        classes: {rendered: !editing}
+      })
     }
-    createProjector().append(blockEl, render);
+
+    // append output onto block div
+    createProjector().append(blockEl[0], renderOutput);
     var myCondition1 = editor.createContextKey(/*key name*/'myCondition1', /*default value*/true);
     
     // callback to update output when triggered
     let myBinding = editor.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
+      editing = false;
+      editorEl[0].classList.remove("editable")
       var outputEl = $('#'+outputId)[0];
       markdownBlock.source = editor.getValue();
-      createProjector().replace(outputEl, render);
+      createProjector().replace(outputEl, renderOutput);
       console.log("entered");
     },'myCondition1');
-    editor.onMouseDown(function (e) {
-      var outputEl = $('#'+outputId)[0];
-      markdownBlock.source = editor.getValue();
-      createProjector().replace(outputEl, render);
-    });
+    // editor.onMouseDown(function (e) {
+    //   var outputEl = $('#'+outputId)[0];
+    //   markdownBlock.source = editor.getValue();
+    //   createProjector().replace(outputEl, render);
+    // });
   }
 }
 
