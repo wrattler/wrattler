@@ -3,7 +3,7 @@ interface BlockKind {
 }
 
 interface Editor {
-  create(id:string, block:BlockKind) : void;
+  create(id:number, block:BlockKind) : void;
 }
 
 interface LanguagePlugin {

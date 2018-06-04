@@ -48,43 +48,44 @@ class MarkdownBlockKind implements Langs.BlockKind {
 // JavaScript record expression - to this is much simpler than a class.
 
 const markdownEditor : Langs.Editor = {
-  create: (id:string, block:Langs.BlockKind) => {
-    let markdownBlock = <MarkdownBlockKind>block;
-    var editor = monaco.editor.create($("#"+id)[0], {
+  create: (id:number, blockcode:Langs.BlockKind) => {
+    let markdownBlock = <MarkdownBlockKind>blockcode;
+    let blockId = "block_"+id;
+    let outputId = "output_"+id;
+    var blockEl = $('#'+blockId)[0];
+    // $('#paper').append("<div id=\""+editorId+"\" class=\"editor\" ></div>")
+    var editor = monaco.editor.create(blockEl, {
       value: markdownBlock.source,
       language: 'markdown',
-      theme:'vs'
+      scrollBeyondLastLine: false,
+      theme:'vs',
     });
 
     let initInput = function(evt) {
       markdownBlock.source = evt.target.value;
     }
 
+    var render = function() {
+      return h('div', {id:outputId}, 
+      [ 
+        // h('textarea', { 
+        //   placeholder: 'Place markdown code here;', rows: 5, cols:50,
+        //   value: markdownBlock.source, oninput: initInput,  
+        // }),
+        h('p.output', [
+          'Output: ' + (editor.getValue() || '')
+        ])
+      ]);
+    }
+    
     editor.onMouseDown(function (e) {
       console.log(editor.getValue());
+      console.log(outputId);
+      var outputEl = $('#'+outputId)[0];
       markdownBlock.source = editor.getValue();
-      var render = function() {
-          return h('div', 
-        [ h('textarea', { 
-            placeholder: 'Place markdown code here;', rows: 5, cols:50,
-            value: markdownBlock.source, oninput: initInput,  
-          }),
-          h('p.output', [
-            'Hello ' + (markdownBlock.source || 'you') + '!'
-          ])
-        ]);
-      }
-      createProjector().append(el, render);
+      createProjector().replace(outputEl, render);
     });
-
-    
-    
-    // console.log("#"+id);
-    // console.log($("#"+id));
-    
-    
-    // console.log(ce['id']);  
-    // console.log(ce)  
+    createProjector().append(blockEl, render);
   }
 }
 
@@ -112,7 +113,7 @@ languagePlugins["markdown"] = markdownLanguagePlugin;
 let documents = 
   [ {"language": "markdown", 
      "source": "# Testing\nThis is *some* `markdown`!"}, 
-    {"language": "markdown", 
+    {"language": "markdowns", 
      "source": "## More testing\nThis is _some more_ `markdown`!"},
     {"language": "markdowns", 
      "source": "## And more testing\nThis is _not_ `markdown`!"}, ]
@@ -132,11 +133,11 @@ for (let cell of documents) {
   else 
   {
     // console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
-    let editorId = "editor_"+index;
-    $('#paper').append("<div id=\""+editorId+"\" class=\"editor\" ></div>")
+    let blockId = "block_"+index;
+    $('#paper').append("<div id=\""+blockId+"\" class=\"editor\" ></div>")
     let languagePlugin = languagePlugins[language];
-    let block = languagePlugin.parse(cell['source'])
-    languagePlugin.editor.create(editorId, block);
+    let block = languagePlugin.parse(cell['source']);
+    languagePlugin.editor.create(index, block);
     index++;
   }
 }
