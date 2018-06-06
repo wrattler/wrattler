@@ -10,6 +10,9 @@ module.exports = {
     filename: '[name].[hash].js',
     path: common.config.buildDir,
   },
+  node: {
+    fs: 'empty'
+  },
   module: {
     rules: common.getModuleRules()
   },
