@@ -48,6 +48,7 @@ class MarkdownBlockKind implements Langs.BlockKind {
 // an interface - and TypeScript lets us do this using a simple 
 // JavaScript record expression - to this is much simpler than a class.
 
+/*
 const markdownEditor : Langs.Editor = {
   create: (id:number, blockcode:Langs.BlockKind) => {
     // cast code into BlockKind
@@ -110,7 +111,7 @@ const markdownEditor : Langs.Editor = {
 
     // append output onto block div
     createProjector().append(blockEl[0], renderOutput);
-    var myCondition1 = editor.createContextKey(/*key name*/'myCondition1', /*default value*/true);
+    var myCondition1 = editor.createContextKey(/*key name*'myCondition1', /*default value*true);
     
     // callback to update output when triggered
     let myBinding = editor.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
@@ -136,6 +137,40 @@ const markdownLanguagePlugin : Langs.LanguagePlugin = {
     return new MarkdownBlockKind(code);
   }
 }
+*/
+type SillyState = {
+  Editing : boolean;
+}
+
+const sillyEditor : Langs.Editor<SillyState> = {
+  initialize: (blockcode:Langs.BlockKind) => {  
+    return { Editing: false };
+  },
+  render: (id:number, state:SillyState) => {
+    function switchEditing() {
+      state.Editing = !state.Editing;
+      console.log("Switched to " + id + " " + state.Editing)
+    }
+    if (state.Editing) 
+      return h('div', [
+        h('div', { id: "editor_" + id.toString() }, [ "EDITOR: Hello world!" ]),
+        h('button', { onclick: switchEditing }, ["Update"])
+      ] );
+    else
+      return h('div', [
+        h('p', [ "Hello world!" ]),
+        h('button', { onclick: switchEditing }, ["Edit"])
+      ] );
+  }
+}
+
+const markdownLanguagePlugin : Langs.LanguagePlugin = {
+  language: "markdown",
+  editor: sillyEditor,
+  parse: (code:string) => {
+    return new MarkdownBlockKind(code);
+  }
+}
 
 // Wrattler will have a number of language plugins for different
 // languages (including R, Python, TheGamma and Markdown). Probably
@@ -153,9 +188,9 @@ languagePlugins["markdown"] = markdownLanguagePlugin;
 let documents = 
   [ {"language": "markdown", 
      "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"}, 
-    {"language": "markdowns", 
+    {"language": "markdown", 
      "source": "## More testing\nThis is _some more_ `markdown`!"},
-    {"language": "markdowns", 
+    {"language": "markdown", 
      "source": "## And more testing\nThis is _not_ `markdown`!"}, ]
 
 // Now, to render the document initially, we need to:
@@ -165,6 +200,48 @@ let documents =
 //    to parse the source code. This gives us a list of `BlockKind` values
 //    (with `language` set to the right language)
 
+type CellState = {
+  //Language
+  Block : Langs.BlockKind
+  State : any
+}
+
+type NotebookState = {
+  Cells : CellState[]
+}
+
+let cellStates = documents.map(cell => {
+  let plugin = languagePlugins[cell.language]; // TODO: Error handling
+  let block = plugin.parse(cell.source);
+  let state = plugin.editor.initialize(block);
+  return { Block: block, State: state };
+})
+
+let state = { Cells: cellStates };
+
+function render(state:NotebookState) {
+  let index = 0
+  let nodes = state.Cells.map(cellState => {
+    let plugin = languagePlugins[cellState.Block.language]
+    let vnode = plugin.editor.render(index++, cellState.State)
+    return h('div', [
+      h('h2', ["Blockkkk " + index.toString()]),
+      vnode
+    ]);
+  })  
+  return h('div', nodes);
+}
+
+function renderOutput() {
+  return render(state);
+}
+
+let paperElement = document.getElementById('paper');
+let proj = createProjector();
+proj.replace(paperElement, renderOutput);
+
+
+/*
 let index = 0;
 for (let cell of documents) {
   var language = cell['language'];
@@ -180,6 +257,7 @@ for (let cell of documents) {
     index++;
   }
 }
+*/
 
 // let index = 0;
 // for (let cell of documents) {
