@@ -27,7 +27,7 @@ const s = require('./editor.css');
 
 // Import interfaces related to language plugins and editors
 // (these are TypeScript interfaces defined in `languages.ts`)
-import * as Langs from './languages';
+import * as Langs from './languages'; /// a little change
 
 // We define a new class for `MarkdownBlockKind` because we
 // later need to cast `BlockKind` to `MarkdownBlockKind` so that
