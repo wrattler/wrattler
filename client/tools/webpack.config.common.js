@@ -2,6 +2,7 @@ var fs = require("fs");
 var path = require("path");
 var fableUtils = require("fable-utils");
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var jQueryPlugin = require('jquery');
 var HtmlWebpackPolyfillIOPlugin = require('html-webpack-polyfill-io-plugin');
 // var DynamicCdnWebpackPlugin = require('dynamic-cdn-webpack-plugin');
 
@@ -12,6 +13,7 @@ var config = {
   entry: { 
     "app": "../src/main.ts",
     "fs": resolve(path.join("..", forceGet(packageJson, "fable.entry", errorMsg))),
+    // "editor.worker": 'monaco-editor/esm/vs/editor/editor.worker.js',
   },
   publicDir: resolve("../public"),
   buildDir: resolve("../build"),
@@ -54,7 +56,7 @@ function getModuleRules(isProduction) {
       }
     },
     { 
-      test: /\.tsx?$/, 
+      test: /\.ts|\.tsx?$/, 
       loader: "ts-loader" 
     },
     {
@@ -64,6 +66,10 @@ function getModuleRules(isProduction) {
         loader: 'babel-loader',
         options: babelOptions
       },
+    },
+    {
+      test: /\.css$/,
+      use: ['style-loader', 'css-loader'],
     }
   ];
 }
@@ -75,7 +81,7 @@ function getPlugins(isProduction) {
       template: config.indexHtmlTemplate,
       // minify: isProduction ? {} : false
     }),
-    new HtmlWebpackPolyfillIOPlugin({ features: "es6,fetch" }),
+    // new HtmlWebpackPolyfillIOPlugin({ features: "es6,fetch" }),
     // new DynamicCdnWebpackPlugin({ verbose: true, only: config.cdnModules }),
   ];
 }
