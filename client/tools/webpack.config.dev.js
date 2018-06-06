@@ -9,6 +9,9 @@ module.exports = {
   devtool: "source-map",
   entry: common.config.entry,
   mode: "development",
+  node: {
+    fs: 'empty'
+  },
   output: {
     filename: '[name].js',
     path: common.config.buildDir,
