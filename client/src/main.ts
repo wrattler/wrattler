@@ -3,37 +3,29 @@
 import { fsHello } from "./demos/fsdemo";
 import { jsHello } from "./demos/jsdemo";
 import { tsHello } from "./demos/tsdemo";
-import * as monaco from 'monaco-editor';
-import $ from 'jquery';
-import {h} from 'maquette';
-import {createProjector} from 'maquette';
-import {VNode} from 'maquette';
-import marked from 'marked';
-// import * as styles from "./editor.css";
-
 
 fsHello();
 jsHello();
 tsHello();
 
-// var el = $('#paper')[0];
+// ------------------------------------------------------------------------------------------------
+// Imports
+// ------------------------------------------------------------------------------------------------
+
+import * as monaco from 'monaco-editor';
+import {h,createProjector,VNode} from 'maquette';
+import marked from 'marked';
+import * as Langs from './languages'; 
+
 const s = require('./editor.css');
 
 
-// monaco.editor.create(el, {
-//   value: "function hello() {\n\talert('Hello Tomas!');\n}",
-//   language: 'javascript'
-// });
+// ------------------------------------------------------------------------------------------------
+// Markdown plugin
+// ------------------------------------------------------------------------------------------------
 
-// Import interfaces related to language plugins and editors
-// (these are TypeScript interfaces defined in `languages.ts`)
-import * as Langs from './languages'; /// a little change
-
-// We define a new class for `MarkdownBlockKind` because we
-// later need to cast `BlockKind` to `MarkdownBlockKind` so that
-// we can access Markdown-specific properties from editor,
-// type checker, etc. (using <MarkdownBlockKind>block)
-
+/// A class that represents a Markdown block. All blocks need to have 
+/// `language` and Markdown also keeps the Markdown source we edit and render
 class MarkdownBlockKind implements Langs.BlockKind {
   language : string;
   source : string;
@@ -43,90 +35,90 @@ class MarkdownBlockKind implements Langs.BlockKind {
   }
 }
 
-// For the editor and language plugin, we do not need a dedicated
-// class, because we just need to create some implementation of 
-// an interface - and TypeScript lets us do this using a simple 
-// JavaScript record expression - to this is much simpler than a class.
+/// The `MarkdownEvent` type is a discriminated union that represents events
+/// that can happen in the Markdown editor. We have two events - one is to switch
+/// to edit mode and the other is to switch to view mode. The latter carries a 
+/// new value of the Markdown source code after user did some editing.
+interface MarkdownEditEvent { kind:'edit' }
+interface MarkdownUpdateEvent { kind:'update', source:string }
+type MarkdownEvent = MarkdownEditEvent | MarkdownUpdateEvent
 
-/*
-const markdownEditor : Langs.Editor = {
-  create: (id:number, blockcode:Langs.BlockKind) => {
-    // cast code into BlockKind
-    let markdownBlock = <MarkdownBlockKind>blockcode;
-    let editing = true;
-    let outputId = "output_"+id;
-    let blockId = "block_"+index;
-    let editorId = "editor_"+index;
+/// The state of the Markdown editor keeps the current block (which all editor
+/// states need to do) and also whether we are currently editing it or not.
+type MarkdownState = {
+  id: number
+  block: MarkdownBlockKind
+  editing: boolean
+}
 
-    // create div for this block
-    $('#paper').append("<div id=\""+blockId+"\" class=\"block\" ></div>")
-    
-    // append editor onto block div
-    let blockEl = $('#'+blockId);
-    blockEl.append("<div id=\""+editorId+"\" class=\"editor\" ></div>")
+const markdownEditor : Langs.Editor<MarkdownState, MarkdownEvent> = {
+  initialize: (id:number, block:Langs.BlockKind) => {  
+    return { id: id, block: <MarkdownBlockKind>block, editing: false }
+  },
 
-    // create editor element
-    let editorEl = $('#'+editorId);
-    editorEl[0].classList.add('editable');
-  
-    // create editor, append onto editor element
-    let editor = monaco.editor.create(editorEl[0], {
-      value: markdownBlock.source,
-      language: 'markdown',
-      scrollBeyondLastLine: false,
-      theme:'vs',
-    });
-
-    // old code for initialising textarea
-    // let initInput = function(evt) {
-    //   markdownBlock.source = evt.target.value;
-    // }
-
-    let toggleVisible = function () {
-      editing = !editing;
-      if (editing===true)
-        editorEl[0].classList.add("editable");
-      // console.log(editing);
+  update: (state:MarkdownState, event:MarkdownEvent) => {
+    switch(event.kind) {
+      case 'edit': 
+        console.log("Markdown: Switch to edit mode!")
+        return { id: state.id, block: state.block, editing: true }
+      case 'update': 
+        console.log("Markdown: Set code to:\n%O", event.source);
+        let newBlock = markdownLanguagePlugin.parse(event.source)
+        return { id: state.id, block: <MarkdownBlockKind>newBlock, editing: false }
     }
+  },
 
-    let renderOutput = function() {
-      // return h('div', {id:outputId}, 
-      // [ 
-      //   h('textarea', { 
-      //     placeholder: 'Place markdown code here;', rows: 5, cols:50,
-      //     value: (editor.getValue() || ''), oninput: initInput,  
-      //   }),
-      //   h('p.output', [
-      //     'Output: ' + (editor.getValue() || '')
-      //   ])
-      // ]);
-      let mdText = editor.getValue() ? marked(editor.getValue()) : '';
-      return h('div.output', {
-        id:outputId, 
-        innerHTML:mdText,
-        onclick: toggleVisible,
-        classes: {rendered: !editing}
-      })
+  render: (state:MarkdownState, context:Langs.EditorContext<MarkdownEvent>) => {
+
+    // The render function returns a pair with VNode that represents the rendered content
+    // and a function (handler) that is called after the VNode is materialized and actual
+    // HTML DOM nodes that we can access using `document.getElementById` are created.
+    //
+    // The `context` parameter defines `context.trugger` function. We can call this to 
+    // trigger events (i.e. `MarkdownEvent` values). When we trigger an event, the main 
+    // loop will call our `update` function to get new state of the editor and it will then
+    // re-render the editor (we do not need to do any extra work here!)
+    if (!state.editing) {
+
+      // If we are not in edit mode, we just render a VNode and return no-op handler
+      let node = h('div', [
+        h('p', {innerHTML: marked(state.block.source) }, []),
+        h('button', { onclick: () => context.trigger({kind:'edit'}) }, ["Edit"])
+      ] )
+      return [node, () => { }]
+
+    } else {
+
+      // If we are in edit mode, we return a node with a unique ID together with 
+      // a handler that creates monaco editor once the node is actually created.
+      let node = h('div', [
+        h('div', { style: "height:100px", id: "editor_" + state.id.toString() }, [ ])
+      ] )
+      let handler = () => { 
+        let el = document.getElementById("editor_" + state.id.toString());
+        console.log("Got editor element: %O. Initialized? %O" , el, el.dataset["initialized"])
+
+        // After we create the editor, we mark the node as "initialized" using `el.dataset`.
+        // This guarantees that we will not recreate monaco editor if we re-render the notebook
+        // (when re-render was caused by an event in some other cell of the notebook)
+        if (el.dataset["initialized"] != "true") {
+          el.dataset["initialized"] = "true";
+          let editor = monaco.editor.create(el, {
+            value: state.block.source,
+            language: 'markdown',
+            scrollBeyondLastLine: false,
+            theme:'vs',
+          });                
+
+          let alwaysTrue = editor.createContextKey('alwaysTrue', true);
+          let myBinding = editor.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
+            let code = editor.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
+            context.trigger({kind: 'update', source: code})
+          }, 'alwaysTrue');
+        }
+      }
+      return [node, handler]
     }
-
-    // append output onto block div
-    createProjector().append(blockEl[0], renderOutput);
-    var myCondition1 = editor.createContextKey(/*key name*'myCondition1', /*default value*true);
-    
-    // callback to update output when triggered
-    let myBinding = editor.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
-      editing = false;
-      editorEl[0].classList.remove("editable")
-      var outputEl = $('#'+outputId)[0];
-      markdownBlock.source = editor.getValue();
-      createProjector().replace(outputEl, renderOutput);
-      console.log("entered");
-    },'myCondition1');
-    // editor.onMouseDown(function (e) {
-    //   var outputEl = $('#'+outputId)[0];
-    //   markdownBlock.source = editor.getValue();
-    //   createProjector().replace(outputEl, render);
-    // });
   }
 }
 
@@ -137,51 +129,14 @@ const markdownLanguagePlugin : Langs.LanguagePlugin = {
     return new MarkdownBlockKind(code);
   }
 }
-*/
-type SillyState = {
-  Editing : boolean;
-}
 
-const sillyEditor : Langs.Editor<SillyState> = {
-  initialize: (blockcode:Langs.BlockKind) => {  
-    return { Editing: false };
-  },
-  render: (id:number, state:SillyState) => {
-    function switchEditing() {
-      state.Editing = !state.Editing;
-      console.log("Switched to " + id + " " + state.Editing)
-    }
-    if (state.Editing) 
-      return h('div', [
-        h('div', { id: "editor_" + id.toString() }, [ "EDITOR: Hello world!" ]),
-        h('button', { onclick: switchEditing }, ["Update"])
-      ] );
-    else
-      return h('div', [
-        h('p', [ "Hello world!" ]),
-        h('button', { onclick: switchEditing }, ["Edit"])
-      ] );
-  }
-}
 
-const markdownLanguagePlugin : Langs.LanguagePlugin = {
-  language: "markdown",
-  editor: sillyEditor,
-  parse: (code:string) => {
-    return new MarkdownBlockKind(code);
-  }
-}
+// ------------------------------------------------------------------------------------------------
+// Main notebook rendering code
+// ------------------------------------------------------------------------------------------------
 
-// Wrattler will have a number of language plugins for different
-// languages (including R, Python, TheGamma and Markdown). Probably
-// something like this, except that we might need a dictionary or
-// a lookup table (so that we can find language plugin for a given
-// language quickly):
-
-// fill in language plugins dictionary here eg.
 var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
-// console.log(languagePlugins['markdown']);
 
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
@@ -193,114 +148,75 @@ let documents =
     {"language": "markdown", 
      "source": "## And more testing\nThis is _not_ `markdown`!"}, ]
 
-// Now, to render the document initially, we need to:
-//
-// 1. Iterate over the cells defined in `document`. For each cell, we
-//    get the appropriate `LanguagePlugin` and call its `parse` function
-//    to parse the source code. This gives us a list of `BlockKind` values
-//    (with `language` set to the right language)
-
-type CellState = {
-  //Language
-  Block : Langs.BlockKind
-  State : any
-}
-
+// A state of the notebook is currently just an array of states of the 
+// individual cells. In the future, this will need to include the state
+// of other GUI elements such as the '+' and 'x' menus.
 type NotebookState = {
-  Cells : CellState[]
+  cells: Langs.EditorState[]
 }
 
+// Create an initial notebook state by parsing the sample document
+let index = 0
 let cellStates = documents.map(cell => {
   let plugin = languagePlugins[cell.language]; // TODO: Error handling
   let block = plugin.parse(cell.source);
-  let state = plugin.editor.initialize(block);
-  return { Block: block, State: state };
+  console.log("Created cell with index %O", index)
+  return plugin.editor.initialize(index++, block);  
 })
+let state : NotebookState = { cells: cellStates };
 
-let state = { Cells: cellStates };
+// Get the #paper element and create maquette renderer
+let paperElement = document.getElementById('paper');
+let maquetteProjector = createProjector();
+
+// This is a mutable array that we use to collect handlers that need
+// to be called after maquette renders VDom node and creates real HTML DOM
+// nodes (the handlers then create Monaco editors)
+let postRenderHandlers : (() => void)[] = []
 
 function render(state:NotebookState) {
-  let index = 0
-  let nodes = state.Cells.map(cellState => {
-    let plugin = languagePlugins[cellState.Block.language]
-    let vnode = plugin.editor.render(index++, cellState.State)
+  postRenderHandlers = []
+  let nodes = state.cells.map(state => {
+
+    // The `context` object is passed to the render function. The `trigger` method
+    // of the object can be used to trigger events that cause a state update. The
+    // state update then updates the global `state` variable, re-renders the 
+    // Notebook using `renderNow` and runs all the `postRenderHandlers` afterwards.
+    let context : Langs.EditorContext<any> = {
+      trigger: (event:any) => updateState(state.id, event)
+    }
+    let plugin = languagePlugins[state.block.language]
+    let [vnode, handler] = plugin.editor.render(state, context)
+    postRenderHandlers.push(handler)
+
     return h('div', [
-      h('h2', ["Blockkkk " + index.toString()]),
+      h('h2', ["Block " + state.id.toString()]),
       vnode
     ]);
   })  
   return h('div', nodes);
 }
 
-function renderOutput() {
-  return render(state);
+/// This is called from `markdownEditor` via the `context.trigger` call (when the 
+/// user clicks on the edit button or hits Shift+Enter to update Markdown). It replaces
+/// the blobal `state` and re-renders notebook immediately.
+function updateState(id:number, event:any) {
+  console.log("Triggering event %O for cell ID %O", event, id)
+  let newCells = state.cells.map(state => {
+    if (state.id != id) return state
+    else return languagePlugins[state.block.language].editor.update(state, event)
+  })
+  state = { cells: newCells }
+  rerenderNotebook()
 }
 
-let paperElement = document.getElementById('paper');
-let proj = createProjector();
-proj.replace(paperElement, renderOutput);
-
-
-/*
-let index = 0;
-for (let cell of documents) {
-  var language = cell['language'];
-  if (languagePlugins[language] == null)
-    console.log("No language plugins for "+language);
-  else 
-  {
-    // console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
-    // 
-    let languagePlugin = languagePlugins[language];
-    let block = languagePlugin.parse(cell['source']);
-    languagePlugin.editor.create(index, block);
-    index++;
-  }
+/// Called from `updateState`, this function re-renders the notebook (now) using
+/// maquette and then invokes all post-render handlers to create Monaco editors
+function rerenderNotebook() {
+  maquetteProjector.renderNow()
+  console.log("Rerendered notebook. Collected %O handlers.", postRenderHandlers.length)
+  postRenderHandlers.map(handler => handler());
+  postRenderHandlers = [];
 }
-*/
 
-// let index = 0;
-// for (let cell of documents) {
-//   var language = cell['language'];
-//   if (languagePlugins[language] == null)
-//     console.log("No language plugins for "+language);
-//   else 
-//   {
-//     // console.log("Language plugin for " + language + " is " + languagePlugins[language].language);
-//     let editorId = "editor_"+index;
-//     $('#paper').append("<div id=\""+editorId+"\" style=\"height:100px;\"></div>")
-//     let languagePlugin = languagePlugins[language];
-//     let block = languagePlugin.parse(cell['source'])
-//     languagePlugin.editor.create(editorId, block);
-//     index++;
-//   }
-// }
-
-// 2. We collect an array of `BlockKind` objects - these represent the
-//    parsed cells that we can then render (and later, type check, etc.)
-//
-// 3. To render everything, we iterate over our collection of `BlockKind`
-//    objects. For each, we look at its language, get the appropriate 
-//    `LanguagePlugin` - this gives us an `editor` that we can then use to
-//    render the block.
-//
-// Ideally, we should be able to use the infrastructure we have here to 
-// parse the Markdown in the above `document` (using some good JavaScript 
-// Markdown parser - I used one in the prototype but it was not very good),
-// render the produced HTML and allow people to edit that using Monaco.
-//
-// The `create` function of the `Editor` interface now takes an ID
-// (the idea is that in the main loop, we will create DIV element for
-// each block and pass its ID to the editor so that it can do whatever
-// it wants with it - either using VirtualDom, or directly).
-//
-// Right now, `create` takes the ID and the `BlockKind`. `BlockKind` is
-// just an interface, so for Markdown, this will be some concrete Markdown
-// implementation that will also store the parsed Markdown in some way.
-// When `create` is called, it can assume that it gets Markdown-specific
-// `BlockKind` and it can access the parsed document (after some type cast).
-//
-// Eventually, we will need to make `create` a bit more complex, so that
-// the editor can notify the main code about changes in the source code, 
-// but we can ignore that for now.
-
+maquetteProjector.replace(paperElement, () => render(state));
