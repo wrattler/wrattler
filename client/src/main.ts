@@ -70,10 +70,6 @@ const markdownEditor : Langs.Editor<MarkdownState, MarkdownEvent> = {
 
   render: (state:MarkdownState, context:Langs.EditorContext<MarkdownEvent>) => {
 
-    // The render function returns a pair with VNode that represents the rendered content
-    // and a function (handler) that is called after the VNode is materialized and actual
-    // HTML DOM nodes that we can access using `document.getElementById` are created.
-    //
     // The `context` parameter defines `context.trugger` function. We can call this to 
     // trigger events (i.e. `MarkdownEvent` values). When we trigger an event, the main 
     // loop will call our `update` function to get new state of the editor and it will then
@@ -81,43 +77,29 @@ const markdownEditor : Langs.Editor<MarkdownState, MarkdownEvent> = {
     if (!state.editing) {
 
       // If we are not in edit mode, we just render a VNode and return no-op handler
-      let node = h('div', [
+      return h('div', [
         h('p', {innerHTML: marked(state.block.source) }, []),
         h('button', { onclick: () => context.trigger({kind:'edit'}) }, ["Edit"])
       ] )
-      return [node, () => { }]
 
     } else {
+      let afterCreateHandler = (el) => { 
+        let editor = monaco.editor.create(el, {
+          value: state.block.source,
+          language: 'markdown',
+          scrollBeyondLastLine: false,
+          theme:'vs',
+        });                
 
-      // If we are in edit mode, we return a node with a unique ID together with 
-      // a handler that creates monaco editor once the node is actually created.
-      let node = h('div', [
-        h('div', { style: "height:100px", id: "editor_" + state.id.toString() }, [ ])
-      ] )
-      let handler = () => { 
-        let el = document.getElementById("editor_" + state.id.toString());
-        console.log("Got editor element: %O. Initialized? %O" , el, el.dataset["initialized"])
-
-        // After we create the editor, we mark the node as "initialized" using `el.dataset`.
-        // This guarantees that we will not recreate monaco editor if we re-render the notebook
-        // (when re-render was caused by an event in some other cell of the notebook)
-        if (el.dataset["initialized"] != "true") {
-          el.dataset["initialized"] = "true";
-          let editor = monaco.editor.create(el, {
-            value: state.block.source,
-            language: 'markdown',
-            scrollBeyondLastLine: false,
-            theme:'vs',
-          });                
-
-          let alwaysTrue = editor.createContextKey('alwaysTrue', true);
-          let myBinding = editor.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
-            let code = editor.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
-            context.trigger({kind: 'update', source: code})
-          }, 'alwaysTrue');
-        }
+        let alwaysTrue = editor.createContextKey('alwaysTrue', true);
+        let myBinding = editor.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
+          let code = editor.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
+          context.trigger({kind: 'update', source: code})
+        }, 'alwaysTrue');
       }
-      return [node, handler]
+      return h('div', [
+        h('div', { style: "height:100px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
+      ] )      
     }
   }
 }
@@ -169,26 +151,16 @@ let state : NotebookState = { cells: cellStates };
 let paperElement = document.getElementById('paper');
 let maquetteProjector = createProjector();
 
-// This is a mutable array that we use to collect handlers that need
-// to be called after maquette renders VDom node and creates real HTML DOM
-// nodes (the handlers then create Monaco editors)
-let postRenderHandlers : (() => void)[] = []
-
 function render(state:NotebookState) {
-  postRenderHandlers = []
   let nodes = state.cells.map(state => {
 
     // The `context` object is passed to the render function. The `trigger` method
-    // of the object can be used to trigger events that cause a state update. The
-    // state update then updates the global `state` variable, re-renders the 
-    // Notebook using `renderNow` and runs all the `postRenderHandlers` afterwards.
+    // of the object can be used to trigger events that cause a state update. 
     let context : Langs.EditorContext<any> = {
       trigger: (event:any) => updateState(state.id, event)
     }
     let plugin = languagePlugins[state.block.language]
-    let [vnode, handler] = plugin.editor.render(state, context)
-    postRenderHandlers.push(handler)
-
+    let vnode = plugin.editor.render(state, context)
     return h('div', [
       h('h2', ["Block " + state.id.toString()]),
       vnode
@@ -197,9 +169,10 @@ function render(state:NotebookState) {
   return h('div', nodes);
 }
 
-/// This is called from `markdownEditor` via the `context.trigger` call (when the 
-/// user clicks on the edit button or hits Shift+Enter to update Markdown). It replaces
-/// the blobal `state` and re-renders notebook immediately.
+/// This is called from `markdownEditor` via the `context.trigger` call 
+/// (when the user clicks on the edit button or hits Shift+Enter to update
+/// Markdown). It replaces the blobal `state` and tells maquette to
+/// re-render the notebook at some point soon.
 function updateState(id:number, event:any) {
   console.log("Triggering event %O for cell ID %O", event, id)
   let newCells = state.cells.map(state => {
@@ -207,16 +180,7 @@ function updateState(id:number, event:any) {
     else return languagePlugins[state.block.language].editor.update(state, event)
   })
   state = { cells: newCells }
-  rerenderNotebook()
-}
-
-/// Called from `updateState`, this function re-renders the notebook (now) using
-/// maquette and then invokes all post-render handlers to create Monaco editors
-function rerenderNotebook() {
-  maquetteProjector.renderNow()
-  console.log("Rerendered notebook. Collected %O handlers.", postRenderHandlers.length)
-  postRenderHandlers.map(handler => handler());
-  postRenderHandlers = [];
+  maquetteProjector.scheduleRender()
 }
 
 maquetteProjector.replace(paperElement, () => render(state));

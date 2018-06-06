@@ -26,11 +26,9 @@ interface Editor<TState extends EditorState, TEvent> {
   /// Update takes a state with an event and produces a new state.
   update(state:TState, event:TEvent) : TState
 
-  /// Render takes a state and renders VNodes based on the state.
-  /// There are two extra things. The `context` parameter allows it
-  /// to trigger updates when a UI event happens and it can also return
-  /// a post-render handler (to create Monaco editor etc.)
-  render(state:TState, context:EditorContext<TEvent>) : [VNode, () => void]
+  /// Render takes a state and renders VNodes based on the state. The `context`
+  /// parameter allows it to trigger updates when a UI event happens.
+  render(state:TState, context:EditorContext<TEvent>) : VNode
 }
 
 interface LanguagePlugin {
