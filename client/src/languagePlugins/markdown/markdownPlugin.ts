@@ -12,7 +12,7 @@ const s = require('./editor.css');
 /// A class that represents a Markdown block. All blocks need to have 
 /// `language` and Markdown also keeps the Markdown source we edit and render
 
-export class MarkdownBlockKind implements Langs.BlockKind {
+class MarkdownBlockKind implements Langs.BlockKind {
     language : string;
     source : string;
     constructor(source:string) {
