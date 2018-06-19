@@ -1,0 +1,34 @@
+body{
+  color:#000;
+  background-color:gainsboro;
+    
+}
+
+#paper {
+  margin: auto;
+}
+
+@media only screen and (max-width: 900px) and (min-width: 600px){ 
+	#paper { 
+		min-width: 85%; 
+		max-width: 85%;
+		background-color: red;
+	}
+ }
+
+ @media only screen and (min-width: 900px){ 
+	#paper { 
+		min-width: 90%; 
+		max-width: 90%;
+		background-color: blue;
+	}
+ }
+
+ @media only screen and (max-width: 600px){ 
+	#paper { 
+		min-width: 95%; 
+		max-width: 95%;
+		background-color: green;
+	}
+ }
+

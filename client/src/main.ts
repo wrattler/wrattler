@@ -15,6 +15,10 @@ tsHello();
 import {h,createProjector,VNode} from 'maquette';
 import * as Langs from './languages'; 
 import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugin'
+// import $ from 'jquery'
+// import "bootstrap"
+const s = require('./editor.css');
+
 
 
 // ------------------------------------------------------------------------------------------------
@@ -65,12 +69,17 @@ function render(state:NotebookState) {
     }
     let plugin = languagePlugins[state.block.language]
     let vnode = plugin.editor.render(state, context)
+    // let block = h('h2', ["Block " + state.id.toString()])
+    // let divOfBlock = h('div',{id:'paper2'},[block,vnode])
+    // let divOfBlocks = h('div',{id:'paper'},[divOfBlock]);
+    // return divOfBlocks;
     return h('div', [
-      h('h2', ["Block " + state.id.toString()]),
-      vnode
-    ]);
-  })  
-  return h('div', nodes);
+        h('h2', ["Block " + state.id.toString()]),vnode
+      ]
+    );
+  }); 
+
+  return h('div', {id:'paper'}, [nodes])
 }
 
 /// This is called from `markdownEditor` via the `context.trigger` call 
