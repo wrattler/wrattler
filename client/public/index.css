@@ -1,6 +1,19 @@
+img {
+	width:3%; /* you can use % */
+	height: auto;
+}
+
+div.controls {
+	float:right;
+}
+
+i.control {
+	padding:3px;
+}
+
 body{
   color:#000;
-  background-color:gainsboro;
+  /* background-color:gainsboro; */
     
 }
 
@@ -12,7 +25,7 @@ body{
 	#paper { 
 		min-width: 85%; 
 		max-width: 85%;
-		background-color: red;
+		/* background-color: red; */
 	}
  }
 
@@ -20,7 +33,7 @@ body{
 	#paper { 
 		min-width: 90%; 
 		max-width: 90%;
-		background-color: blue;
+		/* background-color: blue; */
 	}
  }
 
@@ -28,7 +41,7 @@ body{
 	#paper { 
 		min-width: 95%; 
 		max-width: 95%;
-		background-color: green;
+		/* background-color: green; */
 	}
  }
 

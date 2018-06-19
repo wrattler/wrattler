@@ -70,11 +70,18 @@ function render(state:NotebookState) {
     let plugin = languagePlugins[state.block.language]
     let vnode = plugin.editor.render(state, context)
     // let block = h('h2', ["Block " + state.id.toString()])
+    let control_add = h('i', {class: 'fas fa-plus control'})
+    let control_delete = h('i', {class: 'far fa-trash-alt control'})
+    let control_up = h('i', {class: 'fas fa-arrow-up control'})
+    let control_down = h('i', {class: 'fas fa-arrow-down control'})
+    let controls = h('div', {class:'controls'}, [control_add, control_delete, control_up, control_down])
     // let divOfBlock = h('div',{id:'paper2'},[block,vnode])
     // let divOfBlocks = h('div',{id:'paper'},[divOfBlock]);
     // return divOfBlocks;
-    return h('div', [
-        h('h2', ["Block " + state.id.toString()]),vnode
+    console.log(state);
+    return h('div', {class:'cell'}, [
+        // h('h2', ["Block " + state.id.toString() +" : "+state.block.language]),vnode
+        h('div', [controls]),vnode
       ]
     );
   }); 

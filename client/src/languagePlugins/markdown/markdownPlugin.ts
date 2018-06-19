@@ -64,7 +64,7 @@ class MarkdownBlockKind implements Langs.BlockKind {
   
         // If we are not in edit mode, we just render a VNode and return no-op handler
         return h('div', [
-          h('p', {innerHTML: marked(state.block.source) }, []),
+          h('p', {innerHTML: marked(state.block.source)}, []),
           h('button', { onclick: () => context.trigger({kind:'edit'}) }, ["Edit"])
         ] )
   

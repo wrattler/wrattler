@@ -1,0 +1,31 @@
+div.output.rendered {
+    display: block;
+}
+
+div.output {
+    display: none;
+}
+
+div.editor.editable {
+    display: block;
+}
+
+div.editor {
+    display: none;
+}
+
+div.cell{
+    border-left-style: solid;
+    border-left-width: 7px;
+    padding: 5px 5px 5px 15px;
+    width:100%;
+    height: 50vh;
+}
+
+div.cell:nth-child(odd){
+   border-left-color: gainsboro; 
+}
+
+div.cell:nth-child(even){
+    border-left-color: grey;
+}
