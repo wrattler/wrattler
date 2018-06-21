@@ -1,12 +1,12 @@
 // Demos showing how to import files from different languages
 // (we will need this later, but for now, this is just a demo)
-import { fsHello } from "./demos/fsdemo";
-import { jsHello } from "./demos/jsdemo";
-import { tsHello } from "./demos/tsdemo";
+// import { fsHello } from "./demos/fsdemo";
+// import { jsHello } from "./demos/jsdemo";
+// import { tsHello } from "./demos/tsdemo";
 
-fsHello();
-jsHello();
-tsHello();
+// fsHello();
+// jsHello();
+// tsHello();
 
 // ------------------------------------------------------------------------------------------------
 // Imports
@@ -14,12 +14,8 @@ tsHello();
 
 import {h,createProjector,VNode} from 'maquette';
 import * as Langs from './languages'; 
-import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugin'
-// import $ from 'jquery'
-// import "bootstrap"
-const s = require('./editor.css');
-
-
+import { markdownLanguagePlugin, MarkdownBlockKind } from './languagePlugins/markdown/markdownPlugin'
+require('./editor.css');
 
 // ------------------------------------------------------------------------------------------------
 // Main notebook rendering code
@@ -33,16 +29,47 @@ languagePlugins["markdown"] = markdownLanguagePlugin;
 let documents = 
   [ {"language": "markdown", 
      "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"}, 
-    {"language": "markdown", 
-     "source": "## More testing\nThis is _some more_ `markdown`!"},
-    {"language": "markdown", 
-     "source": "## And more testing\nThis is _not_ `markdown`!"}, ]
+    // {"language": "markdown", 
+    //  "source": "## More testing\nThis is _some more_ `markdown`!"},
+    // {"language": "markdown", 
+    //  "source": "## And more testing\nThis is _not_ `markdown`!"}, 
+    ]
 
 // A state of the notebook is currently just an array of states of the 
 // individual cells. In the future, this will need to include the state
 // of other GUI elements such as the '+' and 'x' menus.
 type NotebookState = {
   cells: Langs.EditorState[]
+}
+
+let updateCellId = (cells: Langs.EditorState[], cell: Langs.EditorState, id:number): Langs.EditorState[] => {
+  let temp = cells.slice(0);
+  let index = cells.indexOf(cell);
+  temp[index].id=id;
+  return temp;
+  // // console.log(cells.splice(index, 0, newCell))
+  // // console.log(cells.slice(index+1))
+
+  // return [
+  //   ...cells.slice(0, index),
+  //   // <any>Object.assign({}, cell, {id}),
+  //   ...cells.splice(index, 0, newCell),
+  //   ...cells.slice(index)
+  // ]
+};
+
+let insertCell = (cells: Langs.EditorState[], cell: Langs.EditorState, index: number): Langs.EditorState[] =>{
+  let temp = cells.slice(0);
+  temp.splice(index,0,cell);
+  return temp;
+}
+
+let removeCell = (cells: Langs.EditorState[], cell: Langs.EditorState ): Langs.EditorState[] => {
+  let index = cells.indexOf(cell);
+  return [
+    ...cells.slice(0, index),
+    ...cells.slice(index + 1)
+  ];
 }
 
 // Create an initial notebook state by parsing the sample document
@@ -60,6 +87,43 @@ let paperElement = document.getElementById('paper');
 let maquetteProjector = createProjector();
 
 function render(state:NotebookState) {
+
+  let parseId = (id:string):number => {
+    let splitArray = id.split("_")
+    return +splitArray[splitArray.length-1];
+  }
+
+  function updateCellIndices () {
+    let index:number = 0;
+    for (let cell of state.cells) {
+      state.cells=updateCellId(state.cells, cell, index)
+      index++;
+    }
+  }
+
+  function removeClickHandler (evt) {
+    // let currentId = evt.path[0].id;
+    let currentId = parseId(evt.path[0].id)
+    let cell = state.cells[currentId];
+    state.cells = removeCell(state.cells, cell);
+    updateCellIndices()
+    
+  }
+
+  function addClickHandler (evt) {
+    let currentId = parseId(evt.path[0].id)
+    let newId = currentId+1;
+    let newDocument = {"language": "markdown", 
+     "source": "### Add new block at position: "+newId};
+    let newPlugin = languagePlugins[newDocument.language]; 
+    let newBlock = newPlugin.parse(newDocument.source);
+    
+    let cell:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);  
+    state.cells = insertCell(state.cells, cell, newId);
+    
+    updateCellIndices();
+  }
+
   let nodes = state.cells.map(state => {
 
     // The `context` object is passed to the render function. The `trigger` method
@@ -69,24 +133,18 @@ function render(state:NotebookState) {
     }
     let plugin = languagePlugins[state.block.language]
     let vnode = plugin.editor.render(state, context)
-    // let block = h('h2', ["Block " + state.id.toString()])
-    let control_add = h('i', {class: 'fas fa-plus control'})
-    let control_delete = h('i', {class: 'far fa-trash-alt control'})
-    let control_up = h('i', {class: 'fas fa-arrow-up control'})
-    let control_down = h('i', {class: 'fas fa-arrow-down control'})
-    let controls = h('div', {class:'controls'}, [control_add, control_delete, control_up, control_down])
-    // let divOfBlock = h('div',{id:'paper2'},[block,vnode])
-    // let divOfBlocks = h('div',{id:'paper'},[divOfBlock]);
-    // return divOfBlocks;
-    console.log(state);
-    return h('div', {class:'cell'}, [
+    let c_add = h('i', {id:'add_'+state.id, class: 'fas fa-plus control', onclick:addClickHandler});
+    let c_delete = h('i', {id:'remove_'+state.id, class: 'far fa-trash-alt control', onclick:removeClickHandler})
+    let controls = h('div', {class:'controls'}, [c_add, c_delete])
+    // console.log(state);
+    return h('div', {class:'cell', key:state.id}, [
         // h('h2', ["Block " + state.id.toString() +" : "+state.block.language]),vnode
         h('div', [controls]),vnode
       ]
     );
   }); 
 
-  return h('div', {id:'paper'}, [nodes])
+  return h('div', {class:'container-fluid', id:'paper'}, [nodes])
 }
 
 /// This is called from `markdownEditor` via the `context.trigger` call 

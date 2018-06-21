@@ -7,6 +7,25 @@ div.controls {
 	float:right;
 }
 
+/* code.indicator {
+	color: darkgray;
+}
+div.indicators {
+	float:left;
+	margin-bottom: 5px;
+	border-style: solid;
+	border-color: grey;
+	background-color: gainsboro;
+	color: darkgray;
+
+	float: left;
+	margin-bottom: 5px;
+	border-style: solid;
+	background-color: #e8e8e8;
+	border-width: 1px;
+	border-color: gainsboro;
+} */
+
 i.control {
 	padding:3px;
 }
@@ -23,16 +42,16 @@ body{
 
 @media only screen and (max-width: 900px) and (min-width: 600px){ 
 	#paper { 
-		min-width: 85%; 
-		max-width: 85%;
+		min-width: 90%; 
+		max-width: 90%;
 		/* background-color: red; */
 	}
  }
 
- @media only screen and (min-width: 900px){ 
+ @media only screen and (max-width: 1200px) and (min-width: 900px){ 
 	#paper { 
-		min-width: 90%; 
-		max-width: 90%;
+		min-width: 85%; 
+		max-width: 85%;
 		/* background-color: blue; */
 	}
  }
@@ -41,6 +60,14 @@ body{
 	#paper { 
 		min-width: 95%; 
 		max-width: 95%;
+		/* background-color: green; */
+	}
+ }
+
+ @media only screen and (min-width: 1200px){ 
+	#paper { 
+		min-width: 70%; 
+		max-width: 70%;
 		/* background-color: green; */
 	}
  }

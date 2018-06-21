@@ -53,8 +53,11 @@ class MarkdownBlockKind implements Langs.BlockKind {
           return { id: state.id, block: <MarkdownBlockKind>newBlock, editing: false }
       }
     },
+    
   
     render: (state:MarkdownState, context:Langs.EditorContext<MarkdownEvent>) => {
+      // console.log(state)
+      
   
       // The `context` parameter defines `context.trugger` function. We can call this to 
       // trigger events (i.e. `MarkdownEvent` values). When we trigger an event, the main 
@@ -63,19 +66,22 @@ class MarkdownBlockKind implements Langs.BlockKind {
       if (!state.editing) {
   
         // If we are not in edit mode, we just render a VNode and return no-op handler
-        return h('div', [
-          h('p', {innerHTML: marked(state.block.source)}, []),
-          h('button', { onclick: () => context.trigger({kind:'edit'}) }, ["Edit"])
+        return h('div', {}, [
+          h('p', {innerHTML: marked(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
+          // h('button', { onclick: () => context.trigger({kind:'edit'}) }, ["Edit"])
         ] )
   
       } else {
+        let numLines = 0;
         let afterCreateHandler = (el) => { 
           let editor = monaco.editor.create(el, {
             value: state.block.source,
             language: 'markdown',
             scrollBeyondLastLine: false,
             theme:'vs',
-          });                
+          });    
+          numLines = editor['viewModel'].lines.lines.length;
+          console.log(numLines);
   
           let alwaysTrue = editor.createContextKey('alwaysTrue', true);
           let myBinding = editor.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
@@ -83,8 +89,10 @@ class MarkdownBlockKind implements Langs.BlockKind {
             context.trigger({kind: 'update', source: code})
           }, 'alwaysTrue');
         }
-        return h('div', [
-          h('div', { style: "height:100px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
+        let heightRequired = numLines * 50;
+        return h('div', {}, [
+          // h('div', { style: "height:"+heightRequired+"px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
+          h('div', { style: "height:50px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
         ] )      
       }
     }
@@ -97,4 +105,6 @@ class MarkdownBlockKind implements Langs.BlockKind {
       return new MarkdownBlockKind(code);
     }
   }
+
+  export {MarkdownBlockKind};
   
