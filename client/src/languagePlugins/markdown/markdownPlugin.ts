@@ -105,6 +105,4 @@ class MarkdownBlockKind implements Langs.BlockKind {
       return new MarkdownBlockKind(code);
     }
   }
-
-  export {MarkdownBlockKind};
   
