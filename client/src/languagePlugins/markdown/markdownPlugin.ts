@@ -65,7 +65,6 @@ class MarkdownBlockKind implements Langs.BlockKind {
       // loop will call our `update` function to get new state of the editor and it will then
       // re-render the editor (we do not need to do any extra work here!)
       if (!state.editing) {
-  
         // If we are not in edit mode, we just render a VNode and return no-op handler
         return h('div', {}, [
           h('p', {innerHTML: marked(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),

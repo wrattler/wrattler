@@ -32,7 +32,9 @@ let documents =
   [ {"language": "markdown", 
      "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
     {"language": "javascript",
-      "source": "let x = 1; \n x*2;\n"} 
+      "source": "let x = 1; \n x*2;\n"},
+    {"language": "javascript",
+      "source": "function add(x,y) { return x+y };\n add(2,2)"} 
     ]
 
 interface NotebookAddEvent { kind:'add', id: number }
