@@ -15,6 +15,7 @@
 import {h,createProjector,VNode} from 'maquette';
 import * as Langs from './languages'; 
 import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugin'
+import { javascriptLanguagePlugin } from './languagePlugins/javascript/javascriptPlugin'
 require('./editor.css');
 
 // ------------------------------------------------------------------------------------------------
@@ -23,12 +24,15 @@ require('./editor.css');
 
 var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
+languagePlugins["javascript"] = javascriptLanguagePlugin;
 
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
 let documents = 
   [ {"language": "markdown", 
-     "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"}, 
+     "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
+    {"language": "javascript",
+      "source": "let x = 1; \n x*2;\n"} 
     ]
 
 interface NotebookAddEvent { kind:'add', id: number }
