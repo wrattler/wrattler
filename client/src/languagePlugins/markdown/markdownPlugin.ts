@@ -29,6 +29,7 @@ class MarkdownBlockKind implements Langs.BlockKind {
   interface MarkdownUpdateEvent { kind:'update', source:string }
   type MarkdownEvent = MarkdownEditEvent | MarkdownUpdateEvent
   
+  
   /// The state of the Markdown editor keeps the current block (which all editor
   /// states need to do) and also whether we are currently editing it or not.
   type MarkdownState = {
@@ -73,26 +74,71 @@ class MarkdownBlockKind implements Langs.BlockKind {
   
       } else {
         let numLines = 0;
+        let lastHeight = 75;
         let afterCreateHandler = (el) => { 
-          let editor = monaco.editor.create(el, {
+          let ed = monaco.editor.create(el, {
             value: state.block.source,
             language: 'markdown',
-            scrollBeyondLastLine: false,
+            // scrollBeyondLastLine: false,
             theme:'vs',
+            scrollbar: {
+              // Subtle shadows to the left & top. Defaults to true.
+              useShadows: false,
+          
+              // Render vertical arrows. Defaults to false.
+              verticalHasArrows: true,
+              // Render horizontal arrows. Defaults to false.
+              horizontalHasArrows: true,
+          
+              // Render vertical scrollbar.
+              // Accepted values: 'auto', 'visible', 'hidden'.
+              // Defaults to 'auto'
+              vertical: 'visible',
+              // Render horizontal scrollbar.
+              // Accepted values: 'auto', 'visible', 'hidden'.
+              // Defaults to 'auto'
+              horizontal: 'visible',
+          
+              verticalScrollbarSize: 17,
+              horizontalScrollbarSize: 17,
+              arrowSize: 30
+            }
           });    
-          numLines = editor['viewModel'].lines.lines.length;
+          numLines = ed['viewModel'].lines.lines.length;
           console.log(numLines);
   
-          let alwaysTrue = editor.createContextKey('alwaysTrue', true);
-          let myBinding = editor.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
-            let code = editor.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
+          let alwaysTrue = ed.createContextKey('alwaysTrue', true);
+          let myBinding = ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
+            let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
             context.trigger({kind: 'update', source: code})
           }, 'alwaysTrue');
+
+          let resizeEditor = () => {
+            console.log("changed");
+            let lines = ed['viewModel'].lines.lines.length
+            let zoneHeight = 0.0 //match previewService with Some ps -> ps.ZoneHeight | _ -> 0.0
+            let height = lines > 3 ? lines * 20.0 + zoneHeight : 50;
+            console.log(lines);
+            console.log(height);
+            if ((height !== lastHeight) && (height > 75)){
+              lastHeight = height
+              console.log(el.clientWidth);
+              let width = el.clientWidth
+              // let dim:IDimension = {width: el.style.clientWidth, height: height}
+              ed.layout({width: width, height: height})
+              el.style.height = height+"px";
+              el.style.width = width+"px";
+              console.log(el.style.height);
+            } 
+          }
+          ed.getModel().onDidChangeContent(resizeEditor);
+          resizeEditor();
+
+          // el.setHeight("100px");
         }
-        let heightRequired = numLines * 50;
         return h('div', {}, [
           // h('div', { style: "height:"+heightRequired+"px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
-          h('div', { style: "height:50px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
+          h('div', { style: "height:75px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
         ] )      
       }
     }
