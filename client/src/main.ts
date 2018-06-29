@@ -14,6 +14,7 @@ tsHello();
 
 import {h,createProjector,VNode} from 'maquette';
 import * as Langs from './languages'; 
+import * as Graph from './graph';
 import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugin'
 import { javascriptLanguagePlugin } from './languagePlugins/javascript/javascriptPlugin'
 require('./editor.css');
@@ -42,8 +43,13 @@ interface NotebookRemoveEvent { kind:'remove', id: number }
 interface NotebookBlockEvent { kind:'block', id:number, event:any }
 type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent
 
+type BlockState = {
+  editor: Langs.EditorState
+  code: Graph.Node
+  exports: Graph.Node[]
+}
 type NotebookState = {
-  cells: Langs.EditorState[]
+  cells: BlockState
 }
 
 // Create an initial notebook state by parsing the sample document
