@@ -1,12 +1,12 @@
 // Demos showing how to import files from different languages
 // (we will need this later, but for now, this is just a demo)
-// import { fsHello } from "./demos/fsdemo";
-// import { jsHello } from "./demos/jsdemo";
-// import { tsHello } from "./demos/tsdemo";
+import { fsHello } from "./demos/fsdemo";
+import { jsHello } from "./demos/jsdemo";
+import { tsHello } from "./demos/tsdemo";
 
-// fsHello();
-// jsHello();
-// tsHello();
+fsHello();
+jsHello();
+tsHello();
 
 // ------------------------------------------------------------------------------------------------
 // Imports

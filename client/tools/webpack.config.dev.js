@@ -33,7 +33,11 @@ module.exports = {
   plugins: common.getPlugins().concat([
       new webpack.HotModuleReplacementPlugin(),
       new webpack.NamedModulesPlugin(),
-      new MonacoWebpackPlugin()
+      new MonacoWebpackPlugin(),
+      new webpack.ContextReplacementPlugin(
+        /monaco-editor(\\|\/)esm(\\|\/)vs(\\|\/)editor(\\|\/)common(\\|\/)services/,
+        __dirname
+      )
   ]),
   resolve: {
     modules: [common.config.nodeModulesDir],
