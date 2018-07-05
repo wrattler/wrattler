@@ -2,8 +2,10 @@ import * as monaco from 'monaco-editor';
 import {h,createProjector,VNode} from 'maquette';
 import marked from 'marked';
 import * as Langs from '../../languages'; 
+const ts = require("typescript");
 
 //const s = require('./editor.css');
+
 
 // ------------------------------------------------------------------------------------------------
 // Markdown plugin
@@ -21,7 +23,24 @@ class JavascriptBlockKind implements Langs.BlockKind {
     }
   }
   
+// this is test code
+  const source = "var x = 2; var y = 4;";
 
+  let tsSourceFile = ts.createSourceFile(
+    __filename,
+    source,
+    ts.ScriptTarget.Latest
+  );
+
+  console.log(tsSourceFile.statements);
+  for (var n=0; n < tsSourceFile.statements.length; n++){
+    let node = tsSourceFile.statements[n];
+    console.log("variable name:"+node.declarationList.declarations[0].name.escapedText)
+    console.log("variable value:"+node.declarationList.declarations[0].name.escapedText)
+
+  }
+
+// end test code
   interface JavascriptEditEvent { kind:'edit' }
   interface JavascriptUpdateEvent { kind:'update', source:string }
   type JavascriptEvent = JavascriptEditEvent | JavascriptUpdateEvent
@@ -44,10 +63,10 @@ class JavascriptBlockKind implements Langs.BlockKind {
     update: (state:JavascriptState, event:JavascriptEvent) => {
       switch(event.kind) {
         case 'edit': 
-          console.log("Javascript: Switch to edit mode!")
+          // console.log("Javascript: Switch to edit mode!")
           return { id: state.id, block: state.block, editing: true }
         case 'update': 
-          console.log("Javascript: Set code to:\n%O", event.source);
+          // console.log("Javascript: Set code to:\n%O", event.source);
           let newBlock = javascriptLanguagePlugin.parse(event.source)
           return { id: state.id, block: <JavascriptBlockKind>newBlock, editing: false }
       }
@@ -88,7 +107,7 @@ class JavascriptBlockKind implements Langs.BlockKind {
           let lines = ed['viewModel'].lines.lines.length
           let zoneHeight = 0.0 //match previewService with Some ps -> ps.ZoneHeight | _ -> 0.0
           let height = lines > 3 ? lines * 20.0 + zoneHeight : 50;
-          if ((height !== lastHeight) && (height > 75)){
+          if ((height !== lastHeight) && (height > lastHeight)){
             lastHeight = height
             let width = el.clientWidth
             ed.layout({width: width, height: height})
@@ -101,7 +120,7 @@ class JavascriptBlockKind implements Langs.BlockKind {
       }
       let code = h('div', { style: "height:"+lastHeight+"px; padding-top: 20px;", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
 
-      console.log(code);
+      // console.log(code);
       return h('div', {}, [code, results])
     }
   }

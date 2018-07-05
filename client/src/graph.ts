@@ -10,6 +10,7 @@ interface JsCodeNode extends Node {
 interface JsExportNode extends Node { 
   variableName: string
   code: Node
+  dependencies: Node[]
 }
 
 export {

@@ -19,6 +19,7 @@ import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugi
 import { javascriptLanguagePlugin } from './languagePlugins/javascript/javascriptPlugin'
 require('./editor.css');
 
+
 // ------------------------------------------------------------------------------------------------
 // Main notebook rendering code
 // ------------------------------------------------------------------------------------------------
@@ -51,6 +52,7 @@ type BlockState = {
 type NotebookState = {
   cells: BlockState[]
 }
+
 
 // Create an initial notebook state by parsing the sample document
 let index = 0
@@ -134,8 +136,8 @@ function update(state:NotebookState, evt:NotebookEvent) {
     }
     case 'add': {
       let newId = index++;
-      let newDocument = {"language": "markdown", 
-      "source": "### Add new block: "+newId};
+      let newDocument = { "language": "markdown", 
+                          "source": "### Add new block: "+newId};
       let newPlugin = languagePlugins[newDocument.language]; 
       let newBlock = newPlugin.parse(newDocument.source);
       let editor:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);  
