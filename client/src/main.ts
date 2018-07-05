@@ -49,17 +49,20 @@ type BlockState = {
   exports: Graph.Node[]
 }
 type NotebookState = {
-  cells: BlockState
+  cells: BlockState[]
 }
 
 // Create an initial notebook state by parsing the sample document
 let index = 0
-let cellStates = documents.map(cell => {
+let blockStates = documents.map(cell => {
   let plugin = languagePlugins[cell.language]; // TODO: Error handling
   let block = plugin.parse(cell.source);
-  return plugin.editor.initialize(index++, block);  
+  let editor:Langs.EditorState = plugin.editor.initialize(index++, block); 
+  let code:Graph.Node = {language: cell.language, antecedents: []}
+  let exports:Graph.Node[] = [];
+  return {editor: editor, code: code, exports: exports};  
 })
-let state : NotebookState = { cells: cellStates };
+let state : NotebookState = { cells: blockStates };
 
 // Get the #paper element and create maquette renderer
 let paperElement = document.getElementById('paper');
@@ -72,14 +75,14 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
     // The `context` object is passed to the render function. The `trigger` method
     // of the object can be used to trigger events that cause a state update. 
     let context : Langs.EditorContext<any> = {
-      trigger: (event:any) => trigger({ kind:'block', id:state.id, event:event })
+      trigger: (event:any) => trigger({ kind:'block', id:state.editor.id, event:event })
     }
-    let plugin = languagePlugins[state.block.language]
-    let vnode = plugin.editor.render(state, context)
-    let c_add = h('i', {id:'add_'+state.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:state.id})});
-    let c_delete = h('i', {id:'remove_'+state.id, class: 'far fa-trash-alt control', onclick:()=>trigger({kind:'remove', id:state.id})});
+    let plugin = languagePlugins[state.editor.block.language]
+    let vnode = plugin.editor.render(state.editor, context)
+    let c_add = h('i', {id:'add_'+state.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:state.editor.id})});
+    let c_delete = h('i', {id:'remove_'+state.editor.id, class: 'far fa-trash-alt control', onclick:()=>trigger({kind:'remove', id:state.id})});
     let controls = h('div', {class:'controls'}, [c_add, c_delete])
-    return h('div', {class:'cell', key:state.id}, [
+    return h('div', {class:'cell', key:state.editor.id}, [
         h('div', [controls]),vnode
       ]
     );
@@ -89,10 +92,10 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
 }
 
 function update(state:NotebookState, evt:NotebookEvent) {
-  function spliceCell (cells:Langs.EditorState[], newCell: Langs.EditorState, idOfAboveBlock: number) {
+  function spliceCell (cells:BlockState[], newCell: BlockState, idOfAboveBlock: number) {
     return cells.map (cell => 
       { 
-        if (cell.id === idOfAboveBlock) {
+        if (cell.editor.id === idOfAboveBlock) {
           return [cell, newCell];
         }
         else {
@@ -100,10 +103,10 @@ function update(state:NotebookState, evt:NotebookEvent) {
         }
       }).reduce ((a,b)=> a.concat(b));
   }
-  function removeCell (cells:Langs.EditorState[], idOfSelectedBlock: number) {
+  function removeCell (cells:BlockState[], idOfSelectedBlock: number) {
     return cells.map (cell => 
       { 
-        if (cell.id === idOfSelectedBlock) {
+        if (cell.editor.id === idOfSelectedBlock) {
           return [];
         }
         else {
@@ -111,11 +114,21 @@ function update(state:NotebookState, evt:NotebookEvent) {
         }
       }).reduce ((a,b)=> a.concat(b));
   }
+
+  
   switch(evt.kind) {
     case 'block': {
       let newCells = state.cells.map(state => {
-      if (state.id != evt.id) return state
-        else return languagePlugins[state.block.language].editor.update(state, evt.event)
+        if (state.editor.id != evt.id) 
+          return state
+        else
+        { 
+          return {
+            editor: languagePlugins[state.editor.block.language].editor.update(state.editor, evt.event) , 
+            code: state.code, 
+            exports: state.exports
+          };
+        }
       })
       return { cells: newCells };
     }
@@ -125,7 +138,10 @@ function update(state:NotebookState, evt:NotebookEvent) {
       "source": "### Add new block: "+newId};
       let newPlugin = languagePlugins[newDocument.language]; 
       let newBlock = newPlugin.parse(newDocument.source);
-      let cell:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);  
+      let editor:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);  
+      let code:Graph.Node = {language: newDocument.language, antecedents: []}
+      let exports:Graph.Node[] = [];
+      let cell:BlockState = {editor: editor, code: code, exports: exports}
       return {cells: spliceCell(state.cells, cell, evt.id)};
     }
     case 'remove':
