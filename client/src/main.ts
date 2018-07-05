@@ -80,7 +80,7 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
     let plugin = languagePlugins[state.editor.block.language]
     let vnode = plugin.editor.render(state.editor, context)
     let c_add = h('i', {id:'add_'+state.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:state.editor.id})});
-    let c_delete = h('i', {id:'remove_'+state.editor.id, class: 'far fa-trash-alt control', onclick:()=>trigger({kind:'remove', id:state.id})});
+    let c_delete = h('i', {id:'remove_'+state.editor.id, class: 'far fa-trash-alt control', onclick:()=>trigger({kind:'remove', id:state.editor.id})});
     let controls = h('div', {class:'controls'}, [c_add, c_delete])
     return h('div', {class:'cell', key:state.editor.id}, [
         h('div', [controls]),vnode

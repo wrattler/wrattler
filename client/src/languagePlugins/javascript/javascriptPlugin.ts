@@ -99,7 +99,7 @@ class JavascriptBlockKind implements Langs.BlockKind {
         ed.getModel().onDidChangeContent(resizeEditor);
         resizeEditor();
       }
-      let code = h('div', { style: "height:"+lastHeight+"px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
+      let code = h('div', { style: "height:"+lastHeight+"px; padding-top: 20px;", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
 
       console.log(code);
       return h('div', {}, [code, results])

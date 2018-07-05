@@ -113,21 +113,20 @@ class MarkdownBlockKind implements Langs.BlockKind {
           }, 'alwaysTrue');
 
           let resizeEditor = () => {
-            console.log("changed");
             let lines = ed['viewModel'].lines.lines.length
             let zoneHeight = 0.0 //match previewService with Some ps -> ps.ZoneHeight | _ -> 0.0
             let height = lines > 3 ? lines * 20.0 + zoneHeight : 50;
-            console.log(lines);
-            console.log(height);
+            // console.log(lines);
+            // console.log(height);
             if ((height !== lastHeight) && (height > 75)){
               lastHeight = height
-              console.log(el.clientWidth);
+              // console.log(el.clientWidth);
               let width = el.clientWidth
               // let dim:IDimension = {width: el.style.clientWidth, height: height}
               ed.layout({width: width, height: height})
               el.style.height = height+"px";
               el.style.width = width+"px";
-              console.log(el.style.height);
+              // console.log(el.style.height);
             } 
           }
           ed.getModel().onDidChangeContent(resizeEditor);
@@ -137,7 +136,7 @@ class MarkdownBlockKind implements Langs.BlockKind {
         }
         return h('div', {}, [
           // h('div', { style: "height:"+heightRequired+"px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
-          h('div', { style: "height:75px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
+          h('div', { style: "height:75px; padding-top: 20px; ", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
         ] )      
       }
     }
