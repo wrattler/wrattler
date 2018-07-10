@@ -3,7 +3,7 @@ import {h,createProjector,VNode} from 'maquette';
 import marked from 'marked';
 import * as Langs from '../../languages'; 
 import * as Graph from '../../graph'; 
-const ts = require("typescript");
+const ts = require('typescript');
 
 //const s = require('./editor.css');
 
@@ -32,36 +32,24 @@ class JavascriptBlockKind implements Langs.BlockKind {
       ts.ScriptTarget.Latest
     );
   
-    // console.log(tsSourceFile.statements);
+    console.log(tsSourceFile.statements);
     let tree = [];
     for (var n=0; n < tsSourceFile.statements.length; n++){
       let node = tsSourceFile.statements[n];
       // console.log(node)
       switch (node.kind) {
         case 212: {
-          // tree.push({ 
-          //   kind:212,
-          //   name: node.declarationList.declarations[0].name.escapedText, 
-          //   // value:node.declarationList.declarations[0].initializer.text
-          // })
             tree.push({
               kind: 212,
               name: node.declarationList.declarations[0].name,
               initializer: node.declarationList.declarations[0].initializer
             });
-            // console.log("variable name:"+node.declarationList.declarations[0].name.escapedText);
           break
         }
         case 214: {
-          // tree.push({ 
-          //   kind:214,
-          //   name: node.expression.escapedText, 
-          //   // value:undefined
-          //   })
           tree.push({
             kind: 214,
             expression: node.expression});
-          // console.log("expression name:"+node.expression.escapedText)
           break;
         }
       }
@@ -156,6 +144,24 @@ class JavascriptBlockKind implements Langs.BlockKind {
     }
   }
   
+  function tokenizeStatement (argument:any, node:Graph.JsCodeNode, scopeDictionary:{}) {
+    if (argument != undefined) {
+      
+      if (argument.expression != undefined){
+        console.log(argument.expression);
+        tokenizeStatement(argument.expression.left, node, scopeDictionary)
+        tokenizeStatement(argument.expression.right, node, scopeDictionary)
+      }
+      else {
+        let argumentName = argument.text
+        if (argumentName in scopeDictionary) {
+          let antecedentNode = scopeDictionary[argumentName]
+          node.antecedents.push(antecedentNode);
+        }
+      }
+    }
+  }
+
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
@@ -185,20 +191,8 @@ class JavascriptBlockKind implements Langs.BlockKind {
             };
           dependencies.push(exportNode);
           scopeDictionary[exportNode.variableName] = exportNode;
-          if (statement.initializer.left != undefined) {
-            let left = statement.initializer.left;
-            let leftName = left.text
-            if (leftName in scopeDictionary) {
-              let antecedentNode = scopeDictionary[leftName]
-              node.antecedents.push(antecedentNode);
-            }
-            let right = statement.initializer.right;
-            let rightName = right.text;
-            if (rightName in scopeDictionary) {
-              let antecedentNode = scopeDictionary[rightName]
-              node.antecedents.push(antecedentNode);
-            }
-          }
+          tokenizeStatement(statement.initializer.left, node, scopeDictionary)
+          tokenizeStatement(statement.initializer.right, node, scopeDictionary)
         }
         // if (statement.kind == 214) {
         //   let expression = statement.expression;

@@ -41,7 +41,7 @@ let documents =
     {"language": "javascript",
       "source": "var c = a+1"},
     {"language": "javascript",
-      "source": "var d = b+c"}  
+      "source": "var d = (b+c)*2"}  
     ]
 
 interface NotebookAddEvent { kind:'add', id: number }
