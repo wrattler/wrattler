@@ -35,7 +35,7 @@ interface Editor<TState extends EditorState, TEvent> {
 
   /// Render takes a state and renders VNodes based on the state. The `context`
   /// parameter allows it to trigger updates when a UI event happens.
-  render(cells: any, cell:BlockState, context:EditorContext<TEvent>) : VNode
+  render(cells: BlockState[], cell:BlockState, state: TState, context:EditorContext<TEvent>) : VNode
 }
 
 interface LanguagePlugin {

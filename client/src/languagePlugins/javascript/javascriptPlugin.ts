@@ -70,9 +70,12 @@ class JavascriptBlockKind implements Langs.BlockKind {
     editing: boolean
   }
 
-  function evaluate(code)  {
-    // return eval(code)
-    return code
+  function evaluate(cell: Langs.BlockState, code: string)  {
+    if (cell.code.antecedents.length == 0)
+      return eval(code);
+    else {
+      return code;
+    }
   }
   
   const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
@@ -92,13 +95,13 @@ class JavascriptBlockKind implements Langs.BlockKind {
       }
     },
 
-    render: (state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
+    render: (cells: Langs.BlockState[], cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
 
       let lastHeight = 75;
-      console.log(state)
-      console.log(context)
+      console.log(cell)
       let results = h('div', {}, [
-        h('p', {style: "height:75px; position:relative", innerHTML: evaluate(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
+        // h('p', {style: "height:75px; position:relative", innerHTML: evaluate(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
+        h('p', {style: "height:75px; position:relative", innerHTML: evaluate(cell, state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
       ]);
  
       let afterCreateHandler = (el) => { 
@@ -139,7 +142,7 @@ class JavascriptBlockKind implements Langs.BlockKind {
         ed.getModel().onDidChangeContent(resizeEditor);
         resizeEditor();
       }
-      let code = h('div', { style: "height:"+lastHeight+"px; padding-top: 20px;", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
+      let code = h('div', { style: "height:"+lastHeight+"px; padding-top: 20px;", id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
 
       // console.log(code);
       return h('div', {}, [code, results])

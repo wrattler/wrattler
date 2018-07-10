@@ -56,7 +56,7 @@ class MarkdownBlockKind implements Langs.BlockKind {
     },
     
   
-    render: (state:MarkdownState, context:Langs.EditorContext<MarkdownEvent>) => {
+    render: (cells: Langs.BlockState[], cell: Langs.BlockState, state:MarkdownState, context:Langs.EditorContext<MarkdownEvent>) => {
       // console.log(state)
       
   
@@ -64,6 +64,7 @@ class MarkdownBlockKind implements Langs.BlockKind {
       // trigger events (i.e. `MarkdownEvent` values). When we trigger an event, the main 
       // loop will call our `update` function to get new state of the editor and it will then
       // re-render the editor (we do not need to do any extra work here!)
+      state = <MarkdownState>state;
       if (!state.editing) {
         // If we are not in edit mode, we just render a VNode and return no-op handler
         return h('div', {}, [

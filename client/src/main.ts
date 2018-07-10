@@ -37,7 +37,7 @@ let documents =
     // {"language": "markdown", 
     //  "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
     {"language": "javascript",
-      "source": "var a = 1; \nlet b = 2; "},
+      "source": "var a = 1; \nlet b = 2; a+b;"},
     {"language": "javascript",
       "source": "var c = a+1"},
     {"language": "javascript",
@@ -49,13 +49,13 @@ interface NotebookRemoveEvent { kind:'remove', id: number }
 interface NotebookBlockEvent { kind:'block', id:number, event:any }
 type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent
 
-type BlockState = {
-  editor: Langs.EditorState
-  code: Graph.Node
-  exports: Graph.Node[]
-}
+// type BlockState = {
+//   editor: Langs.EditorState
+//   code: Graph.Node
+//   exports: Graph.Node[]
+// }
 type NotebookState = {
-  cells: BlockState[]
+  cells: Langs.BlockState[]
 }
 
 
@@ -69,7 +69,7 @@ let blockStates = documents.map(cell => {
 })
 let state : NotebookState = { cells: blockStates };
 
-function bindCell (cell:BlockState){
+function bindCell (cell:Langs.BlockState){
   let languagePlugin = languagePlugins[cell.editor.block.language]
   let {code, exports} = languagePlugin.bind(scopeDictionary, cell.editor.block);
   cell.code = code
@@ -86,19 +86,20 @@ let maquetteProjector = createProjector();
 
 function render(trigger:(NotebookEvent) => void, state:NotebookState) {
 
-  let nodes = state.cells.map(state => {
+  let nodes = state.cells.map(cell => {
 
     // The `context` object is passed to the render function. The `trigger` method
     // of the object can be used to trigger events that cause a state update. 
     let context : Langs.EditorContext<any> = {
-      trigger: (event:any) => trigger({ kind:'block', id:state.editor.id, event:event })
+      trigger: (event:any) => trigger({ kind:'block', id:cell.editor.id, event:event })
     }
-    let plugin = languagePlugins[state.editor.block.language]
-    let vnode = plugin.editor.render(state.editor, context)
-    let c_add = h('i', {id:'add_'+state.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:state.editor.id})});
-    let c_delete = h('i', {id:'remove_'+state.editor.id, class: 'far fa-trash-alt control', onclick:()=>trigger({kind:'remove', id:state.editor.id})});
+    let plugin = languagePlugins[cell.editor.block.language]
+    // let vnode = plugin.editor.render(state.editor, context)
+    let vnode = plugin.editor.render(state.cells, cell, cell.editor, context)
+    let c_add = h('i', {id:'add_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id})});
+    let c_delete = h('i', {id:'remove_'+cell.editor.id, class: 'far fa-trash-alt control', onclick:()=>trigger({kind:'remove', id:cell.editor.id})});
     let controls = h('div', {class:'controls'}, [c_add, c_delete])
-    return h('div', {class:'cell', key:state.editor.id}, [
+    return h('div', {class:'cell', key:cell.editor.id}, [
         h('div', [controls]),vnode
       ]
     );
@@ -108,7 +109,7 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
 }
 
 function update(state:NotebookState, evt:NotebookEvent) {
-  function spliceCell (cells:BlockState[], newCell: BlockState, idOfAboveBlock: number) {
+  function spliceCell (cells:Langs.BlockState[], newCell: Langs.BlockState, idOfAboveBlock: number) {
     return cells.map (cell => 
       { 
         if (cell.editor.id === idOfAboveBlock) {
@@ -119,7 +120,7 @@ function update(state:NotebookState, evt:NotebookEvent) {
         }
       }).reduce ((a,b)=> a.concat(b));
   }
-  function removeCell (cells:BlockState[], idOfSelectedBlock: number) {
+  function removeCell (cells:Langs.BlockState[], idOfSelectedBlock: number) {
     return cells.map (cell => 
       { 
         if (cell.editor.id === idOfSelectedBlock) {
@@ -155,7 +156,7 @@ function update(state:NotebookState, evt:NotebookEvent) {
       let newPlugin = languagePlugins[newDocument.language]; 
       let newBlock = newPlugin.parse(newDocument.source);
       let editor:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);  
-      let cell:BlockState = {editor: editor, code: undefined, exports: []}
+      let cell:Langs.BlockState = {editor: editor, code: undefined, exports: []}
       bindCell(cell)
       return {cells: spliceCell(state.cells, cell, evt.id)};
     }
