@@ -33,7 +33,7 @@ class JavascriptBlockKind implements Langs.BlockKind {
       ts.ScriptTarget.Latest
     );
   
-    console.log(tsSourceFile.statements);
+    // console.log(tsSourceFile.statements);
     let tree = [];
     for (var n=0; n < tsSourceFile.statements.length; n++){
       let node = tsSourceFile.statements[n];
@@ -70,9 +70,45 @@ class JavascriptBlockKind implements Langs.BlockKind {
     editing: boolean
   }
 
+  // function evaluateStatement(argument: any):string{
+  //   if (argument != undefined) {
+  //     if (argument.expression != undefined){
+  //       // tokenizeStatement(argument.expression.left, node, scopeDictionary)
+  //       // tokenizeStatement(argument.expression.right, node, scopeDictionary)
+  //     }
+  //     else {
+  //       console.log(argument)
+  //       let argumentName = argument.text
+  //       console.log(argument.text+": "+ JSON.stringify(argument))
+  //     }
+  //   }
+  //   else {
+  //     console.log("WTF?"+JSON.stringify(argument))
+  //   }
+  //   return "";
+  // }
   function evaluate(cell: Langs.BlockState, code: string)  {
-    if (cell.code.antecedents.length == 0)
+    let tree = getAbstractTree(code);
+    for (var s = 0; s < tree.length; s++) {
+      let statement = tree[s];
+      if (statement.kind == 212){
+        let name = statement.name.escapedText
+        console.log(statement)
+        let value = statement.initializer.text
+        
+        cell.exports.forEach(node => {
+          var exportNode = <Graph.ExportNode> node;
+          if (exportNode.variableName === name){
+            exportNode.value = value
+        
+          }
+        })
+      }
+    }
+
+    if (cell.code.antecedents.length == 0){
       return eval(code);
+    }
     else {
       return code;
     }
@@ -98,7 +134,6 @@ class JavascriptBlockKind implements Langs.BlockKind {
     render: (cells: Langs.BlockState[], cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
 
       let lastHeight = 75;
-      console.log(cell)
       let results = h('div', {}, [
         // h('p', {style: "height:75px; position:relative", innerHTML: evaluate(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
         h('p', {style: "height:75px; position:relative", innerHTML: evaluate(cell, state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
@@ -143,8 +178,7 @@ class JavascriptBlockKind implements Langs.BlockKind {
         resizeEditor();
       }
       let code = h('div', { style: "height:"+lastHeight+"px; padding-top: 20px;", id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
-
-      // console.log(code);
+      console.log(cells);
       return h('div', {}, [code, results])
     }
   }

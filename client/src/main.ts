@@ -77,8 +77,8 @@ function bindCell (cell:Langs.BlockState){
 }
 state.cells.forEach(bindCell)
 
-console.log(scopeDictionary);
-console.log(state.cells);
+// console.log(scopeDictionary);
+// console.log(state.cells);
 
 // Get the #paper element and create maquette renderer
 let paperElement = document.getElementById('paper');
