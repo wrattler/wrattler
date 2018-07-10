@@ -2,6 +2,7 @@ import * as monaco from 'monaco-editor';
 import {h,createProjector,VNode} from 'maquette';
 import marked from 'marked';
 import * as Langs from '../../languages'; 
+import * as Graph from '../../graph'; 
 const ts = require("typescript");
 
 //const s = require('./editor.css');
@@ -24,21 +25,50 @@ class JavascriptBlockKind implements Langs.BlockKind {
   }
   
 // this is test code
-  const source = "var x = 2; var y = 4;";
-
-  let tsSourceFile = ts.createSourceFile(
-    __filename,
-    source,
-    ts.ScriptTarget.Latest
-  );
-
-  console.log(tsSourceFile.statements);
-  for (var n=0; n < tsSourceFile.statements.length; n++){
-    let node = tsSourceFile.statements[n];
-    console.log("variable name:"+node.declarationList.declarations[0].name.escapedText)
-    console.log("variable value:"+node.declarationList.declarations[0].name.escapedText)
-
+  function getAbstractTree(source: string) {
+    let tsSourceFile = ts.createSourceFile(
+      __filename,
+      source,
+      ts.ScriptTarget.Latest
+    );
+  
+    // console.log(tsSourceFile.statements);
+    let tree = [];
+    for (var n=0; n < tsSourceFile.statements.length; n++){
+      let node = tsSourceFile.statements[n];
+      // console.log(node)
+      switch (node.kind) {
+        case 212: {
+          // tree.push({ 
+          //   kind:212,
+          //   name: node.declarationList.declarations[0].name.escapedText, 
+          //   // value:node.declarationList.declarations[0].initializer.text
+          // })
+            tree.push({
+              kind: 212,
+              name: node.declarationList.declarations[0].name,
+              initializer: node.declarationList.declarations[0].initializer
+            });
+            // console.log("variable name:"+node.declarationList.declarations[0].name.escapedText);
+          break
+        }
+        case 214: {
+          // tree.push({ 
+          //   kind:214,
+          //   name: node.expression.escapedText, 
+          //   // value:undefined
+          //   })
+          tree.push({
+            kind: 214,
+            expression: node.expression});
+          // console.log("expression name:"+node.expression.escapedText)
+          break;
+        }
+      }
+    }
+    return tree;
   }
+  // getAbstractTree("let x = 1; let y = 2");
 
 // end test code
   interface JavascriptEditEvent { kind:'edit' }
@@ -52,7 +82,8 @@ class JavascriptBlockKind implements Langs.BlockKind {
   }
 
   function evaluate(code)  {
-    return eval(code)
+    // return eval(code)
+    return code
   }
   
   const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
@@ -130,6 +161,110 @@ class JavascriptBlockKind implements Langs.BlockKind {
     editor: javascriptEditor,
     parse: (code:string) => {
       return new JavascriptBlockKind(code);
+    },
+    bind: (scopeDictionary: {}, block: Langs.BlockKind) => {
+      let jsBlock = <JavascriptBlockKind>block
+      let tree = getAbstractTree(jsBlock.source);
+      let dependencies:Graph.JsExportNode[] = [];
+      let node:Graph.JsCodeNode = {
+        language:"javascript", 
+        antecedents:[],
+        value: undefined,
+        code: jsBlock.source
+      }
+      for (var s = 0; s < tree.length; s++) {
+        let statement = tree[s];
+        if (statement.kind == 212){
+          let name = statement.name.escapedText
+          let exportNode = {
+            variableName: name,
+            value: undefined,
+            language:"javascript",
+            code: node, 
+            antecedents:[node]
+            };
+          dependencies.push(exportNode);
+          scopeDictionary[exportNode.variableName] = exportNode;
+          if (statement.initializer.left != undefined) {
+            let left = statement.initializer.left;
+            let leftName = left.text
+            if (leftName in scopeDictionary) {
+              let antecedentNode = scopeDictionary[leftName]
+              node.antecedents.push(antecedentNode);
+            }
+            let right = statement.initializer.right;
+            let rightName = right.text;
+            if (rightName in scopeDictionary) {
+              let antecedentNode = scopeDictionary[rightName]
+              node.antecedents.push(antecedentNode);
+            }
+          }
+        }
+        // if (statement.kind == 214) {
+        //   let expression = statement.expression;
+        //   let name = expression.escapedText
+        //   if (name in scopeDictionary)
+        //   {
+        //     let antecedentNode = scopeDictionary[name]
+        //     // console.log(antecedentNode)
+        //     let exportNode = {
+        //       variableName: name,
+        //       value: undefined,
+        //       language:"javascript",
+        //       code: node, 
+        //       antecedents:[antecedentNode]
+        //       };
+        //   } 
+        // }
+      }
+      return {code: node, exports: dependencies}
+      // for (var s = 0; s < tree.length; s++) {
+      //   let statement = tree[s];
+      //   if (statement.kind == 212){
+      //     let name = statement.name.escapedText
+      //     // let value = statement.initializer.text
+      //     let exportNode = {
+      //       variableName: name,
+      //       value: undefined,
+      //       language:"javascript",
+      //       code: node, 
+      //       antecedents:[node]
+      //       };
+      //     dependencies.push(exportNode);
+      //     scopeDictionary[exportNode.variableName] = exportNode.value;
+
+      //     while (statement.initializer.left != undefined) {
+      //       let left = statement.initializer.left
+      //       if (left.kind == 189){
+      //         if (left.expression)
+      //       }
+      //     }
+      //   }
+      // }
+      
     }
   }
+
+
+  // const javascriptExportPlugin : Graph.JsExportNode = {
+  //   language: "javascript",
+  //   variableName: "",
+  //   code: {language:"javascript"},
+  //   dependencies:[],
+  //   initialize: (variableName: string, code: string) => {  
+  //     let tree = getAbstractTree(code);
+  //     let dependencies = [];
+  //     for (var s = 0; s < tree.length; s++) {
+  //       let statement = tree[s];
+  //       console.log(statement);
+  //       if (statement.kind == 212){
+  //         let newNode = {language:"javascript"};
+  //         dependencies.push(newNode);
+  //       }
+  //     }
+  //     let newNode = { language: "javascript", variableName: variableName, code: code, dependencies: dependencies }
+  //     return newNode
+  //   },
+  // }
+
   

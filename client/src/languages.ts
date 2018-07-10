@@ -1,4 +1,5 @@
 import {VNode} from 'maquette';
+import * as Graph from './graph';
 
 /// Each block knows the language that created it
 interface BlockKind {
@@ -33,6 +34,7 @@ interface Editor<TState extends EditorState, TEvent> {
 
 interface LanguagePlugin {
   parse(code:string) : BlockKind
+  bind(scopeDictionary:{}, block: BlockKind) : {code: Graph.Node, exports: Graph.ExportNode[]}
   editor : Editor<EditorState, any>
   language : string
 }

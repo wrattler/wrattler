@@ -28,15 +28,20 @@ var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
 
+var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
+
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
 let documents = 
-  [ {"language": "markdown", 
-     "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
+  [ 
+    // {"language": "markdown", 
+    //  "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
     {"language": "javascript",
-      "source": "let x = 1; \n x*2;\n"},
+      "source": "var a = 1; \nlet b = 2; "},
     {"language": "javascript",
-      "source": "function add(x,y) { return x+y };\n add(2,2)"} 
+      "source": "var c = a+1"},
+    {"language": "javascript",
+      "source": "var d = b+c"}  
     ]
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -57,14 +62,23 @@ type NotebookState = {
 // Create an initial notebook state by parsing the sample document
 let index = 0
 let blockStates = documents.map(cell => {
-  let plugin = languagePlugins[cell.language]; // TODO: Error handling
-  let block = plugin.parse(cell.source);
-  let editor:Langs.EditorState = plugin.editor.initialize(index++, block); 
-  let code:Graph.Node = {language: cell.language, antecedents: []}
-  let exports:Graph.Node[] = [];
-  return {editor: editor, code: code, exports: exports};  
+  let languagePlugin = languagePlugins[cell.language]; // TODO: Error handling
+  let block = languagePlugin.parse(cell.source);
+  let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block); 
+  return {editor: editor, code: null, exports: []};  
 })
 let state : NotebookState = { cells: blockStates };
+
+function bindCell (cell:BlockState){
+  let languagePlugin = languagePlugins[cell.editor.block.language]
+  let {code, exports} = languagePlugin.bind(scopeDictionary, cell.editor.block);
+  cell.code = code
+  cell.exports = exports
+}
+state.cells.forEach(bindCell)
+
+console.log(scopeDictionary);
+console.log(state.cells);
 
 // Get the #paper element and create maquette renderer
 let paperElement = document.getElementById('paper');
@@ -136,14 +150,13 @@ function update(state:NotebookState, evt:NotebookEvent) {
     }
     case 'add': {
       let newId = index++;
-      let newDocument = { "language": "markdown", 
-                          "source": "### Add new block: "+newId};
+      let newDocument = { "language": "javascript", 
+                          "source": "var z = "+newId};
       let newPlugin = languagePlugins[newDocument.language]; 
       let newBlock = newPlugin.parse(newDocument.source);
       let editor:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);  
-      let code:Graph.Node = {language: newDocument.language, antecedents: []}
-      let exports:Graph.Node[] = [];
-      let cell:BlockState = {editor: editor, code: code, exports: exports}
+      let cell:BlockState = {editor: editor, code: undefined, exports: []}
+      bindCell(cell)
       return {cells: spliceCell(state.cells, cell, evt.id)};
     }
     case 'remove':

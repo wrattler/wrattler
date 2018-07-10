@@ -147,6 +147,9 @@ class MarkdownBlockKind implements Langs.BlockKind {
     editor: markdownEditor,
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
+    },
+    bind: (code: Langs.BlockKind) => {
+      return undefined
     }
   }
   
