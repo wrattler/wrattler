@@ -1,8 +1,9 @@
 import * as monaco from 'monaco-editor';
 import {h,createProjector,VNode} from 'maquette';
-import marked from 'marked';
+// import marked from 'marked';
 import * as Langs from '../../languages'; 
 import * as Graph from '../../graph'; 
+
 const ts = require('typescript');
 
 //const s = require('./editor.css');
@@ -90,11 +91,12 @@ class JavascriptBlockKind implements Langs.BlockKind {
           return { id: state.id, block: <JavascriptBlockKind>newBlock, editing: false }
       }
     },
-    
-  
+
     render: (state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
 
       let lastHeight = 75;
+      console.log(state)
+      console.log(context)
       let results = h('div', {}, [
         h('p', {style: "height:75px; position:relative", innerHTML: evaluate(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
       ]);
@@ -146,9 +148,7 @@ class JavascriptBlockKind implements Langs.BlockKind {
   
   function tokenizeStatement (argument:any, node:Graph.JsCodeNode, scopeDictionary:{}) {
     if (argument != undefined) {
-      
       if (argument.expression != undefined){
-        console.log(argument.expression);
         tokenizeStatement(argument.expression.left, node, scopeDictionary)
         tokenizeStatement(argument.expression.right, node, scopeDictionary)
       }
@@ -194,71 +194,9 @@ class JavascriptBlockKind implements Langs.BlockKind {
           tokenizeStatement(statement.initializer.left, node, scopeDictionary)
           tokenizeStatement(statement.initializer.right, node, scopeDictionary)
         }
-        // if (statement.kind == 214) {
-        //   let expression = statement.expression;
-        //   let name = expression.escapedText
-        //   if (name in scopeDictionary)
-        //   {
-        //     let antecedentNode = scopeDictionary[name]
-        //     // console.log(antecedentNode)
-        //     let exportNode = {
-        //       variableName: name,
-        //       value: undefined,
-        //       language:"javascript",
-        //       code: node, 
-        //       antecedents:[antecedentNode]
-        //       };
-        //   } 
-        // }
       }
       return {code: node, exports: dependencies}
-      // for (var s = 0; s < tree.length; s++) {
-      //   let statement = tree[s];
-      //   if (statement.kind == 212){
-      //     let name = statement.name.escapedText
-      //     // let value = statement.initializer.text
-      //     let exportNode = {
-      //       variableName: name,
-      //       value: undefined,
-      //       language:"javascript",
-      //       code: node, 
-      //       antecedents:[node]
-      //       };
-      //     dependencies.push(exportNode);
-      //     scopeDictionary[exportNode.variableName] = exportNode.value;
-
-      //     while (statement.initializer.left != undefined) {
-      //       let left = statement.initializer.left
-      //       if (left.kind == 189){
-      //         if (left.expression)
-      //       }
-      //     }
-      //   }
-      // }
-      
     }
   }
-
-
-  // const javascriptExportPlugin : Graph.JsExportNode = {
-  //   language: "javascript",
-  //   variableName: "",
-  //   code: {language:"javascript"},
-  //   dependencies:[],
-  //   initialize: (variableName: string, code: string) => {  
-  //     let tree = getAbstractTree(code);
-  //     let dependencies = [];
-  //     for (var s = 0; s < tree.length; s++) {
-  //       let statement = tree[s];
-  //       console.log(statement);
-  //       if (statement.kind == 212){
-  //         let newNode = {language:"javascript"};
-  //         dependencies.push(newNode);
-  //       }
-  //     }
-  //     let newNode = { language: "javascript", variableName: variableName, code: code, dependencies: dependencies }
-  //     return newNode
-  //   },
-  // }
 
   

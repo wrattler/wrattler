@@ -6,6 +6,12 @@ interface BlockKind {
   language : string
 }
 
+type BlockState = {
+    editor: EditorState
+    code: Graph.Node
+    exports: Graph.Node[]
+  }
+
 /// This is passed to the `render` function of `Editor` and it
 /// allows the editor to change its own state when some 
 /// user action happens. The editor just needs to call `trigger`.
@@ -29,7 +35,7 @@ interface Editor<TState extends EditorState, TEvent> {
 
   /// Render takes a state and renders VNodes based on the state. The `context`
   /// parameter allows it to trigger updates when a UI event happens.
-  render(state:TState, context:EditorContext<TEvent>) : VNode
+  render(cells: any, cell:BlockState, context:EditorContext<TEvent>) : VNode
 }
 
 interface LanguagePlugin {
@@ -44,5 +50,6 @@ export {
   Editor,
   EditorState,
   EditorContext,
-  LanguagePlugin
+  LanguagePlugin,
+  BlockState
 }
