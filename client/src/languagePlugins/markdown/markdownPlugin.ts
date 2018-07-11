@@ -12,7 +12,7 @@ const s = require('./editor.css');
 /// A class that represents a Markdown block. All blocks need to have 
 /// `language` and Markdown also keeps the Markdown source we edit and render
 
-class MarkdownBlockKind implements Langs.BlockKind {
+class MarkdownBlockKind implements Langs.Block {
     language : string;
     source : string;
     constructor(source:string) {
@@ -39,7 +39,7 @@ class MarkdownBlockKind implements Langs.BlockKind {
   }
   
   const markdownEditor : Langs.Editor<MarkdownState, MarkdownEvent> = {
-    initialize: (id:number, block:Langs.BlockKind) => {  
+    initialize: (id:number, block:Langs.Block) => {  
       return { id: id, block: <MarkdownBlockKind>block, editing: false }
     },
   
@@ -56,7 +56,7 @@ class MarkdownBlockKind implements Langs.BlockKind {
     },
     
   
-    render: (cells: Langs.BlockState[], cell: Langs.BlockState, state:MarkdownState, context:Langs.EditorContext<MarkdownEvent>) => {
+    render: (cell: Langs.BlockState, state:MarkdownState, context:Langs.EditorContext<MarkdownEvent>) => {
       // console.log(state)
       
   
@@ -149,7 +149,7 @@ class MarkdownBlockKind implements Langs.BlockKind {
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
     },
-    bind: (code: Langs.BlockKind) => {
+    bind: (code: Langs.Block) => {
       return undefined
     }
   }

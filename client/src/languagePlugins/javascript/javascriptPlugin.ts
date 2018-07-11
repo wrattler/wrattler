@@ -16,7 +16,7 @@ const ts = require('typescript');
 /// A class that represents a Markdown block. All blocks need to have 
 /// `language` and Markdown also keeps the Markdown source we edit and render
 
-class JavascriptBlockKind implements Langs.BlockKind {
+class JavascriptBlockKind implements Langs.Block {
     language : string;
     source : string;
     constructor(source:string) {
@@ -115,7 +115,7 @@ class JavascriptBlockKind implements Langs.BlockKind {
   }
   
   const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
-    initialize: (id:number, block:Langs.BlockKind) => {  
+    initialize: (id:number, block:Langs.Block) => {  
       return { id: id, block: <JavascriptBlockKind>block, editing: false }
     },
   
@@ -131,7 +131,7 @@ class JavascriptBlockKind implements Langs.BlockKind {
       }
     },
 
-    render: (cells: Langs.BlockState[], cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
+    render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
 
       let results = h('div', {}, [
         // h('p', {style: "height:75px; position:relative", innerHTML: evaluate(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
@@ -186,7 +186,6 @@ class JavascriptBlockKind implements Langs.BlockKind {
         setTimeout(resizeEditor, 100)
       }
       let code = h('div', { style: "height:100px; margin:20px 0px 10px 0px;", id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
-      console.log(cells);
       return h('div', { }, [code, results])
     }
   }
@@ -213,7 +212,7 @@ class JavascriptBlockKind implements Langs.BlockKind {
     parse: (code:string) => {
       return new JavascriptBlockKind(code);
     },
-    bind: (scopeDictionary: {}, block: Langs.BlockKind) => {
+    bind: (scopeDictionary: {}, block: Langs.Block) => {
       let jsBlock = <JavascriptBlockKind>block
       let tree = getAbstractTree(jsBlock.source);
       let dependencies:Graph.JsExportNode[] = [];

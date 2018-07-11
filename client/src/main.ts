@@ -49,11 +49,6 @@ interface NotebookRemoveEvent { kind:'remove', id: number }
 interface NotebookBlockEvent { kind:'block', id:number, event:any }
 type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent
 
-// type BlockState = {
-//   editor: Langs.EditorState
-//   code: Graph.Node
-//   exports: Graph.Node[]
-// }
 type NotebookState = {
   cells: Langs.BlockState[]
 }
@@ -95,7 +90,7 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
     }
     let plugin = languagePlugins[cell.editor.block.language]
     // let vnode = plugin.editor.render(state.editor, context)
-    let vnode = plugin.editor.render(state.cells, cell, cell.editor, context)
+    let vnode = plugin.editor.render(cell, cell.editor, context)
     let c_add = h('i', {id:'add_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id})});
     let c_delete = h('i', {id:'remove_'+cell.editor.id, class: 'far fa-trash-alt control', onclick:()=>trigger({kind:'remove', id:cell.editor.id})});
     let controls = h('div', {class:'controls'}, [c_add, c_delete])
