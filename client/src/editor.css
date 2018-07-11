@@ -29,3 +29,7 @@ div.cell:nth-child(odd){
 div.cell:nth-child(even){
     border-left-color: grey;
 }
+
+div.controls {
+	float:right;
+}

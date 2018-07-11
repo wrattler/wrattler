@@ -56,7 +56,7 @@ class MarkdownBlockKind implements Langs.BlockKind {
     },
     
   
-    render: (state:MarkdownState, context:Langs.EditorContext<MarkdownEvent>) => {
+    render: (cells: Langs.BlockState[], cell: Langs.BlockState, state:MarkdownState, context:Langs.EditorContext<MarkdownEvent>) => {
       // console.log(state)
       
   
@@ -64,6 +64,7 @@ class MarkdownBlockKind implements Langs.BlockKind {
       // trigger events (i.e. `MarkdownEvent` values). When we trigger an event, the main 
       // loop will call our `update` function to get new state of the editor and it will then
       // re-render the editor (we do not need to do any extra work here!)
+      state = <MarkdownState>state;
       if (!state.editing) {
         // If we are not in edit mode, we just render a VNode and return no-op handler
         return h('div', {}, [
@@ -113,21 +114,20 @@ class MarkdownBlockKind implements Langs.BlockKind {
           }, 'alwaysTrue');
 
           let resizeEditor = () => {
-            console.log("changed");
             let lines = ed['viewModel'].lines.lines.length
             let zoneHeight = 0.0 //match previewService with Some ps -> ps.ZoneHeight | _ -> 0.0
             let height = lines > 3 ? lines * 20.0 + zoneHeight : 50;
-            console.log(lines);
-            console.log(height);
+            // console.log(lines);
+            // console.log(height);
             if ((height !== lastHeight) && (height > 75)){
               lastHeight = height
-              console.log(el.clientWidth);
+              // console.log(el.clientWidth);
               let width = el.clientWidth
               // let dim:IDimension = {width: el.style.clientWidth, height: height}
               ed.layout({width: width, height: height})
               el.style.height = height+"px";
               el.style.width = width+"px";
-              console.log(el.style.height);
+              // console.log(el.style.height);
             } 
           }
           ed.getModel().onDidChangeContent(resizeEditor);
@@ -137,7 +137,7 @@ class MarkdownBlockKind implements Langs.BlockKind {
         }
         return h('div', {}, [
           // h('div', { style: "height:"+heightRequired+"px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
-          h('div', { style: "height:75px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
+          h('div', { style: "height:75px; padding-top: 20px; ", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
         ] )      
       }
     }
@@ -148,6 +148,9 @@ class MarkdownBlockKind implements Langs.BlockKind {
     editor: markdownEditor,
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
+    },
+    bind: (code: Langs.BlockKind) => {
+      return undefined
     }
   }
   

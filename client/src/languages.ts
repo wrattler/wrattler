@@ -1,9 +1,16 @@
 import {VNode} from 'maquette';
+import * as Graph from './graph';
 
 /// Each block knows the language that created it
 interface BlockKind {
   language : string
 }
+
+type BlockState = {
+    editor: EditorState
+    code: Graph.Node
+    exports: Graph.Node[]
+  }
 
 /// This is passed to the `render` function of `Editor` and it
 /// allows the editor to change its own state when some 
@@ -28,11 +35,12 @@ interface Editor<TState extends EditorState, TEvent> {
 
   /// Render takes a state and renders VNodes based on the state. The `context`
   /// parameter allows it to trigger updates when a UI event happens.
-  render(state:TState, context:EditorContext<TEvent>) : VNode
+  render(cells: BlockState[], cell:BlockState, state: TState, context:EditorContext<TEvent>) : VNode
 }
 
 interface LanguagePlugin {
   parse(code:string) : BlockKind
+  bind(scopeDictionary:{}, block: BlockKind) : {code: Graph.Node, exports: Graph.ExportNode[]}
   editor : Editor<EditorState, any>
   language : string
 }
@@ -42,5 +50,6 @@ export {
   Editor,
   EditorState,
   EditorContext,
-  LanguagePlugin
+  LanguagePlugin,
+  BlockState
 }
