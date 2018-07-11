@@ -133,7 +133,6 @@ class JavascriptBlockKind implements Langs.BlockKind {
 
     render: (cells: Langs.BlockState[], cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
 
-      let lastHeight = 75;
       let results = h('div', {}, [
         // h('p', {style: "height:75px; position:relative", innerHTML: evaluate(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
         h('p', {style: "height:75px; position:relative", innerHTML: evaluate(cell, state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
@@ -145,41 +144,50 @@ class JavascriptBlockKind implements Langs.BlockKind {
           language: 'javascript',
           scrollBeyondLastLine: false,
           theme:'vs',
+          minimap: { enabled: false },
+          overviewRulerLanes: 0,
+          lineDecorationsWidth: "0ch",
+          fontSize: 14,
+          fontFamily: 'Monaco',
+          lineNumbersMinChars: 2,
+          lineHeight: 20,
+          lineNumbers: "on",
           scrollbar: {
             verticalHasArrows: true,
             horizontalHasArrows: true,
-            vertical: 'visible',
-            horizontal: 'visible',
-            verticalScrollbarSize: 17,
-            horizontalScrollbarSize: 17,
-            arrowSize: 30
+            vertical: 'none',
+            horizontal: 'none'
           }
         });    
 
         let alwaysTrue = ed.createContextKey('alwaysTrue', true);
-        let myBinding = ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
+        ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
           let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
           context.trigger({kind: 'update', source: code})
         }, 'alwaysTrue');
 
+        let lastHeight = 100;
+        let lastWidth = 0
         let resizeEditor = () => {
-          let lines = ed['viewModel'].lines.lines.length
-          let zoneHeight = 0.0 //match previewService with Some ps -> ps.ZoneHeight | _ -> 0.0
-          let height = lines > 3 ? lines * 20.0 + zoneHeight : 50;
-          if ((height !== lastHeight) && (height > lastHeight)){
+          let lines = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF, false).split('\n').length
+          let height = lines > 4 ? lines * 20.0 : 80;
+          let width = el.clientWidth
+
+          if (height !== lastHeight || width !== lastWidth) {
             lastHeight = height
-            let width = el.clientWidth
-            ed.layout({width: width, height: height})
-            el.style.height = height+"px";
-            el.style.width = width+"px";
-          } 
+            lastWidth = width  
+            console.log(width, height)
+            ed.layout({width:width, height:height})
+            el.style.height = height + "px"
+          }
         }
         ed.getModel().onDidChangeContent(resizeEditor);
-        resizeEditor();
+        window.addEventListener("resize", resizeEditor)
+        setTimeout(resizeEditor, 100)
       }
-      let code = h('div', { style: "height:"+lastHeight+"px; padding-top: 20px;", id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
+      let code = h('div', { style: "height:100px; margin:20px 0px 10px 0px;", id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
       console.log(cells);
-      return h('div', {}, [code, results])
+      return h('div', { }, [code, results])
     }
   }
   
