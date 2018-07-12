@@ -133,9 +133,15 @@ class JavascriptBlockKind implements Langs.Block {
 
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
 
+      let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
       let results = h('div', {}, [
         // h('p', {style: "height:75px; position:relative", innerHTML: evaluate(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
-        h('p', {style: "height:75px; position:relative", innerHTML: evaluate(cell, state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
+        h('p', {
+            style: "height:75px; position:relative", 
+            //innerHTML: evaluate(cell, state.block.source), 
+            onclick:() => context.trigger({kind:'edit'})
+          }, 
+          [ cell.code.value==undefined ? evalButton : ("Value is: " + cell.code.value.toString()) ]),
       ]);
  
       let afterCreateHandler = (el) => { 
@@ -209,6 +215,21 @@ class JavascriptBlockKind implements Langs.Block {
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
+    evaluate: (node:Graph.Node) => {
+      let jsnode = <Graph.JsNode>node
+      switch(jsnode.kind) {
+        case 'code': 
+          // ..
+          jsnode
+          break;
+
+        case 'export':
+          jsnode
+          break;
+          // ...
+      }
+      return "yadda"
+    },
     parse: (code:string) => {
       return new JavascriptBlockKind(code);
     },
@@ -219,18 +240,20 @@ class JavascriptBlockKind implements Langs.Block {
       let node:Graph.JsCodeNode = {
         language:"javascript", 
         antecedents:[],
+        kind: 'code',
         value: undefined,
-        code: jsBlock.source
+        source: jsBlock.source
       }
       for (var s = 0; s < tree.length; s++) {
         let statement = tree[s];
         if (statement.kind == 212){
           let name = statement.name.escapedText
-          let exportNode = {
+          let exportNode:Graph.JsExportNode = {
             variableName: name,
             value: undefined,
             language:"javascript",
             code: node, 
+            kind: 'export',
             antecedents:[node]
             };
           dependencies.push(exportNode);
