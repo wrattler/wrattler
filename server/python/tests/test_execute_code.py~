@@ -1,0 +1,4 @@
+"""
+Test that we can write some frames with simple variable 
+assignments, then use these to do 2+2=4
+"""
