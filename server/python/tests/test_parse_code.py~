@@ -1,8 +1,0 @@
-"""
-See if we can get the input and output frames from a code snippet
-"""
-
-from 
-
-def test_simple_1():
-    

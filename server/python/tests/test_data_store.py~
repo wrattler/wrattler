@@ -1,6 +1,0 @@
-"""
-Check we can read and write to the data store.
-"""
-
-from python_service import read_frame, write_frame
-
