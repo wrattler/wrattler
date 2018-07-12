@@ -138,10 +138,9 @@ class JavascriptBlockKind implements Langs.Block {
         // h('p', {style: "height:75px; position:relative", innerHTML: evaluate(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
         h('p', {
             style: "height:75px; position:relative", 
-            //innerHTML: evaluate(cell, state.block.source), 
             onclick:() => context.trigger({kind:'edit'})
           }, 
-          [ cell.code.value==undefined ? evalButton : ("Value is: " + cell.code.value.toString()) ]),
+          [ cell.code.value==undefined ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
       ]);
  
       let afterCreateHandler = (el) => { 
@@ -166,7 +165,7 @@ class JavascriptBlockKind implements Langs.Block {
           }
         });    
 
-        let alwaysTrue = ed.createContextKey('alwaysTrue', true);
+        ed.createContextKey('alwaysTrue', true);
         ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
           let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
           context.trigger({kind: 'update', source: code})
@@ -182,7 +181,7 @@ class JavascriptBlockKind implements Langs.Block {
           if (height !== lastHeight || width !== lastWidth) {
             lastHeight = height
             lastWidth = width  
-            console.log(width, height)
+            // console.log(width, height)
             ed.layout({width:width, height:height})
             el.style.height = height + "px"
           }
@@ -215,20 +214,31 @@ class JavascriptBlockKind implements Langs.Block {
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
-    evaluate: (node:Graph.Node) => {
+    evaluate: (scopeDictionary:{}, node:Graph.Node) => {
       let jsnode = <Graph.JsNode>node
+      let value = "yadda";
       switch(jsnode.kind) {
         case 'code': 
-          // ..
-          jsnode
+          // console.log(JSON.stringify(jsnode));
+          let returnArgs = "{";
+          for (var e = 0; e < jsnode.exportedVariables.length; e++) {
+            returnArgs= returnArgs.concat(jsnode.exportedVariables[e]+":"+jsnode.exportedVariables[e]+",");
+          }
+          returnArgs = returnArgs.concat("}")
+          // console.log(returnArgs)
+          let evalCode = "function calc() {\n\t "+ jsnode.source +"\n\t return "+returnArgs+"\n}\n; calc()"
+          value = eval(evalCode);
           break;
-
         case 'export':
-          jsnode
+          value = scopeDictionary[jsnode.variableName]
+          console.log(value);
+          // console.log(JSON.stringify(jsnode));
+          //let evalCode = "function calc() {\n\t "+ jsnode.code.source +"\n\t return {"+jsnode.variableName+":"+jsnode.variableName+"}\n}\n; calc()"
+          // let evalCode = "function calcThis() {let a = 1; return {a:a}}; calcThis()"
+          // value = eval(evalCode);
           break;
-          // ...
       }
-      return "yadda"
+      return value
     },
     parse: (code:string) => {
       return new JavascriptBlockKind(code);
@@ -240,6 +250,7 @@ class JavascriptBlockKind implements Langs.Block {
       let node:Graph.JsCodeNode = {
         language:"javascript", 
         antecedents:[],
+        exportedVariables:[],
         kind: 'code',
         value: undefined,
         source: jsBlock.source
@@ -257,6 +268,7 @@ class JavascriptBlockKind implements Langs.Block {
             antecedents:[node]
             };
           dependencies.push(exportNode);
+          node.exportedVariables.push(exportNode.variableName);
           scopeDictionary[exportNode.variableName] = exportNode;
           tokenizeStatement(statement.initializer.left, node, scopeDictionary)
           tokenizeStatement(statement.initializer.right, node, scopeDictionary)

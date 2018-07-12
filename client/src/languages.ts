@@ -18,6 +18,9 @@ interface LanguagePlugin {
    */
   parse(code:string) : Block
 
+  
+  evaluate(scopeDictionary:{}, node): any
+
   /**
    * Given a parsed block and a dictionary that tracks variables that are in scope, 
    * construct a dependency graph for the given block. Returns a node representing the
