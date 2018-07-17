@@ -32,4 +32,4 @@ def eval():
 
 
 if __name__ == "__main__":
-    app.run(hist='0.0.0.0',port=7101, debug=True)
+    app.run(host='0.0.0.0',port=7101, debug=True)
