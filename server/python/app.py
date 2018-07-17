@@ -20,16 +20,16 @@ def exports():
     imports_exports = analyze_code(data)
 
     print("code is {}".format(data["code"]))
-    return jsonify(imports_exports)    
+    return jsonify(imports_exports)
 
 @app.route("/eval", methods=['POST'])
 def eval():
     data = json.loads(request.data)
     eval_result = evaluate_code(data)
-    
+
     return jsonify(eval_result)
 
-    
+
 
 if __name__ == "__main__":
-    app.run(port=7101, debug=True)
+    app.run(hist='0.0.0.0',port=7101, debug=True)
