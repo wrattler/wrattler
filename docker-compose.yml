@@ -1,0 +1,22 @@
+version: '3'
+services:
+  wrattler_client:
+    build:
+      context: client
+      dockerfile: Dockerfile
+    ports:
+     - "8080:8080"
+    networks:
+     - wrattler_nw
+  wrattler_python_service:
+    build:
+      context: server/python
+      dockerfile: Dockerfile
+    ports:
+    - "7101:7101"
+    environment:
+    - FLASK_CONFIGURATION=default
+
+networks:
+  wrattler_nw:
+    driver: bridge
