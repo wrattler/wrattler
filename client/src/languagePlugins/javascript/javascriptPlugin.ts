@@ -231,9 +231,11 @@ class JavascriptBlockKind implements Langs.Block {
           break;
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
-          value = jsExportNode.code.value
+          let exportNodeName= jsExportNode.variableName;
+          value = eval("{exportNodeName: jsExportNode.code.value[exportNodeName]}")
           break;
       }
+      // console.log(jsnode.kind+": "+JSON.stringify(value));
       return value
     },
     parse: (code:string) => {

@@ -84,7 +84,7 @@ function evaluate(node:Graph.Node) {
   // console.log("evaluating:"+JSON.stringify(node));
   let languagePlugin = languagePlugins[node.language]
   node.value = languagePlugin.evaluate(node);
-  console.log(node.value);
+  console.log(node);
   // TODO: If node has value, we are done
   // Otherwise, evalaute all antecedents
   // Call appropriate language plugin to evaluate node
@@ -104,7 +104,7 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
       evaluate: (block:Langs.BlockState) => {
         evaluate(block.code)
         block.exports.forEach(evaluate)
-        trigger({ kind:'refresh' })
+          trigger({ kind:'refresh' })
       }
     }
     let plugin = languagePlugins[cell.editor.block.language]
