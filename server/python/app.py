@@ -29,6 +29,10 @@ def eval():
 
     return jsonify(eval_result)
 
+@app.route("/test", methods=["GET"])
+def test():
+    return "Python data service is alive!"
+
 
 
 if __name__ == "__main__":
