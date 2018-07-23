@@ -222,20 +222,28 @@ class JavascriptBlockKind implements Langs.Block {
       switch(jsnode.kind) {
         case 'code': 
           let jsCodeNode = <Graph.JsCodeNode>node
+          console.log(jsCodeNode);
           for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
             returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
           }
           returnArgs = returnArgs.concat("}")
-          evalCode = "function calc() {\n\t "+ jsCodeNode.source +"\n\t return "+returnArgs+"\n}\n; calc()"
+          let importedVars = "";
+          for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
+            let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
+            importedVars = importedVars.concat("\nlet "+imported.variableName + " = " + imported.value);
+          }
+          importedVars = importedVars.concat(";\n")
+          evalCode = "function calc() {\n\t "+ importedVars + jsCodeNode.source +"\n\t return "+returnArgs+"\n}\n; calc()"
           value = eval(evalCode);
           break;
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName;
-          value = eval("{exportNodeName: jsExportNode.code.value[exportNodeName]}")
+          // value = eval("{exportNodeName: jsExportNode.code.value[exportNodeName]}")
+          value = jsExportNode.code.value[exportNodeName]
+          console.log(value);
           break;
       }
-      // console.log(jsnode.kind+": "+JSON.stringify(value));
       return value
     },
     parse: (code:string) => {
