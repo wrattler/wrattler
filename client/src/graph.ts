@@ -44,7 +44,6 @@ interface JsCodeNode extends Node {
 interface JsExportNode extends ExportNode { 
   /** JavaScript code node that represents full source code that exports this variable */
   code: JsCodeNode
-
   kind: 'export'
 }
 

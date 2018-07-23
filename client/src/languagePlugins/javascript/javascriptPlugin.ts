@@ -214,28 +214,24 @@ class JavascriptBlockKind implements Langs.Block {
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
-    evaluate: (scopeDictionary:{}, node:Graph.Node) => {
+    evaluate: (node:Graph.Node) => {
       let jsnode = <Graph.JsNode>node
       let value = "yadda";
+      let returnArgs = "{";
+      let evalCode = "";
       switch(jsnode.kind) {
         case 'code': 
-          // console.log(JSON.stringify(jsnode));
-          let returnArgs = "{";
-          for (var e = 0; e < jsnode.exportedVariables.length; e++) {
-            returnArgs= returnArgs.concat(jsnode.exportedVariables[e]+":"+jsnode.exportedVariables[e]+",");
+          let jsCodeNode = <Graph.JsCodeNode>node
+          for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
+            returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
           }
           returnArgs = returnArgs.concat("}")
-          // console.log(returnArgs)
-          let evalCode = "function calc() {\n\t "+ jsnode.source +"\n\t return "+returnArgs+"\n}\n; calc()"
+          evalCode = "function calc() {\n\t "+ jsCodeNode.source +"\n\t return "+returnArgs+"\n}\n; calc()"
           value = eval(evalCode);
           break;
         case 'export':
-          value = scopeDictionary[jsnode.variableName]
-          console.log(value);
-          // console.log(JSON.stringify(jsnode));
-          //let evalCode = "function calc() {\n\t "+ jsnode.code.source +"\n\t return {"+jsnode.variableName+":"+jsnode.variableName+"}\n}\n; calc()"
-          // let evalCode = "function calcThis() {let a = 1; return {a:a}}; calcThis()"
-          // value = eval(evalCode);
+          let jsExportNode = <Graph.JsExportNode>node
+          value = jsExportNode.code.value
           break;
       }
       return value

@@ -19,7 +19,7 @@ interface LanguagePlugin {
   parse(code:string) : Block
 
   
-  evaluate(scopeDictionary:{}, node): any
+  evaluate(node): any
 
   /**
    * Given a parsed block and a dictionary that tracks variables that are in scope, 

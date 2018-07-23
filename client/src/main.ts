@@ -83,7 +83,7 @@ let maquetteProjector = createProjector();
 function evaluate(node:Graph.Node) {
   // console.log("evaluating:"+JSON.stringify(node));
   let languagePlugin = languagePlugins[node.language]
-  node.value = languagePlugin.evaluate(scopeDictionary, node);
+  node.value = languagePlugin.evaluate(node);
   console.log(node.value);
   // TODO: If node has value, we are done
   // Otherwise, evalaute all antecedents
