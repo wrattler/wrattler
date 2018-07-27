@@ -1,0 +1,9 @@
+.vs
+bin
+.paket/paket.exe
+packages/
+paket-files/
+obj
+.fake/
+rinstall/
+src/config.fs
