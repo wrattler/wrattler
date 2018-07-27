@@ -5,12 +5,15 @@ functionality of the wrattler python service.
 
 import requests
 import re
+import os
 import json
 import parser
 import pandas as pd
 
-
-DATASTORE_URI = 'http://localhost:7102'
+if 'DATASTORE_URI' in os.environ.keys():
+    DATASTORE_URI = os.environ['DATASTORE_URI']
+else:
+    DATASTORE_URI = 'http://localhost:7102'
 #DATASTORE_URI = 'https://wrattler-data-store.azurewebsites.net'
 
 def convert_to_pandas_df(frame):
@@ -80,7 +83,7 @@ def analyze_code(data):
     if code.count("=") == 1: # assume we have simple variable assignemnt
         lhs,rhs = code.split("=")
         exports.append(lhs.strip())
-        tokens = re.split(r'([\s\+\-\/\*\,]+)', rhs)
+        tokens = re.split(r'([\s\+\-\/\*\,\.]+)', rhs)
         for token in tokens:
             if token.strip() in frames:
                 imports.append(token.strip())
@@ -134,14 +137,31 @@ def execute_code(code, input_vals):
     Use input frames to substitute values into the code snippet, then evaluate.
     """
     # swap out values for input frame variables in the code string
+    tokens = re.split(r'([\W]+)', code)
     index=0
     pd_dfs = []
     for k,v in input_vals.items():
         pd_dfs.append(convert_to_pandas_df(v))
-        code = code.replace(k,'pd_dfs[{}]'.format(index))
+        # see if this key k is in the tokenized code snippet.
+        # if it is, replace it with the pandas dataframe pd_df[i]
+        try:
+            i = tokens.index(k)
+            tokens[i] = 'pd_dfs[{}]'.format(index)
+        except(ValueError): # k was not in the code snippet
+            pass
         index += 1
+# now reassemble the code snippet tokens into a string
+    reassembled_code_string = ""
+    for tok in tokens:
+        reassembled_code_string += tok
     try:
-        result = eval(code)
-        return result
+        result = eval(reassembled_code_string)
+        # should be a pandas dataframe - convert it back to
+        # the wrattler format
+        try:
+            result = convert_from_pandas_df(result)
+            return result
+        except(AttributeError):
+            raise RuntimeError("Output of %s was not a dataframe" % code)
     except(NameError):
         raise RuntimeError("Could not evaluate expression %s" % code)
