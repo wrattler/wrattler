@@ -40,11 +40,11 @@ let reportFsiError (e:exn) =
 
 let reloadScript () =
   try
-    traceImportant "Reloading 'app.fsx' script..." 
+    traceImportant "Reloading 'app.fsx' script..."
     fsiSession.EvalInteraction(sprintf "#load @\"%s\"" (__SOURCE_DIRECTORY__ </> "app.fsx"))
     match fsiSession.EvalExpression("App.app") with
     | Some app -> Some(app.ReflectionValue :?> WebPart)
-    | None -> failwith "Couldn't get 'app' value." 
+    | None -> failwith "Couldn't get 'app' value."
   with e -> reportFsiError e; None
 
 // --------------------------------------------------------------------------------------
@@ -54,12 +54,12 @@ let reloadScript () =
 let getLocalServerConfig port =
   { defaultConfig with
       homeFolder = Some __SOURCE_DIRECTORY__
-      bindings = [ HttpBinding.createSimple HTTP  "127.0.0.1" port ] }
+      bindings = [ HttpBinding.createSimple HTTP  "0.0.0.0" port ] }
 
 let mutable currentApp : WebPart = Successful.OK "Loading..."
 
 let reloadAppServer (changedFiles: string seq) =
-  reloadScript () |> Option.iter (fun app -> 
+  reloadScript () |> Option.iter (fun app ->
     currentApp <- app
     traceImportant "Refreshed server." )
 
@@ -70,12 +70,12 @@ let port =
   | Some port -> port
   | _ -> failwith "Local port not specified!"
 
-let app = 
+let app =
   Writers.setHeader "Cache-Control" "no-cache, no-store, must-revalidate"
   >=> Writers.setHeader "Pragma" "no-cache"
   >=> Writers.setHeader "Expires" "0"
   >=> fun ctx -> currentApp ctx
-  
+
 let _, server = startWebServerAsync (getLocalServerConfig port) app
 
 // Start Suave to host it on localhost
