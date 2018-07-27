@@ -17,4 +17,5 @@ ADD . /app
 WORKDIR /app
 RUN rm -f paket.lock
 EXPOSE 7102
+RUN chmod u+x build.sh
 CMD ["./build.sh"]
