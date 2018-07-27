@@ -2,6 +2,7 @@ import * as monaco from 'monaco-editor';
 import {h,createProjector,VNode} from 'maquette';
 import marked from 'marked';
 import * as Langs from '../../languages'; 
+import * as Graph from '../../graph'; 
 
 const s = require('./editor.css');
 
@@ -151,6 +152,21 @@ class MarkdownBlockKind implements Langs.Block {
     },
     bind: (code: Langs.Block) => {
       return undefined
-    }
+    },
+    evaluate: (node:Graph.Node) => {
+      // let jsnode = <Graph.JsNode>node
+      // switch(jsnode.kind) {
+      //   case 'code': 
+      //     // ..
+      //     jsnode
+      //     break;
+
+      //   case 'export':
+      //     jsnode
+      //     break;
+      //     // ...
+      // }
+      return "yadda"
+    },
   }
   

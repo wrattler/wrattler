@@ -18,6 +18,9 @@ interface LanguagePlugin {
    */
   parse(code:string) : Block
 
+  
+  evaluate(node): any
+
   /**
    * Given a parsed block and a dictionary that tracks variables that are in scope, 
    * construct a dependency graph for the given block. Returns a node representing the
@@ -71,6 +74,7 @@ interface Editor<TState extends EditorState, TEvent> {
 interface EditorContext<TEvent> {
   /** Trigger an editor-specific event to be handled via the `update` function  */
   trigger(event:TEvent)
+  evaluate(block:BlockState)
 }
 
 

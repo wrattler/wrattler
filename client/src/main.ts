@@ -47,7 +47,8 @@ let documents =
 interface NotebookAddEvent { kind:'add', id: number }
 interface NotebookRemoveEvent { kind:'remove', id: number }
 interface NotebookBlockEvent { kind:'block', id:number, event:any }
-type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent
+interface NotebookRefreshEvent { kind:'refresh' }
+type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent | NotebookRefreshEvent
 
 type NotebookState = {
   cells: Langs.BlockState[]
@@ -79,6 +80,17 @@ state.cells.forEach(bindCell)
 let paperElement = document.getElementById('paper');
 let maquetteProjector = createProjector();
 
+function evaluate(node:Graph.Node) {
+  // console.log("evaluating:"+JSON.stringify(node));
+  let languagePlugin = languagePlugins[node.language]
+  node.value = languagePlugin.evaluate(node);
+  console.log(node);
+  // TODO: If node has value, we are done
+  // Otherwise, evalaute all antecedents
+  // Call appropriate language plugin to evaluate node
+  //   .. and set node.value to what the language plugin returns
+}
+
 function render(trigger:(NotebookEvent) => void, state:NotebookState) {
 
   let nodes = state.cells.map(cell => {
@@ -86,7 +98,14 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
     // The `context` object is passed to the render function. The `trigger` method
     // of the object can be used to trigger events that cause a state update. 
     let context : Langs.EditorContext<any> = {
-      trigger: (event:any) => trigger({ kind:'block', id:cell.editor.id, event:event })
+      trigger: (event:any) => 
+        trigger({ kind:'block', id:cell.editor.id, event:event }),
+
+      evaluate: (block:Langs.BlockState) => {
+        evaluate(block.code)
+        block.exports.forEach(evaluate)
+          trigger({ kind:'refresh' })
+      }
     }
     let plugin = languagePlugins[cell.editor.block.language]
     // let vnode = plugin.editor.render(state.editor, context)
@@ -155,6 +174,10 @@ function update(state:NotebookState, evt:NotebookEvent) {
       bindCell(cell)
       return {cells: spliceCell(state.cells, cell, evt.id)};
     }
+
+    case 'refresh':
+      return state;
+
     case 'remove':
       return {cells: removeCell(state.cells, evt.id)};
   }

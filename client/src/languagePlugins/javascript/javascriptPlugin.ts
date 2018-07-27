@@ -133,9 +133,14 @@ class JavascriptBlockKind implements Langs.Block {
 
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
 
+      let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
       let results = h('div', {}, [
         // h('p', {style: "height:75px; position:relative", innerHTML: evaluate(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
-        h('p', {style: "height:75px; position:relative", innerHTML: evaluate(cell, state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
+        h('p', {
+            style: "height:75px; position:relative", 
+            onclick:() => context.trigger({kind:'edit'})
+          }, 
+          [ cell.code.value==undefined ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
       ]);
  
       let afterCreateHandler = (el) => { 
@@ -160,7 +165,7 @@ class JavascriptBlockKind implements Langs.Block {
           }
         });    
 
-        let alwaysTrue = ed.createContextKey('alwaysTrue', true);
+        ed.createContextKey('alwaysTrue', true);
         ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
           let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
           context.trigger({kind: 'update', source: code})
@@ -176,7 +181,7 @@ class JavascriptBlockKind implements Langs.Block {
           if (height !== lastHeight || width !== lastWidth) {
             lastHeight = height
             lastWidth = width  
-            console.log(width, height)
+            // console.log(width, height)
             ed.layout({width:width, height:height})
             el.style.height = height + "px"
           }
@@ -209,6 +214,38 @@ class JavascriptBlockKind implements Langs.Block {
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
+    evaluate: (node:Graph.Node) => {
+      let jsnode = <Graph.JsNode>node
+      let value = "yadda";
+      let returnArgs = "{";
+      let evalCode = "";
+      switch(jsnode.kind) {
+        case 'code': 
+          let jsCodeNode = <Graph.JsCodeNode>node
+          console.log(jsCodeNode);
+          for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
+            returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
+          }
+          returnArgs = returnArgs.concat("}")
+          let importedVars = "";
+          for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
+            let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
+            importedVars = importedVars.concat("\nlet "+imported.variableName + " = " + imported.value);
+          }
+          importedVars = importedVars.concat(";\n")
+          evalCode = "function calc() {\n\t "+ importedVars + jsCodeNode.source +"\n\t return "+returnArgs+"\n}\n; calc()"
+          value = eval(evalCode);
+          break;
+        case 'export':
+          let jsExportNode = <Graph.JsExportNode>node
+          let exportNodeName= jsExportNode.variableName;
+          // value = eval("{exportNodeName: jsExportNode.code.value[exportNodeName]}")
+          value = jsExportNode.code.value[exportNodeName]
+          console.log(value);
+          break;
+      }
+      return value
+    },
     parse: (code:string) => {
       return new JavascriptBlockKind(code);
     },
@@ -219,21 +256,25 @@ class JavascriptBlockKind implements Langs.Block {
       let node:Graph.JsCodeNode = {
         language:"javascript", 
         antecedents:[],
+        exportedVariables:[],
+        kind: 'code',
         value: undefined,
-        code: jsBlock.source
+        source: jsBlock.source
       }
       for (var s = 0; s < tree.length; s++) {
         let statement = tree[s];
         if (statement.kind == 212){
           let name = statement.name.escapedText
-          let exportNode = {
+          let exportNode:Graph.JsExportNode = {
             variableName: name,
             value: undefined,
             language:"javascript",
             code: node, 
+            kind: 'export',
             antecedents:[node]
             };
           dependencies.push(exportNode);
+          node.exportedVariables.push(exportNode.variableName);
           scopeDictionary[exportNode.variableName] = exportNode;
           tokenizeStatement(statement.initializer.left, node, scopeDictionary)
           tokenizeStatement(statement.initializer.right, node, scopeDictionary)

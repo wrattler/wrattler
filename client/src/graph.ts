@@ -32,7 +32,9 @@ interface ExportNode extends Node {
  */
 interface JsCodeNode extends Node { 
   /** Complete JavaScript source code in the assoicated block  */
-  code: string,
+  source: string,
+  exportedVariables:string[]
+  kind: 'code'
 }
 
 /**
@@ -42,12 +44,15 @@ interface JsCodeNode extends Node {
 interface JsExportNode extends ExportNode { 
   /** JavaScript code node that represents full source code that exports this variable */
   code: JsCodeNode
+  kind: 'export'
 }
 
+type JsNode = JsCodeNode | JsExportNode
 
 export {
   Node,
-  JsCodeNode,
   ExportNode,
-  JsExportNode
+  JsNode,
+  JsExportNode,
+  JsCodeNode
 }
