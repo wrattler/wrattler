@@ -16,7 +16,7 @@ CORS(app)
 
 @app.route("/exports", methods=['POST'])
 def exports():
-    data = json.loads(request.data)
+    data = json.loads(request.data.decode("utf-8"))
     imports_exports = analyze_code(data)
 
     print("code is {}".format(data["code"]))
@@ -24,7 +24,7 @@ def exports():
 
 @app.route("/eval", methods=['POST'])
 def eval():
-    data = json.loads(request.data)
+    data = json.loads(request.data.decode("utf-8"))
     eval_result = evaluate_code(data)
 
     return jsonify(eval_result)
