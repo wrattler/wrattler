@@ -83,7 +83,6 @@ class JavascriptBlockKind implements Langs.Block {
       }
     }
     return tree;
-    
   }
 
   interface JavascriptEditEvent { kind:'edit' }
@@ -264,28 +263,6 @@ class JavascriptBlockKind implements Langs.Block {
         }
       })
       return {code: node, exports: dependencies}
-      
-      //   for (var s = 0; s < tree.length; s++) {
-      //     let statement = tree[s];
-      //     if (statement.kind == 212){
-      //       let name = statement.name.escapedText
-      //       let exportNode:Graph.JsExportNode = {
-      //         variableName: name,
-      //         value: undefined,
-      //         language:"javascript",
-      //         code: node, 
-      //         kind: 'export',
-      //         antecedents:[node]
-      //         };
-      //       dependencies.push(exportNode);
-      //       node.exportedVariables.push(exportNode.variableName);
-      //       scopeDictionary[exportNode.variableName] = exportNode;
-      //       tokenizeStatement(statement.initializer.left, node, scopeDictionary)
-      //       tokenizeStatement(statement.initializer.right, node, scopeDictionary)
-      //     }
-      //   }
-      
-      // return {code: node, exports: dependencies}
     }
   }
 
