@@ -4,6 +4,7 @@
     "esModuleInterop": true,
     "declaration": true,
     "declarationDir": "exports",
-    "lib": [ "es2015" ]
+    // "target": "es5",
+    "lib": [ "es2015.promise", "es5", "dom" ]
   }
 }
