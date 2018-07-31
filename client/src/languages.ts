@@ -26,7 +26,7 @@ interface LanguagePlugin {
    * construct a dependency graph for the given block. Returns a node representing the
    * code block and a list of exported variables (to be added to the scope)
    */
-  bind(scopeDictionary:{}, block: Block) : {code: Graph.Node, exports: Graph.ExportNode[]}
+  bind(scopeDictionary:{}, block: Block) : Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>
 }
 
 /** 

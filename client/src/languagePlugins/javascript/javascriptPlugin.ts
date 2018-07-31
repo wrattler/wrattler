@@ -25,45 +25,69 @@ class JavascriptBlockKind implements Langs.Block {
     }
   }
   
-  function getSourceFile(source: string): Promise<any> {
-    
-    return new Promise<Array<any>>(resolve => {
+  function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
+    return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
       let tsSourceFile = ts.createSourceFile(
         __filename,
         source,
         ts.ScriptTarget.Latest
       );
-      setTimeout(() => {
-        resolve(tsSourceFile);
-      }, 1000);
-    });
-  }
-
-  async function getAbstractTree(source: string): Promise<any> {
-    let tsSourceFile = await getSourceFile(source);
-    console.log(tsSourceFile)
-    let tree = [];
-    for (var n=0; n < tsSourceFile.statements.length; n++){
-      let node = tsSourceFile.statements[n];
-      // console.log(node)
-      switch (node.kind) {
-        case 212: {
+      let tree = [];
+      for (var n=0; n < tsSourceFile.statements.length; n++){
+        let node = tsSourceFile.statements[n];
+        // console.log(node)
+        switch (node.kind) {
+          case 212: {
+              tree.push({
+                kind: 212,
+                name: node.declarationList.declarations[0].name,
+                initializer: node.declarationList.declarations[0].initializer
+              });
+            break
+          }
+          case 214: {
             tree.push({
-              kind: 212,
-              name: node.declarationList.declarations[0].name,
-              initializer: node.declarationList.declarations[0].initializer
-            });
-          break
-        }
-        case 214: {
-          tree.push({
-            kind: 214,
-            expression: node.expression});
-          break;
+              kind: 214,
+              expression: node.expression});
+            break;
+          }
         }
       }
-    }
-    return tree;
+      let dependencies:Graph.JsExportNode[] = [];
+      let node:Graph.JsCodeNode = {
+        language:"javascript", 
+        antecedents:[],
+        exportedVariables:[],
+        kind: 'code',
+        value: undefined,
+        source: source
+      }
+      for (var s = 0; s < tree.length; s++) {
+        let statement = tree[s];
+        if (statement.kind == 212){
+          let name = statement.name.escapedText
+          let exportNode:Graph.JsExportNode = {
+            variableName: name,
+            value: undefined,
+            language:"javascript",
+            code: node, 
+            kind: 'export',
+            antecedents:[node]
+            };
+          dependencies.push(exportNode);
+          node.exportedVariables.push(exportNode.variableName);
+          
+          tokenizeStatement(statement.initializer.left, node, scopeDictionary)
+          tokenizeStatement(statement.initializer.right, node, scopeDictionary)
+        }
+      }
+      resolve({code: node, exports: dependencies});
+      // return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
+      //   setTimeout(() => {
+      //     resolve({code: node, exports: dependencies});
+      //   }, 0);
+      // });
+    });
   }
 
   interface JavascriptEditEvent { kind:'edit' }
@@ -94,14 +118,19 @@ class JavascriptBlockKind implements Langs.Block {
     },
 
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
-
       let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
+      console.log(cell)
+      // function display() {
+      //   if (cell.code == undefined)
+      //     if (cell.code == undefined)
+      // }
       let results = h('div', {}, [
         h('p', {
             style: "height:75px; position:relative", 
             onclick:() => context.trigger({kind:'edit'})
           }, 
-          [ cell.code.value==undefined ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
+          [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
+          // [ cell.code==undefined ? evalButton : ("Value is: ") ]),
       ]);
  
       let afterCreateHandler = (el) => { 
@@ -210,39 +239,7 @@ class JavascriptBlockKind implements Langs.Block {
     },
     bind: (scopeDictionary: {}, block: Langs.Block) => {
       let jsBlock = <JavascriptBlockKind>block
-      let promisedTree = getAbstractTree(jsBlock.source);
-      let dependencies:Graph.JsExportNode[] = [];
-      let node:Graph.JsCodeNode = {
-        language:"javascript", 
-        antecedents:[],
-        exportedVariables:[],
-        kind: 'code',
-        value: undefined,
-        source: jsBlock.source
-      }
-      
-      promisedTree.then(tree=> {
-        for (var s = 0; s < tree.length; s++) {
-          let statement = tree[s];
-          if (statement.kind == 212){
-            let name = statement.name.escapedText
-            let exportNode:Graph.JsExportNode = {
-              variableName: name,
-              value: undefined,
-              language:"javascript",
-              code: node, 
-              kind: 'export',
-              antecedents:[node]
-              };
-            dependencies.push(exportNode);
-            node.exportedVariables.push(exportNode.variableName);
-            scopeDictionary[exportNode.variableName] = exportNode;
-            tokenizeStatement(statement.initializer.left, node, scopeDictionary)
-            tokenizeStatement(statement.initializer.right, node, scopeDictionary)
-          }
-        }
-      })
-      return {code: node, exports: dependencies}
+      return getCodeExports(scopeDictionary, jsBlock.source);
     }
   }
 

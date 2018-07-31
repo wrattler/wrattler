@@ -65,13 +65,32 @@ let blockStates = documents.map(cell => {
 })
 let state : NotebookState = { cells: blockStates };
 
-function bindCell (cell:Langs.BlockState){
+function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>{
   let languagePlugin = languagePlugins[cell.editor.block.language]
-  let {code, exports} = languagePlugin.bind(scopeDictionary, cell.editor.block);
-  cell.code = code
-  cell.exports = exports
+  return languagePlugin.bind(scopeDictionary, cell.editor.block);
+  // cell.code = code
+  // cell.exports = exports
+  // add loop through exports and add them into scope dictionary here
+  // scopeDictionary[exportNode.variableName] = exportNode;
 }
-state.cells.forEach(bindCell)
+
+async function bindAllCells() {
+  for (var c = 0; c < state.cells.length; c++) {
+    let aCell = state.cells[c]
+    let {code, exports} = await bindCell(aCell);
+    aCell.code = code
+    aCell.exports = exports
+    for (var e = 0; e < exports.length; e++ ) {
+      let exportNode = exports[e];
+      scopeDictionary[exportNode.variableName] = exportNode;
+    }
+    console.log(aCell)
+  }
+}
+
+bindAllCells()
+
+// state.cells.forEach(bindCell)
 
 // console.log(scopeDictionary);
 // console.log(state.cells);
