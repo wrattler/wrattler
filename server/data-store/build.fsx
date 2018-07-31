@@ -69,7 +69,7 @@ let startServers () =
         info.Arguments <- sprintf "--load:src/local.fsx -- local-port=%d" port
         info.WorkingDirectory <- __SOURCE_DIRECTORY__)
     TimeSpan.MaxValue false ignore ignore 
-
+ 
 Target "start" (fun _ ->
   async { return startServers() } 
   |> Async.Ignore
@@ -84,7 +84,8 @@ Target "start" (fun _ ->
       System.Threading.Thread.Sleep(1000)
       printfn "Waiting for servers to start...."
   traceImportant "Servers started...."
-  System.Diagnostics.Process.Start(sprintf "http://localhost:%d/" port) |> ignore
+  try System.Diagnostics.Process.Start(sprintf "http://localhost:%d/" port) |> ignore
+  with _ -> traceImportant "Failed to open web browser"
 )
 
 Target "run" (fun _ ->
@@ -92,6 +93,11 @@ Target "run" (fun _ ->
   Console.ReadLine() |> ignore
 )
 
+Target "sleep" (fun _ ->
+  System.Threading.Thread.Sleep(System.Threading.Timeout.Infinite);
+)
+
 "start" ==> "run"
+"start" ==> "sleep"
 
 RunTargetOrDefault "run"

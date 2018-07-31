@@ -15,7 +15,6 @@ RUN mkdir /app
 ADD . /app
 #RUN cd /app; yarn;
 WORKDIR /app
-RUN rm -f paket.lock
 EXPOSE 7102
 RUN chmod u+x build.sh
-CMD ["./build.sh"]
+CMD ["./build.sh", "sleep"]
