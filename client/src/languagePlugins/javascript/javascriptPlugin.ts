@@ -217,12 +217,14 @@ class JavascriptBlockKind implements Langs.Block {
           }
           returnArgs = returnArgs.concat("}")
           let importedVars = "";
+          var argDictionary:{[key: string]: string} = {}
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
             let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-            importedVars = importedVars.concat("\nlet "+imported.variableName + " = " + imported.value);
+            argDictionary[imported.variableName] = imported.value;
+            importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
-          importedVars = importedVars.concat(";\n")
-          evalCode = "function calc() {\n\t "+ importedVars + jsCodeNode.source +"\n\t return "+returnArgs+"\n}\n; calc()"
+          evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
+          console.log(evalCode)
           value = eval(evalCode);
           break;
         case 'export':
