@@ -54,7 +54,7 @@ class JavascriptBlockKind implements Langs.Block {
     return new Promise<Array<any>>(resolve => {
       setTimeout(() => {
         resolve(tsSourceFile);
-      }, 10);
+      }, 100);
     });
   }
 
@@ -218,7 +218,6 @@ class JavascriptBlockKind implements Langs.Block {
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName;
-          // value = eval("{exportNodeName: jsExportNode.code.value[exportNodeName]}")
           value = jsExportNode.code.value[exportNodeName]
           console.log(value);
           break;
