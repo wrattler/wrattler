@@ -26,35 +26,16 @@ class JavascriptBlockKind implements Langs.Block {
   }
   
   function getSourceFile(source: string): Promise<any> {
-    let tsSourceFile = ts.createSourceFile(
-      __filename,
-      source,
-      ts.ScriptTarget.Latest
-    );
-    let tree = [];
-    for (var n=0; n < tsSourceFile.statements.length; n++){
-      let node = tsSourceFile.statements[n];
-      switch (node.kind) {
-        case 212: {
-            tree.push({
-              kind: 212,
-              name: node.declarationList.declarations[0].name,
-              initializer: node.declarationList.declarations[0].initializer
-            });
-          break
-        }
-        case 214: {
-          tree.push({
-            kind: 214,
-            expression: node.expression});
-          break;
-        }
-      }
-    }
+    
     return new Promise<Array<any>>(resolve => {
+      let tsSourceFile = ts.createSourceFile(
+        __filename,
+        source,
+        ts.ScriptTarget.Latest
+      );
       setTimeout(() => {
         resolve(tsSourceFile);
-      }, 100);
+      }, 1000);
     });
   }
 
