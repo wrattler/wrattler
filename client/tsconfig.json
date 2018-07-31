@@ -3,6 +3,7 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "declaration": true,
-    "declarationDir": "exports"
+    "declarationDir": "exports",
+    "lib": [ "es2015" ]
   }
 }

@@ -25,16 +25,15 @@ class JavascriptBlockKind implements Langs.Block {
     }
   }
   
-// this is test code
-  function getAbstractTree(source: string) {
-    let tsSourceFile = ts.createSourceFile(
-      __filename,
-      source,
-      ts.ScriptTarget.Latest
-    );
-  
-    // console.log(tsSourceFile.statements);
-    let tree = [];
+  function getSourceFile(source: string): Promise<any> {
+    return new Promise<Array<any>>(resolve => {
+      setTimeout(() => {
+        let tsSourceFile = ts.createSourceFile(
+          __filename,
+          source,
+          ts.ScriptTarget.Latest
+        );
+        let tree = [];
     for (var n=0; n < tsSourceFile.statements.length; n++){
       let node = tsSourceFile.statements[n];
       // console.log(node)
@@ -55,11 +54,40 @@ class JavascriptBlockKind implements Langs.Block {
         }
       }
     }
-    return tree;
+        resolve(tree);
+      }, 100);
+    });
   }
-  // getAbstractTree("let x = 1; let y = 2");
 
-// end test code
+  async function getAbstractTree(source: string): Promise<any> {
+    let tsSourceFilePromise = await getSourceFile(source);
+    let tree = [];
+    // console.log(tsSourceFile.statements);
+    tsSourceFilePromise.then(tsSourceFile=> {
+      for (var n=0; n < tsSourceFile.statements.length; n++){
+        let node = tsSourceFile.statements[n];
+        // console.log(node)
+        switch (node.kind) {
+          case 212: {
+              tree.push({
+                kind: 212,
+                name: node.declarationList.declarations[0].name,
+                initializer: node.declarationList.declarations[0].initializer
+              });
+            break
+          }
+          case 214: {
+            tree.push({
+              kind: 214,
+              expression: node.expression});
+            break;
+          }
+        }
+      }
+      return tree;
+    })
+  }
+
   interface JavascriptEditEvent { kind:'edit' }
   interface JavascriptUpdateEvent { kind:'update', source:string }
   type JavascriptEvent = JavascriptEditEvent | JavascriptUpdateEvent
@@ -68,50 +96,6 @@ class JavascriptBlockKind implements Langs.Block {
     id: number
     block: JavascriptBlockKind
     editing: boolean
-  }
-
-  // function evaluateStatement(argument: any):string{
-  //   if (argument != undefined) {
-  //     if (argument.expression != undefined){
-  //       // tokenizeStatement(argument.expression.left, node, scopeDictionary)
-  //       // tokenizeStatement(argument.expression.right, node, scopeDictionary)
-  //     }
-  //     else {
-  //       console.log(argument)
-  //       let argumentName = argument.text
-  //       console.log(argument.text+": "+ JSON.stringify(argument))
-  //     }
-  //   }
-  //   else {
-  //     console.log("WTF?"+JSON.stringify(argument))
-  //   }
-  //   return "";
-  // }
-  function evaluate(cell: Langs.BlockState, code: string)  {
-    let tree = getAbstractTree(code);
-    for (var s = 0; s < tree.length; s++) {
-      let statement = tree[s];
-      if (statement.kind == 212){
-        let name = statement.name.escapedText
-        console.log(statement)
-        let value = statement.initializer.text
-        
-        cell.exports.forEach(node => {
-          var exportNode = <Graph.ExportNode> node;
-          if (exportNode.variableName === name){
-            exportNode.value = value
-        
-          }
-        })
-      }
-    }
-
-    if (cell.code.antecedents.length == 0){
-      return eval(code);
-    }
-    else {
-      return code;
-    }
   }
   
   const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
@@ -135,7 +119,6 @@ class JavascriptBlockKind implements Langs.Block {
 
       let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
       let results = h('div', {}, [
-        // h('p', {style: "height:75px; position:relative", innerHTML: evaluate(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
         h('p', {
             style: "height:75px; position:relative", 
             onclick:() => context.trigger({kind:'edit'})
@@ -181,7 +164,6 @@ class JavascriptBlockKind implements Langs.Block {
           if (height !== lastHeight || width !== lastWidth) {
             lastHeight = height
             lastWidth = width  
-            // console.log(width, height)
             ed.layout({width:width, height:height})
             el.style.height = height + "px"
           }
@@ -251,7 +233,7 @@ class JavascriptBlockKind implements Langs.Block {
     },
     bind: (scopeDictionary: {}, block: Langs.Block) => {
       let jsBlock = <JavascriptBlockKind>block
-      let tree = getAbstractTree(jsBlock.source);
+      let promisedTree = getAbstractTree(jsBlock.source);
       let dependencies:Graph.JsExportNode[] = [];
       let node:Graph.JsCodeNode = {
         language:"javascript", 
@@ -261,26 +243,51 @@ class JavascriptBlockKind implements Langs.Block {
         value: undefined,
         source: jsBlock.source
       }
-      for (var s = 0; s < tree.length; s++) {
-        let statement = tree[s];
-        if (statement.kind == 212){
-          let name = statement.name.escapedText
-          let exportNode:Graph.JsExportNode = {
-            variableName: name,
-            value: undefined,
-            language:"javascript",
-            code: node, 
-            kind: 'export',
-            antecedents:[node]
-            };
-          dependencies.push(exportNode);
-          node.exportedVariables.push(exportNode.variableName);
-          scopeDictionary[exportNode.variableName] = exportNode;
-          tokenizeStatement(statement.initializer.left, node, scopeDictionary)
-          tokenizeStatement(statement.initializer.right, node, scopeDictionary)
+      
+      promisedTree.then(tree=> {
+        for (var s = 0; s < tree.length; s++) {
+          let statement = tree[s];
+          if (statement.kind == 212){
+            let name = statement.name.escapedText
+            let exportNode:Graph.JsExportNode = {
+              variableName: name,
+              value: undefined,
+              language:"javascript",
+              code: node, 
+              kind: 'export',
+              antecedents:[node]
+              };
+            dependencies.push(exportNode);
+            node.exportedVariables.push(exportNode.variableName);
+            scopeDictionary[exportNode.variableName] = exportNode;
+            tokenizeStatement(statement.initializer.left, node, scopeDictionary)
+            tokenizeStatement(statement.initializer.right, node, scopeDictionary)
+          }
         }
-      }
+      })
       return {code: node, exports: dependencies}
+      
+      //   for (var s = 0; s < tree.length; s++) {
+      //     let statement = tree[s];
+      //     if (statement.kind == 212){
+      //       let name = statement.name.escapedText
+      //       let exportNode:Graph.JsExportNode = {
+      //         variableName: name,
+      //         value: undefined,
+      //         language:"javascript",
+      //         code: node, 
+      //         kind: 'export',
+      //         antecedents:[node]
+      //         };
+      //       dependencies.push(exportNode);
+      //       node.exportedVariables.push(exportNode.variableName);
+      //       scopeDictionary[exportNode.variableName] = exportNode;
+      //       tokenizeStatement(statement.initializer.left, node, scopeDictionary)
+      //       tokenizeStatement(statement.initializer.right, node, scopeDictionary)
+      //     }
+      //   }
+      
+      // return {code: node, exports: dependencies}
     }
   }
 
