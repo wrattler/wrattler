@@ -39,6 +39,8 @@ let documents =
     {"language": "javascript",
       "source": "var a = 1; \nlet b = 2; a+b;"},
     {"language": "javascript",
+      "source": "let x = 1; \nlet y = x+x;"},
+    {"language": "javascript",
       "source": "var c = a+1"},
     {"language": "javascript",
       "source": "var d = (b+c)*2"}  
