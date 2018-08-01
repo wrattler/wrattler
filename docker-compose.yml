@@ -5,7 +5,7 @@ services:
       context: client
       dockerfile: Dockerfile
     ports:
-     - "8080:8080"
+     - "8080"
     depends_on:
     - wrattler_python_service
     - wrattler_data_store
@@ -17,7 +17,7 @@ services:
       context: server/python
       dockerfile: Dockerfile
     ports:
-    - "7101:7101"
+    - "7101"
     environment:
      - FLASK_CONFIGURATION=default
      - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
@@ -29,7 +29,7 @@ services:
       context: server/data-store
       dockerfile: Dockerfile
     ports:
-    - "7102:7102"
+    - "7102"
     networks:
     - wrattler_nw
 
