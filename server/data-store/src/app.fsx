@@ -1,7 +1,9 @@
 #if INTERACTIVE
-#r "../packages/Suave/lib/net40/Suave.dll"
+#r "../packages/Suave/lib/net461/Suave.dll"
 #r "../packages/FSharp.Data/lib/net45/FSharp.Data.dll"
-#load "../packages/FSharp.Azure.StorageTypeProvider/StorageTypeProvider.fsx"
+#r "../packages/WindowsAzure.Storage/lib/net45/Microsoft.WindowsAzure.Storage.dll"
+#r "../packages/Microsoft.Azure.KeyVault.Core/lib/net452/Microsoft.Azure.KeyVault.Core.dll"
+#r "../packages/Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
 #load "config.fs" "common/storage.fs"
 #else
 module Wrattler.DataStore
