@@ -5,7 +5,7 @@
 #I "../packages"
 #r "FAKE/tools/FakeLib.dll"
 #r "FSharp.Compiler.Service/lib/net45/FSharp.Compiler.Service.dll"
-#r "Suave/lib/net40/Suave.dll"
+#r "Suave/lib/net461/Suave.dll"
 
 open Fake
 open System
