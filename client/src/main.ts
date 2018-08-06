@@ -86,7 +86,7 @@ async function bindAllCells() {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    // console.log(aCell)
+    console.log(aCell)
   }
 }
 

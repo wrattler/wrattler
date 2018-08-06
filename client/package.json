@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@types/jquery": "^3.3.3",
+    "axios": "^0.18.0",
     "bootstrap": "^4.0.0-alpha.6",
     "maquette": "^3.3.0",
     "marked": "^0.4.0",

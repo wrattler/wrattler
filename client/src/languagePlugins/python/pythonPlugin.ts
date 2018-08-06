@@ -3,7 +3,7 @@ import {h,createProjector,VNode} from 'maquette';
 import * as Langs from '../../languages'; 
 import * as Graph from '../../graph'; 
 const ts = require('typescript');
-const https = require('https');
+const axios = require('axios');
 
 // ------------------------------------------------------------------------------------------------
 // Python plugin
@@ -164,17 +164,16 @@ class PythonBlockKind implements Langs.Block {
         value: undefined,
         source: pyBlock.source
 			}
-			return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
-				setTimeout(() => {
-					    resolve({code: node, exports: dependencies});
-					  }, 10);
-			})
-      // let url = 'http://httpbin.org/get'
-      // return this.https.get(url)
-      //           .toPromise()
-      //           .then(data => {
-      //               console.log(data);
-			// 						return {code: node, exports: dependencies}
-      //           }) 
+			let url = 'https://httpbin.org/get'
+			async function getExports() {
+				try {
+					const response = await axios.get(url);
+					console.log(response);
+					return {code: node, exports: dependencies};
+				} catch (error) {
+					console.error(error);
+				}
+			}
+			return getExports()
     }
   }
