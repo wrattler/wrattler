@@ -102,14 +102,12 @@ let paperElement = document.getElementById('paper');
 let maquetteProjector = createProjector();
 
 function evaluate(node:Graph.Node) {
-  // console.log("evaluating:"+JSON.stringify(node));
+  if (node.value) return;
+  node.antecedents.forEach(evaluate);
+  
   let languagePlugin = languagePlugins[node.language]
   node.value = languagePlugin.evaluate(node);
   console.log(node);
-  // TODO: If node has value, we are done
-  // Otherwise, evalaute all antecedents
-  // Call appropriate language plugin to evaluate node
-  //   .. and set node.value to what the language plugin returns
 }
 
 function render(trigger:(NotebookEvent) => void, state:NotebookState) {
