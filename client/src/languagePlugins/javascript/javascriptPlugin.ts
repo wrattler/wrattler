@@ -119,7 +119,7 @@ class JavascriptBlockKind implements Langs.Block {
 
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
       let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
-      console.log(cell)
+      // console.log(cell)
       // function display() {
       //   if (cell.code == undefined)
       //     if (cell.code == undefined)

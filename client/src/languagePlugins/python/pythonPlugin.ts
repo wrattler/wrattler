@@ -3,6 +3,7 @@ import {h,createProjector,VNode} from 'maquette';
 import * as Langs from '../../languages'; 
 import * as Graph from '../../graph'; 
 const ts = require('typescript');
+const https = require('https');
 
 // ------------------------------------------------------------------------------------------------
 // Python plugin
@@ -18,12 +19,12 @@ class PythonBlockKind implements Langs.Block {
       this.language = "python";
       this.source = source;
     }
-  }
-  
-  function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
+	}
+	
+	function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
     return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
-      let dependencies:Graph.PyExportNode[] = [];
-      let node:Graph.PyCodeNode = {
+      let dependencies:Graph.JsExportNode[] = [];
+      let node:Graph.JsCodeNode = {
         language:"python", 
         antecedents:[],
         exportedVariables:[],
@@ -32,9 +33,14 @@ class PythonBlockKind implements Langs.Block {
         source: source
       }
       resolve({code: node, exports: dependencies});
+      // return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
+      //   setTimeout(() => {
+      //     resolve({code: node, exports: dependencies});
+      //   }, 0);
+      // });
     });
   }
-
+  
   interface PythonEditEvent { kind:'edit' }
   interface PythonUpdateEvent { kind:'update', source:string }
   type PythonEvent = PythonEditEvent | PythonUpdateEvent
@@ -147,7 +153,28 @@ class PythonBlockKind implements Langs.Block {
       return new PythonBlockKind(code);
     },
     bind: (scopeDictionary: {}, block: Langs.Block) => {
-      let pyBlock = <PythonBlockKind>block
-      return getCodeExports(scopeDictionary, pyBlock.source);
+			let pyBlock = <PythonBlockKind>block
+			// return getCodeExports(scopeDictionary, pyBlock.source)
+      let dependencies:Graph.JsExportNode[] = [];
+      let node:Graph.PyCodeNode = {
+        language:"python", 
+        antecedents:[],
+        exportedVariables:[],
+        kind: 'code',
+        value: undefined,
+        source: pyBlock.source
+			}
+			return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
+				setTimeout(() => {
+					    resolve({code: node, exports: dependencies});
+					  }, 10);
+			})
+      // let url = 'http://httpbin.org/get'
+      // return this.https.get(url)
+      //           .toPromise()
+      //           .then(data => {
+      //               console.log(data);
+			// 						return {code: node, exports: dependencies}
+      //           }) 
     }
   }
