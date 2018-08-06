@@ -16,20 +16,24 @@ CORS(app)
 
 @app.route("/exports", methods=['POST'])
 def exports():
-    data = json.loads(request.data)
+    data = json.loads(request.data.decode("utf-8"))
     imports_exports = analyze_code(data)
 
     print("code is {}".format(data["code"]))
-    return jsonify(imports_exports)    
+    return jsonify(imports_exports)
 
 @app.route("/eval", methods=['POST'])
 def eval():
-    data = json.loads(request.data)
+    data = json.loads(request.data.decode("utf-8"))
     eval_result = evaluate_code(data)
-    
+
     return jsonify(eval_result)
 
-    
+@app.route("/test", methods=["GET"])
+def test():
+    return "Python data service is alive!"
+
+
 
 if __name__ == "__main__":
-    app.run(port=7101, debug=True)
+    app.run(host='0.0.0.0',port=7101, debug=True)
