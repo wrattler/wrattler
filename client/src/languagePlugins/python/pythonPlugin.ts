@@ -35,53 +35,47 @@ class PythonBlockKind implements Langs.Block {
     });
   }
 
-  interface JavascriptEditEvent { kind:'edit' }
-  interface JavascriptUpdateEvent { kind:'update', source:string }
-  type JavascriptEvent = JavascriptEditEvent | JavascriptUpdateEvent
+  interface PythonEditEvent { kind:'edit' }
+  interface PythonUpdateEvent { kind:'update', source:string }
+  type PythonEvent = PythonEditEvent | PythonUpdateEvent
   
-  type JavascriptState = {
+  type PythonState = {
     id: number
-    block: JavascriptBlockKind
+    block: PythonBlockKind
     editing: boolean
   }
   
-  const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
+  const pythonEditor : Langs.Editor<PythonState, PythonEvent> = {
     initialize: (id:number, block:Langs.Block) => {  
-      return { id: id, block: <JavascriptBlockKind>block, editing: false }
+      return { id: id, block: <PythonBlockKind>block, editing: false }
     },
   
-    update: (state:JavascriptState, event:JavascriptEvent) => {
+    update: (state:PythonState, event:PythonEvent) => {
       switch(event.kind) {
         case 'edit': 
-          // console.log("Javascript: Switch to edit mode!")
+          // console.log("Python: Switch to edit mode!")
           return { id: state.id, block: state.block, editing: true }
         case 'update': 
-          // console.log("Javascript: Set code to:\n%O", event.source);
-          let newBlock = javascriptLanguagePlugin.parse(event.source)
-          return { id: state.id, block: <JavascriptBlockKind>newBlock, editing: false }
+          // console.log("Python: Set code to:\n%O", event.source);
+          let newBlock = pythonLanguagePlugin.parse(event.source)
+          return { id: state.id, block: <PythonBlockKind>newBlock, editing: false }
       }
     },
 
-    render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
+    render: (cell: Langs.BlockState, state:PythonState, context:Langs.EditorContext<PythonEvent>) => {
       let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
-      console.log(cell)
-      // function display() {
-      //   if (cell.code == undefined)
-      //     if (cell.code == undefined)
-      // }
       let results = h('div', {}, [
         h('p', {
             style: "height:75px; position:relative", 
             onclick:() => context.trigger({kind:'edit'})
           }, 
           [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
-          // [ cell.code==undefined ? evalButton : ("Value is: ") ]),
       ]);
  
       let afterCreateHandler = (el) => { 
         let ed = monaco.editor.create(el, {
           value: state.block.source,
-          language: 'javascript',
+          language: 'python',
           scrollBeyondLastLine: false,
           theme:'vs',
           minimap: { enabled: false },
@@ -128,66 +122,32 @@ class PythonBlockKind implements Langs.Block {
       return h('div', { }, [code, results])
     }
   }
-  
-  function tokenizeStatement (argument:any, node:Graph.JsCodeNode, scopeDictionary:{}) {
-    if (argument != undefined) {
-      if (argument.expression != undefined){
-        tokenizeStatement(argument.expression.left, node, scopeDictionary)
-        tokenizeStatement(argument.expression.right, node, scopeDictionary)
-      }
-      else {
-        let argumentName = argument.text
-        if (argumentName in scopeDictionary) {
-          let antecedentNode = scopeDictionary[argumentName]
-          node.antecedents.push(antecedentNode);
-        }
-      }
-    }
-  }
 
-  export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
-    language: "javascript",
-    editor: javascriptEditor,
+  export const pythonLanguagePlugin : Langs.LanguagePlugin = {
+    language: "python",
+    editor: pythonEditor,
     evaluate: (node:Graph.Node) => {
-      let jsnode = <Graph.JsNode>node
+      let pynode = <Graph.PyNode>node
       let value = "yadda";
       let returnArgs = "{";
       let evalCode = "";
-      switch(jsnode.kind) {
+      switch(pynode.kind) {
         case 'code': 
-          let jsCodeNode = <Graph.JsCodeNode>node
-          console.log(jsCodeNode);
-          for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
-            returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
-          }
-          returnArgs = returnArgs.concat("}")
-          let importedVars = "";
-          var argDictionary:{[key: string]: string} = {}
-          for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
-            let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-            argDictionary[imported.variableName] = imported.value;
-            importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
-          }
-          evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
-          console.log(evalCode)
-          value = eval(evalCode);
+          value = "";
           break;
         case 'export':
-          let jsExportNode = <Graph.JsExportNode>node
-          let exportNodeName= jsExportNode.variableName;
-          value = jsExportNode.code.value[exportNodeName]
-          console.log(value);
+          let pyExportNode = <Graph.PyExportNode>node
+          let exportNodeName= pyExportNode.variableName;
+          value = pyExportNode.code.value[exportNodeName]
           break;
       }
       return value
     },
     parse: (code:string) => {
-      return new JavascriptBlockKind(code);
+      return new PythonBlockKind(code);
     },
     bind: (scopeDictionary: {}, block: Langs.Block) => {
-      let jsBlock = <JavascriptBlockKind>block
-      return getCodeExports(scopeDictionary, jsBlock.source);
+      let pyBlock = <PythonBlockKind>block
+      return getCodeExports(scopeDictionary, pyBlock.source);
     }
   }
-
-  

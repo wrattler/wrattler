@@ -61,7 +61,7 @@ interface PyCodeNode extends Node {
  * This inherits `variableName` from `ExportNode`.
  */
 interface PyExportNode extends ExportNode { 
-  /** JavaScript code node that represents full source code that exports this variable */
+  /** Python code node that represents full source code that exports this variable */
   code: PyCodeNode
   kind: 'export'
 }
