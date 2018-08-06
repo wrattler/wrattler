@@ -7,7 +7,7 @@ By default it will be accessible at ```localhost:7101```.
 
 The following endpoints are then exposed:
 
-### POST to /exports with payload {"code": <code_snipper>, "frames" <list-of-frames>, "hash": <hash_of_cell>}
+### POST to /exports with payload {"code": <code_snippet>, "frames" <list-of-frames>, "hash": <hash_of_cell>}
 
 This will call the ```analyze_code``` function in ```python_service.py```
 to analyse the code snippet to identify the names of input and output
