@@ -25,41 +25,71 @@ class JavascriptBlockKind implements Langs.Block {
     }
   }
   
-// this is test code
-  function getAbstractTree(source: string) {
-    let tsSourceFile = ts.createSourceFile(
-      __filename,
-      source,
-      ts.ScriptTarget.Latest
-    );
-  
-    // console.log(tsSourceFile.statements);
-    let tree = [];
-    for (var n=0; n < tsSourceFile.statements.length; n++){
-      let node = tsSourceFile.statements[n];
-      // console.log(node)
-      switch (node.kind) {
-        case 212: {
+  function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
+    return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
+      let tsSourceFile = ts.createSourceFile(
+        __filename,
+        source,
+        ts.ScriptTarget.Latest
+      );
+      let tree = [];
+      for (var n=0; n < tsSourceFile.statements.length; n++){
+        let node = tsSourceFile.statements[n];
+        // console.log(node)
+        switch (node.kind) {
+          case 212: {
+              tree.push({
+                kind: 212,
+                name: node.declarationList.declarations[0].name,
+                initializer: node.declarationList.declarations[0].initializer
+              });
+            break
+          }
+          case 214: {
             tree.push({
-              kind: 212,
-              name: node.declarationList.declarations[0].name,
-              initializer: node.declarationList.declarations[0].initializer
-            });
-          break
-        }
-        case 214: {
-          tree.push({
-            kind: 214,
-            expression: node.expression});
-          break;
+              kind: 214,
+              expression: node.expression});
+            break;
+          }
         }
       }
-    }
-    return tree;
+      let dependencies:Graph.JsExportNode[] = [];
+      let node:Graph.JsCodeNode = {
+        language:"javascript", 
+        antecedents:[],
+        exportedVariables:[],
+        kind: 'code',
+        value: undefined,
+        source: source
+      }
+      for (var s = 0; s < tree.length; s++) {
+        let statement = tree[s];
+        if (statement.kind == 212){
+          let name = statement.name.escapedText
+          let exportNode:Graph.JsExportNode = {
+            variableName: name,
+            value: undefined,
+            language:"javascript",
+            code: node, 
+            kind: 'export',
+            antecedents:[node]
+            };
+          dependencies.push(exportNode);
+          node.exportedVariables.push(exportNode.variableName);
+          
+          tokenizeStatement(statement.initializer.left, node, scopeDictionary)
+          tokenizeStatement(statement.initializer.right, node, scopeDictionary)
+        }
+      }
+      resolve({code: node, exports: dependencies});
+      // return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
+      //   setTimeout(() => {
+      //     resolve({code: node, exports: dependencies});
+      //   }, 0);
+      // });
+    });
   }
-  // getAbstractTree("let x = 1; let y = 2");
 
-// end test code
   interface JavascriptEditEvent { kind:'edit' }
   interface JavascriptUpdateEvent { kind:'update', source:string }
   type JavascriptEvent = JavascriptEditEvent | JavascriptUpdateEvent
@@ -68,50 +98,6 @@ class JavascriptBlockKind implements Langs.Block {
     id: number
     block: JavascriptBlockKind
     editing: boolean
-  }
-
-  // function evaluateStatement(argument: any):string{
-  //   if (argument != undefined) {
-  //     if (argument.expression != undefined){
-  //       // tokenizeStatement(argument.expression.left, node, scopeDictionary)
-  //       // tokenizeStatement(argument.expression.right, node, scopeDictionary)
-  //     }
-  //     else {
-  //       console.log(argument)
-  //       let argumentName = argument.text
-  //       console.log(argument.text+": "+ JSON.stringify(argument))
-  //     }
-  //   }
-  //   else {
-  //     console.log("WTF?"+JSON.stringify(argument))
-  //   }
-  //   return "";
-  // }
-  function evaluate(cell: Langs.BlockState, code: string)  {
-    let tree = getAbstractTree(code);
-    for (var s = 0; s < tree.length; s++) {
-      let statement = tree[s];
-      if (statement.kind == 212){
-        let name = statement.name.escapedText
-        console.log(statement)
-        let value = statement.initializer.text
-        
-        cell.exports.forEach(node => {
-          var exportNode = <Graph.ExportNode> node;
-          if (exportNode.variableName === name){
-            exportNode.value = value
-        
-          }
-        })
-      }
-    }
-
-    if (cell.code.antecedents.length == 0){
-      return eval(code);
-    }
-    else {
-      return code;
-    }
   }
   
   const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
@@ -132,15 +118,19 @@ class JavascriptBlockKind implements Langs.Block {
     },
 
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
-
       let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
+      console.log(cell)
+      // function display() {
+      //   if (cell.code == undefined)
+      //     if (cell.code == undefined)
+      // }
       let results = h('div', {}, [
-        // h('p', {style: "height:75px; position:relative", innerHTML: evaluate(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
         h('p', {
             style: "height:75px; position:relative", 
             onclick:() => context.trigger({kind:'edit'})
           }, 
-          [ cell.code.value==undefined ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
+          [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
+          // [ cell.code==undefined ? evalButton : ("Value is: ") ]),
       ]);
  
       let afterCreateHandler = (el) => { 
@@ -181,7 +171,6 @@ class JavascriptBlockKind implements Langs.Block {
           if (height !== lastHeight || width !== lastWidth) {
             lastHeight = height
             lastWidth = width  
-            // console.log(width, height)
             ed.layout({width:width, height:height})
             el.style.height = height + "px"
           }
@@ -228,18 +217,19 @@ class JavascriptBlockKind implements Langs.Block {
           }
           returnArgs = returnArgs.concat("}")
           let importedVars = "";
+          var argDictionary:{[key: string]: string} = {}
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
             let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-            importedVars = importedVars.concat("\nlet "+imported.variableName + " = " + imported.value);
+            argDictionary[imported.variableName] = imported.value;
+            importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
-          importedVars = importedVars.concat(";\n")
-          evalCode = "function calc() {\n\t "+ importedVars + jsCodeNode.source +"\n\t return "+returnArgs+"\n}\n; calc()"
+          evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
+          console.log(evalCode)
           value = eval(evalCode);
           break;
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName;
-          // value = eval("{exportNodeName: jsExportNode.code.value[exportNodeName]}")
           value = jsExportNode.code.value[exportNodeName]
           console.log(value);
           break;
@@ -251,36 +241,7 @@ class JavascriptBlockKind implements Langs.Block {
     },
     bind: (scopeDictionary: {}, block: Langs.Block) => {
       let jsBlock = <JavascriptBlockKind>block
-      let tree = getAbstractTree(jsBlock.source);
-      let dependencies:Graph.JsExportNode[] = [];
-      let node:Graph.JsCodeNode = {
-        language:"javascript", 
-        antecedents:[],
-        exportedVariables:[],
-        kind: 'code',
-        value: undefined,
-        source: jsBlock.source
-      }
-      for (var s = 0; s < tree.length; s++) {
-        let statement = tree[s];
-        if (statement.kind == 212){
-          let name = statement.name.escapedText
-          let exportNode:Graph.JsExportNode = {
-            variableName: name,
-            value: undefined,
-            language:"javascript",
-            code: node, 
-            kind: 'export',
-            antecedents:[node]
-            };
-          dependencies.push(exportNode);
-          node.exportedVariables.push(exportNode.variableName);
-          scopeDictionary[exportNode.variableName] = exportNode;
-          tokenizeStatement(statement.initializer.left, node, scopeDictionary)
-          tokenizeStatement(statement.initializer.right, node, scopeDictionary)
-        }
-      }
-      return {code: node, exports: dependencies}
+      return getCodeExports(scopeDictionary, jsBlock.source);
     }
   }
 
