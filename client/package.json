@@ -37,6 +37,7 @@
     "maquette": "^3.3.0",
     "marked": "^0.4.0",
     "monaco-editor-webpack-plugin": "^1.1.0",
+    "ts-md5": "^1.2.4",
     "typescript": "^2.8.3"
   }
 }
