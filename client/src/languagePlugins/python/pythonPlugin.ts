@@ -168,18 +168,40 @@ class PythonBlockKind implements Langs.Block {
         source: pyBlock.source
 			}
 			
-			
-			let url = APIROOT.concat("/post")
+			// console.log(APIROOT);
+			let url = APIROOT.concat("exports")
+			console.log(url);
 			let hash = Md5.hashStr(pyBlock.source)
 			let body = {"code": pyBlock.source,
 									"hash": hash,
-									"frames": Object.keys(scopeDictionary),
-									"exports": [ "top1" ],               
-									"imports": [ "f1" ]}
+									"frames": Object.keys(scopeDictionary)
+								}
+			let headers = {'Content-Type': 'application/json'}
 			async function getExports() {
 				try {
-					const response = await axios.post(url,body);
-					console.log(response);
+					const response = await axios.post(url,body, headers);
+					// console.log(response.data.exports)
+					// console.log(response.data.imports)
+					for (var n = 0 ; n < response.data.exports.length; n++) {
+						// console.log(response.data.exports[n]);
+						let exportNode:Graph.PyExportNode = {
+							variableName: response.data.exports[n],
+							value: undefined,
+							language:"python",
+							code: node, 
+							kind: 'export',
+							antecedents:[node]
+							};
+						dependencies.push(exportNode) 
+						node.exportedVariables.push(exportNode.variableName)
+						console.log(node);
+					}
+					for (var n = 0 ; n < response.data.imports.length; n++) {
+						if (response.data.imports[n] in scopeDictionary) {
+							let antecedentNode = scopeDictionary[response.data.imports[n]]
+							node.antecedents.push(antecedentNode);
+						}
+					}
 					return {code: node, exports: dependencies};
 				} catch (error) {
 					console.error(error);

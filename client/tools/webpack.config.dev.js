@@ -43,7 +43,8 @@ module.exports = {
         VERSION: JSON.stringify("5fa3b9"),
         BROWSER_SUPPORTS_HTML5: true,
         TWO: JSON.stringify(process.env),
-        APIROOT: '"https://httpbin.org/"'
+        APIROOT_TEST: '"https://httpbin.org/"',
+        APIROOT: JSON.stringify(process.env.PYTHONSERVICE_URI)
     })
   ]),
   resolve: {

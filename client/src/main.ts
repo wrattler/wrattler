@@ -42,7 +42,7 @@ let documents =
     {"language": "markdown", 
      "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
      {"language": "python",
-     "source": "m = 1; \nn = 2; m+n;"},
+     "source": "m = 1"},
      {"language": "javascript",
       "source": "var a = 1; \nlet b = 2; a+b;"},
     // {"language": "javascript",
@@ -89,7 +89,7 @@ async function bindAllCells() {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    // console.log(aCell)
+    console.log(aCell)
     // console.log(Object.keys(scopeDictionary))
   }
 }
