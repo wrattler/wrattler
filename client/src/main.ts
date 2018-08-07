@@ -19,6 +19,8 @@ import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugi
 import { javascriptLanguagePlugin } from './languagePlugins/javascript/javascriptPlugin'
 import { pythonLanguagePlugin } from './languagePlugins/python/pythonPlugin'
 require('./editor.css');
+declare var TWO: string;
+
 
 
 // ------------------------------------------------------------------------------------------------
@@ -30,6 +32,7 @@ languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
 languagePlugins["python"] = pythonLanguagePlugin;
 
+console.log(TWO)
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
 // A sample document is just an array of records with cells. Each 
@@ -60,7 +63,7 @@ type NotebookState = {
   cells: Langs.BlockState[]
 }
 
-
+// console.log(TWO);
 // Create an initial notebook state by parsing the sample document
 let index = 0
 let blockStates = documents.map(cell => {

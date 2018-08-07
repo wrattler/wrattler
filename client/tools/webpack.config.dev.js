@@ -37,7 +37,15 @@ module.exports = {
       new webpack.ContextReplacementPlugin(
         /monaco-editor(\\|\/)esm(\\|\/)vs(\\|\/)editor(\\|\/)common(\\|\/)services/,
         __dirname
-      )
+      ),
+      new webpack.DefinePlugin({
+        PRODUCTION: JSON.stringify(true),
+        VERSION: JSON.stringify("5fa3b9"),
+        BROWSER_SUPPORTS_HTML5: true,
+        TWO: JSON.stringify(process.env),
+        APIROOT: '"https://httpbin.org/"',
+        "typeof window": JSON.stringify("object")
+    })
   ]),
   resolve: {
     modules: [common.config.nodeModulesDir],

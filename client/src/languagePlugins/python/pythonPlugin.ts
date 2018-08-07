@@ -2,8 +2,10 @@ import * as monaco from 'monaco-editor';
 import {h,createProjector,VNode} from 'maquette';
 import * as Langs from '../../languages'; 
 import * as Graph from '../../graph'; 
+
 const ts = require('typescript');
 const axios = require('axios');
+declare var APIROOT: string;
 
 // ------------------------------------------------------------------------------------------------
 // Python plugin
@@ -155,7 +157,7 @@ class PythonBlockKind implements Langs.Block {
     bind: (scopeDictionary: {}, block: Langs.Block) => {
 			let pyBlock = <PythonBlockKind>block
 			// return getCodeExports(scopeDictionary, pyBlock.source)
-      let dependencies:Graph.JsExportNode[] = [];
+      let dependencies:Graph.PyExportNode[] = [];
       let node:Graph.PyCodeNode = {
         language:"python", 
         antecedents:[],
@@ -164,10 +166,13 @@ class PythonBlockKind implements Langs.Block {
         value: undefined,
         source: pyBlock.source
 			}
-			let url = 'https://httpbin.org/get'
+			
+			let url = APIROOT.concat("/post")
+			let body = {"exports": [ "top1" ],               
+			"imports": [ "f1" ]}
 			async function getExports() {
 				try {
-					const response = await axios.get(url);
+					const response = await axios.post(url,body);
 					console.log(response);
 					return {code: node, exports: dependencies};
 				} catch (error) {
