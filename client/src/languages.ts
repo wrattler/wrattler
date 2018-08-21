@@ -1,3 +1,10 @@
+/**
+ * Interface for implementing language plugins.
+ * 
+ * @module Languages
+ */
+
+/** This comment is needed so that TypeDoc parses the above one correctly */
 import {VNode} from 'maquette';
 import * as Graph from './graph';
 

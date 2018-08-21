@@ -1,3 +1,9 @@
+/**
+ * Types representing the dependency graph.
+ * 
+ * @module Graph
+ */
+
 /** 
  * A node in the dependency graph that Wrattler maintains while the user edits a
  * notebook. The graph is used to avoid re-computing previously computed parts

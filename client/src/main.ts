@@ -1,5 +1,6 @@
-// Demos showing how to import files from different languages
-// (we will need this later, but for now, this is just a demo)
+/** @hidden */
+
+/** This comment is needed so that TypeDoc parses the above one correctly */
 import { fsHello } from "./demos/fsdemo";
 import { jsHello } from "./demos/jsdemo";
 import { tsHello } from "./demos/tsdemo";
