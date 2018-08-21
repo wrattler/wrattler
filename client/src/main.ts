@@ -17,7 +17,10 @@ import * as Langs from './languages';
 import * as Graph from './graph';
 import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugin'
 import { javascriptLanguagePlugin } from './languagePlugins/javascript/javascriptPlugin'
+import { pythonLanguagePlugin } from './languagePlugins/python/pythonPlugin'
 require('./editor.css');
+declare var TWO: string;
+
 
 
 // ------------------------------------------------------------------------------------------------
@@ -27,23 +30,27 @@ require('./editor.css');
 var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
+languagePlugins["python"] = pythonLanguagePlugin;
 
+console.log(TWO)
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
 let documents = 
   [ 
-    // {"language": "markdown", 
-    //  "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
-    {"language": "javascript",
+    {"language": "markdown", 
+     "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
+     {"language": "python",
+     "source": "m = 1"},
+     {"language": "javascript",
       "source": "var a = 1; \nlet b = 2; a+b;"},
-    {"language": "javascript",
-      "source": "let x = 1; \nlet y = x+x;"},
-    {"language": "javascript",
-      "source": "var c = a+1"},
-    {"language": "javascript",
-      "source": "var d = (b+c)*2"}  
+    // {"language": "javascript",
+    //   "source": "let x = 1; \nlet y = x+x;"},
+    // {"language": "javascript",
+    //   "source": "var c = a+1"},
+    // {"language": "javascript",
+    //   "source": "var d = (b+c)*2"}  
     ]
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -56,7 +63,7 @@ type NotebookState = {
   cells: Langs.BlockState[]
 }
 
-
+// console.log(TWO);
 // Create an initial notebook state by parsing the sample document
 let index = 0
 let blockStates = documents.map(cell => {
@@ -70,10 +77,6 @@ let state : NotebookState = { cells: blockStates };
 function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>{
   let languagePlugin = languagePlugins[cell.editor.block.language]
   return languagePlugin.bind(scopeDictionary, cell.editor.block);
-  // cell.code = code
-  // cell.exports = exports
-  // add loop through exports and add them into scope dictionary here
-  // scopeDictionary[exportNode.variableName] = exportNode;
 }
 
 async function bindAllCells() {
@@ -87,15 +90,11 @@ async function bindAllCells() {
       scopeDictionary[exportNode.variableName] = exportNode;
     }
     console.log(aCell)
+    // console.log(Object.keys(scopeDictionary))
   }
 }
 
 bindAllCells()
-
-// state.cells.forEach(bindCell)
-
-// console.log(scopeDictionary);
-// console.log(state.cells);
 
 // Get the #paper element and create maquette renderer
 let paperElement = document.getElementById('paper');
@@ -129,9 +128,10 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
     let plugin = languagePlugins[cell.editor.block.language]
     // let vnode = plugin.editor.render(state.editor, context)
     let vnode = plugin.editor.render(cell, cell.editor, context)
+    let c_language = h('p', {style: 'float:left'}, [cell.editor.block.language] )
     let c_add = h('i', {id:'add_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id})});
     let c_delete = h('i', {id:'remove_'+cell.editor.id, class: 'far fa-trash-alt control', onclick:()=>trigger({kind:'remove', id:cell.editor.id})});
-    let controls = h('div', {class:'controls'}, [c_add, c_delete])
+    let controls = h('div', {class:'controls'}, [c_language, c_add, c_delete])
     return h('div', {class:'cell', key:cell.editor.id}, [
         h('div', [controls]),vnode
       ]
