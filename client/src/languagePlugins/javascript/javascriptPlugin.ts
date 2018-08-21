@@ -25,6 +25,7 @@ class JavascriptBlockKind implements Langs.Block {
     }
   }
   
+  
   function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
     return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
       let tsSourceFile = ts.createSourceFile(
@@ -33,23 +34,23 @@ class JavascriptBlockKind implements Langs.Block {
         ts.ScriptTarget.Latest
       );
       let tree = [];
+      
       for (var n=0; n < tsSourceFile.statements.length; n++){
         let node = tsSourceFile.statements[n];
-        // console.log(node)
         switch (node.kind) {
-          case 212: {
-              tree.push({
-                kind: 212,
-                name: node.declarationList.declarations[0].name,
-                initializer: node.declarationList.declarations[0].initializer
-              });
-            break
-          }
-          case 214: {
+          case ts.SyntaxKind.VariableStatement: {
             tree.push({
-              kind: 214,
-              expression: node.expression});
-            break;
+              kind: ts.SyntaxKind.VariableStatement,
+              name: node.declarationList.declarations[0].name,
+              initializer: node.declarationList.declarations[0].initializer
+            });
+          break
+          }
+        case 214: {
+          tree.push({
+            kind: 214,
+            expression: node.expression});
+          break;
           }
         }
       }
@@ -62,9 +63,24 @@ class JavascriptBlockKind implements Langs.Block {
         value: undefined,
         source: source
       }
+      
+      let walk = function (expr) {
+        ts.forEachChild(expr, function(child) 
+        { 
+          if (child.constructor.name === 'IdentifierObject') {
+            let argumentName = child.escapedText;
+            if (argumentName in scopeDictionary) {
+              let antecedentNode = scopeDictionary[argumentName]
+              node.antecedents.push(antecedentNode);
+            }
+          }
+          walk(child)
+        })
+      }
+
       for (var s = 0; s < tree.length; s++) {
         let statement = tree[s];
-        if (statement.kind == 212){
+        if (statement.kind == ts.SyntaxKind.VariableStatement){
           let name = statement.name.escapedText
           let exportNode:Graph.JsExportNode = {
             variableName: name,
@@ -80,13 +96,11 @@ class JavascriptBlockKind implements Langs.Block {
           tokenizeStatement(statement.initializer.left, node, scopeDictionary)
           tokenizeStatement(statement.initializer.right, node, scopeDictionary)
         }
+        else {
+          walk(statement);
+        }
       }
       resolve({code: node, exports: dependencies});
-      // return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
-      //   setTimeout(() => {
-      //     resolve({code: node, exports: dependencies});
-      //   }, 0);
-      // });
     });
   }
 
@@ -211,7 +225,7 @@ class JavascriptBlockKind implements Langs.Block {
       switch(jsnode.kind) {
         case 'code': 
           let jsCodeNode = <Graph.JsCodeNode>node
-          console.log(jsCodeNode);
+          // console.log(jsCodeNode);
           for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
             returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
           }
@@ -224,7 +238,7 @@ class JavascriptBlockKind implements Langs.Block {
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
           evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
-          console.log(evalCode)
+          // console.log(evalCode)
           value = eval(evalCode);
           break;
         case 'export':
