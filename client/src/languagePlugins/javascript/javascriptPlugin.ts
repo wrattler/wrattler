@@ -91,6 +91,7 @@ class JavascriptBlockKind implements Langs.Block {
           dependencies.push(exportNode);
           node.exportedVariables.push(exportNode.variableName);
         }
+        // console.log(statement);
         walk(statement)
       }
       resolve({code: node, exports: dependencies});
@@ -104,23 +105,22 @@ class JavascriptBlockKind implements Langs.Block {
   type JavascriptState = {
     id: number
     block: JavascriptBlockKind
-    editing: boolean
   }
   
   const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
     initialize: (id:number, block:Langs.Block) => {  
-      return { id: id, block: <JavascriptBlockKind>block, editing: false }
+      return { id: id, block: <JavascriptBlockKind>block}
     },
   
     update: (state:JavascriptState, event:JavascriptEvent) => {
       switch(event.kind) {
         case 'edit': 
           // console.log("Javascript: Switch to edit mode!")
-          return { id: state.id, block: state.block, editing: true }
+          return { id: state.id, block: state.block }
         case 'update': 
           // console.log("Javascript: Set code to:\n%O", event.source);
           let newBlock = javascriptLanguagePlugin.parse(event.source)
-          return { id: state.id, block: <JavascriptBlockKind>newBlock, editing: false }
+          return { id: state.id, block: <JavascriptBlockKind>newBlock }
       }
     },
 

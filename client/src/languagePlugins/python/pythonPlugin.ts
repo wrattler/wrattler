@@ -51,23 +51,22 @@ class PythonBlockKind implements Langs.Block {
   type PythonState = {
     id: number
     block: PythonBlockKind
-    editing: boolean
   }
   
   const pythonEditor : Langs.Editor<PythonState, PythonEvent> = {
     initialize: (id:number, block:Langs.Block) => {  
-      return { id: id, block: <PythonBlockKind>block, editing: false }
+      return { id: id, block: <PythonBlockKind>block}
     },
   
     update: (state:PythonState, event:PythonEvent) => {
       switch(event.kind) {
         case 'edit': 
           // console.log("Python: Switch to edit mode!")
-          return { id: state.id, block: state.block, editing: true }
+          return { id: state.id, block: state.block }
         case 'update': 
           // console.log("Python: Set code to:\n%O", event.source);
           let newBlock = pythonLanguagePlugin.parse(event.source)
-          return { id: state.id, block: <PythonBlockKind>newBlock, editing: false }
+          return { id: state.id, block: <PythonBlockKind>newBlock}
       }
     },
 
