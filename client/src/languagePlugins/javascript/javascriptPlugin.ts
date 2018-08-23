@@ -46,10 +46,8 @@ class JavascriptBlockKind implements Langs.Block {
             });
           break
           }
-        case 214: {
-          tree.push({
-            kind: 214,
-            expression: node.expression});
+          default: {
+            tree.push(node);
           break;
           }
         }
@@ -92,13 +90,8 @@ class JavascriptBlockKind implements Langs.Block {
             };
           dependencies.push(exportNode);
           node.exportedVariables.push(exportNode.variableName);
-          
-          tokenizeStatement(statement.initializer.left, node, scopeDictionary)
-          tokenizeStatement(statement.initializer.right, node, scopeDictionary)
         }
-        else {
-          walk(statement);
-        }
+        walk(statement)
       }
       resolve({code: node, exports: dependencies});
     });

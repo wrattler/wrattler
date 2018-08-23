@@ -40,10 +40,15 @@ let documents =
   [ 
     {"language": "markdown", 
      "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
+    //  {"language": "javascript",
+    //  "source": "var b = 1"},
+    //  {"language": "javascript",
+    //   "source": "var a = 1; \na = a+b;"},
      {"language": "javascript",
-     "source": "var b = 1"},
+     "source": "var a = 1;"},
      {"language": "javascript",
-      "source": "var a = 1; a+b;"},
+      "source": "var c = 0;for(var i = 0; i<10; i++) { c = c+a; }"},
+    
     // {"language": "javascript",
     //   "source": "let x = 1; \nlet y = x+x;"},
     // {"language": "javascript",
@@ -88,7 +93,7 @@ async function bindAllCells() {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    // console.log(aCell)
+    console.log(aCell)
     // console.log(Object.keys(scopeDictionary))
   }
 }
