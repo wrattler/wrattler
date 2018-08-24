@@ -6,7 +6,7 @@ import * as Graph from '../../graph';
 const ts = require('typescript');
 const axios = require('axios');
 declare var APIROOT: string;
-import {Md5} from 'ts-md5/dist/md5';
+// import {Md5} from 'ts-md5/dist/md5';
 
 // ------------------------------------------------------------------------------------------------
 // Python plugin
@@ -170,7 +170,9 @@ class PythonBlockKind implements Langs.Block {
 			// console.log(APIROOT);
 			let url = APIROOT.concat("exports")
 			console.log(url);
-			let hash = Md5.hashStr(pyBlock.source)
+      // let hash = Md5.hashStr(pyBlock.source)
+      
+      let hash = "Md5.hashStr(pyBlock.source)"
 			let body = {"code": pyBlock.source,
 									"hash": hash,
 									"frames": Object.keys(scopeDictionary)

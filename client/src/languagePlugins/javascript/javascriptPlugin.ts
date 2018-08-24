@@ -33,25 +33,8 @@ class JavascriptBlockKind implements Langs.Block {
         source,
         ts.ScriptTarget.Latest
       );
-      let tree = [];
-      
-      for (var n=0; n < tsSourceFile.statements.length; n++){
-        let node = tsSourceFile.statements[n];
-        switch (node.kind) {
-          case ts.SyntaxKind.VariableStatement: {
-            tree.push({
-              kind: ts.SyntaxKind.VariableStatement,
-              name: node.declarationList.declarations[0].name,
-              initializer: node.declarationList.declarations[0].initializer
-            });
-          break
-          }
-          default: {
-            tree.push(node);
-          break;
-          }
-        }
-      }
+      // let tree = [];
+
       let dependencies:Graph.JsExportNode[] = [];
       let node:Graph.JsCodeNode = {
         language:"javascript", 
@@ -61,10 +44,24 @@ class JavascriptBlockKind implements Langs.Block {
         value: undefined,
         source: source
       }
-      
+
       let walk = function (expr) {
         ts.forEachChild(expr, function(child) 
         { 
+          if (child.kind == ts.SyntaxKind.VariableStatement) {
+            let name = child.declarationList.declarations[0].name.escapedText
+            let exportNode:Graph.JsExportNode = {
+              variableName: name,
+              value: undefined,
+              language:"javascript",
+              code: node, 
+              kind: 'export',
+              antecedents:[node]
+              };
+            dependencies.push(exportNode);
+            node.exportedVariables.push(exportNode.variableName);
+          }
+
           if (child.constructor.name === 'IdentifierObject') {
             let argumentName = child.escapedText;
             if (argumentName in scopeDictionary) {
@@ -76,24 +73,31 @@ class JavascriptBlockKind implements Langs.Block {
         })
       }
 
-      for (var s = 0; s < tree.length; s++) {
-        let statement = tree[s];
-        if (statement.kind == ts.SyntaxKind.VariableStatement){
-          let name = statement.name.escapedText
-          let exportNode:Graph.JsExportNode = {
-            variableName: name,
-            value: undefined,
-            language:"javascript",
-            code: node, 
-            kind: 'export',
-            antecedents:[node]
-            };
-          dependencies.push(exportNode);
-          node.exportedVariables.push(exportNode.variableName);
-        }
-        // console.log(statement);
-        walk(statement)
-      }
+      walk(tsSourceFile);
+
+      // for (var n=0; n < tsSourceFile.statements.length; n++){
+      //   let statement = tsSourceFile.statements[n];
+      //   if (statement.kind == ts.SyntaxKind.VariableStatement) {
+      //     let name = statement.declarationList.declarations[0].name.escapedText
+      //     // let initializer = statement.declarationList.declarations[0].initializer
+      //     let exportNode:Graph.JsExportNode = {
+      //       variableName: name,
+      //       value: undefined,
+      //       language:"javascript",
+      //       code: node, 
+      //       kind: 'export',
+      //       antecedents:[node]
+      //       };
+      //     dependencies.push(exportNode);
+      //     node.exportedVariables.push(exportNode.variableName);
+      //   }
+      // }
+
+      // for (var n=0; n < tsSourceFile.statements.length; n++){
+      //   let statement = tsSourceFile.statements[n];
+      //   walk(statement);
+      // }
+
       resolve({code: node, exports: dependencies});
     });
   }
