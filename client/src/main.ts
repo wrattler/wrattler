@@ -47,9 +47,9 @@ let documents =
      {"language": "javascript",
      "source": "var a = 1;"},
      {"language": "javascript",
-      "source": "var c = a + 1;"},
-      {"language": "javascript",
-      "source": "var d = a;"},
+      "source": "var c = a + 1; var d = a;"},
+      // {"language": "javascript",
+      // "source": "var d = a;"},
     
     // {"language": "javascript",
     //   "source": "let x = 1; \nlet y = x+x;"},

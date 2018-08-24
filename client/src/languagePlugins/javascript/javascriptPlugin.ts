@@ -66,7 +66,8 @@ class JavascriptBlockKind implements Langs.Block {
             let argumentName = child.escapedText;
             if (argumentName in scopeDictionary) {
               let antecedentNode = scopeDictionary[argumentName]
-              node.antecedents.push(antecedentNode);
+              if (node.antecedents.indexOf(antecedentNode) == -1)
+                node.antecedents.push(antecedentNode);
             }
           }
           walk(child)
