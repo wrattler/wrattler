@@ -32,8 +32,6 @@ var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
 languagePlugins["python"] = pythonLanguagePlugin;
-
-console.log(TWO)
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
 // A sample document is just an array of records with cells. Each 
@@ -42,10 +40,17 @@ let documents =
   [ 
     {"language": "markdown", 
      "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
-     {"language": "python",
-     "source": "m = 1"},
+    //  {"language": "javascript",
+    //  "source": "var b = 1"},
+    //  {"language": "javascript",
+    //   "source": "var a = 1; \na = a+b;"},
      {"language": "javascript",
-      "source": "var a = 1; \nlet b = 2; a+b;"},
+     "source": "var a = 1;"},
+     {"language": "javascript",
+      "source": "var c = a + 1; var d = a;"},
+      // {"language": "javascript",
+      // "source": "var d = a;"},
+    
     // {"language": "javascript",
     //   "source": "let x = 1; \nlet y = x+x;"},
     // {"language": "javascript",

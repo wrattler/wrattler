@@ -25,6 +25,7 @@ class JavascriptBlockKind implements Langs.Block {
     }
   }
   
+  
   function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
     return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
       let tsSourceFile = ts.createSourceFile(
@@ -32,27 +33,8 @@ class JavascriptBlockKind implements Langs.Block {
         source,
         ts.ScriptTarget.Latest
       );
-      let tree = [];
-      for (var n=0; n < tsSourceFile.statements.length; n++){
-        let node = tsSourceFile.statements[n];
-        // console.log(node)
-        switch (node.kind) {
-          case 212: {
-              tree.push({
-                kind: 212,
-                name: node.declarationList.declarations[0].name,
-                initializer: node.declarationList.declarations[0].initializer
-              });
-            break
-          }
-          case 214: {
-            tree.push({
-              kind: 214,
-              expression: node.expression});
-            break;
-          }
-        }
-      }
+      // let tree = [];
+
       let dependencies:Graph.JsExportNode[] = [];
       let node:Graph.JsCodeNode = {
         language:"javascript", 
@@ -62,31 +44,62 @@ class JavascriptBlockKind implements Langs.Block {
         value: undefined,
         source: source
       }
-      for (var s = 0; s < tree.length; s++) {
-        let statement = tree[s];
-        if (statement.kind == 212){
-          let name = statement.name.escapedText
-          let exportNode:Graph.JsExportNode = {
-            variableName: name,
-            value: undefined,
-            language:"javascript",
-            code: node, 
-            kind: 'export',
-            antecedents:[node]
-            };
-          dependencies.push(exportNode);
-          node.exportedVariables.push(exportNode.variableName);
-          
-          tokenizeStatement(statement.initializer.left, node, scopeDictionary)
-          tokenizeStatement(statement.initializer.right, node, scopeDictionary)
-        }
+
+      let walk = function (expr) {
+        ts.forEachChild(expr, function(child) 
+        { 
+          if (child.kind == ts.SyntaxKind.VariableStatement) {
+            let name = child.declarationList.declarations[0].name.escapedText
+            let exportNode:Graph.JsExportNode = {
+              variableName: name,
+              value: undefined,
+              language:"javascript",
+              code: node, 
+              kind: 'export',
+              antecedents:[node]
+              };
+            dependencies.push(exportNode);
+            node.exportedVariables.push(exportNode.variableName);
+          }
+
+          if (child.constructor.name === 'IdentifierObject') {
+            let argumentName = child.escapedText;
+            if (argumentName in scopeDictionary) {
+              let antecedentNode = scopeDictionary[argumentName]
+              if (node.antecedents.indexOf(antecedentNode) == -1)
+                node.antecedents.push(antecedentNode);
+            }
+          }
+          walk(child)
+        })
       }
+
+      walk(tsSourceFile);
+
+      // for (var n=0; n < tsSourceFile.statements.length; n++){
+      //   let statement = tsSourceFile.statements[n];
+      //   if (statement.kind == ts.SyntaxKind.VariableStatement) {
+      //     let name = statement.declarationList.declarations[0].name.escapedText
+      //     // let initializer = statement.declarationList.declarations[0].initializer
+      //     let exportNode:Graph.JsExportNode = {
+      //       variableName: name,
+      //       value: undefined,
+      //       language:"javascript",
+      //       code: node, 
+      //       kind: 'export',
+      //       antecedents:[node]
+      //       };
+      //     dependencies.push(exportNode);
+      //     node.exportedVariables.push(exportNode.variableName);
+      //   }
+      // }
+
+      // for (var n=0; n < tsSourceFile.statements.length; n++){
+      //   let statement = tsSourceFile.statements[n];
+      //   walk(statement);
+      // }
+
       resolve({code: node, exports: dependencies});
-      // return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
-      //   setTimeout(() => {
-      //     resolve({code: node, exports: dependencies});
-      //   }, 0);
-      // });
     });
   }
 
@@ -97,23 +110,22 @@ class JavascriptBlockKind implements Langs.Block {
   type JavascriptState = {
     id: number
     block: JavascriptBlockKind
-    editing: boolean
   }
   
   const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
     initialize: (id:number, block:Langs.Block) => {  
-      return { id: id, block: <JavascriptBlockKind>block, editing: false }
+      return { id: id, block: <JavascriptBlockKind>block}
     },
   
     update: (state:JavascriptState, event:JavascriptEvent) => {
       switch(event.kind) {
         case 'edit': 
           // console.log("Javascript: Switch to edit mode!")
-          return { id: state.id, block: state.block, editing: true }
+          return { id: state.id, block: state.block }
         case 'update': 
           // console.log("Javascript: Set code to:\n%O", event.source);
           let newBlock = javascriptLanguagePlugin.parse(event.source)
-          return { id: state.id, block: <JavascriptBlockKind>newBlock, editing: false }
+          return { id: state.id, block: <JavascriptBlockKind>newBlock }
       }
     },
 
@@ -211,7 +223,7 @@ class JavascriptBlockKind implements Langs.Block {
       switch(jsnode.kind) {
         case 'code': 
           let jsCodeNode = <Graph.JsCodeNode>node
-          console.log(jsCodeNode);
+          // console.log(jsCodeNode);
           for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
             returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
           }
@@ -224,7 +236,7 @@ class JavascriptBlockKind implements Langs.Block {
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
           evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
-          console.log(evalCode)
+          // console.log(evalCode)
           value = eval(evalCode);
           break;
         case 'export':
