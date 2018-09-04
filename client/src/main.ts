@@ -63,6 +63,7 @@ interface NotebookAddEvent { kind:'add', id: number }
 interface NotebookRemoveEvent { kind:'remove', id: number }
 interface NotebookBlockEvent { kind:'block', id:number, event:any }
 interface NotebookRefreshEvent { kind:'refresh' }
+// interface NotebookSourceChange { kind:'sourceChange' }
 type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent | NotebookRefreshEvent
 
 type NotebookState = {
@@ -100,6 +101,8 @@ async function bindAllCells() {
   }
 }
 
+// bindSubsequentCells()
+
 bindAllCells()
 
 // Get the #paper element and create maquette renderer
@@ -130,6 +133,9 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
         block.exports.forEach(evaluate)
           trigger({ kind:'refresh' })
       }
+
+      // sourceChange
+      // rebind all blocks after this one
     }
     let plugin = languagePlugins[cell.editor.block.language]
     // let vnode = plugin.editor.render(state.editor, context)
