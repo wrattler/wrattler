@@ -105,7 +105,8 @@ class JavascriptBlockKind implements Langs.Block {
 
   interface JavascriptEditEvent { kind:'edit' }
   interface JavascriptUpdateEvent { kind:'update', source:string }
-  type JavascriptEvent = JavascriptEditEvent | JavascriptUpdateEvent
+  // interface JavascriptRebindEvent { kind:'rebindSubsequent'}
+  type JavascriptEvent = JavascriptEditEvent | JavascriptUpdateEvent 
   
   type JavascriptState = {
     id: number
@@ -168,9 +169,13 @@ class JavascriptBlockKind implements Langs.Block {
         });    
 
         ed.createContextKey('alwaysTrue', true);
+
         ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
           let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
-          context.trigger({kind: 'update', source: code})
+          // let codeNode = <Graph.JsCodeNode> cell.code;
+          // codeNode.source = code;
+          // console.log(cell);
+          context.rebindSubsequent(cell, code)
         }, 'alwaysTrue');
 
         let lastHeight = 100;
@@ -193,24 +198,24 @@ class JavascriptBlockKind implements Langs.Block {
       }
       let code = h('div', { style: "height:100px; margin:20px 0px 10px 0px;", id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
       return h('div', { }, [code, results])
-    }
+    },
   }
   
-  function tokenizeStatement (argument:any, node:Graph.JsCodeNode, scopeDictionary:{}) {
-    if (argument != undefined) {
-      if (argument.expression != undefined){
-        tokenizeStatement(argument.expression.left, node, scopeDictionary)
-        tokenizeStatement(argument.expression.right, node, scopeDictionary)
-      }
-      else {
-        let argumentName = argument.text
-        if (argumentName in scopeDictionary) {
-          let antecedentNode = scopeDictionary[argumentName]
-          node.antecedents.push(antecedentNode);
-        }
-      }
-    }
-  }
+  // function tokenizeStatement (argument:any, node:Graph.JsCodeNode, scopeDictionary:{}) {
+  //   if (argument != undefined) {
+  //     if (argument.expression != undefined){
+  //       tokenizeStatement(argument.expression.left, node, scopeDictionary)
+  //       tokenizeStatement(argument.expression.right, node, scopeDictionary)
+  //     }
+  //     else {
+  //       let argumentName = argument.text
+  //       if (argumentName in scopeDictionary) {
+  //         let antecedentNode = scopeDictionary[argumentName]
+  //         node.antecedents.push(antecedentNode);
+  //       }
+  //     }
+  //   }
+  // }
 
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
@@ -236,19 +241,20 @@ class JavascriptBlockKind implements Langs.Block {
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
           evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
-          // console.log(evalCode)
+          console.log(evalCode)
           value = eval(evalCode);
           break;
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName;
           value = jsExportNode.code.value[exportNodeName]
-          console.log(value);
+          // console.log(value);
           break;
       }
       return value
     },
     parse: (code:string) => {
+      console.log(code);
       return new JavascriptBlockKind(code);
     },
     bind: (scopeDictionary: {}, block: Langs.Block) => {
