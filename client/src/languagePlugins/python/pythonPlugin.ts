@@ -141,6 +141,10 @@ class PythonBlockKind implements Langs.Block {
       let evalCode = "";
       switch(pynode.kind) {
         case 'code': 
+          // this part calls to eval code
+          // get s a json
+          // json contains urls for all data frames
+          // read data from datastore and put into dictionary
           value = "";
           break;
         case 'export':

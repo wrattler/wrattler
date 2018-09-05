@@ -36,14 +36,18 @@ var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
+// 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
 let documents = 
   [ 
     {"language": "markdown", 
      "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
-     {"language": "javascript",
-     "source": "var a = 1;"},
-     {"language": "javascript",
-      "source": "var c = a + 1; var d = a;"},
+    //  {"language": "javascript",
+    //  "source": "var a = 1;"},
+    //  {"language": "javascript",
+    //   "source": "var c = a + 1; var d = a;"},
+    {"language": "python",
+    "source": "a = 1;"},
+    
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -74,10 +78,10 @@ function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: G
   return languagePlugin.bind(scopeDictionary, cell.editor.block);
 }
 
-function clearCell (cell:Langs.BlockState): void{
-  cell.exports = [];
-  cell.code.value = {};
-}
+// function clearCell (cell:Langs.BlockState): void{
+//   cell.exports = [];
+//   cell.code.value = {};
+// }
 
 async function bindAllCells() {
   for (var c = 0; c < state.cells.length; c++) {
@@ -89,8 +93,8 @@ async function bindAllCells() {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    //console.log(aCell)
-    // console.log(Object.keys(scopeDictionary))
+    console.log(aCell)
+    console.log(Object.keys(scopeDictionary))
   }
 }
 
