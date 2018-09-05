@@ -40,30 +40,19 @@ let documents =
   [ 
     {"language": "markdown", 
      "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
-    //  {"language": "javascript",
-    //  "source": "var b = 1"},
-    //  {"language": "javascript",
-    //   "source": "var a = 1; \na = a+b;"},
      {"language": "javascript",
      "source": "var a = 1;"},
      {"language": "javascript",
       "source": "var c = a + 1; var d = a;"},
-      // {"language": "javascript",
-      // "source": "var d = a;"},
-    
-    // {"language": "javascript",
-    //   "source": "let x = 1; \nlet y = x+x;"},
-    // {"language": "javascript",
-    //   "source": "var c = a+1"},
-    // {"language": "javascript",
-    //   "source": "var d = (b+c)*2"}  
-    ]
+  ]
 
 interface NotebookAddEvent { kind:'add', id: number }
 interface NotebookRemoveEvent { kind:'remove', id: number }
 interface NotebookBlockEvent { kind:'block', id:number, event:any }
 interface NotebookRefreshEvent { kind:'refresh' }
-type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent | NotebookRefreshEvent
+// interface NotebookSourceChange { kind:'sourceChange' }
+interface NotebookSourceChange { kind:'rebind', block: Langs.BlockState, newSource: string}
+type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent | NotebookRefreshEvent | NotebookSourceChange
 
 type NotebookState = {
   cells: Langs.BlockState[]
@@ -85,6 +74,11 @@ function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: G
   return languagePlugin.bind(scopeDictionary, cell.editor.block);
 }
 
+function clearCell (cell:Langs.BlockState): void{
+  cell.exports = [];
+  cell.code.value = {};
+}
+
 async function bindAllCells() {
   for (var c = 0; c < state.cells.length; c++) {
     let aCell = state.cells[c]
@@ -95,9 +89,47 @@ async function bindAllCells() {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    console.log(aCell)
+    //console.log(aCell)
     // console.log(Object.keys(scopeDictionary))
   }
+}
+
+async function rebindSubsequentCells(cell:Langs.BlockState, newSource: string) {
+  for (var b=0; b < state.cells.length; b++) {
+    if (state.cells[b].editor.id >= cell.editor.id) {
+      let languagePlugin = languagePlugins[state.cells[b].editor.block.language]
+      let block = state.cells[b].editor.block;
+      if (state.cells[b].editor.id == cell.editor.id) {
+        block = languagePlugin.parse(newSource);
+        console.log(block)
+      }
+      let id = state.cells[b].editor.id;
+      let editor:Langs.EditorState = languagePlugin.editor.initialize(id, block); 
+      let newBlock:Langs.BlockState = {editor: editor, code: null, exports: []};  
+      var index = state.cells.indexOf(state.cells[b]);
+      for (var e = 0; e < state.cells[b].exports.length; e++) {
+        let oldExport:Graph.ExportNode = <Graph.ExportNode>state.cells[b].exports[e];
+        delete scopeDictionary[oldExport.variableName];
+      }
+      if (index !== -1) {
+        state.cells[index] = newBlock;
+      }
+    }
+  }
+  console.log(state.cells);
+  for (var b=0; b < state.cells.length; b++) {
+    if (state.cells[b].editor.id >= cell.editor.id) {
+      let aCell = state.cells[b]
+      let {code, exports} = await bindCell(aCell);
+      aCell.code = code
+      aCell.exports = exports
+      for (var e = 0; e < exports.length; e++ ) {
+        let exportNode = exports[e];
+        scopeDictionary[exportNode.variableName] = exportNode;
+      }
+    }
+  }
+  console.log(state.cells);
 }
 
 bindAllCells()
@@ -107,7 +139,8 @@ let paperElement = document.getElementById('paper');
 let maquetteProjector = createProjector();
 
 function evaluate(node:Graph.Node) {
-  if (node.value) return;
+  console.log(node);
+  if ((node.value)&&(Object.keys(node.value).length > 0)) return;
   node.antecedents.forEach(evaluate);
   
   let languagePlugin = languagePlugins[node.language]
@@ -129,8 +162,20 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
         evaluate(block.code)
         block.exports.forEach(evaluate)
           trigger({ kind:'refresh' })
-      }
+      },
+
+      // sourceChange
+      // rebind all blocks after this one
+      rebindSubsequent: (block:Langs.BlockState, newSource: string) => {
+        console.log("Call rebind from: " + JSON.stringify(block));
+        trigger({kind: 'rebind', block: block, newSource: newSource})
+        // evaluate(block.code)
+        // block.exports.forEach(evaluate)
+        //   trigger({ kind:'refresh' })
+        // console.log(state.cells);
+      } 
     }
+  
     let plugin = languagePlugins[cell.editor.block.language]
     // let vnode = plugin.editor.render(state.editor, context)
     let vnode = plugin.editor.render(cell, cell.editor, context)
@@ -205,6 +250,13 @@ function update(state:NotebookState, evt:NotebookEvent) {
 
     case 'remove':
       return {cells: removeCell(state.cells, evt.id)};
+    
+    case 'rebind': {
+      console.log("Rebind in update: "+JSON.stringify(evt))
+      rebindSubsequentCells(evt.block, evt.newSource);
+      return state;
+    }
+
   }
 }
 

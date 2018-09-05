@@ -71,6 +71,7 @@ interface Editor<TState extends EditorState, TEvent> {
    * editor and produces a new state.
    */
   update(state:TState, event:TEvent) : TState
+
 }
 
 /** 
@@ -82,6 +83,8 @@ interface EditorContext<TEvent> {
   /** Trigger an editor-specific event to be handled via the `update` function  */
   trigger(event:TEvent)
   evaluate(block:BlockState)
+  // sourceChange(block: BlockState);
+  rebindSubsequent(block: BlockState, newSource: string);
 }
 
 
