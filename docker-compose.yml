@@ -17,6 +17,8 @@ services:
       - ./client:/app
     entrypoint: /bin/bash
     command: "./entrypoint.sh"
+    environment:
+     - PYTHONSERVICE_URI=http://localhost:7101
 
   wrattler_python_service:
     build:

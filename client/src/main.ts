@@ -62,7 +62,7 @@ type NotebookState = {
   cells: Langs.BlockState[]
 }
 
-// console.log(TWO);
+console.log(TWO);
 // Create an initial notebook state by parsing the sample document
 let index = 0
 let blockStates = documents.map(cell => {

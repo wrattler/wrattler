@@ -171,8 +171,8 @@ class PythonBlockKind implements Langs.Block {
         source: pyBlock.source
 			}
 			
-			// console.log(APIROOT);
-			let url = APIROOT.concat("exports")
+			console.log(APIROOT);
+			let url = APIROOT.concat("/exports")
 			console.log(url);
       // let hash = Md5.hashStr(pyBlock.source)
       
