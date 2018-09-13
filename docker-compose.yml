@@ -6,11 +6,17 @@ services:
       dockerfile: Dockerfile
     ports:
      - "8080:8080"
+    # stdin_open: true
+    # tty: true
     depends_on:
     - wrattler_python_service
     - wrattler_data_store
     networks:
-     - wrattler_nw
+    - wrattler_nw
+    volumes:
+      - ./client:/app
+    entrypoint: /bin/bash
+    command: "./entrypoint.sh"
 
   wrattler_python_service:
     build:

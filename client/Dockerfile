@@ -11,10 +11,13 @@ RUN apt-get update; apt-get -y install yarn
 RUN curl -sL http://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get update; apt-get -y install nodejs
 
-RUN mkdir /app
-ADD . /app
-RUN cd /app; yarn;
-WORKDIR /app/src
+# RUN mkdir app
+# ADD . /app
+# RUN cd /app; yarn;
+WORKDIR /app
 
 EXPOSE 8080
-CMD ["/usr/bin/yarn","start"]
+# RUN ["chmod", "+x", "/app/entrypoint.sh"]
+# RUN ["/usr/bin/yarn"]
+# RUN ["/usr/bin/yarn","start"]
+# CMD [ "npm", "start" ]

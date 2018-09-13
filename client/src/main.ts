@@ -46,7 +46,7 @@ let documents =
     //  {"language": "javascript",
     //   "source": "var c = a + 1; var d = a;"},
     {"language": "python",
-    "source": "a = 1;"},
+    "source": "a = 6;"},
     
   ]
 
