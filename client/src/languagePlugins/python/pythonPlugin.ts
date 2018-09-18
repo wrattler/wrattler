@@ -136,36 +136,43 @@ class PythonBlockKind implements Langs.Block {
     editor: pythonEditor,
     evaluate: (node:Graph.Node) => {
       let pyNode = <Graph.PyNode>node
-      let value = "";
-      let returnArgs = "{";
-      
-      async function getEval(url, body, headers) {
+      async function getValue(blob) {
+        var pathname = new URL(blob).pathname;
+        let headers = {'Content-Type': 'application/json'}
+        let url = APIROOT.concat(pathname)
+        url = url.replace("7101","7102");
         try {
-          const response = await axios.post(url, body, headers);
-          console.log(response.data.exports)
-          console.log(response.data.imports)
-          value = "wibble"
+          const response = await axios.get(url, headers);
+          return response.data
         }
         catch (error) {
           console.error(error);
         }
       }
+
+      async function getEval(body) {
+        let url = APIROOT.concat("/eval")
+        let headers = {'Content-Type': 'application/json'}
+        try {
+          const response = await axios.post(url, body, headers);
+          return getValue(response.data[0].url)
+        }
+        catch (error) {
+          console.error(error);
+        }
+      }
+
       switch(pyNode.kind) {
         case 'code': {
           // this part calls to eval code
           // get s a json
           // json contains urls for all data frames
           // read data from datastore and put into dictionary
-			    let url = APIROOT.concat("/eval")
-			    console.log("Eval url: "+url);
           let hash = Md5.hashStr(pyNode.source)
-      
 			    let body = {"code": pyNode.source,
 									"hash": hash,
 									"frames": {}}
-			    let headers = {'Content-Type': 'application/json'}
-			    
-          return getEval(url, body, headers);
+          return getEval(body);
         }
       }
     },
