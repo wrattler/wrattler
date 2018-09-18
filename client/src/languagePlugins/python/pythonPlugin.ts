@@ -6,7 +6,7 @@ import * as Graph from '../../graph';
 const ts = require('typescript');
 const axios = require('axios');
 declare var APIROOT: string;
-// import {Md5} from 'ts-md5/dist/md5';
+import {Md5} from 'ts-md5/dist/md5';
 
 // ------------------------------------------------------------------------------------------------
 // Python plugin
@@ -135,25 +135,39 @@ class PythonBlockKind implements Langs.Block {
     language: "python",
     editor: pythonEditor,
     evaluate: (node:Graph.Node) => {
-      let pynode = <Graph.PyNode>node
-      let value = "yadda";
+      let pyNode = <Graph.PyNode>node
+      let value = "";
       let returnArgs = "{";
-      let evalCode = "";
-      switch(pynode.kind) {
-        case 'code': 
+      
+      async function getEval(url, body, headers) {
+        try {
+          const response = await axios.post(url, body, headers);
+          console.log(response.data.exports)
+          console.log(response.data.imports)
+          value = "wibble"
+        }
+        catch (error) {
+          console.error(error);
+        }
+      }
+      switch(pyNode.kind) {
+        case 'code': {
           // this part calls to eval code
           // get s a json
           // json contains urls for all data frames
           // read data from datastore and put into dictionary
-          value = "";
-          break;
-        case 'export':
-          let pyExportNode = <Graph.PyExportNode>node
-          let exportNodeName= pyExportNode.variableName;
-          value = pyExportNode.code.value[exportNodeName]
-          break;
+			    let url = APIROOT.concat("/eval")
+			    console.log("Eval url: "+url);
+          let hash = Md5.hashStr(pyNode.source)
+      
+			    let body = {"code": pyNode.source,
+									"hash": hash,
+									"frames": {}}
+			    let headers = {'Content-Type': 'application/json'}
+			    
+          return getEval(url, body, headers);
+        }
       }
-      return value
     },
     parse: (code:string) => {
       return new PythonBlockKind(code);
@@ -174,9 +188,9 @@ class PythonBlockKind implements Langs.Block {
 			console.log(APIROOT);
 			let url = APIROOT.concat("/exports")
 			console.log(url);
-      // let hash = Md5.hashStr(pyBlock.source)
+      let hash = Md5.hashStr(pyBlock.source)
       
-      let hash = "Md5.hashStr(pyBlock.source)"
+      // let hash = "Md5.hashStr(pyBlock.source)"
 			let body = {"code": pyBlock.source,
 									"hash": hash,
 									"frames": Object.keys(scopeDictionary)
@@ -185,8 +199,8 @@ class PythonBlockKind implements Langs.Block {
 			async function getExports() {
 				try {
 					const response = await axios.post(url,body, headers);
-					// console.log(response.data.exports)
-					// console.log(response.data.imports)
+					console.log(response.data.exports)
+					console.log(response.data.imports)
 					for (var n = 0 ; n < response.data.exports.length; n++) {
 						// console.log(response.data.exports[n]);
 						let exportNode:Graph.PyExportNode = {

@@ -5,9 +5,9 @@ import { fsHello } from "./demos/fsdemo";
 import { jsHello } from "./demos/jsdemo";
 import { tsHello } from "./demos/tsdemo";
 
-fsHello();
-jsHello();
-tsHello();
+// fsHello();
+// jsHello();
+// tsHello();
 
 // ------------------------------------------------------------------------------------------------
 // Imports
@@ -39,15 +39,20 @@ var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 // 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
 let documents = 
   [ 
-    {"language": "markdown", 
-     "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
+    // {"language": "markdown", 
+    //  "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
     //  {"language": "javascript",
     //  "source": "var a = 1;"},
     //  {"language": "javascript",
     //   "source": "var c = a + 1; var d = a;"},
-    {"language": "python",
-    "source": "a = 6;"},
-    
+    // {"language": "python",
+    // "source": "a = 1;"},
+    // {"language": "javascript",
+    //   "source": "var c = a + 1; var d = a;"}
+    {
+      "language": "python",
+      "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
+    }
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -62,7 +67,7 @@ type NotebookState = {
   cells: Langs.BlockState[]
 }
 
-console.log(TWO);
+// console.log(TWO);
 // Create an initial notebook state by parsing the sample document
 let index = 0
 let blockStates = documents.map(cell => {
