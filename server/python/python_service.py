@@ -6,15 +6,28 @@ functionality of the wrattler python service.
 import requests
 import re
 import os
+import sys
 import json
 import parser
 import pandas as pd
+import numpy
 
 if 'DATASTORE_URI' in os.environ.keys():
     DATASTORE_URI = os.environ['DATASTORE_URI']
 else:
     DATASTORE_URI = 'http://localhost:7102'
 #DATASTORE_URI = 'https://wrattler-data-store.azurewebsites.net'
+
+
+def cleanup(i):
+    """
+    Function to ensure we can json-ify our values.  For example,
+    pandas returns numpy.int64 rather than int, which are not json-serializable,
+    so we convert them to regular ints here
+    """
+    if isinstance(i, numpy.integer): return int(i)
+    return i
+
 
 def convert_to_pandas_df(frame):
     """
@@ -40,7 +53,7 @@ def convert_from_pandas_df(dataframe):
     for row in range(len(dataframe.values)):
         this_row = {}
         for column in columns:
-            this_row[column] = dataframe[column][row]
+            this_row[column] = cleanup(dataframe[column][row])
         row_list.append(this_row)
     return row_list
 
@@ -62,6 +75,7 @@ def write_frame(data, frame_name, frame_hash):
     write a frame to the data store
     """
     url = '{}/{}/{}'.format(DATASTORE_URI, frame_hash, frame_name)
+#    print(" url is {}".format(url), file=sys.stderr)
     r=requests.put(url,json=data)
     tokenized_response = r.content.decode("utf-8").split()
     if 'StatusMessage:Created' in tokenized_response:
