@@ -11,6 +11,9 @@ import json
 import parser
 import pandas as pd
 import numpy
+import ast
+import collections
+
 
 if 'DATASTORE_URI' in os.environ.keys():
     DATASTORE_URI = os.environ['DATASTORE_URI']
@@ -28,6 +31,35 @@ def cleanup(i):
     if isinstance(i, numpy.integer): return int(i)
     return i
 
+
+def find_assignment_targets(code):
+    """
+    Use an Abstract Syntax Tree (AST) to find any assignment statements, and
+    add the targets to a list.
+    """
+    node = ast.parse(code, mode="exec")
+    target_list = []
+
+    for a,b in ast.iter_fields(node):
+        if isinstance(b, list):
+            for statement in b:
+                if isinstance(statement, ast.Assign):
+                    def _get_targets(targets, output_list):
+                        for target in targets:
+                            if isinstance(target, ast.Name):
+#                                print("Found a name {}".format(target.id))
+                                output_list.append(target.id)
+#                            elif isinstance(target, ast.Tuple):
+#                                for dummy, li in ast.iter_fields(target):
+#                                    for obj in li:
+#                                        output_list.append(obj.id)
+#                                print("Found an iterable {}".format(target))
+#                                output_list += _get_targets(target, output_list)
+#                            else:
+#                                print("found something else {}".format(target.__class__))
+                        return output_list
+                    target_list += _get_targets(statement.targets, [])
+    return target_list
 
 def convert_to_pandas_df(frame):
     """
@@ -145,37 +177,83 @@ def evaluate_code(data):
     else:
         raise RuntimeError("Could not write result to datastore")
 
+def evaluate_code(data):
+    """
+    retrieve inputs from storage, execute code, and store output.
+    """
+    code_string = data["code"]
+    output_hash = data["hash"]
+    if code_string.count("=") != 1: # assume we have simple variable assignemnt
+        raise RuntimeError("Cannot evaluate code - wrong number of '='")
+    assignment_targets = find_assignment_targets(code_string)
 
-def execute_code(code, input_vals):
+    input_frames = data["frames"]
+    frame_dict = retrieve_frames(input_frames)
+    result = execute_code(code_string, frame_dict, assignment_targets)
+    frame_name = assignment_targets[0] ### FIXME -temp, only consider single variable assignment
+    data = [{frame_name : result}] ## FIXME frame name vs variable name
+    wrote_ok = write_frame(data, frame_name, output_hash)
+    if wrote_ok:
+        return [{"name": frame_name,
+                "url": '{}/{}/{}'.format(DATASTORE_URI,
+                                         output_hash,
+                                         frame_name)}]
+    else:
+        raise RuntimeError("Could not write result to datastore")
+
+
+def execute_code(code, input_val_dict, return_vars):
     """
-    Use input frames to substitute values into the code snippet, then evaluate.
+    BETTER APPROACH - construct a string func_string that defines a function f(args)
+    then do exec(func_string), then define another string call_string that calls this function, with
+    our args, and do eval(call_string)
     """
-    # swap out values for input frame variables in the code string
-    tokens = re.split(r'([\W]+)', code)
-    index=0
-    pd_dfs = []
-    for k,v in input_vals.items():
-        pd_dfs.append(convert_to_pandas_df(v))
-        # see if this key k is in the tokenized code snippet.
-        # if it is, replace it with the pandas dataframe pd_df[i]
-        try:
-            i = tokens.index(k)
-            tokens[i] = 'pd_dfs[{}]'.format(index)
-        except(ValueError): # k was not in the code snippet
-            pass
-        index += 1
-# now reassemble the code snippet tokens into a string
-    reassembled_code_string = ""
-    for tok in tokens:
-        reassembled_code_string += tok
+    func_string = "def f():\n"
+    for k,v in input_val_dict.items():
+        func_string += "  {} = convert_to_pandas_df({})\n".format(k,v)
+    func_string += "  {}\n".format(code.strip())
+    func_string += "  return {}".format(return_vars[0])
+    exec(func_string)
+    retval = eval('f()')
     try:
-        result = eval(reassembled_code_string)
-        # should be a pandas dataframe - convert it back to
-        # the wrattler format
-        try:
-            result = convert_from_pandas_df(result)
-            return result
-        except(AttributeError):
+        result = convert_from_pandas_df(retval)
+        return result
+    except(AttributeError):
             raise RuntimeError("Output of %s was not a dataframe" % code)
-    except(NameError):
-        raise RuntimeError("Could not evaluate expression %s" % code)
+    return result
+
+#
+#def execute_code(code, input_vals):
+#    """
+#    Use input frames to substitute values into the code snippet, then evaluate.
+#    """
+#    # swap out values for input frame variables in the code string
+#    tokens = re.split(r'([\W]+)', code)
+#    index=0
+#    pd_dfs = []
+#    for k,v in input_vals.items():
+#        pd_dfs.append(convert_to_pandas_df(v))
+#        # see if this key k is in the tokenized code snippet.
+#        # if it is, replace it with the pandas dataframe pd_df[i]
+#        try:
+#            i = tokens.index(k)
+#            tokens[i] = 'pd_dfs[{}]'.format(index)
+#        except(ValueError): # k was not in the code snippet
+#            pass
+#        index += 1
+## now reassemble the code snippet tokens into a string
+#    reassembled_code_string = ""
+#    for tok in tokens:
+#        reassembled_code_string += tok
+#    try:
+#        result = eval(reassembled_code_string)
+#        # should be a pandas dataframe - convert it back to
+#        # the wrattler format
+#        try:
+#            result = convert_from_pandas_df(result)
+#            return result
+#        except(AttributeError):
+#            raise RuntimeError("Output of %s was not a dataframe" % code)
+#    except(NameError):
+#        raise RuntimeError("Could not evaluate expression %s" % code)
+#
