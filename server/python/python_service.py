@@ -32,35 +32,6 @@ def cleanup(i):
     return i
 
 
-def find_assignment_targets(code):
-    """
-    Use an Abstract Syntax Tree (AST) to find any assignment statements, and
-    add the targets to a list.
-    """
-    node = ast.parse(code, mode="exec")
-    target_list = []
-
-    for a,b in ast.iter_fields(node):
-        if isinstance(b, list):
-            for statement in b:
-                if isinstance(statement, ast.Assign):
-                    def _get_targets(targets, output_list):
-                        for target in targets:
-                            if isinstance(target, ast.Name):
-#                                print("Found a name {}".format(target.id))
-                                output_list.append(target.id)
-#                            elif isinstance(target, ast.Tuple):
-#                                for dummy, li in ast.iter_fields(target):
-#                                    for obj in li:
-#                                        output_list.append(obj.id)
-#                                print("Found an iterable {}".format(target))
-#                                output_list += _get_targets(target, output_list)
-#                            else:
-#                                print("found something else {}".format(target.__class__))
-                        return output_list
-                    target_list += _get_targets(statement.targets, [])
-    return target_list
-
 def convert_to_pandas_df(frame):
     """
     convert wrattler format [{"var1":val1, "var2":val2},{...}]
@@ -115,6 +86,33 @@ def write_frame(data, frame_name, frame_hash):
     return r.status_code == 200
 
 
+def find_assignments(code_string):
+    """
+    returns a dict {"targets: [], "input_vals": []}
+    """
+
+    output_dict = {"targets": [],
+                   "input_vals": []
+                   }
+    node = ast.parse(code_string)
+    ## recursive function to navigate the tree and find assignment targets and input values
+    def _find_elements(node, output_dict, parent=None):
+        if isinstance(node, ast.AST):
+            if isinstance(node, ast.Assign):
+                _find_elements(node.targets, output_dict, "targets")
+                _find_elements(node.value, output_dict, "input_vals")
+            elif isinstance(node, ast.Name) and parent:
+                output_dict[parent].append(node.id)
+            else:
+                for a,b in ast.iter_fields(node):
+                    _find_elements(b, output_dict, parent)
+        elif isinstance(node, list):
+            for element in node:
+                _find_elements(element, output_dict, parent)
+        return output_dict
+    final_dict = _find_elements(node, output_dict)
+    return final_dict
+
 
 def analyze_code(data):
     """
@@ -126,13 +124,12 @@ def analyze_code(data):
     cell_hash = data["hash"]
     imports = []
     exports = []
-    if code.count("=") == 1: # assume we have simple variable assignemnt
-        lhs,rhs = code.split("=")
-        exports.append(lhs.strip())
-        tokens = re.split(r'([\s\+\-\/\*\,\.]+)', rhs)
-        for token in tokens:
-            if token.strip() in frames:
-                imports.append(token.strip())
+
+    assignment_dict = find_assignments(code)
+    exports = assignment_dict["targets"]
+    for variable in assignment_dict["input_vals"]:
+        if variable in frames:
+            imports.append(variable)
     return {"imports": imports,
             "exports": exports}
 
@@ -152,52 +149,34 @@ def retrieve_frames(input_frames):
     return frame_dict
 
 
-
 def evaluate_code(data):
     """
     retrieve inputs from storage, execute code, and store output.
     """
     code_string = data["code"]
     output_hash = data["hash"]
-    if code_string.count("=") != 1: # assume we have simple variable assignemnt
-        raise RuntimeError("Cannot evaluate code - wrong number of '='")
-    lhs,rhs = code_string.split("=")
-    rhs = rhs.strip()
-    input_frames = data["frames"]
-    frame_dict = retrieve_frames(input_frames)
-    result = execute_code(rhs, frame_dict)
-    frame_name = lhs.strip()
-    data = [{frame_name : result}] ## FIXME frame name vs variable name
-    wrote_ok = write_frame(data, frame_name, output_hash)
-    if wrote_ok:
-        return [{"name": frame_name,
-                "url": '{}/{}/{}'.format(DATASTORE_URI,
-                                         output_hash,
-                                         frame_name)}]
-    else:
-        raise RuntimeError("Could not write result to datastore")
-
-def evaluate_code(data):
-    """
-    retrieve inputs from storage, execute code, and store output.
-    """
-    code_string = data["code"]
-    output_hash = data["hash"]
-    if code_string.count("=") != 1: # assume we have simple variable assignemnt
-        raise RuntimeError("Cannot evaluate code - wrong number of '='")
-    assignment_targets = find_assignment_targets(code_string)
+    assign_dict = find_assignments(code_string)
 
     input_frames = data["frames"]
     frame_dict = retrieve_frames(input_frames)
-    result = execute_code(code_string, frame_dict, assignment_targets)
-    frame_name = assignment_targets[0] ### FIXME -temp, only consider single variable assignment
-    data = [{frame_name : result}] ## FIXME frame name vs variable name
-    wrote_ok = write_frame(data, frame_name, output_hash)
+    results = execute_code(code_string, frame_dict, assign_dict['targets'])
+    frame_names = assign_dict['targets']
+    if len(results) != len(frame_names):
+        raise RuntimeError("no. of output frames does not match no. results")
+    ## there can be more than one output frames
+    return_dict = {
+        "output": "",
+        "frames": []
+    }
+    wrote_ok=True
+    for i, name in enumerate(frame_names):
+        wrote_ok &= write_frame({name : results[i]}, name, output_hash)
+        return_dict["frames"].append({"name": name,"url": "{}/{}/{}"\
+                                      .format(DATASTORE_URI,
+                                              output_hash,
+                                              name)})
     if wrote_ok:
-        return [{"name": frame_name,
-                "url": '{}/{}/{}'.format(DATASTORE_URI,
-                                         output_hash,
-                                         frame_name)}]
+        return return_dict
     else:
         raise RuntimeError("Could not write result to datastore")
 
