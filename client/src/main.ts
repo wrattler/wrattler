@@ -43,8 +43,8 @@ let documents =
     //  "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
      {"language": "javascript",
      "source": "var a = 1;"},
-    //  {"language": "javascript",
-    //   "source": "var c = a + 1;"},
+     {"language": "javascript",
+      "source": "var c = a + 1;"},
     // {"language": "python",
     // "source": "a = 1;"},
     // {"language": "javascript",
@@ -98,8 +98,8 @@ async function bindAllCells() {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    // console.log(aCell)
-    // console.log(Object.keys(scopeDictionary))
+    console.log(aCell)
+    console.log(Object.keys(scopeDictionary))
   }
 }
 
@@ -149,11 +149,10 @@ let maquetteProjector = createProjector();
 async function evaluate(node:Graph.Node) {
   if ((node.value)&&(Object.keys(node.value).length > 0)) return;
   node.antecedents.forEach(evaluate);
-  
   let languagePlugin = languagePlugins[node.language]
-  // console.log(node)
   node.value = await languagePlugin.evaluate(node);
-  console.log(node)
+  console.log("Received value:"+JSON.stringify(node.value));
+  return true
 }
 
 function render(trigger:(NotebookEvent) => void, state:NotebookState) {
@@ -166,13 +165,11 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
         trigger({ kind:'block', id:cell.editor.id, event:event }),
 
       evaluate: (block:Langs.BlockState) => {
-        evaluate(block.code)
-        for (var e = 0; e < block.exports.length; e++)
-        {
-          evaluate(block.exports[e])
-        }
-        // block.exports.forEach(evaluate)
-        // trigger({ kind:'refresh' })
+        return evaluate(block.code).then(()=>{
+          console.log("Going to evaluate exports:")
+          block.exports.forEach(evaluate)
+          trigger({ kind:'refresh' })
+        })
       },
 
       // sourceChange

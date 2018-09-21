@@ -108,16 +108,6 @@ class JavascriptBlockKind implements Langs.Block {
     
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
       let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
-      // function display() {
-      //   if (cell.code == undefined)
-      //     if (cell.code == undefined)
-      // }
-      async function getCodeValue() {
-        let response = await cell.code.value;
-        console.log(JSON.stringify(response))
-        return response.toString();
-      }
-      
       
       let results = h('div', {}, [
         h('p', {
@@ -210,21 +200,19 @@ class JavascriptBlockKind implements Langs.Block {
               evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
               console.log(evalCode)
               value = eval(evalCode);
-              console.log(value)
+              console.log("Returning value"+JSON.stringify(value))
               resolve(value);
           })
         case 'export':
           return new Promise<any>(resolve => {
             let jsExportNode = <Graph.JsExportNode>node
             let exportNodeName= jsExportNode.variableName;
-            console.log(jsExportNode);
+            console.log("Trying to access export node "+exportNodeName+" : "+JSON.stringify(jsExportNode.code.value));
             let codeValue = jsExportNode.code.value[exportNodeName];
-            console.log(codeValue);
             resolve(codeValue);
           })
+          
       }
-      // console.log(value);
-      // return value
     },
     parse: (code:string) => {
       //console.log(code);
