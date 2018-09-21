@@ -145,7 +145,7 @@ def retrieve_frames(input_frames):
         if r.status_code != 200:
             raise RuntimeError("Problem retrieving dataframe %s"%frame["name"])
         frame_content = json.loads(r.content.decode("utf-8"))
-        frame_dict[frame["name"]] = frame_content
+        frame_dict[frame["name"]] = frame_content[frame["name"]]
     return frame_dict
 
 
@@ -161,9 +161,10 @@ def evaluate_code(data):
     frame_dict = retrieve_frames(input_frames)
     results = execute_code(code_string, frame_dict, assign_dict['targets'])
     frame_names = assign_dict['targets']
+
     if len(results) != len(frame_names):
         raise RuntimeError("no. of output frames does not match no. results")
-    ## there can be more than one output frames
+    ## there can be more than one output frame
     return_dict = {
         "output": "",
         "frames": []
@@ -183,23 +184,33 @@ def evaluate_code(data):
 
 def execute_code(code, input_val_dict, return_vars):
     """
-    BETTER APPROACH - construct a string func_string that defines a function f(args)
-    then do exec(func_string), then define another string call_string that calls this function, with
-    our args, and do eval(call_string)
+    BETTER APPROACH - construct a string func_string that defines a function f()
+    then do exec(func_string), then define another string call_string that calls this function,
+    and then finally do eval(call_string)
     """
     func_string = "def f():\n"
     for k,v in input_val_dict.items():
         func_string += "  {} = convert_to_pandas_df({})\n".format(k,v)
     func_string += "  {}\n".format(code.strip())
-    func_string += "  return {}".format(return_vars[0])
+    func_string += "  return "
+    for rv in return_vars:
+        func_string += "{},".format(rv)
+    func_string += "\n"
     exec(func_string)
-    retval = eval('f()')
-    try:
-        result = convert_from_pandas_df(retval)
+    func_output = eval('f()')
+#    return func_output, func_string
+    if isinstance(func_output, collections.Iterable):
+        results = []
+        for item in func_output:
+            try:
+                result = convert_from_pandas_df(item)
+                results.append(result)
+            except(AttributeError):
+                raise RuntimeError("Output of %s was not a dataframe" % code)
+        return results
+    else:
+        result = convert_from_pandas_df(func_output)
         return result
-    except(AttributeError):
-            raise RuntimeError("Output of %s was not a dataframe" % code)
-    return result
 
 #
 #def execute_code(code, input_vals):
