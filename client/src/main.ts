@@ -43,16 +43,16 @@ let documents =
     //  "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
      {"language": "javascript",
      "source": "var a = 1;"},
-     {"language": "javascript",
-      "source": "var c = a + 1; var d = a;"},
+    //  {"language": "javascript",
+    //   "source": "var c = a + 1;"},
     // {"language": "python",
     // "source": "a = 1;"},
     // {"language": "javascript",
     //   "source": "var c = a + 1; var d = a;"}
-    {
-      "language": "python",
-      "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
-    }
+    // {
+    //   "language": "python",
+    //   "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
+    // }
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -146,20 +146,19 @@ bindAllCells()
 // Get the #paper element and create maquette renderer
 let paperElement = document.getElementById('paper');
 let maquetteProjector = createProjector();
-
 async function evaluate(node:Graph.Node) {
   if ((node.value)&&(Object.keys(node.value).length > 0)) return;
   node.antecedents.forEach(evaluate);
   
   let languagePlugin = languagePlugins[node.language]
+  // console.log(node)
   node.value = await languagePlugin.evaluate(node);
-  
+  console.log(node)
 }
 
 function render(trigger:(NotebookEvent) => void, state:NotebookState) {
 
   let nodes = state.cells.map(cell => {
-
     // The `context` object is passed to the render function. The `trigger` method
     // of the object can be used to trigger events that cause a state update. 
     let context : Langs.EditorContext<any> = {
@@ -168,14 +167,17 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
 
       evaluate: (block:Langs.BlockState) => {
         evaluate(block.code)
-        block.exports.forEach(evaluate)
-          trigger({ kind:'refresh' })
+        for (var e = 0; e < block.exports.length; e++)
+        {
+          evaluate(block.exports[e])
+        }
+        // block.exports.forEach(evaluate)
+        // trigger({ kind:'refresh' })
       },
 
       // sourceChange
       // rebind all blocks after this one
       rebindSubsequent: (block:Langs.BlockState, newSource: string) => {
-        console.log("Call rebind from: " + JSON.stringify(block));
         trigger({kind: 'rebind', block: block, newSource: newSource})
       } 
     }
@@ -256,7 +258,7 @@ function update(state:NotebookState, evt:NotebookEvent) {
       return {cells: removeCell(state.cells, evt.id)};
     
     case 'rebind': {
-      console.log("Rebind in update: "+JSON.stringify(evt))
+      // console.log("Rebind in update: "+JSON.stringify(evt))
       rebindSubsequentCells(evt.block, evt.newSource);
       return state;
     }
