@@ -143,7 +143,7 @@ class PythonBlockKind implements Langs.Block {
         url = url.replace("7101","7102");
         try {
           const response = await axios.get(url, headers);
-          return response.data
+          return response.data[0]
         }
         catch (error) {
           console.error(error);
@@ -174,6 +174,14 @@ class PythonBlockKind implements Langs.Block {
 									"frames": {}}
           return getEval(body);
         }
+        case 'export':
+          return new Promise<any>(resolve => {
+            let pyExportNode = <Graph.PyExportNode>node
+            let exportNodeName= pyExportNode.variableName;
+            console.log("Trying to access export node "+exportNodeName+" : "+JSON.stringify(pyExportNode.code.value));
+            let codeValue = pyExportNode.code.value[exportNodeName];
+            resolve(codeValue);
+        })
       }
     },
     parse: (code:string) => {

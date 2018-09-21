@@ -44,15 +44,19 @@ let documents =
      {"language": "javascript",
      "source": "var a = 1;"},
      {"language": "javascript",
-      "source": "var c = a + 1;"},
+      "source": "var c = a+1;"},
     // {"language": "python",
     // "source": "a = 1;"},
     // {"language": "javascript",
     //   "source": "var c = a + 1; var d = a;"}
-    // {
-    //   "language": "python",
-    //   "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
-    // }
+    {
+      "language": "python",
+      "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
+    },
+    {
+      "language": "javascript",
+      "source": "var length = df.length"
+    }
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -146,13 +150,23 @@ bindAllCells()
 // Get the #paper element and create maquette renderer
 let paperElement = document.getElementById('paper');
 let maquetteProjector = createProjector();
+
+
 async function evaluate(node:Graph.Node) {
-  if ((node.value)&&(Object.keys(node.value).length > 0)) return;
+  if ((node.value)&&(Object.keys(node.value).length > 0)) return ;
+  // return doAntecedents(node.antecedents).then(()=>{
+  //   let languagePlugin = languagePlugins[node.language]
+  //   node.value = await languagePlugin.evaluate(node);
+  //   console.log("Received value:"+JSON.stringify(node.value));
+  //   return true;
+  // })
   node.antecedents.forEach(evaluate);
+  //let a = await Promise.all(node.antecedents.map(ant => {console.log("Eval:"+JSON.stringify((<Graph.JsExportNode>ant).variableName));evaluate(ant)}))
+  // console.log("Promises: "+ JSON.stringify(a));
   let languagePlugin = languagePlugins[node.language]
   node.value = await languagePlugin.evaluate(node);
-  console.log("Received value:"+JSON.stringify(node.value));
-  return true
+  console.log("Received value: "+JSON.stringify(node.value));
+  return;
 }
 
 function render(trigger:(NotebookEvent) => void, state:NotebookState) {
