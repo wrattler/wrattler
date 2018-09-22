@@ -20,7 +20,6 @@ import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugi
 import { javascriptLanguagePlugin } from './languagePlugins/javascript/javascriptPlugin'
 import { pythonLanguagePlugin } from './languagePlugins/python/pythonPlugin'
 require('./editor.css');
-declare var TWO: string;
 
 
 
@@ -52,6 +51,10 @@ let documents =
     {
       "language": "python",
       "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
+    },
+    {
+      "language": "javascript",
+      "source": "var len = df.length"
     }
   ]
 
@@ -67,7 +70,6 @@ type NotebookState = {
   cells: Langs.BlockState[]
 }
 
-// console.log(TWO);
 // Create an initial notebook state by parsing the sample document
 let index = 0
 let blockStates = documents.map(cell => {
@@ -149,7 +151,7 @@ let maquetteProjector = createProjector();
 
 async function evaluate(node:Graph.Node) {
   if ((node.value)&&(Object.keys(node.value).length > 0)) return;
-  node.antecedents.forEach(evaluate);
+  for(var ant of node.antecedents) await evaluate(ant);
   
   let languagePlugin = languagePlugins[node.language]
   node.value = await languagePlugin.evaluate(node);
@@ -166,10 +168,10 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
       trigger: (event:any) => 
         trigger({ kind:'block', id:cell.editor.id, event:event }),
 
-      evaluate: (block:Langs.BlockState) => {
-        evaluate(block.code)
-        block.exports.forEach(evaluate)
-          trigger({ kind:'refresh' })
+      evaluate: async (block:Langs.BlockState) => {
+        await evaluate(block.code)
+        for(var exp of block.exports) await evaluate(exp)
+        trigger({ kind:'refresh' })
       },
 
       // sourceChange

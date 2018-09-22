@@ -2,11 +2,13 @@ import * as monaco from 'monaco-editor';
 import {h,createProjector,VNode} from 'maquette';
 import * as Langs from '../../languages'; 
 import * as Graph from '../../graph'; 
+import {Md5} from 'ts-md5/dist/md5';
 
 const ts = require('typescript');
 const axios = require('axios');
-declare var APIROOT: string;
-import {Md5} from 'ts-md5/dist/md5';
+
+declare var PYTHONSERVICE_URI: string;
+declare var DATASTORE_URI: string;
 
 // ------------------------------------------------------------------------------------------------
 // Python plugin
@@ -136,11 +138,11 @@ class PythonBlockKind implements Langs.Block {
     editor: pythonEditor,
     evaluate: (node:Graph.Node) => {
       let pyNode = <Graph.PyNode>node
+
       async function getValue(blob) {
         var pathname = new URL(blob).pathname;
         let headers = {'Content-Type': 'application/json'}
-        let url = APIROOT.concat(pathname)
-        url = url.replace("7101","7102");
+        let url = DATASTORE_URI.concat(pathname)
         try {
           const response = await axios.get(url, headers);
           return response.data
@@ -151,11 +153,13 @@ class PythonBlockKind implements Langs.Block {
       }
 
       async function getEval(body) {
-        let url = APIROOT.concat("/eval")
+        let url = PYTHONSERVICE_URI.concat("/eval")
         let headers = {'Content-Type': 'application/json'}
         try {
           const response = await axios.post(url, body, headers);
-          return getValue(response.data[0].url)
+          var results = {}
+          for(var df of response.data) results[df.name] = await getValue(df.url)
+          return results;
         }
         catch (error) {
           console.error(error);
@@ -163,17 +167,18 @@ class PythonBlockKind implements Langs.Block {
       }
 
       switch(pyNode.kind) {
-        case 'code': {
-          // this part calls to eval code
-          // get s a json
-          // json contains urls for all data frames
-          // read data from datastore and put into dictionary
+        case 'code': 
           let hash = Md5.hashStr(pyNode.source)
 			    let body = {"code": pyNode.source,
 									"hash": hash,
 									"frames": {}}
           return getEval(body);
-        }
+
+        case 'export':
+          let pyExportNode = <Graph.PyExportNode>node
+          let exportNodeName= pyExportNode.variableName;
+          var value = pyExportNode.code.value[exportNodeName]
+          return value
       }
     },
     parse: (code:string) => {
@@ -192,9 +197,7 @@ class PythonBlockKind implements Langs.Block {
         source: pyBlock.source
 			}
 			
-			console.log(APIROOT);
-			let url = APIROOT.concat("/exports")
-			console.log(url);
+			let url = PYTHONSERVICE_URI.concat("/exports")
       let hash = Md5.hashStr(pyBlock.source)
       
       // let hash = "Md5.hashStr(pyBlock.source)"
