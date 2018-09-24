@@ -145,7 +145,7 @@ class PythonBlockKind implements Langs.Block {
         let url = DATASTORE_URI.concat(pathname)
         try {
           const response = await axios.get(url, headers);
-          return response.data
+          return response.data[0]
         }
         catch (error) {
           console.error(error);
