@@ -20,7 +20,6 @@ import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugi
 import { javascriptLanguagePlugin } from './languagePlugins/javascript/javascriptPlugin'
 import { pythonLanguagePlugin } from './languagePlugins/python/pythonPlugin'
 require('./editor.css');
-declare var TWO: string;
 
 
 
@@ -55,7 +54,7 @@ let documents =
     },
     {
       "language": "javascript",
-      "source": "var length = df.length"
+      "source": "var len = df.length"
     }
   ]
 
@@ -71,7 +70,6 @@ type NotebookState = {
   cells: Langs.BlockState[]
 }
 
-// console.log(TWO);
 // Create an initial notebook state by parsing the sample document
 let index = 0
 let blockStates = documents.map(cell => {
@@ -153,16 +151,9 @@ let maquetteProjector = createProjector();
 
 
 async function evaluate(node:Graph.Node) {
-  if ((node.value)&&(Object.keys(node.value).length > 0)) return ;
-  // return doAntecedents(node.antecedents).then(()=>{
-  //   let languagePlugin = languagePlugins[node.language]
-  //   node.value = await languagePlugin.evaluate(node);
-  //   console.log("Received value:"+JSON.stringify(node.value));
-  //   return true;
-  // })
-  node.antecedents.forEach(evaluate);
-  //let a = await Promise.all(node.antecedents.map(ant => {console.log("Eval:"+JSON.stringify((<Graph.JsExportNode>ant).variableName));evaluate(ant)}))
-  // console.log("Promises: "+ JSON.stringify(a));
+  if ((node.value)&&(Object.keys(node.value).length > 0)) return;
+  for(var ant of node.antecedents) await evaluate(ant);
+  
   let languagePlugin = languagePlugins[node.language]
   node.value = await languagePlugin.evaluate(node);
   console.log("Received value: "+JSON.stringify(node.value));
@@ -177,13 +168,12 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
     let context : Langs.EditorContext<any> = {
       trigger: (event:any) => 
         trigger({ kind:'block', id:cell.editor.id, event:event }),
+      
+      evaluate: async (block:Langs.BlockState) => {
+        await evaluate(block.code)
+        for(var exp of block.exports) await evaluate(exp)
+        trigger({ kind:'refresh' })
 
-      evaluate: (block:Langs.BlockState) => {
-        return evaluate(block.code).then(()=>{
-          console.log("Going to evaluate exports:")
-          block.exports.forEach(evaluate)
-          trigger({ kind:'refresh' })
-        })
       },
 
       // sourceChange

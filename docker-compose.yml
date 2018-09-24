@@ -21,7 +21,8 @@ services:
     command: "./entrypoint.sh"
     environment:
      - PYTHONSERVICE_URI=http://localhost:7101
-
+     - DATASTORE_URI=http://localhost:7102
+     
   wrattler_python_service:
     build:
       context: server/python

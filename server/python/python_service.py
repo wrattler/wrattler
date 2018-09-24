@@ -135,7 +135,7 @@ def evaluate_code(data):
     frame_dict = retrieve_frames(input_frames)
     result = execute_code(rhs, frame_dict)
     frame_name = lhs.strip()
-    data = [{frame_name : result}] ## FIXME frame name vs variable name
+    data = result ## FIXME frame name vs variable name
     wrote_ok = write_frame(data, frame_name, output_hash)
     if wrote_ok:
         return [{"name": frame_name,

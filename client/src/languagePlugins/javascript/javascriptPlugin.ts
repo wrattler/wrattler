@@ -176,12 +176,30 @@ class JavascriptBlockKind implements Langs.Block {
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
-    evaluate: (node:Graph.Node) => {
+    evaluate: async (node:Graph.Node) => {
       let jsnode = <Graph.JsNode>node
       var value: Promise<any>;
       let returnArgs = "{";
       let evalCode = "";
-
+      function getValue() {
+        let jsCodeNode = <Graph.JsCodeNode>node
+        for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
+          returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
+        }
+        returnArgs = returnArgs.concat("}")
+        let importedVars = "";
+        var argDictionary:{[key: string]: string} = {}
+        for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
+          let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
+          argDictionary[imported.variableName] = imported.value;
+          importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
+        }
+        evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
+        console.log(evalCode)
+        value = eval(evalCode);
+        console.log(value);
+        return value;
+      }
       switch(jsnode.kind) {
         case 'code': 
           return new Promise<any>(resolve => {
@@ -204,14 +222,12 @@ class JavascriptBlockKind implements Langs.Block {
               resolve(value);
           })
         case 'export':
-          return new Promise<any>(resolve => {
-            let jsExportNode = <Graph.JsExportNode>node
-            let exportNodeName= jsExportNode.variableName;
-            console.log("Trying to access export node "+exportNodeName+" : "+JSON.stringify(jsExportNode.code.value));
-            let codeValue = jsExportNode.code.value[exportNodeName];
-            resolve(codeValue);
-          })
-          
+
+          let jsExportNode = <Graph.JsExportNode>node
+          let exportNodeName= jsExportNode.variableName;
+          value = jsExportNode.code.value[exportNodeName]
+          return value
+
       }
     },
     parse: (code:string) => {
