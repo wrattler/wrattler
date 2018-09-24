@@ -25,7 +25,6 @@ class JavascriptBlockKind implements Langs.Block {
     }
   }
   
-  
   function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
     return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
       let tsSourceFile = ts.createSourceFile(
@@ -106,20 +105,17 @@ class JavascriptBlockKind implements Langs.Block {
       }
     },
 
+    
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
       let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
-      // console.log(cell)
-      // function display() {
-      //   if (cell.code == undefined)
-      //     if (cell.code == undefined)
-      // }
+      
       let results = h('div', {}, [
         h('p', {
             style: "height:75px; position:relative", 
             onclick:() => context.trigger({kind:'edit'})
           }, 
           [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
-          // [ cell.code==undefined ? evalButton : ("Value is: ") ]),
+          // [ cell.code==undefined ? evalButton : ("Value is: "+cell.code.value) ]),
       ]);
  
       let afterCreateHandler = (el) => { 
@@ -182,10 +178,9 @@ class JavascriptBlockKind implements Langs.Block {
     editor: javascriptEditor,
     evaluate: async (node:Graph.Node) => {
       let jsnode = <Graph.JsNode>node
-      let value = "yadda";
+      var value: Promise<any>;
       let returnArgs = "{";
       let evalCode = "";
-
       function getValue() {
         let jsCodeNode = <Graph.JsCodeNode>node
         for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
@@ -205,19 +200,38 @@ class JavascriptBlockKind implements Langs.Block {
         console.log(value);
         return value;
       }
-
       switch(jsnode.kind) {
         case 'code': 
-          return getValue();
+          return new Promise<any>(resolve => {
+              let jsCodeNode = <Graph.JsCodeNode>node
+              for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
+                returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
+              }
+              returnArgs = returnArgs.concat("}")
+              let importedVars = "";
+              var argDictionary:{[key: string]: string} = {}
+              for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
+                let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
+                argDictionary[imported.variableName] = imported.value;
+                importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
+              }
+              evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
+              console.log(evalCode)
+              value = eval(evalCode);
+              console.log("Returning value"+JSON.stringify(value))
+              resolve(value);
+          })
         case 'export':
+
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName;
           value = jsExportNode.code.value[exportNodeName]
           return value
+
       }
     },
     parse: (code:string) => {
-      console.log(code);
+      //console.log(code);
       return new JavascriptBlockKind(code);
     },
     bind: (scopeDictionary: {}, block: Langs.Block) => {

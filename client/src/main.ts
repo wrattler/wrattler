@@ -43,7 +43,7 @@ let documents =
      {"language": "javascript",
      "source": "var a = 1;"},
      {"language": "javascript",
-      "source": "var c = a + 1; var d = a;"},
+      "source": "var c = a+1;"},
     // {"language": "python",
     // "source": "a = 1;"},
     // {"language": "javascript",
@@ -100,8 +100,8 @@ async function bindAllCells() {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    // console.log(aCell)
-    // console.log(Object.keys(scopeDictionary))
+    console.log(aCell)
+    console.log(Object.keys(scopeDictionary))
   }
 }
 
@@ -149,35 +149,36 @@ bindAllCells()
 let paperElement = document.getElementById('paper');
 let maquetteProjector = createProjector();
 
+
 async function evaluate(node:Graph.Node) {
   if ((node.value)&&(Object.keys(node.value).length > 0)) return;
   for(var ant of node.antecedents) await evaluate(ant);
   
   let languagePlugin = languagePlugins[node.language]
   node.value = await languagePlugin.evaluate(node);
-  
+  console.log("Received value: "+JSON.stringify(node.value));
+  return;
 }
 
 function render(trigger:(NotebookEvent) => void, state:NotebookState) {
 
   let nodes = state.cells.map(cell => {
-
     // The `context` object is passed to the render function. The `trigger` method
     // of the object can be used to trigger events that cause a state update. 
     let context : Langs.EditorContext<any> = {
       trigger: (event:any) => 
         trigger({ kind:'block', id:cell.editor.id, event:event }),
-
+      
       evaluate: async (block:Langs.BlockState) => {
         await evaluate(block.code)
         for(var exp of block.exports) await evaluate(exp)
         trigger({ kind:'refresh' })
+
       },
 
       // sourceChange
       // rebind all blocks after this one
       rebindSubsequent: (block:Langs.BlockState, newSource: string) => {
-        console.log("Call rebind from: " + JSON.stringify(block));
         trigger({kind: 'rebind', block: block, newSource: newSource})
       } 
     }
@@ -258,7 +259,7 @@ function update(state:NotebookState, evt:NotebookEvent) {
       return {cells: removeCell(state.cells, evt.id)};
     
     case 'rebind': {
-      console.log("Rebind in update: "+JSON.stringify(evt))
+      // console.log("Rebind in update: "+JSON.stringify(evt))
       rebindSubsequentCells(evt.block, evt.newSource);
       return state;
     }
