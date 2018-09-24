@@ -223,8 +223,9 @@ function update(state:NotebookState, evt:NotebookEvent) {
       }).reduce ((a,b)=> a.concat(b));
   }
 
-  
+  console.log(state);
   switch(evt.kind) {
+    
     case 'block': {
       let newCells = state.cells.map(state => {
         if (state.editor.id != evt.id) 
@@ -242,7 +243,7 @@ function update(state:NotebookState, evt:NotebookEvent) {
     }
     case 'add': {
       let newId = index++;
-      let newDocument = { "language": "javascript", 
+      let newDocument = { "language": "python", 
                           "source": "var z = "+newId};
       let newPlugin = languagePlugins[newDocument.language]; 
       let newBlock = newPlugin.parse(newDocument.source);
