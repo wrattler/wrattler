@@ -39,12 +39,8 @@ module.exports = {
         __dirname
       ),
       new webpack.DefinePlugin({
-        PRODUCTION: JSON.stringify(true),
-        VERSION: JSON.stringify("5fa3b9"),
-        BROWSER_SUPPORTS_HTML5: true,
-        TWO: JSON.stringify(process.env),
-        APIROOT_TEST: '"https://httpbin.org/"',
-        APIROOT: JSON.stringify(process.env.PYTHONSERVICE_URI)
+        PYTHONSERVICE_URI: JSON.stringify(typeof(process.env.PYTHONSERVICE_URI)=="undefined"?"http://localhost:7101":process.env.PYTHONSERVICE_URI),
+        DATASTORE_URI: JSON.stringify(typeof(process.env.DATASTORE_URI)=="undefined"?"http://localhost:7102":process.env.DATASTORE_URI)
     })
   ]),
   resolve: {

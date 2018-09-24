@@ -5,9 +5,9 @@ import { fsHello } from "./demos/fsdemo";
 import { jsHello } from "./demos/jsdemo";
 import { tsHello } from "./demos/tsdemo";
 
-fsHello();
-jsHello();
-tsHello();
+// fsHello();
+// jsHello();
+// tsHello();
 
 // ------------------------------------------------------------------------------------------------
 // Imports
@@ -20,7 +20,6 @@ import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugi
 import { javascriptLanguagePlugin } from './languagePlugins/javascript/javascriptPlugin'
 import { pythonLanguagePlugin } from './languagePlugins/python/pythonPlugin'
 require('./editor.css');
-declare var TWO: string;
 
 
 
@@ -39,15 +38,24 @@ var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 // 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
 let documents = 
   [ 
-    {"language": "markdown", 
-     "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
-    //  {"language": "javascript",
-    //  "source": "var a = 1;"},
-    //  {"language": "javascript",
-    //   "source": "var c = a + 1; var d = a;"},
-    {"language": "python",
-    "source": "a = 6;"},
-    
+    // {"language": "markdown", 
+    //  "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
+     {"language": "javascript",
+     "source": "var a = 1;"},
+     {"language": "javascript",
+      "source": "var c = a + 1; var d = a;"},
+    // {"language": "python",
+    // "source": "a = 1;"},
+    // {"language": "javascript",
+    //   "source": "var c = a + 1; var d = a;"}
+    {
+      "language": "python",
+      "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
+    },
+    {
+      "language": "javascript",
+      "source": "var len = df.length"
+    }
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -62,7 +70,6 @@ type NotebookState = {
   cells: Langs.BlockState[]
 }
 
-console.log(TWO);
 // Create an initial notebook state by parsing the sample document
 let index = 0
 let blockStates = documents.map(cell => {
@@ -93,8 +100,8 @@ async function bindAllCells() {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    console.log(aCell)
-    console.log(Object.keys(scopeDictionary))
+    // console.log(aCell)
+    // console.log(Object.keys(scopeDictionary))
   }
 }
 
@@ -142,14 +149,13 @@ bindAllCells()
 let paperElement = document.getElementById('paper');
 let maquetteProjector = createProjector();
 
-function evaluate(node:Graph.Node) {
-  console.log(node);
+async function evaluate(node:Graph.Node) {
   if ((node.value)&&(Object.keys(node.value).length > 0)) return;
-  node.antecedents.forEach(evaluate);
+  for(var ant of node.antecedents) await evaluate(ant);
   
   let languagePlugin = languagePlugins[node.language]
-  node.value = languagePlugin.evaluate(node);
-  console.log(node);
+  node.value = await languagePlugin.evaluate(node);
+  
 }
 
 function render(trigger:(NotebookEvent) => void, state:NotebookState) {
@@ -162,10 +168,10 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
       trigger: (event:any) => 
         trigger({ kind:'block', id:cell.editor.id, event:event }),
 
-      evaluate: (block:Langs.BlockState) => {
-        evaluate(block.code)
-        block.exports.forEach(evaluate)
-          trigger({ kind:'refresh' })
+      evaluate: async (block:Langs.BlockState) => {
+        await evaluate(block.code)
+        for(var exp of block.exports) await evaluate(exp)
+        trigger({ kind:'refresh' })
       },
 
       // sourceChange
@@ -173,10 +179,6 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
       rebindSubsequent: (block:Langs.BlockState, newSource: string) => {
         console.log("Call rebind from: " + JSON.stringify(block));
         trigger({kind: 'rebind', block: block, newSource: newSource})
-        // evaluate(block.code)
-        // block.exports.forEach(evaluate)
-        //   trigger({ kind:'refresh' })
-        // console.log(state.cells);
       } 
     }
   

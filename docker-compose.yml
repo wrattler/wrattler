@@ -15,11 +15,14 @@ services:
     - wrattler_nw
     volumes:
       - ./client:/app
+      - ./client/src:/app/src
+      - ./client/src/languagePlugins:/app/src/languagePlugins
     entrypoint: /bin/bash
     command: "./entrypoint.sh"
     environment:
      - PYTHONSERVICE_URI=http://localhost:7101
-
+     - DATASTORE_URI=http://localhost:7102
+     
   wrattler_python_service:
     build:
       context: server/python

@@ -159,6 +159,7 @@ def evaluate_code(data):
 
     input_frames = data["frames"]
     frame_dict = retrieve_frames(input_frames)
+
     results = execute_code(code_string, frame_dict, assign_dict['targets'])
     frame_names = assign_dict['targets']
 
@@ -176,6 +177,7 @@ def evaluate_code(data):
                                       .format(DATASTORE_URI,
                                               output_hash,
                                               name)})
+
     if wrote_ok:
         return return_dict
     else:

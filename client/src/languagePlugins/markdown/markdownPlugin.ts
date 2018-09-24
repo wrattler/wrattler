@@ -162,20 +162,8 @@ class MarkdownBlockKind implements Langs.Block {
 					  }, 10);
 			})
     },
-    evaluate: (node:Graph.Node) => {
-      // let jsnode = <Graph.JsNode>node
-      // switch(jsnode.kind) {
-      //   case 'code': 
-      //     // ..
-      //     jsnode
-      //     break;
-
-      //   case 'export':
-      //     jsnode
-      //     break;
-      //     // ...
-      // }
-      return "yadda"
+    evaluate: async (node:Graph.Node) => {
+      return {};
     },
   }
   
