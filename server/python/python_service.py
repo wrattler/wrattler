@@ -186,18 +186,22 @@ def evaluate_code(data):
 
 def execute_code(code, input_val_dict, return_vars):
     """
-    BETTER APPROACH - construct a string func_string that defines a function f()
+    Construct a string func_string that defines a function f()
     then do exec(func_string), then define another string call_string that calls this function,
     and then finally do eval(call_string)
     """
     func_string = "def f():\n"
     for k,v in input_val_dict.items():
-        func_string += "  {} = convert_to_pandas_df({})\n".format(k,v)
-    func_string += "  {}\n".format(code.strip())
-    func_string += "  return "
+        func_string += "    {} = convert_to_pandas_df({})\n".format(k,v)
+    ## need to worry about indentation for multi-line code fragments.
+    ## split the code string by newline character, and prepend 4 spaces to each line.
+    for line in code.strip().split("\n"):
+        func_string += "    {}\n".format(line)
+    func_string += "    return "
     for rv in return_vars:
         func_string += "{},".format(rv)
     func_string += "\n"
+    print(func_string)
     exec(func_string)
     func_output = eval('f()')
 #    return func_output, func_string
