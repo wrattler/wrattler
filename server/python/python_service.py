@@ -172,7 +172,7 @@ def evaluate_code(data):
     }
     wrote_ok=True
     for i, name in enumerate(frame_names):
-        wrote_ok &= write_frame({name : results[i]}, name, output_hash)
+        wrote_ok &= write_frame(results[i], name, output_hash)
         return_dict["frames"].append({"name": name,"url": "{}/{}/{}"\
                                       .format(DATASTORE_URI,
                                               output_hash,
@@ -184,7 +184,7 @@ def evaluate_code(data):
         raise RuntimeError("Could not write result to datastore")
 
 
-def execute_code(code, input_val_dict, return_vars):
+def execute_code(code, input_val_dict, return_vars, verbose=False):
     """
     Construct a string func_string that defines a function f()
     then do exec(func_string), then define another string call_string that calls this function,
@@ -201,10 +201,11 @@ def execute_code(code, input_val_dict, return_vars):
     for rv in return_vars:
         func_string += "{},".format(rv)
     func_string += "\n"
-    print(func_string)
+    if verbose:
+        print(func_string)
     exec(func_string)
     func_output = eval('f()')
-#    return func_output, func_string
+
     if isinstance(func_output, collections.Iterable):
         results = []
         for item in func_output:
@@ -217,39 +218,3 @@ def execute_code(code, input_val_dict, return_vars):
     else:
         result = convert_from_pandas_df(func_output)
         return result
-
-#
-#def execute_code(code, input_vals):
-#    """
-#    Use input frames to substitute values into the code snippet, then evaluate.
-#    """
-#    # swap out values for input frame variables in the code string
-#    tokens = re.split(r'([\W]+)', code)
-#    index=0
-#    pd_dfs = []
-#    for k,v in input_vals.items():
-#        pd_dfs.append(convert_to_pandas_df(v))
-#        # see if this key k is in the tokenized code snippet.
-#        # if it is, replace it with the pandas dataframe pd_df[i]
-#        try:
-#            i = tokens.index(k)
-#            tokens[i] = 'pd_dfs[{}]'.format(index)
-#        except(ValueError): # k was not in the code snippet
-#            pass
-#        index += 1
-## now reassemble the code snippet tokens into a string
-#    reassembled_code_string = ""
-#    for tok in tokens:
-#        reassembled_code_string += tok
-#    try:
-#        result = eval(reassembled_code_string)
-#        # should be a pandas dataframe - convert it back to
-#        # the wrattler format
-#        try:
-#            result = convert_from_pandas_df(result)
-#            return result
-#        except(AttributeError):
-#            raise RuntimeError("Output of %s was not a dataframe" % code)
-#    except(NameError):
-#        raise RuntimeError("Could not evaluate expression %s" % code)
-#
