@@ -54,7 +54,10 @@ def convert_to_pandas_df(frame):
 def convert_from_pandas_df(dataframe):
     """
     converts pandas dataframe into wrattler format, i.e. list of rows.
+    If input is not a pandas dataframe, just return it unchanged.
     """
+    if not isinstance(dataframe, pd.DataFrame):
+        return dataframe
     row_list = []
     columns = list(dataframe.columns)
     for row in range(len(dataframe.values)):
@@ -213,9 +216,7 @@ def execute_code(code, input_val_dict, return_vars, verbose=False):
     if isinstance(func_output, collections.Iterable):
         results = []
         for item in func_output:
-            if isinstance(item, pd.DataFrame):
-                item = convert_from_pandas_df(item)
-            results.append(item)
+            results.append(convert_from_pandas_df(item))
         return results
     else:
         result = convert_from_pandas_df(func_output)

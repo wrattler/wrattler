@@ -16,9 +16,10 @@ def test_execute_pd_concat():
                   "y": [{"b":4,"c": 2},{"b": 5,"c": 7}]}
     return_targets = find_assignments(input_code)["targets"]
     result = execute_code(input_code, input_vals, return_targets)
-    print(result)
-    assert(len(result) == 4)
-    assert(len(result[0]) == 3)
+    print(result)  # result will be a list of lists of dicts
+    assert(len(result) == 1) # only one output of function
+    assert(len(result[0]) == 4) # four 'rows' of dataframe
+    assert(len(result[0][0]) == 3) # three 'columns'
 
 
 def test_execute_simple_func():
