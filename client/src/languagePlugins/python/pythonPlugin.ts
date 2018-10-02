@@ -136,10 +136,10 @@ class PythonBlockKind implements Langs.Block {
   export const pythonLanguagePlugin : Langs.LanguagePlugin = {
     language: "python",
     editor: pythonEditor,
-    evaluate: (node:Graph.Node) => {
+    evaluate: async (node:Graph.Node) : Promise<Langs.Value> => {
       let pyNode = <Graph.PyNode>node
 
-      async function getValue(blob) {
+      async function getValue(blob) : Promise<Langs.Value> {
         var pathname = new URL(blob).pathname;
         let headers = {'Content-Type': 'application/json'}
         let url = DATASTORE_URI.concat(pathname)
@@ -152,13 +152,13 @@ class PythonBlockKind implements Langs.Block {
         }
       }
 
-      async function getEval(body) {
+      async function getEval(body) : Promise<Langs.ExportsValue> {
         let url = PYTHONSERVICE_URI.concat("/eval")
         let headers = {'Content-Type': 'application/json'}
         try {
           const response = await axios.post(url, body, headers);
-          var results = {}
-          for(var df of response.data) results[df.name] = await getValue(df.url)
+          var results : Langs.ExportsValue = {}
+          for(var df of response.data.frames) results[df.name] = await getValue(df.url)
           return results;
         }
         catch (error) {
@@ -172,13 +172,13 @@ class PythonBlockKind implements Langs.Block {
 			    let body = {"code": pyNode.source,
 									"hash": hash,
 									"frames": {}}
-          return getEval(body);
+          return await getEval(body);
 
         case 'export':
           let pyExportNode = <Graph.PyExportNode>node
-          let exportNodeName= pyExportNode.variableName;
-          var value = pyExportNode.code.value[exportNodeName]
-          return value
+          let exportNodeName= pyExportNode.variableName
+          let exportsValue = <Langs.ExportsValue>pyExportNode.code.value
+          return exportsValue[exportNodeName]
       }
     },
     parse: (code:string) => {

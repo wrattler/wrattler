@@ -176,58 +176,36 @@ class JavascriptBlockKind implements Langs.Block {
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
-    evaluate: async (node:Graph.Node) => {
+    evaluate: async (node:Graph.Node) : Promise<Langs.Value> => {
       let jsnode = <Graph.JsNode>node
-      var value: Promise<any>;
-      let returnArgs = "{";
-      let evalCode = "";
-      function getValue() {
-        let jsCodeNode = <Graph.JsCodeNode>node
-        for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
-          returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
-        }
-        returnArgs = returnArgs.concat("}")
-        let importedVars = "";
-        var argDictionary:{[key: string]: string} = {}
-        for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
-          let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-          argDictionary[imported.variableName] = imported.value;
-          importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
-        }
-        evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
-        console.log(evalCode)
-        value = eval(evalCode);
-        console.log(value);
-        return value;
-      }
+      
       switch(jsnode.kind) {
         case 'code': 
-          return new Promise<any>(resolve => {
-              let jsCodeNode = <Graph.JsCodeNode>node
-              for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
-                returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
-              }
-              returnArgs = returnArgs.concat("}")
-              let importedVars = "";
-              var argDictionary:{[key: string]: string} = {}
-              for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
-                let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-                argDictionary[imported.variableName] = imported.value;
-                importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
-              }
-              evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
-              console.log(evalCode)
-              value = eval(evalCode);
-              console.log("Returning value"+JSON.stringify(value))
-              resolve(value);
-          })
+          let returnArgs = "{";
+          let evalCode = "";
+          let jsCodeNode = <Graph.JsCodeNode>node
+          for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
+            returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
+          }
+          returnArgs = returnArgs.concat("}")
+          let importedVars = "";
+          var argDictionary:{[key: string]: string} = {}
+          for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
+            let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
+            argDictionary[imported.variableName] = imported.value;
+            importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
+          }
+          evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
+          console.log(evalCode)
+          let value : Langs.ExportsValue = eval(evalCode);
+          console.log("Returning value"+JSON.stringify(value))
+          return value;
+
         case 'export':
-
           let jsExportNode = <Graph.JsExportNode>node
-          let exportNodeName= jsExportNode.variableName;
-          value = jsExportNode.code.value[exportNodeName]
-          return value
-
+          let exportNodeName= jsExportNode.variableName
+          let exportsValue = <Langs.ExportsValue>jsExportNode.code.value
+          return exportsValue[exportNodeName]
       }
     },
     parse: (code:string) => {

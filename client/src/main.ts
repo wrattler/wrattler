@@ -38,8 +38,8 @@ var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 // 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
 let documents = 
   [ 
-    // {"language": "markdown", 
-    //  "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
+    {"language": "markdown", 
+      "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
      {"language": "javascript",
      "source": "var a = 1;"},
      {"language": "javascript",
@@ -50,7 +50,7 @@ let documents =
     //   "source": "var c = a + 1; var d = a;"}
     {
       "language": "python",
-      "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
+      "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})\ndftwo = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
     },
     {
       "language": "javascript",
