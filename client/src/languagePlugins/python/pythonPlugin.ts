@@ -171,9 +171,21 @@ class PythonBlockKind implements Langs.Block {
 
       switch(pyNode.kind) {
         case 'code': 
-        console.log(pyNode.source)
-          let hash = Md5.hashStr(pyNode.source)
-			    let body = {"code": pyNode.source,
+          var argDictionary:{[key: string]: string} = {}
+          let importedVars = "";
+          for (var i = 0; i < pyNode.antecedents.length; i++) {
+            let imported = <Graph.PyExportNode>pyNode.antecedents[i]
+            console.log(imported);
+            let value = imported.value.data
+            console.log(value);
+            importedVars = importedVars.concat(imported.variableName + " = pd.DataFrame(" + JSON.stringify(value) + ")\n");
+          }
+          // console.log(argDictionary)
+          // console.log(importedVars)
+          let src = importedVars.concat(pyNode.source)
+          console.log(src)
+          let hash = Md5.hashStr(src)
+			    let body = {"code": src,
 									"hash": hash,
 									"frames": {}}
           return await getEval(body);

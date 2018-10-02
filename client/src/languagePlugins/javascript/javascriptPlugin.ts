@@ -227,16 +227,12 @@ class JavascriptBlockKind implements Langs.Block {
           var argDictionary:{[key: string]: string} = {}
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
             let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-            if (imported.language == 'python')
               argDictionary[imported.variableName] = imported.value.data;
-            else
-              argDictionary[imported.variableName] = imported.value;
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
           evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
           console.log(evalCode)
           let values : Langs.ExportsValue = eval(evalCode);
-          let dataframes : Langs.DataFrame[] = []
           let dfString: string = ""
           for (let value in values){
             let df = value.concat(" = pd.DataFrame(").concat(JSON.stringify(values[value])).concat(")\n")

@@ -45,7 +45,11 @@ let documents =
     //  {"language": "javascript",
     //   "source": "var c = a+1;"},
     {"language": "javascript",
-    "source": "var a = {\"A\":[1,2,3], \"B\":[4,5,6]}"},
+    "source": "var data_1998 = {\"profit\":[1,2,3], \"loss\":[4,5,6]}; console.log(data_1998.profit.length)"},
+    {"language": "javascript",
+    "source": "var profit = data_1998"},
+    {"language": "python",
+    "source": "loss = data_1998"},
     // {"language": "javascript",
     //   "source": "var c = a+1;"},
     // {"language": "python",
@@ -56,10 +60,10 @@ let documents =
       "language": "python",
       "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
     },
-    {
-      "language": "javascript",
-      "source": "var len = df.length"
-    }
+    // {
+    //   "language": "javascript",
+    //   "source": "var len = {\"length\": df.length}"
+    // }
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
