@@ -145,6 +145,7 @@ class PythonBlockKind implements Langs.Block {
         let url = DATASTORE_URI.concat(pathname)
         try {
           const response = await axios.get(url, headers);
+          console.log(response)
           return response.data
         }
         catch (error) {
@@ -158,7 +159,9 @@ class PythonBlockKind implements Langs.Block {
         try {
           const response = await axios.post(url, body, headers);
           var results : Langs.ExportsValue = {}
-          for(var df of response.data.frames) results[df.name] = await getValue(df.url)
+          for(var df of response.data.frames) 
+            // results[df.name] = await getValue(df.url)
+            results[df.name] = {url: df.url, data: await getValue(df.url)}
           return results;
         }
         catch (error) {
@@ -168,6 +171,7 @@ class PythonBlockKind implements Langs.Block {
 
       switch(pyNode.kind) {
         case 'code': 
+        console.log(pyNode.source)
           let hash = Md5.hashStr(pyNode.source)
 			    let body = {"code": pyNode.source,
 									"hash": hash,
@@ -209,8 +213,8 @@ class PythonBlockKind implements Langs.Block {
 			async function getExports() {
 				try {
 					const response = await axios.post(url,body, headers);
-					console.log(response.data.exports)
-					console.log(response.data.imports)
+					// console.log(response.data.exports)
+					// console.log(response.data.imports)
 					for (var n = 0 ; n < response.data.exports.length; n++) {
 						// console.log(response.data.exports[n]);
 						let exportNode:Graph.PyExportNode = {

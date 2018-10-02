@@ -40,10 +40,14 @@ let documents =
   [ 
     {"language": "markdown", 
       "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
-     {"language": "javascript",
-     "source": "var a = 1;"},
-     {"language": "javascript",
-      "source": "var c = a+1;"},
+    //  {"language": "javascript",
+    //  "source": "var a = 1; "},
+    //  {"language": "javascript",
+    //   "source": "var c = a+1;"},
+    {"language": "javascript",
+    "source": "var a = {\"A\":[1,2,3], \"B\":[4,5,6]}"},
+    // {"language": "javascript",
+    //   "source": "var c = a+1;"},
     // {"language": "python",
     // "source": "a = 1;"},
     // {"language": "javascript",
@@ -100,8 +104,8 @@ async function bindAllCells() {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    console.log(aCell)
-    console.log(Object.keys(scopeDictionary))
+    // console.log(aCell)
+    // console.log(Object.keys(scopeDictionary))
   }
 }
 
@@ -156,7 +160,7 @@ async function evaluate(node:Graph.Node) {
   
   let languagePlugin = languagePlugins[node.language]
   node.value = await languagePlugin.evaluate(node);
-  console.log("Received value: "+JSON.stringify(node.value));
+  // console.log("Received value: "+JSON.stringify(node.value));
   return;
 }
 
@@ -223,7 +227,7 @@ function update(state:NotebookState, evt:NotebookEvent) {
       }).reduce ((a,b)=> a.concat(b));
   }
 
-  console.log(state);
+  // console.log(state);
   switch(evt.kind) {
     
     case 'block': {

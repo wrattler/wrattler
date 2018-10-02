@@ -10,8 +10,14 @@ import * as Graph from './graph';
 
 interface Value {
 }
+
 interface ExportsValue extends Value {
   [key:string]: Value
+}
+
+interface DataFrame {
+  url : string
+  data : any
 }
 
 /**
@@ -122,11 +128,10 @@ type BlockState = {
   exports: Graph.Node[]
 }
 
-
-
 export { 
   Block,
   Value, 
+  DataFrame,
   ExportsValue,
   Editor,
   EditorState,
