@@ -50,7 +50,7 @@ let documents =
     //   "source": "var c = a + 1; var d = a;"}
     {
       "language": "python",
-      "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})\ndftwo = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
+      "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
     },
     {
       "language": "javascript",

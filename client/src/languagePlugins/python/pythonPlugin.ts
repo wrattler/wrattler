@@ -107,7 +107,7 @@ class PythonBlockKind implements Langs.Block {
         ed.createContextKey('alwaysTrue', true);
         ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
           let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
-          context.trigger({kind: 'update', source: code})
+          context.rebindSubsequent(cell, code)
         }, 'alwaysTrue');
 
         let lastHeight = 100;
