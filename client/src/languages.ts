@@ -15,7 +15,7 @@ interface ExportsValue extends Value {
   [key:string]: Value
 }
 
-interface DataFrame {
+interface DataFrame extends Value {
   url : string
   data : any
 }
