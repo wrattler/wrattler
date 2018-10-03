@@ -159,11 +159,12 @@ class PythonBlockKind implements Langs.Block {
           let importedFrames : { name:string, url:string }[] = [];
           for (var ant of pyNode.antecedents) {
             let imported = <Graph.ExportNode>ant
-            console.log(imported);
-            console.log(imported.value.data);
+            // console.log(imported);
+            // console.log(imported.value.data);
             importedFrames.push({ name: imported.variableName, url: imported.value.url })
           }
 
+          console.log(importedFrames);
           let src = pyNode.source
           console.log(src)
           let hash = Md5.hashStr(src)

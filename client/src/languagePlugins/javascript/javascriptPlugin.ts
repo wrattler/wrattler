@@ -181,7 +181,7 @@ class JavascriptBlockKind implements Langs.Block {
         let headers = {'Content-Type': 'application/json'}
         try {
           var response = await axios.put(url, value, {headers: headers});
-          return url;
+          return "http://wrattler_wrattler_data_store_1:7102".concat("/put").concat("/"+hash).concat("/"+variableName)
         }
         catch (error) {
           console.error(error);
