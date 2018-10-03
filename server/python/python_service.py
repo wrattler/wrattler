@@ -60,10 +60,10 @@ def convert_from_pandas_df(dataframe):
         return dataframe
     row_list = []
     columns = list(dataframe.columns)
-    for row in range(len(dataframe.values)):
+    for index, row in dataframe.iterrows():
         this_row = {}
         for column in columns:
-            this_row[column] = cleanup(dataframe[column][row])
+            this_row[column] = cleanup(row[column])
         row_list.append(this_row)
     return row_list
 
