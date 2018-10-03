@@ -223,7 +223,7 @@ class JavascriptBlockKind implements Langs.Block {
           evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
           console.log(evalCode)
           let values : Langs.ExportsValue = eval(evalCode);
-          return putValues(values);
+          return await putValues(values);
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName
