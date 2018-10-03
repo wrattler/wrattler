@@ -8,6 +8,18 @@
 import {VNode} from 'maquette';
 import * as Graph from './graph';
 
+interface Value {
+}
+
+interface ExportsValue extends Value {
+  [key:string]: Value
+}
+
+interface DataFrame {
+  url : string
+  data : any
+}
+
 /**
  * A plugin that implements language specific functionality such as creating an
  * editor for the language, parsing code, creating dependency graph, evaluation, etc.
@@ -26,7 +38,7 @@ interface LanguagePlugin {
   parse(code:string) : Block
 
   
-  evaluate(node): Promise<any>
+  evaluate(node:Graph.Node): Promise<Value>
 
   /**
    * Given a parsed block and a dictionary that tracks variables that are in scope, 
@@ -116,10 +128,11 @@ type BlockState = {
   exports: Graph.Node[]
 }
 
-
-
 export { 
   Block,
+  Value, 
+  DataFrame,
+  ExportsValue,
   Editor,
   EditorState,
   EditorContext,

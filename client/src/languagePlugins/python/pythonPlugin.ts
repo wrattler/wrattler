@@ -107,7 +107,7 @@ class PythonBlockKind implements Langs.Block {
         ed.createContextKey('alwaysTrue', true);
         ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
           let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
-          context.trigger({kind: 'update', source: code})
+          context.rebindSubsequent(cell, code)
         }, 'alwaysTrue');
 
         let lastHeight = 100;
@@ -136,15 +136,16 @@ class PythonBlockKind implements Langs.Block {
   export const pythonLanguagePlugin : Langs.LanguagePlugin = {
     language: "python",
     editor: pythonEditor,
-    evaluate: (node:Graph.Node) => {
+    evaluate: async (node:Graph.Node) : Promise<Langs.Value> => {
       let pyNode = <Graph.PyNode>node
 
-      async function getValue(blob) {
+      async function getValue(blob) : Promise<Langs.Value> {
         var pathname = new URL(blob).pathname;
         let headers = {'Content-Type': 'application/json'}
         let url = DATASTORE_URI.concat(pathname)
         try {
           const response = await axios.get(url, headers);
+          console.log(response)
           return response.data
         }
         catch (error) {
@@ -152,13 +153,15 @@ class PythonBlockKind implements Langs.Block {
         }
       }
 
-      async function getEval(body) {
+      async function getEval(body) : Promise<Langs.ExportsValue> {
         let url = PYTHONSERVICE_URI.concat("/eval")
         let headers = {'Content-Type': 'application/json'}
         try {
           const response = await axios.post(url, body, headers);
-          var results = {}
-          for(var df of response.data) results[df.name] = await getValue(df.url)
+          var results : Langs.ExportsValue = {}
+          for(var df of response.data.frames) 
+            // results[df.name] = await getValue(df.url)
+            results[df.name] = {url: df.url, data: await getValue(df.url)}
           return results;
         }
         catch (error) {
@@ -168,17 +171,30 @@ class PythonBlockKind implements Langs.Block {
 
       switch(pyNode.kind) {
         case 'code': 
-          let hash = Md5.hashStr(pyNode.source)
-			    let body = {"code": pyNode.source,
+          var argDictionary:{[key: string]: string} = {}
+          let importedVars = "";
+          for (var i = 0; i < pyNode.antecedents.length; i++) {
+            let imported = <Graph.PyExportNode>pyNode.antecedents[i]
+            console.log(imported);
+            let value = imported.value.data
+            console.log(value);
+            importedVars = importedVars.concat(imported.variableName + " = pd.DataFrame(" + JSON.stringify(value) + ")\n");
+          }
+          // console.log(argDictionary)
+          // console.log(importedVars)
+          let src = importedVars.concat(pyNode.source)
+          console.log(src)
+          let hash = Md5.hashStr(src)
+			    let body = {"code": src,
 									"hash": hash,
 									"frames": {}}
-          return getEval(body);
+          return await getEval(body);
 
         case 'export':
           let pyExportNode = <Graph.PyExportNode>node
-          let exportNodeName= pyExportNode.variableName;
-          var value = pyExportNode.code.value[exportNodeName]
-          return value
+          let exportNodeName= pyExportNode.variableName
+          let exportsValue = <Langs.ExportsValue>pyExportNode.code.value
+          return exportsValue[exportNodeName]
       }
     },
     parse: (code:string) => {
@@ -209,8 +225,8 @@ class PythonBlockKind implements Langs.Block {
 			async function getExports() {
 				try {
 					const response = await axios.post(url,body, headers);
-					console.log(response.data.exports)
-					console.log(response.data.imports)
+					// console.log(response.data.exports)
+					// console.log(response.data.imports)
 					for (var n = 0 ; n < response.data.exports.length; n++) {
 						// console.log(response.data.exports[n]);
 						let exportNode:Graph.PyExportNode = {

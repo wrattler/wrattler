@@ -38,12 +38,20 @@ var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 // 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
 let documents = 
   [ 
-    // {"language": "markdown", 
-    //  "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
-     {"language": "javascript",
-     "source": "var a = 1;"},
-     {"language": "javascript",
-      "source": "var c = a+1;"},
+    {"language": "markdown", 
+      "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
+    //  {"language": "javascript",
+    //  "source": "var a = 1; "},
+    //  {"language": "javascript",
+    //   "source": "var c = a+1;"},
+    {"language": "javascript",
+    "source": "var data_1998 = {\"profit\":[1,2,3], \"loss\":[4,5,6]}; console.log(data_1998.profit.length)"},
+    {"language": "javascript",
+    "source": "var profit = data_1998"},
+    {"language": "python",
+    "source": "loss = data_1998"},
+    // {"language": "javascript",
+    //   "source": "var c = a+1;"},
     // {"language": "python",
     // "source": "a = 1;"},
     // {"language": "javascript",
@@ -52,10 +60,10 @@ let documents =
       "language": "python",
       "source": "df = pd.DataFrame({\"a\":[\"1\",\"2\",\"3\"],\"b\":[\"4\",\"5\",\"6\"]})"
     },
-    {
-      "language": "javascript",
-      "source": "var len = df.length"
-    }
+    // {
+    //   "language": "javascript",
+    //   "source": "var len = {\"length\": df.length}"
+    // }
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -100,8 +108,8 @@ async function bindAllCells() {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    console.log(aCell)
-    console.log(Object.keys(scopeDictionary))
+    // console.log(aCell)
+    // console.log(Object.keys(scopeDictionary))
   }
 }
 
@@ -156,7 +164,7 @@ async function evaluate(node:Graph.Node) {
   
   let languagePlugin = languagePlugins[node.language]
   node.value = await languagePlugin.evaluate(node);
-  console.log("Received value: "+JSON.stringify(node.value));
+  // console.log("Received value: "+JSON.stringify(node.value));
   return;
 }
 
@@ -223,7 +231,7 @@ function update(state:NotebookState, evt:NotebookEvent) {
       }).reduce ((a,b)=> a.concat(b));
   }
 
-  console.log(state);
+  // console.log(state);
   switch(evt.kind) {
     
     case 'block': {

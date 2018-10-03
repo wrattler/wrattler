@@ -5,6 +5,10 @@ import * as Langs from '../../languages';
 import * as Graph from '../../graph'; 
 
 const ts = require('typescript');
+import {Md5} from 'ts-md5/dist/md5';
+const axios = require('axios');
+declare var PYTHONSERVICE_URI: string;
+declare var DATASTORE_URI: string;
 
 //const s = require('./editor.css');
 
@@ -176,58 +180,76 @@ class JavascriptBlockKind implements Langs.Block {
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
-    evaluate: async (node:Graph.Node) => {
+    evaluate: async (node:Graph.Node) : Promise<Langs.Value> => {
       let jsnode = <Graph.JsNode>node
-      var value: Promise<any>;
-      let returnArgs = "{";
-      let evalCode = "";
-      function getValue() {
-        let jsCodeNode = <Graph.JsCodeNode>node
-        for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
-          returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
+      
+      async function getValue(blob) : Promise<Langs.Value> {
+        var pathname = new URL(blob).pathname;
+        let headers = {'Content-Type': 'application/json'}
+        let url = DATASTORE_URI.concat(pathname)
+        try {
+          const response = await axios.get(url, headers);
+          console.log(response)
+          return response.data
         }
-        returnArgs = returnArgs.concat("}")
-        let importedVars = "";
-        var argDictionary:{[key: string]: string} = {}
-        for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
-          let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-          argDictionary[imported.variableName] = imported.value;
-          importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
+        catch (error) {
+          console.error(error);
         }
-        evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
-        console.log(evalCode)
-        value = eval(evalCode);
-        console.log(value);
-        return value;
       }
+
+      async function getEval(body) : Promise<Langs.ExportsValue> {
+        let url = PYTHONSERVICE_URI.concat("/eval")
+        let headers = {'Content-Type': 'application/json'}
+        try {
+          const response = await axios.post(url, body, headers);
+          var results : Langs.ExportsValue = {}
+          for(var df of response.data.frames) 
+            // results[df.name] = await getValue(df.url)
+            results[df.name] = {url: df.url, data: await getValue(df.url)}
+          console.log(results)
+          return results;
+        }
+        catch (error) {
+          console.error(error);
+        }
+      }
+
       switch(jsnode.kind) {
         case 'code': 
-          return new Promise<any>(resolve => {
-              let jsCodeNode = <Graph.JsCodeNode>node
-              for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
-                returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
-              }
-              returnArgs = returnArgs.concat("}")
-              let importedVars = "";
-              var argDictionary:{[key: string]: string} = {}
-              for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
-                let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-                argDictionary[imported.variableName] = imported.value;
-                importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
-              }
-              evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
-              console.log(evalCode)
-              value = eval(evalCode);
-              console.log("Returning value"+JSON.stringify(value))
-              resolve(value);
-          })
+          let returnArgs = "{";
+          let evalCode = "";
+          let jsCodeNode = <Graph.JsCodeNode>node
+          for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
+            returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
+          }
+          returnArgs = returnArgs.concat("}")
+          let importedVars = "";
+          var argDictionary:{[key: string]: string} = {}
+          for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
+            let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
+              argDictionary[imported.variableName] = imported.value.data;
+            importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
+          }
+          evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
+          console.log(evalCode)
+          let values : Langs.ExportsValue = eval(evalCode);
+          let dfString: string = ""
+          for (let value in values){
+            let df = value.concat(" = pd.DataFrame(").concat(JSON.stringify(values[value])).concat(")\n")
+            dfString = dfString.concat(df)
+          }
+          console.log(dfString)
+          // need to post this into data store
+          let hash = Md5.hashStr(dfString)
+			    let body = {"code": dfString,
+									"hash": hash,
+									"frames": {}}
+          return await getEval(body);
         case 'export':
-
           let jsExportNode = <Graph.JsExportNode>node
-          let exportNodeName= jsExportNode.variableName;
-          value = jsExportNode.code.value[exportNodeName]
-          return value
-
+          let exportNodeName= jsExportNode.variableName
+          let exportsValue = <Langs.ExportsValue>jsExportNode.code.value
+          return exportsValue[exportNodeName]
       }
     },
     parse: (code:string) => {
