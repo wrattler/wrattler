@@ -5,9 +5,9 @@ import { fsHello } from "./demos/fsdemo";
 import { jsHello } from "./demos/jsdemo";
 import { tsHello } from "./demos/tsdemo";
 
-fsHello();
-jsHello();
-tsHello();
+// fsHello();
+// jsHello();
+// tsHello();
 
 // ------------------------------------------------------------------------------------------------
 // Imports
@@ -20,7 +20,6 @@ import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugi
 import { javascriptLanguagePlugin } from './languagePlugins/javascript/javascriptPlugin'
 import { pythonLanguagePlugin } from './languagePlugins/python/pythonPlugin'
 require('./editor.css');
-declare var TWO: string;
 
 
 
@@ -36,14 +35,17 @@ var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
+// 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
 let documents = 
   [ 
-    {"language": "markdown", 
-     "source": "# Testing Markdown\n1. Edit this block \n2. Shift+Enter to convert to *Markdown*"},
-     {"language": "javascript",
-     "source": "var a = 1;"},
-     {"language": "javascript",
-      "source": "var c = a + 1; var d = a;"},
+    { "language": "markdown", "source": "First, we create one frame in JavaScript:" },
+    { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
+    { "language": "markdown", "source": "Second, we create one frame in Python:" },
+    { "language": "python", "source": 'two = pd.DataFrame({"name":["Jim"], "age":[51]})' },
+    { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
+    { "language": "javascript", "source": "var joinJs = one.concat(two)"},
+    { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
+    { "language": "python", "source": "joinPy = one.append(two)"} 
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -58,7 +60,6 @@ type NotebookState = {
   cells: Langs.BlockState[]
 }
 
-// console.log(TWO);
 // Create an initial notebook state by parsing the sample document
 let index = 0
 let blockStates = documents.map(cell => {
@@ -74,10 +75,10 @@ function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: G
   return languagePlugin.bind(scopeDictionary, cell.editor.block);
 }
 
-function clearCell (cell:Langs.BlockState): void{
-  cell.exports = [];
-  cell.code.value = {};
-}
+// function clearCell (cell:Langs.BlockState): void{
+//   cell.exports = [];
+//   cell.code.value = {};
+// }
 
 async function bindAllCells() {
   for (var c = 0; c < state.cells.length; c++) {
@@ -89,7 +90,7 @@ async function bindAllCells() {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    //console.log(aCell)
+    // console.log(aCell)
     // console.log(Object.keys(scopeDictionary))
   }
 }
@@ -138,41 +139,37 @@ bindAllCells()
 let paperElement = document.getElementById('paper');
 let maquetteProjector = createProjector();
 
-function evaluate(node:Graph.Node) {
-  console.log(node);
+
+async function evaluate(node:Graph.Node) {
   if ((node.value)&&(Object.keys(node.value).length > 0)) return;
-  node.antecedents.forEach(evaluate);
+  for(var ant of node.antecedents) await evaluate(ant);
   
   let languagePlugin = languagePlugins[node.language]
-  node.value = languagePlugin.evaluate(node);
-  console.log(node);
+  node.value = await languagePlugin.evaluate(node);
+  // console.log("Received value: "+JSON.stringify(node.value));
+  return;
 }
 
 function render(trigger:(NotebookEvent) => void, state:NotebookState) {
 
   let nodes = state.cells.map(cell => {
-
     // The `context` object is passed to the render function. The `trigger` method
     // of the object can be used to trigger events that cause a state update. 
     let context : Langs.EditorContext<any> = {
       trigger: (event:any) => 
         trigger({ kind:'block', id:cell.editor.id, event:event }),
+      
+      evaluate: async (block:Langs.BlockState) => {
+        await evaluate(block.code)
+        for(var exp of block.exports) await evaluate(exp)
+        trigger({ kind:'refresh' })
 
-      evaluate: (block:Langs.BlockState) => {
-        evaluate(block.code)
-        block.exports.forEach(evaluate)
-          trigger({ kind:'refresh' })
       },
 
       // sourceChange
       // rebind all blocks after this one
       rebindSubsequent: (block:Langs.BlockState, newSource: string) => {
-        console.log("Call rebind from: " + JSON.stringify(block));
         trigger({kind: 'rebind', block: block, newSource: newSource})
-        // evaluate(block.code)
-        // block.exports.forEach(evaluate)
-        //   trigger({ kind:'refresh' })
-        // console.log(state.cells);
       } 
     }
   
@@ -216,8 +213,9 @@ function update(state:NotebookState, evt:NotebookEvent) {
       }).reduce ((a,b)=> a.concat(b));
   }
 
-  
+  // console.log(state);
   switch(evt.kind) {
+    
     case 'block': {
       let newCells = state.cells.map(state => {
         if (state.editor.id != evt.id) 
@@ -235,7 +233,7 @@ function update(state:NotebookState, evt:NotebookEvent) {
     }
     case 'add': {
       let newId = index++;
-      let newDocument = { "language": "javascript", 
+      let newDocument = { "language": "python", 
                           "source": "var z = "+newId};
       let newPlugin = languagePlugins[newDocument.language]; 
       let newBlock = newPlugin.parse(newDocument.source);
@@ -252,7 +250,7 @@ function update(state:NotebookState, evt:NotebookEvent) {
       return {cells: removeCell(state.cells, evt.id)};
     
     case 'rebind': {
-      console.log("Rebind in update: "+JSON.stringify(evt))
+      // console.log("Rebind in update: "+JSON.stringify(evt))
       rebindSubsequentCells(evt.block, evt.newSource);
       return state;
     }

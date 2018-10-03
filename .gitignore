@@ -4,3 +4,8 @@ client/src/obj
 client/tools/obj
 client/build
 client/docs
+# Python - ignore byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+server/data-store/src/config.fs

@@ -4,7 +4,13 @@ import {h,createProjector,VNode} from 'maquette';
 import * as Langs from '../../languages'; 
 import * as Graph from '../../graph'; 
 
-const ts = require('typescript');
+import ts from 'typescript';
+import axios from 'axios';
+
+import {Md5} from 'ts-md5/dist/md5';
+
+declare var PYTHONSERVICE_URI: string;
+declare var DATASTORE_URI: string;
 
 //const s = require('./editor.css');
 
@@ -24,7 +30,6 @@ class JavascriptBlockKind implements Langs.Block {
       this.source = source;
     }
   }
-  
   
   function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
     return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
@@ -48,65 +53,44 @@ class JavascriptBlockKind implements Langs.Block {
       let walk = function (expr) {
         ts.forEachChild(expr, function(child) 
         { 
-          if (child.kind == ts.SyntaxKind.VariableStatement) {
-            let name = child.declarationList.declarations[0].name.escapedText
-            let exportNode:Graph.JsExportNode = {
-              variableName: name,
-              value: undefined,
-              language:"javascript",
-              code: node, 
-              kind: 'export',
-              antecedents:[node]
-              };
-            dependencies.push(exportNode);
-            node.exportedVariables.push(exportNode.variableName);
-          }
-
-          if (child.constructor.name === 'IdentifierObject') {
-            let argumentName = child.escapedText;
-            if (argumentName in scopeDictionary) {
-              let antecedentNode = scopeDictionary[argumentName]
-              if (node.antecedents.indexOf(antecedentNode) == -1)
-                node.antecedents.push(antecedentNode);
-            }
+          switch(child.kind) {
+            case ts.SyntaxKind.VariableStatement:
+              let decl = (<ts.VariableStatement>child).declarationList.declarations[0].name
+              // REVIEW: This could fail if 'decl' is 'BindingPattern' and not 'Identifier'
+              // REVIEW: Also, TypeScript uses some strange '__String' that might not be valid 'string'
+              let name = <string>(<ts.Identifier>decl).escapedText 
+              let exportNode:Graph.JsExportNode = {
+                variableName: name,
+                value: undefined,
+                language:"javascript",
+                code: node, 
+                kind: 'export',
+                antecedents:[node]
+                };
+              dependencies.push(exportNode);
+              node.exportedVariables.push(exportNode.variableName);
+              break;
+          
+            case ts.SyntaxKind.Identifier:
+              // REVIEW: As above, 'escapedText' is actually '__String' which might cause problems 
+              let argumentName = <string>(<ts.Identifier>child).escapedText;
+              if (argumentName in scopeDictionary) {
+                let antecedentNode = scopeDictionary[argumentName]
+                if (node.antecedents.indexOf(antecedentNode) == -1)
+                  node.antecedents.push(antecedentNode);
+              }
+              break;
           }
           walk(child)
         })
       }
 
       walk(tsSourceFile);
-
-      // for (var n=0; n < tsSourceFile.statements.length; n++){
-      //   let statement = tsSourceFile.statements[n];
-      //   if (statement.kind == ts.SyntaxKind.VariableStatement) {
-      //     let name = statement.declarationList.declarations[0].name.escapedText
-      //     // let initializer = statement.declarationList.declarations[0].initializer
-      //     let exportNode:Graph.JsExportNode = {
-      //       variableName: name,
-      //       value: undefined,
-      //       language:"javascript",
-      //       code: node, 
-      //       kind: 'export',
-      //       antecedents:[node]
-      //       };
-      //     dependencies.push(exportNode);
-      //     node.exportedVariables.push(exportNode.variableName);
-      //   }
-      // }
-
-      // for (var n=0; n < tsSourceFile.statements.length; n++){
-      //   let statement = tsSourceFile.statements[n];
-      //   walk(statement);
-      // }
-
       resolve({code: node, exports: dependencies});
     });
   }
 
-  interface JavascriptEditEvent { kind:'edit' }
-  interface JavascriptUpdateEvent { kind:'update', source:string }
-  // interface JavascriptRebindEvent { kind:'rebindSubsequent'}
-  type JavascriptEvent = JavascriptEditEvent | JavascriptUpdateEvent 
+  type JavascriptEvent = {}
   
   type JavascriptState = {
     id: number
@@ -118,32 +102,17 @@ class JavascriptBlockKind implements Langs.Block {
       return { id: id, block: <JavascriptBlockKind>block}
     },
   
-    update: (state:JavascriptState, event:JavascriptEvent) => {
-      switch(event.kind) {
-        case 'edit': 
-          // console.log("Javascript: Switch to edit mode!")
-          return { id: state.id, block: state.block }
-        case 'update': 
-          // console.log("Javascript: Set code to:\n%O", event.source);
-          let newBlock = javascriptLanguagePlugin.parse(event.source)
-          return { id: state.id, block: <JavascriptBlockKind>newBlock }
-      }
-    },
-
+    update: (state:JavascriptState, event:JavascriptEvent) => state,
+    
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
       let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
-      // console.log(cell)
-      // function display() {
-      //   if (cell.code == undefined)
-      //     if (cell.code == undefined)
-      // }
+      
       let results = h('div', {}, [
         h('p', {
             style: "height:75px; position:relative", 
-            onclick:() => context.trigger({kind:'edit'})
           }, 
           [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
-          // [ cell.code==undefined ? evalButton : ("Value is: ") ]),
+          // [ cell.code==undefined ? evalButton : ("Value is: "+cell.code.value) ]),
       ]);
  
       let afterCreateHandler = (el) => { 
@@ -200,35 +169,49 @@ class JavascriptBlockKind implements Langs.Block {
       return h('div', { }, [code, results])
     },
   }
-  
-  // function tokenizeStatement (argument:any, node:Graph.JsCodeNode, scopeDictionary:{}) {
-  //   if (argument != undefined) {
-  //     if (argument.expression != undefined){
-  //       tokenizeStatement(argument.expression.left, node, scopeDictionary)
-  //       tokenizeStatement(argument.expression.right, node, scopeDictionary)
-  //     }
-  //     else {
-  //       let argumentName = argument.text
-  //       if (argumentName in scopeDictionary) {
-  //         let antecedentNode = scopeDictionary[argumentName]
-  //         node.antecedents.push(antecedentNode);
-  //       }
-  //     }
-  //   }
-  // }
 
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
-    evaluate: (node:Graph.Node) => {
+    evaluate: async (node:Graph.Node) : Promise<Langs.Value> => {
       let jsnode = <Graph.JsNode>node
-      let value = "yadda";
-      let returnArgs = "{";
-      let evalCode = "";
+      
+      async function getValue(blob) : Promise<Langs.Value> {
+        var pathname = new URL(blob).pathname;
+        let headers = {'Content-Type': 'application/json'}
+        let url = DATASTORE_URI.concat(pathname)
+        try {
+          const response = await axios.get(url, {headers: headers});
+          console.log(response)
+          return response.data
+        }
+        catch (error) {
+          console.error(error);
+        }
+      }
+
+      async function getEval(body) : Promise<Langs.ExportsValue> {
+        let url = PYTHONSERVICE_URI.concat("/eval")
+        let headers = {'Content-Type': 'application/json'}
+        try {
+          const response = await axios.post(url, body, {headers: headers});
+          var results : Langs.ExportsValue = {}
+          for(var df of response.data.frames) 
+            // results[df.name] = await getValue(df.url)
+            results[df.name] = {url: df.url, data: await getValue(df.url)}
+          console.log(results)
+          return results;
+        }
+        catch (error) {
+          console.error(error);
+        }
+      }
+
       switch(jsnode.kind) {
         case 'code': 
+          let returnArgs = "{";
+          let evalCode = "";
           let jsCodeNode = <Graph.JsCodeNode>node
-          // console.log(jsCodeNode);
           for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
             returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
           }
@@ -237,24 +220,33 @@ class JavascriptBlockKind implements Langs.Block {
           var argDictionary:{[key: string]: string} = {}
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
             let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-            argDictionary[imported.variableName] = imported.value;
+              argDictionary[imported.variableName] = imported.value.data;
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
           evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
           console.log(evalCode)
-          value = eval(evalCode);
-          break;
+          let values : Langs.ExportsValue = eval(evalCode);
+          let dfString: string = ""
+          for (let value in values){
+            let df = value.concat(" = pd.DataFrame(").concat(JSON.stringify(values[value])).concat(")\n")
+            dfString = dfString.concat(df)
+          }
+          console.log(dfString)
+          // need to post this into data store
+          let hash = Md5.hashStr(dfString)
+			    let body = {"code": dfString,
+									"hash": hash,
+									"frames": {}}
+          return await getEval(body);
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
-          let exportNodeName= jsExportNode.variableName;
-          value = jsExportNode.code.value[exportNodeName]
-          // console.log(value);
-          break;
+          let exportNodeName= jsExportNode.variableName
+          let exportsValue = <Langs.ExportsValue>jsExportNode.code.value
+          return exportsValue[exportNodeName]
       }
-      return value
     },
     parse: (code:string) => {
-      console.log(code);
+      //console.log(code);
       return new JavascriptBlockKind(code);
     },
     bind: (scopeDictionary: {}, block: Langs.Block) => {

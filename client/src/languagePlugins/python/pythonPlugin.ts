@@ -2,11 +2,11 @@ import * as monaco from 'monaco-editor';
 import {h,createProjector,VNode} from 'maquette';
 import * as Langs from '../../languages'; 
 import * as Graph from '../../graph'; 
+import {Md5} from 'ts-md5/dist/md5';
+import axios from 'axios';
 
-const ts = require('typescript');
-const axios = require('axios');
-declare var APIROOT: string;
-// import {Md5} from 'ts-md5/dist/md5';
+declare var PYTHONSERVICE_URI: string;
+declare var DATASTORE_URI: string;
 
 // ------------------------------------------------------------------------------------------------
 // Python plugin
@@ -44,9 +44,7 @@ class PythonBlockKind implements Langs.Block {
     });
   }
   
-  interface PythonEditEvent { kind:'edit' }
-  interface PythonUpdateEvent { kind:'update', source:string }
-  type PythonEvent = PythonEditEvent | PythonUpdateEvent
+  type PythonEvent = {}
   
   type PythonState = {
     id: number
@@ -58,24 +56,13 @@ class PythonBlockKind implements Langs.Block {
       return { id: id, block: <PythonBlockKind>block}
     },
   
-    update: (state:PythonState, event:PythonEvent) => {
-      switch(event.kind) {
-        case 'edit': 
-          // console.log("Python: Switch to edit mode!")
-          return { id: state.id, block: state.block }
-        case 'update': 
-          // console.log("Python: Set code to:\n%O", event.source);
-          let newBlock = pythonLanguagePlugin.parse(event.source)
-          return { id: state.id, block: <PythonBlockKind>newBlock}
-      }
-    },
+    update: (state:PythonState, event:PythonEvent) => state,
 
     render: (cell: Langs.BlockState, state:PythonState, context:Langs.EditorContext<PythonEvent>) => {
       let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
       let results = h('div', {}, [
         h('p', {
             style: "height:75px; position:relative", 
-            onclick:() => context.trigger({kind:'edit'})
           }, 
           [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
       ]);
@@ -105,7 +92,7 @@ class PythonBlockKind implements Langs.Block {
         ed.createContextKey('alwaysTrue', true);
         ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
           let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
-          context.trigger({kind: 'update', source: code})
+          context.rebindSubsequent(cell, code)
         }, 'alwaysTrue');
 
         let lastHeight = 100;
@@ -134,22 +121,63 @@ class PythonBlockKind implements Langs.Block {
   export const pythonLanguagePlugin : Langs.LanguagePlugin = {
     language: "python",
     editor: pythonEditor,
-    evaluate: (node:Graph.Node) => {
-      let pynode = <Graph.PyNode>node
-      let value = "yadda";
-      let returnArgs = "{";
-      let evalCode = "";
-      switch(pynode.kind) {
+    evaluate: async (node:Graph.Node) : Promise<Langs.Value> => {
+      let pyNode = <Graph.PyNode>node
+
+      async function getValue(blob) : Promise<Langs.Value> {
+        var pathname = new URL(blob).pathname;
+        let headers = {'Content-Type': 'application/json'}
+        let url = DATASTORE_URI.concat(pathname)
+        try {
+          const response = await axios.get(url, {headers: headers});
+          console.log(response)
+          return response.data
+        }
+        catch (error) {
+          console.error(error);
+        }
+      }
+
+      async function getEval(body) : Promise<Langs.ExportsValue> {
+        let url = PYTHONSERVICE_URI.concat("/eval")
+        let headers = {'Content-Type': 'application/json'}
+        try {
+          const response = await axios.post(url, body, {headers: headers});
+          var results : Langs.ExportsValue = {}
+          for(var df of response.data.frames) 
+            // results[df.name] = await getValue(df.url)
+            results[df.name] = {url: df.url, data: await getValue(df.url)}
+          return results;
+        }
+        catch (error) {
+          console.error(error);
+        }
+      }
+
+      switch(pyNode.kind) {
         case 'code': 
-          value = "";
-          break;
+          let importedFrames : { name:string, url:string }[] = [];
+          for (var ant of pyNode.antecedents) {
+            let imported = <Graph.ExportNode>ant
+            console.log(imported);
+            console.log(imported.value.data);
+            importedFrames.push({ name: imported.variableName, url: imported.value.url })
+          }
+
+          let src = pyNode.source
+          console.log(src)
+          let hash = Md5.hashStr(src)
+			    let body = {"code": src,
+									"hash": hash,
+									"frames": importedFrames}
+          return await getEval(body);
+
         case 'export':
           let pyExportNode = <Graph.PyExportNode>node
-          let exportNodeName= pyExportNode.variableName;
-          value = pyExportNode.code.value[exportNodeName]
-          break;
+          let exportNodeName= pyExportNode.variableName
+          let exportsValue = <Langs.ExportsValue>pyExportNode.code.value
+          return exportsValue[exportNodeName]
       }
-      return value
     },
     parse: (code:string) => {
       return new PythonBlockKind(code);
@@ -167,12 +195,10 @@ class PythonBlockKind implements Langs.Block {
         source: pyBlock.source
 			}
 			
-			// console.log(APIROOT);
-			let url = APIROOT.concat("exports")
-			console.log(url);
-      // let hash = Md5.hashStr(pyBlock.source)
+			let url = PYTHONSERVICE_URI.concat("/exports")
+      let hash = Md5.hashStr(pyBlock.source)
       
-      let hash = "Md5.hashStr(pyBlock.source)"
+      // let hash = "Md5.hashStr(pyBlock.source)"
 			let body = {"code": pyBlock.source,
 									"hash": hash,
 									"frames": Object.keys(scopeDictionary)
@@ -180,7 +206,7 @@ class PythonBlockKind implements Langs.Block {
 			let headers = {'Content-Type': 'application/json'}
 			async function getExports() {
 				try {
-					const response = await axios.post(url,body, headers);
+					const response = await axios.post(url, body, {headers: headers});
 					// console.log(response.data.exports)
 					// console.log(response.data.imports)
 					for (var n = 0 ; n < response.data.exports.length; n++) {

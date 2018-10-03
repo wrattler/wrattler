@@ -20,3 +20,19 @@ def test_convert_pandas():
     pd_df = convert_to_pandas_df(d_orig)
     d_new = convert_from_pandas_df(pd_df)
     assert(d_orig == d_new)
+
+
+def test_dont_convert_non_df():
+    """
+    Check that if we just give a number or a string or something else,
+    we get the same result back
+    """
+    x_orig = 345
+    x_conv = convert_to_pandas_df(x_orig)
+    x_new = convert_from_pandas_df(x_conv)
+    assert(x_orig == x_new)
+
+    y_orig = "testing"
+    y_conv = convert_to_pandas_df(y_orig)
+    y_new = convert_from_pandas_df(y_conv)
+    assert(y_orig == y_new)
