@@ -35,28 +35,35 @@ def cleanup(i):
 def convert_to_pandas_df(frame):
     """
     convert wrattler format [{"var1":val1, "var2":val2},{...}]
-    to pandas dataframe.
+    to pandas dataframe.  If it doesn't fit this format, just return
+    the input, unchanged.
     """
-    frame_dict = {}
-    for row in frame:
-        for k,v in row.items():
-            if not k in frame_dict.keys():
-                frame_dict[k] = []
-            frame_dict[k].append(v)
-    df = pd.DataFrame(frame_dict)
-    return df
+    try:
+        frame_dict = {}
+        for row in frame:
+            for k,v in row.items():
+                if not k in frame_dict.keys():
+                    frame_dict[k] = []
+                frame_dict[k].append(v)
+        df = pd.DataFrame(frame_dict)
+        return df
+    except:  # could be TypeError, AttributeError, ...
+        return frame
 
 
 def convert_from_pandas_df(dataframe):
     """
     converts pandas dataframe into wrattler format, i.e. list of rows.
+    If input is not a pandas dataframe, just return it unchanged.
     """
+    if not isinstance(dataframe, pd.DataFrame):
+        return dataframe
     row_list = []
     columns = list(dataframe.columns)
-    for row in range(len(dataframe.values)):
+    for index, row in dataframe.iterrows():
         this_row = {}
         for column in columns:
-            this_row[column] = cleanup(dataframe[column][row])
+            this_row[column] = cleanup(row[column])
         row_list.append(this_row)
     return row_list
 
@@ -145,7 +152,7 @@ def retrieve_frames(input_frames):
         if r.status_code != 200:
             raise RuntimeError("Problem retrieving dataframe %s"%frame["name"])
         frame_content = json.loads(r.content.decode("utf-8"))
-        frame_dict[frame["name"]] = frame_content[frame["name"]]
+        frame_dict[frame["name"]] = frame_content
     return frame_dict
 
 
@@ -209,11 +216,7 @@ def execute_code(code, input_val_dict, return_vars, verbose=False):
     if isinstance(func_output, collections.Iterable):
         results = []
         for item in func_output:
-            try:
-                result = convert_from_pandas_df(item)
-                results.append(result)
-            except(AttributeError):
-                raise RuntimeError("Output of %s was not a dataframe" % code)
+            results.append(convert_from_pandas_df(item))
         return results
     else:
         result = convert_from_pandas_df(func_output)
