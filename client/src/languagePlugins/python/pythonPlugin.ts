@@ -3,9 +3,7 @@ import {h,createProjector,VNode} from 'maquette';
 import * as Langs from '../../languages'; 
 import * as Graph from '../../graph'; 
 import {Md5} from 'ts-md5/dist/md5';
-
-const ts = require('typescript');
-const axios = require('axios');
+import axios from 'axios';
 
 declare var PYTHONSERVICE_URI: string;
 declare var DATASTORE_URI: string;
@@ -46,9 +44,7 @@ class PythonBlockKind implements Langs.Block {
     });
   }
   
-  interface PythonEditEvent { kind:'edit' }
-  interface PythonUpdateEvent { kind:'update', source:string }
-  type PythonEvent = PythonEditEvent | PythonUpdateEvent
+  type PythonEvent = {}
   
   type PythonState = {
     id: number
@@ -60,24 +56,13 @@ class PythonBlockKind implements Langs.Block {
       return { id: id, block: <PythonBlockKind>block}
     },
   
-    update: (state:PythonState, event:PythonEvent) => {
-      switch(event.kind) {
-        case 'edit': 
-          // console.log("Python: Switch to edit mode!")
-          return { id: state.id, block: state.block }
-        case 'update': 
-          // console.log("Python: Set code to:\n%O", event.source);
-          let newBlock = pythonLanguagePlugin.parse(event.source)
-          return { id: state.id, block: <PythonBlockKind>newBlock}
-      }
-    },
+    update: (state:PythonState, event:PythonEvent) => state,
 
     render: (cell: Langs.BlockState, state:PythonState, context:Langs.EditorContext<PythonEvent>) => {
       let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
       let results = h('div', {}, [
         h('p', {
             style: "height:75px; position:relative", 
-            onclick:() => context.trigger({kind:'edit'})
           }, 
           [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
       ]);
@@ -144,7 +129,7 @@ class PythonBlockKind implements Langs.Block {
         let headers = {'Content-Type': 'application/json'}
         let url = DATASTORE_URI.concat(pathname)
         try {
-          const response = await axios.get(url, headers);
+          const response = await axios.get(url, {headers: headers});
           console.log(response)
           return response.data
         }
@@ -157,7 +142,7 @@ class PythonBlockKind implements Langs.Block {
         let url = PYTHONSERVICE_URI.concat("/eval")
         let headers = {'Content-Type': 'application/json'}
         try {
-          const response = await axios.post(url, body, headers);
+          const response = await axios.post(url, body, {headers: headers});
           var results : Langs.ExportsValue = {}
           for(var df of response.data.frames) 
             // results[df.name] = await getValue(df.url)
@@ -224,7 +209,7 @@ class PythonBlockKind implements Langs.Block {
 			let headers = {'Content-Type': 'application/json'}
 			async function getExports() {
 				try {
-					const response = await axios.post(url,body, headers);
+					const response = await axios.post(url, body, {headers: headers});
 					// console.log(response.data.exports)
 					// console.log(response.data.imports)
 					for (var n = 0 ; n < response.data.exports.length; n++) {

@@ -4,9 +4,11 @@ import {h,createProjector,VNode} from 'maquette';
 import * as Langs from '../../languages'; 
 import * as Graph from '../../graph'; 
 
-const ts = require('typescript');
+import ts from 'typescript';
+import axios from 'axios';
+
 import {Md5} from 'ts-md5/dist/md5';
-const axios = require('axios');
+
 declare var PYTHONSERVICE_URI: string;
 declare var DATASTORE_URI: string;
 
@@ -51,27 +53,33 @@ class JavascriptBlockKind implements Langs.Block {
       let walk = function (expr) {
         ts.forEachChild(expr, function(child) 
         { 
-          if (child.kind == ts.SyntaxKind.VariableStatement) {
-            let name = child.declarationList.declarations[0].name.escapedText
-            let exportNode:Graph.JsExportNode = {
-              variableName: name,
-              value: undefined,
-              language:"javascript",
-              code: node, 
-              kind: 'export',
-              antecedents:[node]
-              };
-            dependencies.push(exportNode);
-            node.exportedVariables.push(exportNode.variableName);
-          }
-
-          if (child.constructor.name === 'IdentifierObject') {
-            let argumentName = child.escapedText;
-            if (argumentName in scopeDictionary) {
-              let antecedentNode = scopeDictionary[argumentName]
-              if (node.antecedents.indexOf(antecedentNode) == -1)
-                node.antecedents.push(antecedentNode);
-            }
+          switch(child.kind) {
+            case ts.SyntaxKind.VariableStatement:
+              let decl = (<ts.VariableStatement>child).declarationList.declarations[0].name
+              // REVIEW: This could fail if 'decl' is 'BindingPattern' and not 'Identifier'
+              // REVIEW: Also, TypeScript uses some strange '__String' that might not be valid 'string'
+              let name = <string>(<ts.Identifier>decl).escapedText 
+              let exportNode:Graph.JsExportNode = {
+                variableName: name,
+                value: undefined,
+                language:"javascript",
+                code: node, 
+                kind: 'export',
+                antecedents:[node]
+                };
+              dependencies.push(exportNode);
+              node.exportedVariables.push(exportNode.variableName);
+              break;
+          
+            case ts.SyntaxKind.Identifier:
+              // REVIEW: As above, 'escapedText' is actually '__String' which might cause problems 
+              let argumentName = <string>(<ts.Identifier>child).escapedText;
+              if (argumentName in scopeDictionary) {
+                let antecedentNode = scopeDictionary[argumentName]
+                if (node.antecedents.indexOf(antecedentNode) == -1)
+                  node.antecedents.push(antecedentNode);
+              }
+              break;
           }
           walk(child)
         })
@@ -82,10 +90,7 @@ class JavascriptBlockKind implements Langs.Block {
     });
   }
 
-  interface JavascriptEditEvent { kind:'edit' }
-  interface JavascriptUpdateEvent { kind:'update', source:string }
-  // interface JavascriptRebindEvent { kind:'rebindSubsequent'}
-  type JavascriptEvent = JavascriptEditEvent | JavascriptUpdateEvent 
+  type JavascriptEvent = {}
   
   type JavascriptState = {
     id: number
@@ -97,18 +102,7 @@ class JavascriptBlockKind implements Langs.Block {
       return { id: id, block: <JavascriptBlockKind>block}
     },
   
-    update: (state:JavascriptState, event:JavascriptEvent) => {
-      switch(event.kind) {
-        case 'edit': 
-          // console.log("Javascript: Switch to edit mode!")
-          return { id: state.id, block: state.block }
-        case 'update': 
-          // console.log("Javascript: Set code to:\n%O", event.source);
-          let newBlock = javascriptLanguagePlugin.parse(event.source)
-          return { id: state.id, block: <JavascriptBlockKind>newBlock }
-      }
-    },
-
+    update: (state:JavascriptState, event:JavascriptEvent) => state,
     
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
       let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
@@ -116,7 +110,6 @@ class JavascriptBlockKind implements Langs.Block {
       let results = h('div', {}, [
         h('p', {
             style: "height:75px; position:relative", 
-            onclick:() => context.trigger({kind:'edit'})
           }, 
           [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
           // [ cell.code==undefined ? evalButton : ("Value is: "+cell.code.value) ]),
@@ -188,7 +181,7 @@ class JavascriptBlockKind implements Langs.Block {
         let headers = {'Content-Type': 'application/json'}
         let url = DATASTORE_URI.concat(pathname)
         try {
-          const response = await axios.get(url, headers);
+          const response = await axios.get(url, {headers: headers});
           console.log(response)
           return response.data
         }
@@ -201,7 +194,7 @@ class JavascriptBlockKind implements Langs.Block {
         let url = PYTHONSERVICE_URI.concat("/eval")
         let headers = {'Content-Type': 'application/json'}
         try {
-          const response = await axios.post(url, body, headers);
+          const response = await axios.post(url, body, {headers: headers});
           var results : Langs.ExportsValue = {}
           for(var df of response.data.frames) 
             // results[df.name] = await getValue(df.url)
