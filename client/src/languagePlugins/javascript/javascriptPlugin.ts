@@ -176,31 +176,44 @@ class JavascriptBlockKind implements Langs.Block {
     evaluate: async (node:Graph.Node) : Promise<Langs.Value> => {
       let jsnode = <Graph.JsNode>node
       
-      async function getValue(blob) : Promise<Langs.Value> {
-        var pathname = new URL(blob).pathname;
-        let headers = {'Content-Type': 'application/json'}
-        let url = DATASTORE_URI.concat(pathname)
-        try {
-          const response = await axios.get(url, {headers: headers});
-          console.log(response)
-          return response.data
-        }
-        catch (error) {
-          console.error(error);
-        }
-      }
+      // async function getValue(blob) : Promise<Langs.Value> {
+      //   var pathname = new URL(blob).pathname;
+      //   let headers = {'Content-Type': 'application/json'}
+      //   let url = DATASTORE_URI.concat(pathname)
+      //   try {
+      //     const response = await axios.get(url, {headers: headers});
+      //     console.log(response)
+      //     return response.data
+      //   }
+      //   catch (error) {
+      //     console.error(error);
+      //   }
+      // }
 
-      async function getEval(body) : Promise<Langs.ExportsValue> {
-        let url = PYTHONSERVICE_URI.concat("/eval")
+      // async function getEval(body) : Promise<Langs.ExportsValue> {
+      //   let url = PYTHONSERVICE_URI.concat("/eval")
+      //   let headers = {'Content-Type': 'application/json'}
+      //   try {
+      //     const response = await axios.post(url, body, {headers: headers});
+      //     var results : Langs.ExportsValue = {}
+      //     for(var df of response.data.frames) 
+      //       // results[df.name] = await getValue(df.url)
+      //       results[df.name] = {url: df.url, data: await getValue(df.url)}
+      //     console.log(results)
+      //     return results;
+      //   }
+      //   catch (error) {
+      //     console.error(error);
+      //   }
+      // }
+
+      async function putValue(variableName, hash, value) : Promise<string> {
+        let url = DATASTORE_URI.concat("/put").concat("/"+hash).concat("/"+variableName)
         let headers = {'Content-Type': 'application/json'}
         try {
-          const response = await axios.post(url, body, {headers: headers});
-          var results : Langs.ExportsValue = {}
-          for(var df of response.data.frames) 
-            // results[df.name] = await getValue(df.url)
-            results[df.name] = {url: df.url, data: await getValue(df.url)}
-          console.log(results)
-          return results;
+          var response = await axios.put(url, value, {headers: headers});
+          console.log(response)
+          return "created";
         }
         catch (error) {
           console.error(error);
@@ -226,18 +239,19 @@ class JavascriptBlockKind implements Langs.Block {
           evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
           console.log(evalCode)
           let values : Langs.ExportsValue = eval(evalCode);
-          let dfString: string = ""
           for (let value in values){
-            let df = value.concat(" = pd.DataFrame(").concat(JSON.stringify(values[value])).concat(")\n")
-            dfString = dfString.concat(df)
+            let dfString = JSON.stringify(values[value])
+            let hash = Md5.hashStr(dfString)
+            var created = await putValue(value, hash, dfString)
           }
-          console.log(dfString)
-          // need to post this into data store
-          let hash = Md5.hashStr(dfString)
-			    let body = {"code": dfString,
-									"hash": hash,
-									"frames": {}}
-          return await getEval(body);
+          return values;
+          // console.log(dfString)
+          // // need to post this into data store
+          // let hash = Md5.hashStr(dfString)
+			    // let body = {"code": dfString,
+					// 				"hash": hash,
+					// 				"frames": {}}
+          // return await getEval(body);
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName
