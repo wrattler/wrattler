@@ -175,45 +175,28 @@ class JavascriptBlockKind implements Langs.Block {
     editor: javascriptEditor,
     evaluate: async (node:Graph.Node) : Promise<Langs.Value> => {
       let jsnode = <Graph.JsNode>node
-      
-      // async function getValue(blob) : Promise<Langs.Value> {
-      //   var pathname = new URL(blob).pathname;
-      //   let headers = {'Content-Type': 'application/json'}
-      //   let url = DATASTORE_URI.concat(pathname)
-      //   try {
-      //     const response = await axios.get(url, {headers: headers});
-      //     console.log(response)
-      //     return response.data
-      //   }
-      //   catch (error) {
-      //     console.error(error);
-      //   }
-      // }
-
-      // async function getEval(body) : Promise<Langs.ExportsValue> {
-      //   let url = PYTHONSERVICE_URI.concat("/eval")
-      //   let headers = {'Content-Type': 'application/json'}
-      //   try {
-      //     const response = await axios.post(url, body, {headers: headers});
-      //     var results : Langs.ExportsValue = {}
-      //     for(var df of response.data.frames) 
-      //       // results[df.name] = await getValue(df.url)
-      //       results[df.name] = {url: df.url, data: await getValue(df.url)}
-      //     console.log(results)
-      //     return results;
-      //   }
-      //   catch (error) {
-      //     console.error(error);
-      //   }
-      // }
 
       async function putValue(variableName, hash, value) : Promise<string> {
         let url = DATASTORE_URI.concat("/put").concat("/"+hash).concat("/"+variableName)
         let headers = {'Content-Type': 'application/json'}
         try {
           var response = await axios.put(url, value, {headers: headers});
-          console.log(response)
-          return "created";
+          return url;
+        }
+        catch (error) {
+          console.error(error);
+        }
+      }
+
+      async function putValues(values) : Promise<Langs.ExportsValue> {
+        try {
+          var results : Langs.ExportsValue = {}
+          for (let value in values) {
+            let dfString = JSON.stringify(values[value])
+            let hash = Md5.hashStr(dfString)
+            results[value] = {url: await putValue(value, hash, dfString), data: values[value]}
+          }
+          return results;
         }
         catch (error) {
           console.error(error);
@@ -233,25 +216,14 @@ class JavascriptBlockKind implements Langs.Block {
           var argDictionary:{[key: string]: string} = {}
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
             let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-              argDictionary[imported.variableName] = imported.value.data;
+            console.log(imported);
+            argDictionary[imported.variableName] = imported.value.data;
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
           evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
           console.log(evalCode)
           let values : Langs.ExportsValue = eval(evalCode);
-          for (let value in values){
-            let dfString = JSON.stringify(values[value])
-            let hash = Md5.hashStr(dfString)
-            var created = await putValue(value, hash, dfString)
-          }
-          return values;
-          // console.log(dfString)
-          // // need to post this into data store
-          // let hash = Md5.hashStr(dfString)
-			    // let body = {"code": dfString,
-					// 				"hash": hash,
-					// 				"frames": {}}
-          // return await getEval(body);
+          return putValues(values);
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName
