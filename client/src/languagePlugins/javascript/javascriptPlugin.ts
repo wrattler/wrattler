@@ -177,11 +177,12 @@ class JavascriptBlockKind implements Langs.Block {
       let jsnode = <Graph.JsNode>node
 
       async function putValue(variableName, hash, value) : Promise<string> {
-        let url = DATASTORE_URI.concat("/put").concat("/"+hash).concat("/"+variableName)
+        let url = DATASTORE_URI.concat("/"+hash).concat("/"+variableName)
         let headers = {'Content-Type': 'application/json'}
         try {
           var response = await axios.put(url, value, {headers: headers});
-          return "http://wrattler_wrattler_data_store_1:7102".concat("/put").concat("/"+hash).concat("/"+variableName)
+          // return DATASTORE_URI.concat("/"+hash).concat("/"+variableName)
+          return "http://wrattler_wrattler_data_store_1:7102".concat("/"+hash).concat("/"+variableName)
         }
         catch (error) {
           console.error(error);
