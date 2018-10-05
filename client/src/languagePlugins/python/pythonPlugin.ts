@@ -59,13 +59,48 @@ class PythonBlockKind implements Langs.Block {
     update: (state:PythonState, event:PythonEvent) => state,
 
     render: (cell: Langs.BlockState, state:PythonState, context:Langs.EditorContext<PythonEvent>) => {
-      let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
+      
+      function printValue(cellValues) {
+        let variableNames:Array<string> = Object.keys(cellValues)
+        let valuesString = "Values: \n"
+        for (let v = 0; v < variableNames.length; v++) {
+          valuesString = valuesString.concat(variableNames[v])
+                                      .concat(": ")
+                                      .concat(JSON.stringify(cellValues[variableNames[v]].data))
+                                      .concat("\n");
+        }
+        return valuesString
+      }
+
+      function printPreview(cellAntecedents) {
+        console.log(cellAntecedents)
+        let valuesString = "Preview: "
+        for (let v = 0; v < cellAntecedents.length; v++) {
+          valuesString = valuesString.concat(cellAntecedents[v].variableName)
+                                      .concat(": ")
+                                      .concat(JSON.stringify(cellAntecedents[v].value.data))
+                                      .concat("\n");
+				}
+				return valuesString
+      }
+
+      let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
+      let preview = h('div', {}, [
+        h('p', {
+            style: "height:75px; position:relative", 
+          }, 
+          [((cell.code==undefined)||(cell.code.value==undefined)) ? previewButton : (printPreview(cell.code.antecedents))]),
+      ]);
+
+      let evalButton = h('button', { onclick:() => {context.evaluate(cell); console.log(cell)} }, ["Evaluate"])
       let results = h('div', {}, [
         h('p', {
             style: "height:75px; position:relative", 
           }, 
-          [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
+          [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : (printValue(cell.code.value))]),
+          // [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value.data)) ]),
       ]);
+
  
       let afterCreateHandler = (el) => { 
         let ed = monaco.editor.create(el, {
@@ -114,7 +149,7 @@ class PythonBlockKind implements Langs.Block {
         setTimeout(resizeEditor, 100)
       }
       let code = h('div', { style: "height:100px; margin:20px 0px 10px 0px;", id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
-      return h('div', { }, [code, results])
+      return h('div', { }, [code, preview, results])
     }
   }
 
