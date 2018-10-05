@@ -24,25 +24,25 @@ class PythonBlockKind implements Langs.Block {
     }
 	}
 	
-	function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
-    return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
-      let dependencies:Graph.JsExportNode[] = [];
-      let node:Graph.JsCodeNode = {
-        language:"python", 
-        antecedents:[],
-        exportedVariables:[],
-        kind: 'code',
-        value: undefined,
-        source: source
-      }
-      resolve({code: node, exports: dependencies});
-      // return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
-      //   setTimeout(() => {
-      //     resolve({code: node, exports: dependencies});
-      //   }, 0);
-      // });
-    });
-  }
+	// function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
+  //   return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
+  //     let dependencies:Graph.JsExportNode[] = [];
+  //     let node:Graph.JsCodeNode = {
+  //       language:"python", 
+  //       antecedents:[],
+  //       exportedVariables:[],
+  //       kind: 'code',
+  //       value: undefined,
+  //       source: source
+  //     }
+  //     resolve({code: node, exports: dependencies});
+  //     // return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
+  //     //   setTimeout(() => {
+  //     //     resolve({code: node, exports: dependencies});
+  //     //   }, 0);
+  //     // });
+  //   });
+  // }
   
   type PythonEvent = {}
   
