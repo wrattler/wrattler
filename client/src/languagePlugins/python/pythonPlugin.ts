@@ -84,8 +84,26 @@ class PythonBlockKind implements Langs.Block {
 				return valuesString
 			}
 			
+			function printTabs(tableNames) {
+				let buttonComponents: Array<any> = []
+				for (let t = 0; t< tableNames.length; t++) {
+					let buttonComponent = h('button', {style: "background-color: inherit;\
+																											float: left;\
+																											border: none;\
+																											outline: none;\
+																											cursor: pointer;\
+																											padding: 14px 16px;\
+																											transition: 0.3s;\
+																											font-size: 17px;"}, [tableNames[t]])
+
+					buttonComponents.push(buttonComponent)
+				}
+				return h('div', {style: "overflow: hidden; border: 1px solid #ccc; background-color: #f1f1f1;"},[buttonComponents]);
+			}
+
 			function printCurrentTables(cellValues) {
 				let tableNames:Array<string> = Object.keys(cellValues)
+				let tabComponents = printTabs(tableNames);
 				let tablesComponent: Array<any> = [];
 				// for each variable, print a table
 				for (let v = 0; v < tableNames.length; v++) {
@@ -114,7 +132,7 @@ class PythonBlockKind implements Langs.Block {
 					let tableComponent = h('table', {style: "width:100%"},[rowsComponents]);
 					tablesComponent.push(tableComponent)
         }
-				return h('div', {},[tablesComponent]);
+				return h('div', {},[tabComponents,tablesComponent]);
 			}
 			
 			function getCurrentHeaders(firstDataFrameRow) {
@@ -129,14 +147,6 @@ class PythonBlockKind implements Langs.Block {
 				} 
 				return row;
 			}
-
-      // let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
-      // let preview = h('div', {}, [
-      //   h('p', {
-      //       style: "height:75px; position:relative", 
-      //     }, 
-      //     [((cell.code==undefined)||(cell.code.value==undefined)) ? previewButton : (printPreview(cell.code.antecedents))]),
-			// ]);
 			
 			let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
       let preview = h('div', {}, [((cell.code==undefined)||(cell.code.value==undefined)) ? previewButton : (printCurrentTables(cell.code.value))]);
