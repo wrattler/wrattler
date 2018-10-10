@@ -4,6 +4,10 @@
  * @module Graph
  */
 
+/** This comment is needed so that TypeDoc parses the above one correctly */
+import * as Values from './values';
+
+
 /** 
  * A node in the dependency graph that Wrattler maintains while the user edits a
  * notebook. The graph is used to avoid re-computing previously computed parts
@@ -18,7 +22,7 @@ interface Node {
   antecedents: Node[]
   
   /**  The evaluated value associated with this node */
-  value: any
+  value: Values.Value
 }
 
 /**

@@ -2,6 +2,7 @@ import * as monaco from 'monaco-editor';
 import {h,createProjector,VNode} from 'maquette';
 import * as Langs from '../../languages'; 
 import * as Graph from '../../graph'; 
+import * as Values from '../../values'; 
 import {Md5} from 'ts-md5/dist/md5';
 import axios from 'axios';
 
@@ -156,10 +157,10 @@ class PythonBlockKind implements Langs.Block {
   export const pythonLanguagePlugin : Langs.LanguagePlugin = {
     language: "python",
     editor: pythonEditor,
-    evaluate: async (node:Graph.Node) : Promise<Langs.Value> => {
+    evaluate: async (node:Graph.Node) : Promise<Values.Value> => {
       let pyNode = <Graph.PyNode>node
 
-      async function getValue(blob) : Promise<Langs.Value> {
+      async function getValue(blob) : Promise<Values.Value> {
         var pathname = new URL(blob).pathname;
         let headers = {'Content-Type': 'application/json'}
         let url = DATASTORE_URI.concat(pathname)
@@ -173,12 +174,12 @@ class PythonBlockKind implements Langs.Block {
         }
       }
 
-      async function getEval(body) : Promise<Langs.ExportsValue> {
+      async function getEval(body) : Promise<Values.ExportsValue> {
         let url = PYTHONSERVICE_URI.concat("/eval")
         let headers = {'Content-Type': 'application/json'}
         try {
           const response = await axios.post(url, body, {headers: headers});
-          var results : Langs.ExportsValue = {}
+          var results : Values.ExportsValue = {}
           for(var df of response.data.frames) 
             // results[df.name] = await getValue(df.url)
             results[df.name] = {url: df.url, data: await getValue(df.url)}
@@ -196,7 +197,7 @@ class PythonBlockKind implements Langs.Block {
             let imported = <Graph.ExportNode>ant
             // console.log(imported);
             // console.log(imported.value.data);
-            importedFrames.push({ name: imported.variableName, url: imported.value.url })
+            importedFrames.push({ name: imported.variableName, url: (<Values.DataFrame>imported.value).url })
           }
 
           console.log(importedFrames);
@@ -211,7 +212,7 @@ class PythonBlockKind implements Langs.Block {
         case 'export':
           let pyExportNode = <Graph.PyExportNode>node
           let exportNodeName= pyExportNode.variableName
-          let exportsValue = <Langs.ExportsValue>pyExportNode.code.value
+          let exportsValue = <Values.ExportsValue>pyExportNode.code.value
           return exportsValue[exportNodeName]
       }
     },

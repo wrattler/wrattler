@@ -3,6 +3,7 @@ import {h,createProjector,VNode} from 'maquette';
 // import marked from 'marked';
 import * as Langs from '../../languages'; 
 import * as Graph from '../../graph'; 
+import * as Values from '../../values'; 
 
 import ts from 'typescript';
 import axios from 'axios';
@@ -173,7 +174,7 @@ class JavascriptBlockKind implements Langs.Block {
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
-    evaluate: async (node:Graph.Node) : Promise<Langs.Value> => {
+    evaluate: async (node:Graph.Node) : Promise<Values.Value> => {
       let jsnode = <Graph.JsNode>node
 
       async function putValue(variableName, hash, value) : Promise<string> {
@@ -189,9 +190,9 @@ class JavascriptBlockKind implements Langs.Block {
         }
       }
 
-      async function putValues(values) : Promise<Langs.ExportsValue> {
+      async function putValues(values) : Promise<Values.ExportsValue> {
         try {
-          var results : Langs.ExportsValue = {}
+          var results : Values.ExportsValue = {}
           for (let value in values) {
             let dfString = JSON.stringify(values[value])
             let hash = Md5.hashStr(dfString)
@@ -218,17 +219,17 @@ class JavascriptBlockKind implements Langs.Block {
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
             let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
             console.log(imported);
-            argDictionary[imported.variableName] = imported.value.data;
+            argDictionary[imported.variableName] = (<Values.DataFrame>imported.value).data;
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
           evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
           console.log(evalCode)
-          let values : Langs.ExportsValue = eval(evalCode);
+          let values : Values.ExportsValue = eval(evalCode);
           return await putValues(values);
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName
-          let exportsValue = <Langs.ExportsValue>jsExportNode.code.value
+          let exportsValue = <Values.ExportsValue>jsExportNode.code.value
           return exportsValue[exportNodeName]
       }
     },

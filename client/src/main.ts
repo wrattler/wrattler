@@ -1,24 +1,13 @@
 /** @hidden */
 
 /** This comment is needed so that TypeDoc parses the above one correctly */
-import { fsHello } from "./demos/fsdemo";
-import { jsHello } from "./demos/jsdemo";
-import { tsHello } from "./demos/tsdemo";
-
-// fsHello();
-// jsHello();
-// tsHello();
-
-// ------------------------------------------------------------------------------------------------
-// Imports
-// ------------------------------------------------------------------------------------------------
-
 import {h,createProjector,VNode} from 'maquette';
 import * as Langs from './languages'; 
 import * as Graph from './graph';
 import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugin'
 import { javascriptLanguagePlugin } from './languagePlugins/javascript/javascriptPlugin'
 import { pythonLanguagePlugin } from './languagePlugins/python/pythonPlugin'
+import { gammaLangaugePlugin } from "./languagePlugins/gamma/main";
 require('./editor.css');
 
 
@@ -31,6 +20,7 @@ var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
 languagePlugins["python"] = pythonLanguagePlugin;
+languagePlugins["thegamma"] = gammaLangaugePlugin;
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
 // A sample document is just an array of records with cells. Each 
@@ -45,7 +35,8 @@ let documents =
     { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
     { "language": "javascript", "source": "var joinJs = one.concat(two)"},
     { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
-    { "language": "python", "source": "joinPy = one.append(two)"} 
+    { "language": "python", "source": "joinPy = one.append(two)"},
+    { "language": "thegamma", "source": "1+2"} 
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
