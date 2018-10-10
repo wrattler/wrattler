@@ -69,18 +69,18 @@ function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: G
 // }
 
 async function bindAllCells() {
+  var newCells = []
   for (var c = 0; c < state.cells.length; c++) {
     let aCell = state.cells[c]
     let {code, exports} = await bindCell(aCell);
-    aCell.code = code
-    aCell.exports = exports
+    var newCell = { editor:aCell.editor, code:code, exports:exports }
     for (var e = 0; e < exports.length; e++ ) {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    // console.log(aCell)
-    // console.log(Object.keys(scopeDictionary))
+    newCells.push(newCell)
   }
+  state.cells = newCells;
 }
 
 async function rebindSubsequentCells(cell:Langs.BlockState, newSource: string) {
@@ -120,13 +120,6 @@ async function rebindSubsequentCells(cell:Langs.BlockState, newSource: string) {
   }
   console.log(state.cells);
 }
-
-bindAllCells()
-
-// Get the #paper element and create maquette renderer
-let paperElement = document.getElementById('paper');
-let maquetteProjector = createProjector();
-
 
 async function evaluate(node:Graph.Node) {
   if ((node.value)&&(Object.keys(node.value).length > 0)) return;
@@ -246,9 +239,14 @@ function update(state:NotebookState, evt:NotebookEvent) {
   }
 }
 
+let maquetteProjector = createProjector();
+let paperElement = document.getElementById('paper');
+
 function updateAndRender(event:NotebookEvent) {
   state = update(state, event)
   maquetteProjector.scheduleRender()
 }
 
-maquetteProjector.replace(paperElement, () => render(updateAndRender, state));
+bindAllCells().then(() =>
+  maquetteProjector.replace(paperElement, () => render(updateAndRender, state))
+);

@@ -16,7 +16,7 @@ type [<AllowNullLiteral>] Node =
     /// Returns all nodes that this node depends on in any way 
     abstract antecedents: Node[] 
     /// The evaluated value associated with this node 
-    abstract value: Value option 
+    abstract value: Value option with get, set
 
 /// A node that represents a data frame exported from a code block. This is 
 /// a common interface that can be implemented by any language plugin that 
