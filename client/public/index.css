@@ -3,6 +3,65 @@ img {
 	height: auto;
 }
 
+div.editor {
+	border-left-style: double;
+	border-left-color: grey;
+	padding: 5px;
+	margin: 10px;
+	height: 50vh;
+	/* overflow: scroll; */
+}
+
+div.output.rendered {
+	display: block;
+}
+
+div.output {
+	display: none;
+}
+
+div.editor.editable {
+	display: block;
+}
+
+div.editor {
+	display: none;
+}
+
+div.output.rendered {
+	display: block;
+}
+
+div.output {
+	display: none;
+}
+
+div.editor.editable {
+	display: block;
+}
+
+div.editor {
+	display: none;
+}
+
+div.cell{
+	border-left-style: solid;
+	border-left-width: 7px;
+	padding: 5px 5px 5px 15px;
+	width:100%;
+}
+
+div.cell:nth-child(odd){
+ border-left-color: gainsboro; 
+}
+
+div.cell:nth-child(even){
+	border-left-color: grey;
+}
+
+div.controls {
+float:right;
+}
 
 
 /* code.indicator {

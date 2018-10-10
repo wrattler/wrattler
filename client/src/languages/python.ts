@@ -1,9 +1,9 @@
 import * as monaco from 'monaco-editor';
 import {h,createProjector,VNode} from 'maquette';
-import * as Langs from '../../languages'; 
-import * as Graph from '../../graph'; 
-import * as Values from '../../values'; 
-import {Md5} from 'ts-md5/dist/md5';
+import * as Langs from '../definitions/languages'; 
+import * as Graph from '../definitions/graph'; 
+import * as Values from '../definitions/values'; 
+import {Md5} from 'ts-md5';
 import axios from 'axios';
 
 declare var PYTHONSERVICE_URI: string;

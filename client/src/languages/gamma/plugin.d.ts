@@ -1,4 +1,4 @@
 export as namespace gamma
-import { LanguagePlugin } from "../../languages";
+import { LanguagePlugin } from "../../definitions/languages";
 export let gammaLangaugePlugin : LanguagePlugin;
 

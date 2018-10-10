@@ -2,15 +2,12 @@
 
 /** This comment is needed so that TypeDoc parses the above one correctly */
 import {h,createProjector,VNode} from 'maquette';
-import * as Langs from './languages'; 
-import * as Graph from './graph';
-import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugin'
-import { javascriptLanguagePlugin } from './languagePlugins/javascript/javascriptPlugin'
-import { pythonLanguagePlugin } from './languagePlugins/python/pythonPlugin'
-import { gammaLangaugePlugin } from "./languagePlugins/gamma/main";
-require('./editor.css');
-
-
+import * as Langs from './definitions/languages'; 
+import * as Graph from './definitions/graph';
+import { markdownLanguagePlugin } from './languages/markdown'
+import { javascriptLanguagePlugin } from './languages/javascript'
+import { pythonLanguagePlugin } from './languages/python'
+import { gammaLangaugePlugin } from "./languages/gamma/plugin";
 
 // ------------------------------------------------------------------------------------------------
 // Main notebook rendering code

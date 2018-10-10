@@ -3,9 +3,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="languagePlugins/gamma/html.fs" />
-    <Compile Include="languagePlugins/gamma/imports.fs" />
-    <Compile Include="languagePlugins/gamma/main.fs" />
+    <Compile Include="languages/gamma/html.fs" />
+    <Compile Include="languages/gamma/imports.fs" />
+    <Compile Include="languages/gamma/plugin.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

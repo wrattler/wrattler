@@ -1,20 +1,16 @@
 import * as monaco from 'monaco-editor';
 import {h,createProjector,VNode} from 'maquette';
-// import marked from 'marked';
-import * as Langs from '../../languages'; 
-import * as Graph from '../../graph'; 
-import * as Values from '../../values'; 
+import * as Langs from '../definitions/languages'; 
+import * as Graph from '../definitions/graph'; 
+import * as Values from '../definitions/values'; 
 
 import ts from 'typescript';
 import axios from 'axios';
 
-import {Md5} from 'ts-md5/dist/md5';
+import {Md5} from 'ts-md5';
 
 declare var PYTHONSERVICE_URI: string;
 declare var DATASTORE_URI: string;
-
-//const s = require('./editor.css');
-
 
 // ------------------------------------------------------------------------------------------------
 // Markdown plugin
