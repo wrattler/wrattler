@@ -36,8 +36,8 @@ type [<AllowNullLiteral>] ExportsValue =
 
 type [<AllowNullLiteral>] DataFrame =
     inherit Value
-    abstract url: string with get, set
-    abstract data: obj option with get, set
+    abstract url: string 
+    abstract data: obj option 
 
 type BindingResult =
   { code: Node

@@ -41,11 +41,17 @@ let editor =
       ]
     member x.update(state, evt) = state }
 
-let sampleValue () = 
-  { new Value }
-
 let evaluate (node:GammaNode) = async {
-  return sampleValue() }
+  let ants = (node :> Node).antecedents
+  let allData = ResizeArray<_>()
+  for ant in ants do
+    let df = (ant.value.Value :?> DataFrame)
+    allData.AddRange(unbox<obj[]> df.data)
+  let res = 
+    { new DataFrame with
+        member x.url = "STORING NOT IMPLEMENTED"
+        member x.data = Some(allData :> _) }  
+  return res :> Value }
 
 let bind (scope:ScopeDictionary) (block:Block) = async {
   let df1 = scope.["one"]
