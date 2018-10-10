@@ -1,13 +1,14 @@
 /** @hidden */
 
 /** This comment is needed so that TypeDoc parses the above one correctly */
-import {h,createProjector,VNode} from 'maquette';
-import * as Langs from './definitions/languages'; 
-import * as Graph from './definitions/graph';
+import {h,createProjector,VNode} from 'maquette'
+import { Log } from "./common/log"
+import * as Langs from './definitions/languages'
+import * as Graph from './definitions/graph'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
 import { pythonLanguagePlugin } from './languages/python'
-import { gammaLangaugePlugin } from "./languages/gamma/plugin";
+import { gammaLangaugePlugin } from "./languages/gamma/plugin"
 
 // ------------------------------------------------------------------------------------------------
 // Main notebook rendering code
@@ -250,3 +251,11 @@ function updateAndRender(event:NotebookEvent) {
 bindAllCells().then(() =>
   maquetteProjector.replace(paperElement, () => render(updateAndRender, state))
 );
+
+
+ 
+Log.trace("test1","hi1 %O", {"a":123})
+Log.trace("test2","hi2 %O", {"a":123})
+Log.trace("test3","hi3 %O", {"a":123})
+Log.trace("test1","hi4 %s", {"a":123})
+Log.trace("test2","hi5 %s", {"a":123})
