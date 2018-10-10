@@ -150,14 +150,14 @@ class PythonBlockKind implements Langs.Block {
 			}
 			
 			let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
-      let preview = h('div', {}, [((cell.code==undefined)||(cell.code.value==undefined)) ? previewButton : (printCurrentTables(cell.code.value))]);
+      let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printCurrentTables(cell.code.value))]);
 
       let evalButton = h('button', { onclick:() => {context.evaluate(cell); console.log(cell)} }, ["Evaluate"])
       let results = h('div', {}, [
         h('p', {
             style: "height:75px; position:relative", 
           }, 
-          [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : (printValue(cell.code.value))]),
+          [ (cell.code.value==undefined) ? evalButton : (printValue(cell.code.value))]),
       ]);
 
  

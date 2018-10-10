@@ -108,8 +108,7 @@ class JavascriptBlockKind implements Langs.Block {
         h('p', {
             style: "height:75px; position:relative", 
           }, 
-          [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
-          // [ cell.code==undefined ? evalButton : ("Value is: "+cell.code.value) ]),
+          [ (cell.code.value==undefined) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
       ]);
  
       let afterCreateHandler = (el) => { 
