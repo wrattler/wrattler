@@ -45,7 +45,7 @@ let documents =
     { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
     { "language": "javascript", "source": "var joinJs = one.concat(two)"},
     { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
-    { "language": "python", "source": "joinPy = one.append(two)"} 
+    { "language": "python", "source": "joinPy = one.append(two); joinPyFlip = two.append(one)"},
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
