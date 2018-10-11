@@ -5,11 +5,11 @@ source("R_service.R")
 
 
 handle_exports <- function(code, frames, hash) {
-    # dummy implementation for now
-    imports <- c("x","y")
-    exports <- c("a","b")
-    print(paste("Code is",code))
-    return(jsonlite::toJSON(data.frame(imports,exports),auto_unbox=TRUE))
+    ## get imports and exports from the code snippet
+    impExpEnv <- analyzeCode(code)
+    importDF <- data.frame(imports=impExpEnv$imports)
+    exportDF <- data.frame(exports=impExpEnv$exports)
+    return(jsonlite::toJSON(c(importDF,exportDF)))
 }
 
 handle_eval <- function(code_frames_hash) {

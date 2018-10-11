@@ -2,8 +2,9 @@
 
 library(jsonlite)
 library(httr)
+source("codeAnalysis.R")
 
-read_frame <- function(frame_name, frame_hash) {
+readFrame <- function(frame_name, frame_hash) {
     ## Read a dataframe from the datastore.
     ## use jsonlite to deserialize json into a data.frame
     url <- paste0(Sys.getenv("DATASTORE_URL"),"/",frame_hash,"/",frame_name)
@@ -17,7 +18,7 @@ read_frame <- function(frame_name, frame_hash) {
 }
 
 
-write_frame <- function(frame_data, frame_name, frame_hash) {
+writeFrame <- function(frame_data, frame_name, frame_hash) {
     ## Write a dataframe to the datastore.
     ## use jsonlite to serialize dataframe into json
     url <- paste0(Sys.getenv("DATASTORE_URL"),"/",frame_hash,"/",frame_name)
@@ -26,11 +27,14 @@ write_frame <- function(frame_data, frame_name, frame_hash) {
 }
 
 
-analyze_code <- function(code) {
-
+analyzeCode <- function(code) {
+    ## code here will be a string - first parse it, then find imports and exports
+    parsedCode <- prepCodeString(code)
+    impexp <- getImportsExports(parsedCode)
+    return(impexp)
 }
 
 
-execute_code <- function(code) {
+executeCode <- function(code) {
 
 }

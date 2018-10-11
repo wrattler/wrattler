@@ -1,6 +1,6 @@
 FROM ubuntu:16.04
 
-
+RUN apt-get update; apt-get install -y libssl-dev
 # install R, and setup CRAN mirror
 RUN apt-get update; apt-get install -y software-properties-common
 RUN apt-get update; apt-get install -y libcurl4-openssl-dev
@@ -14,6 +14,7 @@ RUN add-apt-repository 'deb [arch=amd64,i386] https://cran.rstudio.com/bin/linux
 RUN Rscript -e "install.packages('ggplot2')"
 RUN Rscript -e "install.packages('jug')"
 RUN Rscript -e "install.packages('xml2')"
+RUN Rscript -e "install.packages('httr')"
 
 
 # copy current working directory
