@@ -1,19 +1,15 @@
-import * as monaco from 'monaco-editor';
-import {h,createProjector,VNode} from 'maquette';
-// import marked from 'marked';
-import * as Langs from '../../languages'; 
-import * as Graph from '../../graph'; 
+import {h,VNode} from 'maquette';
+import * as Langs from '../definitions/languages'; 
+import * as Graph from '../definitions/graph'; 
+import * as Values from '../definitions/values'; 
+import {createEditor} from '../editors/editor';
 
 import ts from 'typescript';
 import axios from 'axios';
-
-import {Md5} from 'ts-md5/dist/md5';
+import {Md5} from 'ts-md5';
 
 declare var PYTHONSERVICE_URI: string;
 declare var DATASTORE_URI: string;
-
-//const s = require('./editor.css');
-
 
 // ------------------------------------------------------------------------------------------------
 // Markdown plugin
@@ -111,61 +107,10 @@ class JavascriptBlockKind implements Langs.Block {
         h('p', {
             style: "height:75px; position:relative", 
           }, 
-          [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
-          // [ cell.code==undefined ? evalButton : ("Value is: "+cell.code.value) ]),
+          [ (cell.code.value==undefined) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
       ]);
  
-      let afterCreateHandler = (el) => { 
-        let ed = monaco.editor.create(el, {
-          value: state.block.source,
-          language: 'javascript',
-          scrollBeyondLastLine: false,
-          theme:'vs',
-          minimap: { enabled: false },
-          overviewRulerLanes: 0,
-          lineDecorationsWidth: "0ch",
-          fontSize: 14,
-          fontFamily: 'Monaco',
-          lineNumbersMinChars: 2,
-          lineHeight: 20,
-          lineNumbers: "on",
-          scrollbar: {
-            verticalHasArrows: true,
-            horizontalHasArrows: true,
-            vertical: 'none',
-            horizontal: 'none'
-          }
-        });    
-
-        ed.createContextKey('alwaysTrue', true);
-
-        ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
-          let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
-          // let codeNode = <Graph.JsCodeNode> cell.code;
-          // codeNode.source = code;
-          // console.log(cell);
-          context.rebindSubsequent(cell, code)
-        }, 'alwaysTrue');
-
-        let lastHeight = 100;
-        let lastWidth = 0
-        let resizeEditor = () => {
-          let lines = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF, false).split('\n').length
-          let height = lines > 4 ? lines * 20.0 : 80;
-          let width = el.clientWidth
-
-          if (height !== lastHeight || width !== lastWidth) {
-            lastHeight = height
-            lastWidth = width  
-            ed.layout({width:width, height:height})
-            el.style.height = height + "px"
-          }
-        }
-        ed.getModel().onDidChangeContent(resizeEditor);
-        window.addEventListener("resize", resizeEditor)
-        setTimeout(resizeEditor, 100)
-      }
-      let code = h('div', { style: "height:100px; margin:20px 0px 10px 0px;", id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
+			let code = createEditor("javascript", state.block.source, cell, context)
       return h('div', { }, [code, results])
     },
   }
@@ -173,7 +118,7 @@ class JavascriptBlockKind implements Langs.Block {
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
-    evaluate: async (node:Graph.Node) : Promise<Langs.Value> => {
+    evaluate: async (node:Graph.Node) : Promise<Values.Value> => {
       let jsnode = <Graph.JsNode>node
 
       async function putValue(variableName, hash, value) : Promise<string> {
@@ -189,9 +134,9 @@ class JavascriptBlockKind implements Langs.Block {
         }
       }
 
-      async function putValues(values) : Promise<Langs.ExportsValue> {
+      async function putValues(values) : Promise<Values.ExportsValue> {
         try {
-          var results : Langs.ExportsValue = {}
+          var results : Values.ExportsValue = {}
           for (let value in values) {
             let dfString = JSON.stringify(values[value])
             let hash = Md5.hashStr(dfString)
@@ -218,17 +163,17 @@ class JavascriptBlockKind implements Langs.Block {
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
             let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
             console.log(imported);
-            argDictionary[imported.variableName] = imported.value.data;
+            argDictionary[imported.variableName] = (<Values.DataFrame>imported.value).data;
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
           evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
           console.log(evalCode)
-          let values : Langs.ExportsValue = eval(evalCode);
+          let values : Values.ExportsValue = eval(evalCode);
           return await putValues(values);
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName
-          let exportsValue = <Langs.ExportsValue>jsExportNode.code.value
+          let exportsValue = <Values.ExportsValue>jsExportNode.code.value
           return exportsValue[exportNodeName]
       }
     },

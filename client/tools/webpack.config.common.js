@@ -2,8 +2,7 @@ var fs = require("fs");
 var path = require("path");
 var fableUtils = require("fable-utils");
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var jQueryPlugin = require('jquery');
-var HtmlWebpackPolyfillIOPlugin = require('html-webpack-polyfill-io-plugin');
+// var HtmlWebpackPolyfillIOPlugin = require('html-webpack-polyfill-io-plugin');
 // var DynamicCdnWebpackPlugin = require('dynamic-cdn-webpack-plugin');
 
 var packageJson = JSON.parse(fs.readFileSync(resolve('../package.json')).toString());
