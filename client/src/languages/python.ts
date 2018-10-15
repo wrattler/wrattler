@@ -1,9 +1,9 @@
-import * as monaco from 'monaco-editor';
 import {h} from 'maquette';
 import * as Langs from '../definitions/languages'; 
 import * as Graph from '../definitions/graph'; 
 import * as Values from '../definitions/values'; 
 import {printPreview} from '../editors/preview'; 
+import {createEditor} from '../editors/editor';
 import {Md5} from 'ts-md5';
 import axios from 'axios';
 
@@ -60,54 +60,7 @@ class PythonBlockKind implements Langs.Block {
 			let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
 			let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
       let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(triggerSelect, state.tabID, <Values.DataFrame>cell.code.value))]);
- 
-			let afterCreateHandler = (el) => { 
-				let ed = monaco.editor.create(el, {
-					value: state.block.source,
-					language: 'python',
-					scrollBeyondLastLine: false,
-					theme:'vs',
-					minimap: { enabled: false },
-					overviewRulerLanes: 0,
-					lineDecorationsWidth: "0ch",
-					fontSize: 14,
-					fontFamily: 'Monaco',
-					lineNumbersMinChars: 2,
-					lineHeight: 20,
-					lineNumbers: "on",
-					scrollbar: {
-						verticalHasArrows: true,
-						horizontalHasArrows: true,
-						vertical: 'none',
-						horizontal: 'none'
-					}
-				});    
-
-				ed.createContextKey('alwaysTrue', true);
-				ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
-					let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
-					context.rebindSubsequent(cell, code)
-				}, 'alwaysTrue');
-
-				let lastHeight = 100;
-				let lastWidth = 0
-				let resizeEditor = () => {
-					let lines = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF, false).split('\n').length
-					let height = lines > 4 ? lines * 20.0 : 80;
-					let width = el.clientWidth
-
-					if (height !== lastHeight || width !== lastWidth) {
-						lastHeight = height
-						lastWidth = width  
-						ed.layout({width:width, height:height})
-						el.style.height = height + "px"
-					}
-				}
-				ed.getModel().onDidChangeContent(resizeEditor);
-				window.addEventListener("resize", resizeEditor)
-				setTimeout(resizeEditor, 100)
-			}
-			let code = h('div', { style: "height:100px; margin:20px 0px 10px 0px;", id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
+			let code = createEditor("python", state.block.source, cell, context)
 			return h('div', { }, [code, preview])
 		}
 	}
