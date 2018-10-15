@@ -1,40 +1,19 @@
 import {h, VNode} from 'maquette';
+import * as Values from '../definitions/values'; 
 
-function printValue(cellValues) {
-  let variableNames:Array<string> = Object.keys(cellValues)
-  let valuesString = "Values: \n"
-  for (let v = 0; v < variableNames.length; v++) {
-    valuesString = valuesString.concat(variableNames[v])
-                                .concat(": ")
-                                .concat(JSON.stringify(cellValues[variableNames[v]].data))
-                                .concat("\n");
-  }
-  return valuesString
-}
-
-function printPreview (triggerSelect, selectedTable, cellValues) {
+function printPreview(triggerSelect:(number) => void, selectedTable:number, cellValues:Values.DataFrame) {
   let tableNames:Array<string> = Object.keys(cellValues)
-  let tabComponents = printTabs(triggerSelect, tableNames);
-  return h('div', {},[ tabComponents, 
-    (tableNames[selectedTable] == undefined) || (cellValues[tableNames[selectedTable]].data) == undefined ? [] : printCurrentTable(cellValues[tableNames[selectedTable]].data)]);
+  let tabComponents = printTabs(triggerSelect, selectedTable, tableNames);
+  return h('div', {}, [ tabComponents, printCurrentTable(cellValues[tableNames[selectedTable]].data) ]);
 }
 
-function printTabs(triggerSelect, tableNames) {
+function printTabs(triggerSelect:(number) => void, selectedTable:number, tableNames:Array<string>) {
   let buttonComponents: Array<any> = []
   for (let t = 0; t< tableNames.length; t++) {
-    let buttonComponent = h('button', {style: "background-color: inherit;\
-                                                float: left;\
-                                                border: none;\
-                                                outline: none;\
-                                                cursor: pointer;\
-                                                padding: 14px 16px;\
-                                                transition: 0.3s;\
-                                                font-size: 17px;", onclick:()=> triggerSelect(t)
-                                                }, [tableNames[t]])
-
+    let buttonComponent = h('button', { class: t==selectedTable?"selected":"normal", onclick:()=> triggerSelect(t)}, [tableNames[t]])
     buttonComponents.push(buttonComponent)
   }
-  return h('div', {style: "overflow: hidden; border: 1px solid #ccc; background-color: #f1f1f1;"},[buttonComponents]);
+  return h('div', {class: "tabs"},[buttonComponents]);
 }
 
 function printCurrentTable(aTable) {

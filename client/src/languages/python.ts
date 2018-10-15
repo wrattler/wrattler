@@ -58,8 +58,8 @@ class PythonBlockKind implements Langs.Block {
 
 		render: (cell: Langs.BlockState, state:PythonState, context:Langs.EditorContext<PythonEvent>) => {
 			let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
-			let triggerSelect = t => context.trigger({kind:'switchtab', index: t})
-      let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(triggerSelect, state.tabID, cell.code.value))]);
+			let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
+      let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(triggerSelect, state.tabID, <Values.DataFrame>cell.code.value))]);
  
 			let afterCreateHandler = (el) => { 
 				let ed = monaco.editor.create(el, {

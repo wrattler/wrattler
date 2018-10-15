@@ -3,6 +3,25 @@ img {
 	height: auto;
 }
 
+div.tabs {
+	overflow: hidden; 
+	border: 1px solid #ccc; 
+	background-color: #f1f1f1;
+}
+div.tabs button {
+	background-color: inherit;
+	float: left;
+	border: none;
+	outline: none;
+	cursor: pointer;
+	padding: 14px 16px;
+	transition: 0.3s;
+	font-size: 17px;
+}
+div.tabs button.selected {
+	font-weight:bold;
+}
+																								
 div.editor {
 	border-left-style: double;
 	border-left-color: grey;
