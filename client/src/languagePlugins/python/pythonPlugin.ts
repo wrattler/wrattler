@@ -59,15 +59,15 @@ class PythonBlockKind implements Langs.Block {
 
 		render: (cell: Langs.BlockState, state:PythonState, context:Langs.EditorContext<PythonEvent>) => {
 			function printValue(cellValues) {
-			  let variableNames:Array<string> = Object.keys(cellValues)
-			  let valuesString = "Values: \n"
-			  for (let v = 0; v < variableNames.length; v++) {
-			    valuesString = valuesString.concat(variableNames[v])
-			                                .concat(": ")
-			                                .concat(JSON.stringify(cellValues[variableNames[v]].data))
-			                                .concat("\n");
-			  }
-			  return valuesString
+				let variableNames:Array<string> = Object.keys(cellValues)
+				let valuesString = "Values: \n"
+				for (let v = 0; v < variableNames.length; v++) {
+					valuesString = valuesString.concat(variableNames[v])
+																			.concat(": ")
+																			.concat(JSON.stringify(cellValues[variableNames[v]].data))
+																			.concat("\n");
+				}
+				return valuesString
 			}
 			
 			function printPreview (cellValues) {
@@ -141,10 +141,10 @@ class PythonBlockKind implements Langs.Block {
 
 			let evalButton = h('button', { onclick:() => {context.evaluate(cell); console.log(cell)} }, ["Evaluate"])
 			let results = h('div', {}, [
-			  h('p', {
-			      style: "height:75px; position:relative", 
-			    }, 
-			    [ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : (printValue(cell.code.value))]),
+				h('p', {
+						style: "height:75px; position:relative", 
+					}, 
+					[ ((cell.code==undefined)||(cell.code.value==undefined)) ? evalButton : (printValue(cell.code.value))]),
 			]);
 
  
