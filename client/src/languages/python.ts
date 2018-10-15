@@ -1,13 +1,11 @@
 import * as monaco from 'monaco-editor';
-import {h,createProjector,VNode} from 'maquette';
+import {h} from 'maquette';
 import * as Langs from '../definitions/languages'; 
 import * as Graph from '../definitions/graph'; 
 import * as Values from '../definitions/values'; 
+import {printPreview} from '../editors/preview'; 
 import {Md5} from 'ts-md5';
 import axios from 'axios';
-import { triggerAsyncId } from 'async_hooks';
-import { updateArrayBindingPattern } from 'typescript';
-import { EventEmitter } from 'events';
 
 declare var PYTHONSERVICE_URI: string;
 declare var DATASTORE_URI: string;
@@ -59,93 +57,9 @@ class PythonBlockKind implements Langs.Block {
 		},
 
 		render: (cell: Langs.BlockState, state:PythonState, context:Langs.EditorContext<PythonEvent>) => {
-			function printValue(cellValues) {
-				let variableNames:Array<string> = Object.keys(cellValues)
-				let valuesString = "Values: \n"
-				for (let v = 0; v < variableNames.length; v++) {
-					valuesString = valuesString.concat(variableNames[v])
-																			.concat(": ")
-																			.concat(JSON.stringify(cellValues[variableNames[v]].data))
-																			.concat("\n");
-				}
-				return valuesString
-			}
-			
-			function printPreview (cellValues) {
-				let tableNames:Array<string> = Object.keys(cellValues)
-				let tabComponents = printTabs(tableNames);
-				return h('div', {},[ tabComponents, 
-					(tableNames[state.tabID] == undefined) || (cellValues[tableNames[state.tabID]].data) == undefined ? [] : printCurrentTable(cellValues[tableNames[state.tabID]].data)]);
-			}
-
-			function printTabs(tableNames) {
-				let buttonComponents: Array<any> = []
-				for (let t = 0; t< tableNames.length; t++) {
-					let buttonComponent = h('button', {style: "background-color: inherit;\
-																											float: left;\
-																											border: none;\
-																											outline: none;\
-																											cursor: pointer;\
-																											padding: 14px 16px;\
-																											transition: 0.3s;\
-																											font-size: 17px;", onclick:()=>{
-																												context.trigger({kind:'switchtab', index: t})
-																											}}, [tableNames[t]])
-
-					buttonComponents.push(buttonComponent)
-				}
-				return h('div', {style: "overflow: hidden; border: 1px solid #ccc; background-color: #f1f1f1;"},[buttonComponents]);
-			}
-
-			function printCurrentTable(aTable) {
-				
-				let tableHeaders:Array<string> = getCurrentHeaders(aTable[0]);
-				
-				let rowsComponents:Array<any> = []
-				let headerComponents:Array<any> = []
-				// for this table, create headers
-				for (let i = 0; i < tableHeaders.length; i++) {
-					headerComponents.push(h('th',{}, [tableHeaders[i]]))
-				}
-				rowsComponents.push(h('tr',{},[headerComponents]))
-				
-				// for every row in dataframe, create rows
-				for (let row = 0; row < aTable.length; row++) {
-					let values = getCurrentRow(aTable[row], tableHeaders);
-					let columnsComponents:Array<any> = []
-					for (let v = 0; v < values.length; v++) {
-						columnsComponents.push(h('td', {}, [values[v].toString()]))
-					}
-					rowsComponents.push(h('tr',{},[columnsComponents]))
-				}
-
-				let tableComponent = h('table', {style: "width:100%"},[rowsComponents]);
-				return tableComponent
-			}
-			
-			function getCurrentHeaders(firstDataFrameRow) {
-				let tableHeaders:Array<string> = Object.keys(firstDataFrameRow)
-				return tableHeaders;
-			}
-
-			function getCurrentRow(dfRow, keys) {
-				let row: Array<string> = [];
-				for (let k in keys) {
-					row.push(dfRow[keys[k]]);
-				} 
-				return row;
-			}
-			
 			let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
-      let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.code.value))]);
-
-      let evalButton = h('button', { onclick:() => {context.evaluate(cell); console.log(cell)} }, ["Evaluate"])
-      let results = h('div', {}, [
-        h('p', {
-            style: "height:75px; position:relative", 
-          }, 
-          [ (cell.code.value==undefined) ? evalButton : (printValue(cell.code.value))]),
-      ]);
+			let triggerSelect = t => context.trigger({kind:'switchtab', index: t})
+      let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(triggerSelect, state.tabID, cell.code.value))]);
  
 			let afterCreateHandler = (el) => { 
 				let ed = monaco.editor.create(el, {
