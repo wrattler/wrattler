@@ -26,38 +26,6 @@ class PythonBlockKind implements Langs.Block {
 			this.source = source;
 		}
 	}
-	
-	// function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
-	//   return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
-	//     let dependencies:Graph.JsExportNode[] = [];
-	//     let node:Graph.JsCodeNode = {
-	//       language:"python", 
-	//       antecedents:[],
-	//       exportedVariables:[],
-	//       kind: 'code',
-	//       value: undefined,
-	//       source: source
-	//     }
-	//     resolve({code: node, exports: dependencies});
-	//     // return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
-	//     //   setTimeout(() => {
-	//     //     resolve({code: node, exports: dependencies});
-	//     //   }, 0);
-	//     // });
-	//   });
-	// }
-	
-	// interface JavaScriptSwitchTabEvent {
-	// 	kind: "switchtab"
-	// 	index: number
-	// }
-	// type JavascriptEvent = JavaScriptSwitchTabEvent
-	
-	// type JavascriptState = {
-	// 	id: number
-	// 	block: JavascriptBlockKind
-	// 	selectedTab: number
-	// }
 
 	interface PythonSwitchTabEvent {
 		kind: "switchtab"
@@ -69,21 +37,21 @@ class PythonBlockKind implements Langs.Block {
 	type PythonState = {
 		id: number
 		block: PythonBlockKind
+		tabID: number
 	}
-	
-	let tabID:number = 0;
+
 
 	const pythonEditor : Langs.Editor<PythonState, PythonEvent> = {
 		
 		initialize: (id:number, block:Langs.Block) => {  
-			return { id: id, block: <PythonBlockKind>block}
+			return { id: id, block: <PythonBlockKind>block, tabID: 0}
 		},
 	
 		update: (state:PythonState, event:PythonEvent) => {
 			switch(event.kind) {
 				case 'switchtab':
 				{
-					tabID = event.index	
+					return { id: state.id, block: state.block, tabID: event.index }
 				}
 			}
 			return state	
@@ -105,13 +73,8 @@ class PythonBlockKind implements Langs.Block {
 			function printPreview (cellValues) {
 				let tableNames:Array<string> = Object.keys(cellValues)
 				let tabComponents = printTabs(tableNames);
-				console.log(tableNames);
-				console.log(tabID);
-				// console.log(tableNames[tabID]);
-				console.log(cellValues);
-				// let table = cellValues[tableNames[tabID]].data
-				// let tableComponent = printCurrentTable(table)
-				return h('div', {},[tabComponents, (tableNames[tabID] == undefined) || (cellValues[tableNames[tabID]].data) == undefined ? [] : printCurrentTable(cellValues[tableNames[tabID]].data)]);
+				return h('div', {},[ tabComponents, 
+					(tableNames[state.tabID] == undefined) || (cellValues[tableNames[state.tabID]].data) == undefined ? [] : printCurrentTable(cellValues[tableNames[state.tabID]].data)]);
 			}
 
 			function printTabs(tableNames) {
@@ -130,7 +93,6 @@ class PythonBlockKind implements Langs.Block {
 
 					buttonComponents.push(buttonComponent)
 				}
-
 				return h('div', {style: "overflow: hidden; border: 1px solid #ccc; background-color: #f1f1f1;"},[buttonComponents]);
 			}
 
