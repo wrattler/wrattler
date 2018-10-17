@@ -21,8 +21,9 @@ services:
     command: "./entrypoint.sh"
     environment:
      - PYTHONSERVICE_URI=http://localhost:7101
+     - RSERVICE_URI=http://localhost:7103
      - DATASTORE_URI=http://localhost:7102
-     
+
   wrattler_python_service:
     build:
       context: server/python
@@ -31,6 +32,17 @@ services:
     - "7101:7101"
     environment:
      - FLASK_CONFIGURATION=default
+     - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
+    networks:
+    - wrattler_nw
+
+  wrattler_r_service:
+    build:
+      context: server/R
+      dockerfile: Dockerfile
+    ports:
+    - "7103:7103"
+    environment:
      - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
     networks:
     - wrattler_nw

@@ -197,7 +197,7 @@ def execute_code(code, input_val_dict, return_vars, verbose=False):
     then do exec(func_string), then define another string call_string that calls this function,
     and then finally do eval(call_string)
     """
-    func_string = "def f():\n"
+    func_string = "def wrattler_f():\n"
     for k,v in input_val_dict.items():
         func_string += "    {} = convert_to_pandas_df({})\n".format(k,v)
     ## need to worry about indentation for multi-line code fragments.
@@ -211,7 +211,7 @@ def execute_code(code, input_val_dict, return_vars, verbose=False):
     if verbose:
         print(func_string)
     exec(func_string)
-    func_output = eval('f()')
+    func_output = eval('wrattler_f()')
 
     if isinstance(func_output, collections.Iterable):
         results = []
