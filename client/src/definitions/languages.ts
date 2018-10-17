@@ -7,17 +7,15 @@
 /** This comment is needed so that TypeDoc parses the above one correctly */
 import {VNode} from 'maquette';
 import * as Graph from './graph';
+import * as Values from './values';
 
-interface Value {
+interface BindingResult {
+  code: Graph.Node
+  exports: Graph.ExportNode[]
 }
 
-interface ExportsValue extends Value {
-  [key:string]: Value
-}
-
-interface DataFrame extends Value {
-  url : string
-  data : any
+interface ScopeDictionary {
+  [variable:string] : Graph.Node
 }
 
 /**
@@ -38,14 +36,14 @@ interface LanguagePlugin {
   parse(code:string) : Block
 
   
-  evaluate(node:Graph.Node): Promise<Value>
+  evaluate(node:Graph.Node): Promise<Values.Value>
 
   /**
    * Given a parsed block and a dictionary that tracks variables that are in scope, 
    * construct a dependency graph for the given block. Returns a node representing the
    * code block and a list of exported variables (to be added to the scope)
    */
-  bind(scopeDictionary:{}, block: Block) : Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>
+  bind(scopeDictionary:{}, block: Block) : Promise<BindingResult>
 }
 
 /** 
@@ -93,10 +91,9 @@ interface Editor<TState extends EditorState, TEvent> {
  */
 interface EditorContext<TEvent> {
   /** Trigger an editor-specific event to be handled via the `update` function  */
-  trigger(event:TEvent)
-  evaluate(block:BlockState)
-  // sourceChange(block: BlockState);
-  rebindSubsequent(block: BlockState, newSource: string);
+  trigger(event:TEvent) : void
+  evaluate(block:BlockState) : void
+  rebindSubsequent(block: BlockState, newSource: string)
 }
 
 
@@ -130,12 +127,11 @@ type BlockState = {
 
 export { 
   Block,
-  Value, 
-  DataFrame,
-  ExportsValue,
   Editor,
   EditorState,
   EditorContext,
   LanguagePlugin,
-  BlockState
+  BlockState,
+  BindingResult,
+  ScopeDictionary
 }

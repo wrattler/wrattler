@@ -1,27 +1,14 @@
 /** @hidden */
 
 /** This comment is needed so that TypeDoc parses the above one correctly */
-import { fsHello } from "./demos/fsdemo";
-import { jsHello } from "./demos/jsdemo";
-import { tsHello } from "./demos/tsdemo";
-
-// fsHello();
-// jsHello();
-// tsHello();
-
-// ------------------------------------------------------------------------------------------------
-// Imports
-// ------------------------------------------------------------------------------------------------
-
-import {h,createProjector,VNode} from 'maquette';
-import * as Langs from './languages'; 
-import * as Graph from './graph';
-import { markdownLanguagePlugin } from './languagePlugins/markdown/markdownPlugin'
-import { javascriptLanguagePlugin } from './languagePlugins/javascript/javascriptPlugin'
-import { pythonLanguagePlugin } from './languagePlugins/python/pythonPlugin'
-require('./editor.css');
-
-
+import {h,createProjector,VNode} from 'maquette'
+import { Log } from "./common/log"
+import * as Langs from './definitions/languages'
+import * as Graph from './definitions/graph'
+import { markdownLanguagePlugin } from './languages/markdown'
+import { javascriptLanguagePlugin } from './languages/javascript'
+import { pythonLanguagePlugin } from './languages/python'
+import { gammaLangaugePlugin } from "./languages/gamma/plugin"
 
 // ------------------------------------------------------------------------------------------------
 // Main notebook rendering code
@@ -31,6 +18,7 @@ var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
 languagePlugins["python"] = pythonLanguagePlugin;
+languagePlugins["thegamma"] = gammaLangaugePlugin;
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
 // A sample document is just an array of records with cells. Each 
@@ -45,7 +33,8 @@ let documents =
     { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
     { "language": "javascript", "source": "var joinJs = one.concat(two)"},
     { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
-    { "language": "python", "source": "joinPy = one.append(two)"} 
+    { "language": "python", "source": "joinPy = one.append(two); joinPyFlip = two.append(one)"},
+    { "language": "thegamma", "source": "1+2"} 
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -81,18 +70,18 @@ function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: G
 // }
 
 async function bindAllCells() {
+  var newCells = []
   for (var c = 0; c < state.cells.length; c++) {
     let aCell = state.cells[c]
     let {code, exports} = await bindCell(aCell);
-    aCell.code = code
-    aCell.exports = exports
+    var newCell = { editor:aCell.editor, code:code, exports:exports }
     for (var e = 0; e < exports.length; e++ ) {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
-    // console.log(aCell)
-    // console.log(Object.keys(scopeDictionary))
+    newCells.push(newCell)
   }
+  state.cells = newCells;
 }
 
 async function rebindSubsequentCells(cell:Langs.BlockState, newSource: string) {
@@ -132,13 +121,6 @@ async function rebindSubsequentCells(cell:Langs.BlockState, newSource: string) {
   }
   console.log(state.cells);
 }
-
-bindAllCells()
-
-// Get the #paper element and create maquette renderer
-let paperElement = document.getElementById('paper');
-let maquetteProjector = createProjector();
-
 
 async function evaluate(node:Graph.Node) {
   if ((node.value)&&(Object.keys(node.value).length > 0)) return;
@@ -258,9 +240,22 @@ function update(state:NotebookState, evt:NotebookEvent) {
   }
 }
 
+let maquetteProjector = createProjector();
+let paperElement = document.getElementById('paper');
+
 function updateAndRender(event:NotebookEvent) {
   state = update(state, event)
   maquetteProjector.scheduleRender()
 }
 
-maquetteProjector.replace(paperElement, () => render(updateAndRender, state));
+bindAllCells().then(() =>
+  maquetteProjector.replace(paperElement, () => render(updateAndRender, state))
+);
+
+
+ 
+Log.trace("test1","hi1 %O", {"a":123})
+Log.trace("test2","hi2 %O", {"a":123})
+Log.trace("test3","hi3 %O", {"a":123})
+Log.trace("test1","hi4 %s", {"a":123})
+Log.trace("test2","hi5 %s", {"a":123})

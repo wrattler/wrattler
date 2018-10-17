@@ -1,10 +1,8 @@
 import * as monaco from 'monaco-editor';
 import {h,createProjector,VNode} from 'maquette';
 import marked from 'marked';
-import * as Langs from '../../languages'; 
-import * as Graph from '../../graph'; 
-
-const s = require('./editor.css');
+import * as Langs from '../definitions/languages'; 
+import * as Graph from '../definitions/graph'; 
 
 // ------------------------------------------------------------------------------------------------
 // Markdown plugin
