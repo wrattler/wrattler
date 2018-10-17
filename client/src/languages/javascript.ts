@@ -3,6 +3,8 @@ import * as Langs from '../definitions/languages';
 import * as Graph from '../definitions/graph'; 
 import * as Values from '../definitions/values'; 
 import {createEditor} from '../editors/editor';
+import {printPreview} from '../editors/preview'; 
+
 
 import ts from 'typescript';
 import axios from 'axios';
@@ -25,6 +27,18 @@ class JavascriptBlockKind implements Langs.Block {
       this.language = "javascript";
       this.source = source;
     }
+  }
+  interface JavascriptSwitchTabEvent {
+		kind: "switchtab"
+		index: number
+	}
+
+	type JavascriptEvent = JavascriptSwitchTabEvent 
+	
+	type JavascriptState = {
+		id: number
+		block: JavascriptBlockKind
+		tabID: number
   }
   
   function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
@@ -85,34 +99,43 @@ class JavascriptBlockKind implements Langs.Block {
       resolve({code: node, exports: dependencies});
     });
   }
-
-  type JavascriptEvent = {}
-  
-  type JavascriptState = {
-    id: number
-    block: JavascriptBlockKind
-  }
   
   const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
     initialize: (id:number, block:Langs.Block) => {  
-      return { id: id, block: <JavascriptBlockKind>block}
+      return { id: id, block: <JavascriptBlockKind>block, tabID:0}
     },
   
-    update: (state:JavascriptState, event:JavascriptEvent) => state,
+    update: (state:JavascriptState, event:JavascriptEvent) => {
+      switch(event.kind) {
+				case 'switchtab':
+				{
+					return { id: state.id, block: state.block, tabID: event.index }
+				}
+			}
+			return state	
+    },
     
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
-      let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
-      
-      let results = h('div', {}, [
-        h('p', {
-            style: "height:75px; position:relative", 
-          }, 
-          [ (cell.code.value==undefined) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
-      ]);
- 
+			let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
+			let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
+      let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(triggerSelect, state.tabID, <Values.DataFrame>cell.code.value))]);
 			let code = createEditor("javascript", state.block.source, cell, context)
-      return h('div', { }, [code, results])
-    },
+			return h('div', { }, [code, preview])
+    }
+    
+    // render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
+    //   let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
+      
+    //   let results = h('div', {}, [
+    //     h('p', {
+    //         style: "height:75px; position:relative", 
+    //       }, 
+    //       [ (cell.code.value==undefined) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
+    //   ]);
+ 
+		// 	let code = createEditor("javascript", state.block.source, cell, context)
+    //   return h('div', { }, [code, results])
+    // },
   }
 
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
