@@ -141,6 +141,7 @@ class JavascriptBlockKind implements Langs.Block {
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
+ 
     evaluate: async (node:Graph.Node) : Promise<Values.Value> => {
       let jsnode = <Graph.JsNode>node
 

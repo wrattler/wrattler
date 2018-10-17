@@ -29,6 +29,9 @@ interface LanguagePlugin {
   /** Returns a language-specific editor that handles the UI in a notebook  */
   editor : Editor<EditorState, any>
 
+  /** Returns a language-specific editor that handles the UI in a notebook  */
+  serviceURI? : string
+
   /**
    * Parse source code and construct a language-specific Block object that keeps the result
    * of the parsing (this can just store the source, but it could build an AST too)
