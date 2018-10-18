@@ -12,17 +12,18 @@ import { apiPlugin } from './languages/rPython'
 import { gammaLangaugePlugin } from "./languages/gamma/plugin"
 
 declare var PYTHONSERVICE_URI: string;
-// declare var RSERVICE_URI: string;
+declare var RSERVICE_URI: string;
 
 // ------------------------------------------------------------------------------------------------
 // Main notebook rendering code
 // ------------------------------------------------------------------------------------------------
 
+console.log(RSERVICE_URI)
 var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
 languagePlugins["python"] = new apiPlugin("python", PYTHONSERVICE_URI);
-languagePlugins["r"] = new apiPlugin("r", "http://localhost:7103");
+languagePlugins["r"] = new apiPlugin("r", RSERVICE_URI);
 languagePlugins["thegamma"] = gammaLangaugePlugin;
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
@@ -35,7 +36,7 @@ let documents =
     // { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
     // { "language": "markdown", "source": "Second, we create one frame in Python:" },
     { "language": "python", "source": 'two = pd.DataFrame({"name":["Jim"], "age":[51]})' },
-    // { "language": "r", "source": 'joinR <- rbind("one","two") ' },
+    { "language": "r", "source": 'joinR <- rbind("one","two") ' },
     // { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
     // { "language": "javascript", "source": "var joinJs = one.concat(two)"},
     // { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
