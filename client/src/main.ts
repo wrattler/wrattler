@@ -33,17 +33,17 @@ var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 let documents = 
   [ 
     // { "language": "markdown", "source": "First, we create one frame in JavaScript:" },
-    // { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
+    { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
     // { "language": "markdown", "source": "Second, we create one frame in Python:" },
-    { "language": "python", "source": 'one = pd.DataFrame({"name":["Joe"], "age":[52]})' },
+    // { "language": "python", "source": 'one = pd.DataFrame({"name":["Joe"], "age":[52]})' },
     { "language": "python", "source": 'two = pd.DataFrame({"name":["Jim"], "age":[51]})' },
-    { "language": "r", "source": 'joinR <- rbind(one,two) ' },
+    { "language": "r", "source": 'three <- rbind(one,two) ' },
     // { "language": "javascript"}
     // { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
     // { "language": "javascript", "source": "var joinJs = one.concat(two)"},
     // { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
     // { "language": "python", "source": "joinPy = one.append(two); joinPyFlip = two.append(one)"},
-    // { "language": "thegamma", "source": "1+2"} 
+    { "language": "thegamma", "source": "1+2"} 
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
