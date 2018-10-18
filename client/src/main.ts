@@ -7,8 +7,7 @@ import * as Langs from './definitions/languages'
 import * as Graph from './definitions/graph'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
-import { pythonLanguagePlugin } from './languages/python'
-import { apiPlugin } from './languages/rPython'
+import { externalLanguagePlugin } from './languages/external'
 import { gammaLangaugePlugin } from "./languages/gamma/plugin"
 
 declare var PYTHONSERVICE_URI: string;
@@ -22,8 +21,8 @@ declare var RSERVICE_URI: string;
 var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
-languagePlugins["python"] = new apiPlugin("python", PYTHONSERVICE_URI);
-languagePlugins["r"] = new apiPlugin("r", RSERVICE_URI);
+languagePlugins["python"] = new externalLanguagePlugin("python", PYTHONSERVICE_URI);
+languagePlugins["r"] = new externalLanguagePlugin("r", RSERVICE_URI);
 languagePlugins["thegamma"] = gammaLangaugePlugin;
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
