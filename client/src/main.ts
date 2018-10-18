@@ -35,7 +35,7 @@ let documents =
     // { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
     // { "language": "markdown", "source": "Second, we create one frame in Python:" },
     { "language": "python", "source": 'two = pd.DataFrame({"name":["Jim"], "age":[51]})' },
-    { "language": "r", "source": 'joinR <- rbind(one,two) ' },
+    // { "language": "r", "source": 'joinR <- rbind("one","two") ' },
     // { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
     // { "language": "javascript", "source": "var joinJs = one.concat(two)"},
     // { "language": "markdown", "source": "Similarly, test if we can access both from Python" },

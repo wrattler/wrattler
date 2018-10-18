@@ -121,13 +121,11 @@ export class apiPlugin implements Langs.LanguagePlugin {
 				importedFrames.push({ name: imported.variableName, url: (<Values.DataFrame>imported.value).url })
 				}
 						let src = pyNode.source
-						
 						let hash = Md5.hashStr(src)
 						let body = {"code": src,
 										"hash": hash,
 										"frames": importedFrames}
 						return await getEval(body, this.serviceURI);
-	
 			case 'export':
 				let pyExportNode = <Graph.PyExportNode>node
 				let exportNodeName= pyExportNode.variableName
@@ -164,6 +162,8 @@ export class apiPlugin implements Langs.LanguagePlugin {
 			let headers = {'Content-Type': 'application/json'}
 			async function getExports() {
 				try {
+					console.log(headers)
+					console.log(body)
 					const response = await axios.post(url, body, {headers: headers});
 					// console.log(response.data.exports)
 					// console.log(response.data.imports)

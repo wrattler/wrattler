@@ -29,6 +29,9 @@ handle_eval <- function(code,frames,hash) {
 
 
 jug() %>%
+    cors(path=NULL, allow_methods=c("POST"),allow_origin="*",
+        allow_credentials=NULL, allow_headers=NULL,
+        max_age=NULL, expose_headers=NULL) %>%
     post("/exports", decorate(handle_exports)) %>%
     post("/eval", decorate(handle_eval)) %>%
     simple_error_handler_json() %>%
