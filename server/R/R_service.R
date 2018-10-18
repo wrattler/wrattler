@@ -64,15 +64,16 @@ executeCode <- function(code, importsList) {
     impexp <- analyzeCode(code)
     ## construct a function that assigns retrieved frames to the imported variables,
     ## then contains the code block.
+    print(paste("length of importsList is ",length(importsList)))
     stringFunc <- "wrattler_f <- function() {\n"
-    for (i in 1:length(importsList)) {
+    for (i in seq_along(importsList)) {
         stringFunc <- paste0(stringFunc,"    ",
                              importsList[[i]]$name, "<- readFrame('",
                              importsList[[i]]$url, "') \n")
     }
     stringFunc <- paste(stringFunc, "    ", code, "\n")
     stringFunc <- paste(stringFunc, "    returnVars <- list(")
-    for (i in 1:length(impexp$exports)) {
+    for (i in seq_along(impexp$exports)) {
         stringFunc<- paste0(stringFunc,"'", impexp$exports[i],"'=",impexp$exports[i])
         if (i != length(impexp$exports)) {
             stringFunc <- paste(stringFunc, ,",")
