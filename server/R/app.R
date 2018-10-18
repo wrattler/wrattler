@@ -8,9 +8,10 @@ source("R_service.R")
 handle_exports <- function(code, frames, hash) {
     ## get imports and exports from the code snippet
     impExpEnv <- analyzeCode(code)
-    importDF <- data.frame(imports=impExpEnv$imports)
-    exportDF <- data.frame(exports=impExpEnv$exports)
-    return(jsonlite::toJSON(c(importDF,exportDF)))
+    impExpList <- list(imports=as.character(impExpEnv$imports),
+                      exports=as.character(impExpEnv$exports))
+    impExpDF <- rbind.data.frame(impExpList)
+    return(jsonlite::toJSON(impExpDF))
 }
 
 handle_eval <- function(code,frames,hash) {
