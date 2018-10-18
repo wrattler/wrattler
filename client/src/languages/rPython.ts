@@ -18,7 +18,6 @@ declare var DATASTORE_URI: string;
 /// A class that represents a Python block. All blocks need to have 
 /// `language` and Python also keeps the Python source we edit and render
 
-type languageType = "python" | "r"
 
 export class rPythonBlockKind implements Langs.Block {
 		language : string;
