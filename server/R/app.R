@@ -10,14 +10,12 @@ handle_exports <- function(code, frames, hash) {
     impExpEnv <- analyzeCode(code)
     impExpList <- list(imports=as.character(impExpEnv$imports),
                       exports=as.character(impExpEnv$exports))
-    impExpDF <- rbind.data.frame(impExpList)
-    return(jsonlite::toJSON(impExpDF))
+    return(jsonlite::toJSON(impExpList))
 }
 
 handle_eval <- function(code,frames,hash) {
     ## frames, parsed from json structure like [{"name":<name>,"url":<url>},{...}
     ## will be a list of named-lists.
-
 
     ## get a list of the expected output names from the code
     exportsList <- analyzeCode(code)$exports
@@ -25,7 +23,11 @@ handle_eval <- function(code,frames,hash) {
     outputsList <- executeCode(code, frames)
     ## uploadOutputs will put results onto datastore, and return a dataframe of names and urls
     results <- uploadOutputs(outputsList, exportsList, hash)
-    return(jsonlite::toJSON(results))
+    ## placeholder for text output
+    textOutput <- "Some output"
+    returnValue <- list(frames=results, output=textOutput)
+    return(jsonlite::toJSON(returnValue))
+##    return(jsonlite::toJSON(results))
 }
 
 
