@@ -18,7 +18,7 @@ declare var RSERVICE_URI: string;
 // Main notebook rendering code
 // ------------------------------------------------------------------------------------------------
 
-console.log(RSERVICE_URI)
+
 var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
@@ -30,13 +30,17 @@ var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
 // 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
+console.log("Python service uri:"+languagePlugins["python"].serviceURI)
+console.log("R service uri:"+languagePlugins["r"].serviceURI)
 let documents = 
   [ 
     // { "language": "markdown", "source": "First, we create one frame in JavaScript:" },
     // { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
     // { "language": "markdown", "source": "Second, we create one frame in Python:" },
+    { "language": "python", "source": 'one = pd.DataFrame({"name":["Joe"], "age":[52]})' },
     { "language": "python", "source": 'two = pd.DataFrame({"name":["Jim"], "age":[51]})' },
-    { "language": "r", "source": 'joinR <- rbind("one","two") ' },
+    { "language": "r", "source": 'joinR <- rbind(one,two) ' },
+    // { "language": "javascript"}
     // { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
     // { "language": "javascript", "source": "var joinJs = one.concat(two)"},
     // { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
