@@ -30,8 +30,6 @@ var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 // A sample document is just an array of records with cells. Each 
 // cell has a language and source code (here, just Markdown):
 // 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
-console.log("Python service uri:"+languagePlugins["python"].serviceURI)
-console.log("R service uri:"+languagePlugins["r"].serviceURI)
 let documents = 
   [ 
     // { "language": "markdown", "source": "First, we create one frame in JavaScript:" },
@@ -74,11 +72,6 @@ function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: G
   let languagePlugin = languagePlugins[cell.editor.block.language]
   return languagePlugin.bind(scopeDictionary, cell.editor.block);
 }
-
-// function clearCell (cell:Langs.BlockState): void{
-//   cell.exports = [];
-//   cell.code.value = {};
-// }
 
 async function bindAllCells() {
   var newCells = []
