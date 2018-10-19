@@ -27,6 +27,9 @@ writeFrame <- function(frameData, frameName, frameHash) {
     ## Write a dataframe to the datastore.
     ## use jsonlite to serialize dataframe into json
     url <- makeURL(frameName, frameHash)
+    ## doesn't like converting numbers into json
+    if (is.numeric(frameData)) frameData <- as.character(frameData)
+    ## put it into the datastore
     r <- PUT(url, body=frameData, encode="json")
     return(status_code(r) == 200)
 }
@@ -49,12 +52,12 @@ retrieveFrames <- function(inputFrames) {
 
 uploadOutputs <- function(outputsList, exports, hash) {
     ## take a named list, upload the results, and return dataframe of names and urls
-    name <- exports
     url <- c()
     for (i in 1:length(exports)) {
         uploaded_ok <- writeFrame(outputsList[[exports[[i]]]],exports[[i]],hash)
         url <- c(url, makeURL(exports[[i]], hash))
     }
+    name <- exports
     resultsDF <- data.frame(name, url)
     return(resultsDF)
 }
@@ -64,12 +67,13 @@ executeCode <- function(code, importsList) {
     impexp <- analyzeCode(code)
     ## construct a function that assigns retrieved frames to the imported variables,
     ## then contains the code block.
-    print(paste("length of importsList is ",length(importsList)))
     stringFunc <- "wrattler_f <- function() {\n"
-    for (i in seq_along(importsList)) {
-        stringFunc <- paste0(stringFunc,"    ",
-                             importsList[[i]]$name, "<- readFrame('",
-                             importsList[[i]]$url, "') \n")
+    if (length(importsList) > 0) {
+        for (i in seq_along(importsList)) {
+            stringFunc <- paste0(stringFunc,"    ",
+                                 importsList[[i]]$name, "<- readFrame('",
+                                 importsList[[i]]$url, "') \n")
+        }
     }
     stringFunc <- paste(stringFunc, "    ", code, "\n")
     stringFunc <- paste(stringFunc, "    returnVars <- list(")
