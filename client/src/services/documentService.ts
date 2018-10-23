@@ -71,17 +71,6 @@ three <- rbind(one,two) \
     }
     console.log(documents);
     return documents;
-  },
-  createSampleDocument: () => {
-    let documents = 
-    [ 
-      { "language": "markdown", "source": "First, we create one frame in JavaScript:" },
-      { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
-      { "language": "markdown", "source": "Second, we create one frame in Python:" },
-      { "language": "python", "source": 'two = pd.DataFrame({"name":["Jane"], "age":[52]})' },
-      { "language": "markdown", "source": "Third, we create one more frame in R:" },
-    ]
-    return documents;
   }
   
 }
