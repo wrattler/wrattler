@@ -12,7 +12,15 @@ First, we create one frame in JavaScript:\n\
 ```javascript\
 var one = [{'name':'Joe', 'age':50}]\
 ```\
-Second, we create one frame in Python:";
+Second, we create one frame in Python\
+```python\
+two = pd.DataFrame({'name':['Jane'], 'age':[52]})\
+```\
+Third we combine the two:\
+```r\
+three <- rbind(one,two) \
+```\
+";
       return paragraph
     }
     let documents = []; 
