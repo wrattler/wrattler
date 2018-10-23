@@ -29,16 +29,16 @@ class JavascriptBlockKind implements Langs.Block {
     }
   }
   interface JavascriptSwitchTabEvent {
-		kind: "switchtab"
-		index: number
-	}
+    kind: "switchtab"
+    index: number
+  }
 
-	type JavascriptEvent = JavascriptSwitchTabEvent 
-	
-	type JavascriptState = {
-		id: number
-		block: JavascriptBlockKind
-		tabID: number
+  type JavascriptEvent = JavascriptSwitchTabEvent 
+  
+  type JavascriptState = {
+    id: number
+    block: JavascriptBlockKind
+    tabID: number
   }
   
   function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
@@ -107,35 +107,21 @@ class JavascriptBlockKind implements Langs.Block {
   
     update: (state:JavascriptState, event:JavascriptEvent) => {
       switch(event.kind) {
-				case 'switchtab':
-				{
-					return { id: state.id, block: state.block, tabID: event.index }
-				}
-			}
-			return state	
+        case 'switchtab':
+        {
+          return { id: state.id, block: state.block, tabID: event.index }
+        }
+      }
+      return state  
     },
     
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
-			let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
-			let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
+      let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
+      let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
       let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(triggerSelect, state.tabID, <Values.DataFrame>cell.code.value))]);
-			let code = createEditor("javascript", state.block.source, cell, context)
-			return h('div', { }, [code, preview])
+      let code = createEditor("javascript", state.block.source, cell, context)
+      return h('div', { }, [code, preview])
     }
-    
-    // render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
-    //   let evalButton = h('button', { onclick:() => context.evaluate(cell) }, ["Evaluate"])
-      
-    //   let results = h('div', {}, [
-    //     h('p', {
-    //         style: "height:75px; position:relative", 
-    //       }, 
-    //       [ (cell.code.value==undefined) ? evalButton : ("Value is: " + JSON.stringify(cell.code.value)) ]),
-    //   ]);
- 
-		// 	let code = createEditor("javascript", state.block.source, cell, context)
-    //   return h('div', { }, [code, results])
-    // },
   }
 
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
@@ -186,12 +172,10 @@ class JavascriptBlockKind implements Langs.Block {
           var argDictionary:{[key: string]: string} = {}
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
             let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-            console.log(imported);
             argDictionary[imported.variableName] = (<Values.DataFrame>imported.value).data;
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
           evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
-          console.log(evalCode)
           let values : Values.ExportsValue = eval(evalCode);
           return await putValues(values);
         case 'export':
@@ -202,7 +186,6 @@ class JavascriptBlockKind implements Langs.Block {
       }
     },
     parse: (code:string) => {
-      //console.log(code);
       return new JavascriptBlockKind(code);
     },
     bind: (scopeDictionary: {}, block: Langs.Block) => {

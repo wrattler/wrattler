@@ -149,17 +149,13 @@ class MarkdownBlockKind implements Langs.Block {
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
     },
-    bind: (code: Langs.Block) => {
+    bind: async (code: Langs.Block) : Promise<Langs.BindingResult> => {
       let node:Graph.Node = {
         language:"markdown", 
         antecedents:[],
         value: undefined,
       }
-      return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
-				setTimeout(() => {
-					    resolve({code: node, exports: []});
-					  }, 10);
-			})
+      return {code: node, exports: []};
     },
     evaluate: async (node:Graph.Node) => {
       return {};

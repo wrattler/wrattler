@@ -59,7 +59,7 @@ interface JsExportNode extends ExportNode {
 
 type JsNode = JsCodeNode | JsExportNode
 
-interface PyCodeNode extends Node { 
+interface ExternalCodeNode extends Node { 
   /** Complete Python source code in the assoicated block  */
   source: string,
   exportedVariables:string[]
@@ -70,13 +70,13 @@ interface PyCodeNode extends Node {
  * A node representing a variable exported from a Python code block. 
  * This inherits `variableName` from `ExportNode`.
  */
-interface PyExportNode extends ExportNode { 
+interface ExternalExportNode extends ExportNode { 
   /** Python code node that represents full source code that exports this variable */
-  code: PyCodeNode
+  code: ExternalCodeNode
   kind: 'export'
 }
 
-type PyNode = PyCodeNode | PyExportNode
+type ExternalNode = ExternalCodeNode | ExternalExportNode
 
 export {
   Node,
@@ -84,7 +84,7 @@ export {
   JsNode,
   JsExportNode,
   JsCodeNode,
-  PyNode,
-  PyExportNode,
-  PyCodeNode
+  ExternalNode,
+  ExternalExportNode,
+  ExternalCodeNode
 }

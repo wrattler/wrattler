@@ -7,8 +7,7 @@ import * as Langs from './definitions/languages'
 import * as Graph from './definitions/graph'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
-import { pythonLanguagePlugin } from './languages/python'
-import { apiPlugin } from './languages/rPython'
+import { externalLanguagePlugin } from './languages/external'
 import { gammaLangaugePlugin } from "./languages/gamma/plugin"
 
 declare var PYTHONSERVICE_URI: string;
@@ -18,34 +17,53 @@ declare var RSERVICE_URI: string;
 // Main notebook rendering code
 // ------------------------------------------------------------------------------------------------
 
-console.log(RSERVICE_URI)
+
 var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
-languagePlugins["python"] = new apiPlugin("python", PYTHONSERVICE_URI);
-languagePlugins["r"] = new apiPlugin("r", RSERVICE_URI);
+languagePlugins["python"] = new externalLanguagePlugin("python", PYTHONSERVICE_URI);
+languagePlugins["r"] = new externalLanguagePlugin("r", RSERVICE_URI);
 languagePlugins["thegamma"] = gammaLangaugePlugin;
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
 // A sample document is just an array of records with cells. Each
 // cell has a language and source code (here, just Markdown):
 // 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
+#
+#let documents =
+#  [
+#    // { "language": "markdown", "source": "Let's try running export_dataset.R:" },
+#    // { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
+#    // { "language": "markdown", "source": "Second, we create one frame in Python:" },
+#    { "language": "r", "source": 'data_folder = "/R_service" \
+#\nlibrary(purrr) \
+#\nlibrary(cleanEHR) \
+#\nload(paste(data_folder,"anon_public1000.RData",sep="/")) \
+#\ndt <- ccd_demographic_table(anon_ccd, dtype=TRUE)'}
+#
+#    // { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
+#    // { "language": "javascript", "source": "var joinJs = one.concat(two)"},
+#    // { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
+#    // { "language": "python", "source": "joinPy = one.append(two); joinPyFlip = two.append(one)"},
+#    // { "language": "thegamma", "source": "1+2"}
+
 let documents =
   [
-    // { "language": "markdown", "source": "Let's try running export_dataset.R:" },
-    // { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
-    // { "language": "markdown", "source": "Second, we create one frame in Python:" },
-    { "language": "r", "source": 'data_folder = "/R_service" \
-\nlibrary(purrr) \
-\nlibrary(cleanEHR) \
-\nload(paste(data_folder,"anon_public1000.RData",sep="/")) \
-\ndt <- ccd_demographic_table(anon_ccd, dtype=TRUE)'}
+    { "language": "markdown", "source": "First, we create one frame in JavaScript:" },
+    { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
+    { "language": "markdown", "source": "Second, we create one frame in Python:" },
+    { "language": "python", "source": 'two = pd.DataFrame({"name":["Jane"], "age":[52]})' },
+    { "language": "markdown", "source": "Third, we create one more frame in R:" },
+    { "language": "r", "source": 'three = data.frame(name=c("Jim"), age=c(51))' },
+    { "language": "markdown", "source": "Now, test if we can access all from JavaScript" },
+    { "language": "javascript", "source": "var joinJs = one.concat(two).concat(three)"},
+    { "language": "markdown", "source": "Similarly, test if we can access all from R" },
+    { "language": "r", "source": 'joinR <- rbind(rbind(one,two),three)' },
+    { "language": "markdown", "source": "Finally, test if we can access all from Python" },
+    { "language": "python", "source": "joinPy = one.append(two).append(three);\njoinPyFlip = three.append(two).append(one)"},
+    { "language": "markdown", "source": "On an unrelated note, test if TheGamma does anything" },
+    { "language": "thegamma", "source": "1+2"}
 
-    // { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
-    // { "language": "javascript", "source": "var joinJs = one.concat(two)"},
-    // { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
-    // { "language": "python", "source": "joinPy = one.append(two); joinPyFlip = two.append(one)"},
-    // { "language": "thegamma", "source": "1+2"}
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -74,11 +92,6 @@ function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: G
   let languagePlugin = languagePlugins[cell.editor.block.language]
   return languagePlugin.bind(scopeDictionary, cell.editor.block);
 }
-
-// function clearCell (cell:Langs.BlockState): void{
-//   cell.exports = [];
-//   cell.code.value = {};
-// }
 
 async function bindAllCells() {
   var newCells = []

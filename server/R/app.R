@@ -27,7 +27,6 @@ handle_eval <- function(code,frames,hash) {
     textOutput <- "Some output"
     returnValue <- list(frames=results, output=textOutput)
     return(jsonlite::toJSON(returnValue))
-##    return(jsonlite::toJSON(results))
 }
 
 
