@@ -4,7 +4,10 @@ RUN apt-get update; apt-get install -y libssl-dev
 # install R, and setup CRAN mirror
 RUN apt-get update; apt-get install -y software-properties-common
 RUN apt-get update; apt-get install -y libcurl4-openssl-dev
+RUN apt-get update; apt-get install -y libxml2-dev
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+
+
 RUN echo "r <- getOption('repos'); r['CRAN'] <- 'http://cran.us.r-project.org'; options(repos = r);" > ~/.Rprofile
 RUN add-apt-repository 'deb [arch=amd64,i386] https://cran.rstudio.com/bin/linux/ubuntu xenial/'; apt-get update; apt-get -y install r-base
 
@@ -15,6 +18,9 @@ RUN Rscript -e "install.packages('ggplot2')"
 RUN Rscript -e "install.packages('jug')"
 RUN Rscript -e "install.packages('xml2')"
 RUN Rscript -e "install.packages('httr')"
+RUN Rscript -e "install.packages('purrr')"
+#RUN Rscript -e "install.packages('devtools')"
+RUN Rscript -e "install.packages('cleanEHR')"
 
 
 # copy current working directory

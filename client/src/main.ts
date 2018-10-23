@@ -27,21 +27,25 @@ languagePlugins["r"] = new apiPlugin("r", RSERVICE_URI);
 languagePlugins["thegamma"] = gammaLangaugePlugin;
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
-// A sample document is just an array of records with cells. Each 
+// A sample document is just an array of records with cells. Each
 // cell has a language and source code (here, just Markdown):
 // 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
-let documents = 
-  [ 
-    // { "language": "markdown", "source": "First, we create one frame in JavaScript:" },
+let documents =
+  [
+    // { "language": "markdown", "source": "Let's try running export_dataset.R:" },
     // { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
     // { "language": "markdown", "source": "Second, we create one frame in Python:" },
-    { "language": "python", "source": 'two = pd.DataFrame({"name":["Jim"], "age":[51]})' },
-    { "language": "r", "source": 'joinR <- rbind("one","two") ' },
+    { "language": "r", "source": 'data_folder = "/R_service" \
+\nlibrary(purrr) \
+\nlibrary(cleanEHR) \
+\nload(paste(data_folder,"anon_public1000.RData",sep="/")) \
+\ndt <- ccd_demographic_table(anon_ccd, dtype=TRUE)'}
+
     // { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
     // { "language": "javascript", "source": "var joinJs = one.concat(two)"},
     // { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
     // { "language": "python", "source": "joinPy = one.append(two); joinPyFlip = two.append(one)"},
-    // { "language": "thegamma", "source": "1+2"} 
+    // { "language": "thegamma", "source": "1+2"}
   ]
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -61,8 +65,8 @@ let index = 0
 let blockStates = documents.map(cell => {
   let languagePlugin = languagePlugins[cell.language]; // TODO: Error handling
   let block = languagePlugin.parse(cell.source);
-  let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block); 
-  return {editor: editor, code: null, exports: []};  
+  let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block);
+  return {editor: editor, code: null, exports: []};
 })
 let state : NotebookState = { cells: blockStates };
 
@@ -101,8 +105,8 @@ async function rebindSubsequentCells(cell:Langs.BlockState, newSource: string) {
         console.log(block)
       }
       let id = state.cells[b].editor.id;
-      let editor:Langs.EditorState = languagePlugin.editor.initialize(id, block); 
-      let newBlock:Langs.BlockState = {editor: editor, code: null, exports: []};  
+      let editor:Langs.EditorState = languagePlugin.editor.initialize(id, block);
+      let newBlock:Langs.BlockState = {editor: editor, code: null, exports: []};
       var index = state.cells.indexOf(state.cells[b]);
       for (var e = 0; e < state.cells[b].exports.length; e++) {
         let oldExport:Graph.ExportNode = <Graph.ExportNode>state.cells[b].exports[e];
@@ -132,7 +136,7 @@ async function rebindSubsequentCells(cell:Langs.BlockState, newSource: string) {
 async function evaluate(node:Graph.Node) {
   if ((node.value)&&(Object.keys(node.value).length > 0)) return;
   for(var ant of node.antecedents) await evaluate(ant);
-  
+
   let languagePlugin = languagePlugins[node.language]
   node.value = await languagePlugin.evaluate(node);
   // console.log("Received value: "+JSON.stringify(node.value));
@@ -143,11 +147,11 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
 
   let nodes = state.cells.map(cell => {
     // The `context` object is passed to the render function. The `trigger` method
-    // of the object can be used to trigger events that cause a state update. 
+    // of the object can be used to trigger events that cause a state update.
     let context : Langs.EditorContext<any> = {
-      trigger: (event:any) => 
+      trigger: (event:any) =>
         trigger({ kind:'block', id:cell.editor.id, event:event }),
-      
+
       evaluate: async (block:Langs.BlockState) => {
         await evaluate(block.code)
         for(var exp of block.exports) await evaluate(exp)
@@ -159,9 +163,9 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
       // rebind all blocks after this one
       rebindSubsequent: (block:Langs.BlockState, newSource: string) => {
         trigger({kind: 'rebind', block: block, newSource: newSource})
-      } 
+      }
     }
-  
+
     let plugin = languagePlugins[cell.editor.block.language]
     // let vnode = plugin.editor.render(state.editor, context)
     let vnode = plugin.editor.render(cell, cell.editor, context)
@@ -173,15 +177,15 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
         h('div', [controls]),vnode
       ]
     );
-  }); 
+  });
 
   return h('div', {class:'container-fluid', id:'paper'}, [nodes])
 }
 
 function update(state:NotebookState, evt:NotebookEvent) {
   function spliceCell (cells:Langs.BlockState[], newCell: Langs.BlockState, idOfAboveBlock: number) {
-    return cells.map (cell => 
-      { 
+    return cells.map (cell =>
+      {
         if (cell.editor.id === idOfAboveBlock) {
           return [cell, newCell];
         }
@@ -191,8 +195,8 @@ function update(state:NotebookState, evt:NotebookEvent) {
       }).reduce ((a,b)=> a.concat(b));
   }
   function removeCell (cells:Langs.BlockState[], idOfSelectedBlock: number) {
-    return cells.map (cell => 
-      { 
+    return cells.map (cell =>
+      {
         if (cell.editor.id === idOfSelectedBlock) {
           return [];
         }
@@ -204,16 +208,16 @@ function update(state:NotebookState, evt:NotebookEvent) {
 
   // console.log(state);
   switch(evt.kind) {
-    
+
     case 'block': {
       let newCells = state.cells.map(state => {
-        if (state.editor.id != evt.id) 
+        if (state.editor.id != evt.id)
           return state
         else
-        { 
+        {
           return {
-            editor: languagePlugins[state.editor.block.language].editor.update(state.editor, evt.event) , 
-            code: state.code, 
+            editor: languagePlugins[state.editor.block.language].editor.update(state.editor, evt.event) ,
+            code: state.code,
             exports: state.exports
           };
         }
@@ -222,11 +226,11 @@ function update(state:NotebookState, evt:NotebookEvent) {
     }
     case 'add': {
       let newId = index++;
-      let newDocument = { "language": "python", 
+      let newDocument = { "language": "python",
                           "source": "var z = "+newId};
-      let newPlugin = languagePlugins[newDocument.language]; 
+      let newPlugin = languagePlugins[newDocument.language];
       let newBlock = newPlugin.parse(newDocument.source);
-      let editor:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);  
+      let editor:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);
       let cell:Langs.BlockState = {editor: editor, code: undefined, exports: []}
       bindCell(cell)
       return {cells: spliceCell(state.cells, cell, evt.id)};
@@ -237,7 +241,7 @@ function update(state:NotebookState, evt:NotebookEvent) {
 
     case 'remove':
       return {cells: removeCell(state.cells, evt.id)};
-    
+
     case 'rebind': {
       // console.log("Rebind in update: "+JSON.stringify(evt))
       rebindSubsequentCells(evt.block, evt.newSource);
@@ -260,7 +264,7 @@ bindAllCells().then(() =>
 );
 
 
- 
+
 Log.trace("test1","hi1 %O", {"a":123})
 Log.trace("test2","hi2 %O", {"a":123})
 Log.trace("test3","hi3 %O", {"a":123})
