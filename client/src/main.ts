@@ -31,17 +31,19 @@ var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 // 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
 let documents = 
   [ 
-    // { "language": "markdown", "source": "First, we create one frame in JavaScript:" },
+    { "language": "markdown", "source": "First, we create one frame in JavaScript:" },
     { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
-    // { "language": "markdown", "source": "Second, we create one frame in Python:" },
-    // { "language": "python", "source": 'one = pd.DataFrame({"name":["Joe"], "age":[52]})' },
-    { "language": "python", "source": 'two = pd.DataFrame({"name":["Jim"], "age":[51]})' },
-    { "language": "r", "source": 'three <- rbind(one,two) ' },
-    // { "language": "javascript"}
-    // { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
-    // { "language": "javascript", "source": "var joinJs = one.concat(two)"},
-    // { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
-    // { "language": "python", "source": "joinPy = one.append(two); joinPyFlip = two.append(one)"},
+    { "language": "markdown", "source": "Second, we create one frame in Python:" },
+    { "language": "python", "source": 'two = pd.DataFrame({"name":["Jane"], "age":[52]})' },
+    { "language": "markdown", "source": "Third, we create one more frame in R:" },
+    { "language": "r", "source": 'three = data.frame(name=c("Jim"), age=c(51))' },
+    { "language": "markdown", "source": "Now, test if we can access all from JavaScript" },
+    { "language": "javascript", "source": "var joinJs = one.concat(two).concat(three)"},
+    { "language": "markdown", "source": "Similarly, test if we can access all from R" },
+    { "language": "r", "source": 'joinR <- rbind(rbind(one,two),three)' },
+    { "language": "markdown", "source": "Finally, test if we can access all from Python" },
+    { "language": "python", "source": "joinPy = one.append(two).append(three);\njoinPyFlip = three.append(two).append(one)"},
+    { "language": "markdown", "source": "On an unrelated note, test if TheGamma does anything" },
     { "language": "thegamma", "source": "1+2"} 
   ]
 

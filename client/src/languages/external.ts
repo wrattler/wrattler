@@ -52,7 +52,7 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
         return { id: state.id, block: state.block, tabID: event.index }
       }
     }
-    return state	
+    return state
   },
 
   render: (cell: Langs.BlockState, state:ExternalState, context:Langs.EditorContext<ExternalEvent>) => {
@@ -127,7 +127,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     }
   }
 
-  parse (code:string) {	
+  parse (code:string) {
     return new ExternalBlockKind(code, this.language);
   }
 
