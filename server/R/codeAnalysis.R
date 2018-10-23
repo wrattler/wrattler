@@ -31,7 +31,7 @@ getImportsExports <- function(e) {
 impexpCall <- function(e, w) {
   el <- as.list(e)
   # if the expression is <name> <- <whatever>, add <name> to exports
-  if (as.character(el[[1]]) == "<-" && class(el[[2]]) == "name") {
+  if ((as.character(el[[1]]) == "<-" || as.character(el[[1]]) == "=") && class(el[[2]]) == "name") {
     w$res$exports <- c(w$res$exports, as.character(el[[2]]))
   }
   for (a in el) walkCode(a, w)
