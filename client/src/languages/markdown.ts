@@ -145,6 +145,7 @@ class MarkdownBlockKind implements Langs.Block {
   export const markdownLanguagePlugin : Langs.LanguagePlugin = {
     language: "markdown",
     editor: markdownEditor,
+
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
     },

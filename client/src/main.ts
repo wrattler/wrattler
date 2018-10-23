@@ -7,17 +7,22 @@ import * as Langs from './definitions/languages'
 import * as Graph from './definitions/graph'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
-import { pythonLanguagePlugin } from './languages/python'
+import { externalLanguagePlugin } from './languages/external'
 import { gammaLangaugePlugin } from "./languages/gamma/plugin"
+
+declare var PYTHONSERVICE_URI: string;
+declare var RSERVICE_URI: string;
 
 // ------------------------------------------------------------------------------------------------
 // Main notebook rendering code
 // ------------------------------------------------------------------------------------------------
 
+
 var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
-languagePlugins["python"] = pythonLanguagePlugin;
+languagePlugins["python"] = new externalLanguagePlugin("python", PYTHONSERVICE_URI);
+languagePlugins["r"] = new externalLanguagePlugin("r", RSERVICE_URI);
 languagePlugins["thegamma"] = gammaLangaugePlugin;
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
@@ -26,14 +31,17 @@ var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 // 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
 let documents = 
   [ 
-    { "language": "markdown", "source": "First, we create one frame in JavaScript:" },
+    // { "language": "markdown", "source": "First, we create one frame in JavaScript:" },
     { "language": "javascript", "source": "var one = [{'name':'Joe', 'age':50}]" },
-    { "language": "markdown", "source": "Second, we create one frame in Python:" },
+    // { "language": "markdown", "source": "Second, we create one frame in Python:" },
+    // { "language": "python", "source": 'one = pd.DataFrame({"name":["Joe"], "age":[52]})' },
     { "language": "python", "source": 'two = pd.DataFrame({"name":["Jim"], "age":[51]})' },
-    { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
-    { "language": "javascript", "source": "var joinJs = one.concat(two)"},
-    { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
-    { "language": "python", "source": "joinPy = one.append(two); joinPyFlip = two.append(one)"},
+    { "language": "r", "source": 'three <- rbind(one,two) ' },
+    // { "language": "javascript"}
+    // { "language": "markdown", "source": "Now, test if we can access both from JavaScript" },
+    // { "language": "javascript", "source": "var joinJs = one.concat(two)"},
+    // { "language": "markdown", "source": "Similarly, test if we can access both from Python" },
+    // { "language": "python", "source": "joinPy = one.append(two); joinPyFlip = two.append(one)"},
     { "language": "thegamma", "source": "1+2"} 
   ]
 
@@ -63,11 +71,6 @@ function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: G
   let languagePlugin = languagePlugins[cell.editor.block.language]
   return languagePlugin.bind(scopeDictionary, cell.editor.block);
 }
-
-// function clearCell (cell:Langs.BlockState): void{
-//   cell.exports = [];
-//   cell.code.value = {};
-// }
 
 async function bindAllCells() {
   var newCells = []
