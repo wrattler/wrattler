@@ -10,4 +10,4 @@ __pycache__/
 *$py.class
 server/data-store/src/config.fs
 .RData
-.Rhistory
+R/.Rhistory
