@@ -1,31 +1,18 @@
 import axios from 'axios';
 
-declare var DATASTORE_URI: string;
+interface DocumentElement {
+  language: string
+  source: string
+}
 
-export const DocumentService = {
-  
-  getSampleDocument: (): Array<any> =>{
-    function getDocumentMd() : string {
-      var paragraph = "# Welcome to Wrattler. \
-This is a sample notebook showing no data science at all.\
-First, we create one frame in JavaScript:\n\
-```javascript\
-var one = [{'name':'Joe', 'age':50}]\
-```\
-Second, we create one frame in Python\
-```python\
-two = pd.DataFrame({'name':['Jane'], 'age':[52]})\
-```\
-Third we combine the two:\
-```r\
-three <- rbind(one,two) \
-```\
-";
-      return paragraph
+async function getSampleDocument(): Promise<Array<DocumentElement>> {
+    async function getDocumentMd() : Promise<string> {
+      let response = await axios.get("/sample.md")
+      return response.data
     }
     let documents = []; 
 
-    function getCellCode(language: string, codeCell: string) {
+    function getCellCode(language: string, codeCell: string) : DocumentElement {
       let languageMarker = "```".concat(language)
       let languageMarkerBegin = codeCell.indexOf(languageMarker)
       if (languageMarkerBegin > -1)
@@ -45,10 +32,10 @@ three <- rbind(one,two) \
           return listOfLanguages[l]
         }
       }
-      return "unknown language";
+      return "markdown";
     }
 
-    let paragraph = getDocumentMd() 
+    let paragraph = await getDocumentMd() 
     var regex = /```[a-z]+[^`]*```/g;
     var res; 
     var currentPos = 0;
@@ -71,6 +58,9 @@ three <- rbind(one,two) \
     }
     console.log(documents);
     return documents;
-  }
+}
   
+export {
+  getSampleDocument,
+  DocumentElement
 }

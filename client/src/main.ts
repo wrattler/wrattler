@@ -9,7 +9,7 @@ import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
 import { externalLanguagePlugin } from './languages/external'
 import { gammaLangaugePlugin } from "./languages/gamma/plugin"
-import { DocumentService } from './services/documentService'
+import { getSampleDocument } from './services/documentService'
 
 declare var PYTHONSERVICE_URI: string;
 declare var RSERVICE_URI: string;
@@ -28,11 +28,6 @@ languagePlugins["r"] = new externalLanguagePlugin("r", RSERVICE_URI);
 languagePlugins["thegamma"] = gammaLangaugePlugin;
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
-// A sample document is just an array of records with cells. Each 
-// cell has a language and source code (here, just Markdown):
-// 1. create 2 blocks, 1 py dataframe, 1 js read dataframe length
-let documents = DocumentService.getSampleDocument();
-
 interface NotebookAddEvent { kind:'add', id: number }
 interface NotebookRemoveEvent { kind:'remove', id: number }
 interface NotebookBlockEvent { kind:'block', id:number, event:any }
@@ -43,24 +38,16 @@ type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent
 
 type NotebookState = {
   cells: Langs.BlockState[]
+  counter: number
 }
 
-// Create an initial notebook state by parsing the sample document
-let index = 0
-let blockStates = documents.map(cell => {
-  let languagePlugin = languagePlugins[cell.language]; // TODO: Error handling
-  let block = languagePlugin.parse(cell.source);
-  let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block); 
-  return {editor: editor, code: null, exports: []};  
-})
-let state : NotebookState = { cells: blockStates };
 
 function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>{
   let languagePlugin = languagePlugins[cell.editor.block.language]
   return languagePlugin.bind(scopeDictionary, cell.editor.block);
 }
 
-async function bindAllCells() {
+async function bindAllCells(state:NotebookState) {
   var newCells = []
   for (var c = 0; c < state.cells.length; c++) {
     let aCell = state.cells[c]
@@ -73,9 +60,10 @@ async function bindAllCells() {
     newCells.push(newCell)
   }
   state.cells = newCells;
+  return state;
 }
 
-async function rebindSubsequentCells(cell:Langs.BlockState, newSource: string) {
+async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState, newSource: string) {
   for (var b=0; b < state.cells.length; b++) {
     if (state.cells[b].editor.id >= cell.editor.id) {
       let languagePlugin = languagePlugins[state.cells[b].editor.block.language]
@@ -111,6 +99,7 @@ async function rebindSubsequentCells(cell:Langs.BlockState, newSource: string) {
     }
   }
   console.log(state.cells);
+  return state;
 }
 
 async function evaluate(node:Graph.Node) {
@@ -162,7 +151,7 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
   return h('div', {class:'container-fluid', id:'paper'}, [nodes])
 }
 
-function update(state:NotebookState, evt:NotebookEvent) {
+async function update(state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
   function spliceCell (cells:Langs.BlockState[], newCell: Langs.BlockState, idOfAboveBlock: number) {
     return cells.map (cell => 
       { 
@@ -202,10 +191,10 @@ function update(state:NotebookState, evt:NotebookEvent) {
           };
         }
       })
-      return { cells: newCells };
+      return { counter: state.counter, cells: newCells };
     }
     case 'add': {
-      let newId = index++;
+      let newId = state.counter + 1;
       let newDocument = { "language": "python", 
                           "source": "var z = "+newId};
       let newPlugin = languagePlugins[newDocument.language]; 
@@ -213,37 +202,56 @@ function update(state:NotebookState, evt:NotebookEvent) {
       let editor:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);  
       let cell:Langs.BlockState = {editor: editor, code: undefined, exports: []}
       bindCell(cell)
-      return {cells: spliceCell(state.cells, cell, evt.id)};
+      return {counter: state.counter+1, cells: spliceCell(state.cells, cell, evt.id)};
     }
 
     case 'refresh':
       return state;
 
     case 'remove':
-      return {cells: removeCell(state.cells, evt.id)};
+      return {counter: state.counter, cells: removeCell(state.cells, evt.id)};
     
     case 'rebind': {
       // console.log("Rebind in update: "+JSON.stringify(evt))
-      rebindSubsequentCells(evt.block, evt.newSource);
-      return state;
+      return await rebindSubsequentCells(state, evt.block, evt.newSource);
     }
 
   }
 }
 
-let maquetteProjector = createProjector();
-let paperElement = document.getElementById('paper');
+async function loadNotebookState() : Promise<NotebookState> {
+  let documents = await getSampleDocument();
 
-function updateAndRender(event:NotebookEvent) {
-  state = update(state, event)
-  maquetteProjector.scheduleRender()
+  // Create an initial notebook state by parsing the sample document
+  let index = 0
+  let blockStates = documents.map(cell => {
+    let languagePlugin = languagePlugins[cell.language]; // TODO: Error handling
+    let block = languagePlugin.parse(cell.source);
+    let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block); 
+    return {editor: editor, code: null, exports: []};  
+  })
+  return { counter: index, cells: blockStates };
 }
 
-bindAllCells().then(() =>
-  maquetteProjector.replace(paperElement, () => render(updateAndRender, state))
-);
+async function initializeNotebook() {
+  let maquetteProjector = createProjector();
+  let paperElement = document.getElementById('paper');
+  
+  var state = await loadNotebookState();
+  state = await bindAllCells(state);
 
+  function updateAndRender(event:NotebookEvent) {
+    update(state, event).then(newState => {
+      state = newState
+      maquetteProjector.scheduleRender()
+    });
+  }
+    
+  maquetteProjector.replace(paperElement, () => 
+    render(updateAndRender, state))
+};
 
+initializeNotebook()
  
 Log.trace("test1","hi1 %O", {"a":123})
 Log.trace("test2","hi2 %O", {"a":123})
