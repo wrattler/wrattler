@@ -21,6 +21,8 @@ async function getSampleDocument(): Promise<Array<DocumentElement>> {
         return {language: language, 
           source: codeCell.substring(languageMarkerBegin+languageMarker.length,languageMarkerEnd)}
       }
+      return {language: language, 
+        source: "Unknown language: \n"+codeCell}
     }
 
     function getCellLanguage(codeCell: string) {
