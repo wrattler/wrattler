@@ -24,7 +24,7 @@ async function getSampleDocument(): Promise<Array<DocumentElement>> {
     }
 
     function getCellLanguage(codeCell: string) {
-      let listOfLanguages = ["javascript", "python", "r"] 
+      let listOfLanguages = ["javascript", "python", "r", "thegamma"] 
       for (var l = 0; l < listOfLanguages.length; l++) {
         let languageMarker = "```".concat(listOfLanguages[l])
         let languageMarkerBegin = codeCell.indexOf(languageMarker)
