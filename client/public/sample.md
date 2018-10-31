@@ -15,8 +15,8 @@ two = pd.DataFrame({"name":["Jim"], "age":[51]})
 
 Finally, we create one more frame in R:
 
-```python
-three = data.frame(name=c("Jim"), age=c(51))
+```r
+three <- data.frame(name=c("Jim"), age=c(51))
 ```
 
 Now, test if we can access all from JavaScript:

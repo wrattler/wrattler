@@ -5,7 +5,7 @@ RUN apt-get update; apt-get install -y libssl-dev
 RUN apt-get update; apt-get install -y software-properties-common
 RUN apt-get update; apt-get install -y libcurl4-openssl-dev
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
-RUN echo "r <- getOption('repos'); r['CRAN'] <- 'http://cran.us.r-project.org'; options(repos = r);" > ~/.Rprofile
+RUN echo "r <- getOption('repos'); r['CRAN'] <- 'http://cran.us.r-project.org'; options(repos='http://cran.rstudio.com/');" > ~/.Rprofile
 RUN add-apt-repository 'deb [arch=amd64,i386] https://cran.rstudio.com/bin/linux/ubuntu xenial/'; apt-get update; apt-get -y install r-base
 
 
