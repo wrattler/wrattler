@@ -29,9 +29,18 @@ writeFrame <- function(frameData, frameName, frameHash) {
     url <- makeURL(frameName, frameHash)
     ## doesn't like converting numbers into json
     if (is.numeric(frameData)) frameData <- as.character(frameData)
-    ## put it into the datastore
-    r <- PUT(url, body=frameData, encode="json")
-    return(status_code(r) == 200)
+    ## see if it is json-able:
+    isJSONable <- tryCatch({ !is.null(jsonlite::toJSON(frameData)) },
+                           error=function(cond) {
+                               return(FALSE)
+                           })
+
+    ## put it into the datastore if it is convertable to json
+    if (isJSONable) {
+        r <- PUT(url, body=frameData, encode="json")
+        return(status_code(r) == 200)
+    }
+    return(FALSE)
 }
 
 
@@ -80,7 +89,7 @@ executeCode <- function(code, importsList) {
     for (i in seq_along(impexp$exports)) {
         stringFunc<- paste0(stringFunc,"'", impexp$exports[i],"'=",impexp$exports[i])
         if (i != length(impexp$exports)) {
-            stringFunc <- paste(stringFunc, ,",")
+            stringFunc <- paste(stringFunc,",")
         }
     }
     stringFunc <- paste(stringFunc,") \n    return(returnVars) \n")
