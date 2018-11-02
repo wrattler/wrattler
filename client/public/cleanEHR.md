@@ -55,13 +55,13 @@ for (i in 1:length(ccd@episodes)){
 That should hopefully have written dataframes called `dt` and `dts` to the data store.
 
 ```python
-dtPython = dt
-dtsPython = dts
+demographicHeaders = list(dt)
+timeSeriesHeaders = list(dts)
 ```
-Can we call dts in python? :smiley: Maquette/Monaco does not render emojis? @tpetricek Fix this!
-Start analytical challenge code here
+
+`list(dt)` does not return the headers of the dataframe. Instead it returns the entire dataframe again. 
 
 ```python
-dtf = dtPython.merge(dtsPython, left_on="ADNO", right_on="ADNO", how="inner")
+dtf = dtPython.merge(dtsPython, left_on='ADNO', right_on='ADNO', how='inner')
 ```
 

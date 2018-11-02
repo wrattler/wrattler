@@ -28,6 +28,7 @@ function printCurrentTable(aTable: any, tableName:string) {
     rowsComponents.push(h('tr',{key: tableName+"rowheader"},[headerComponents]))
     
     // for every row in dataframe, create rows
+    let numRows = aTable.length > 10 ? 10 : aTable.length
     for (let row = 0; row < aTable.length; row++) {
       let values = getCurrentRow(aTable[row], tableHeaders);
       let columnsComponents:Array<any> = []
