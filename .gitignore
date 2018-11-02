@@ -9,5 +9,5 @@ __pycache__/
 *.py[cod]
 *$py.class
 server/data-store/src/config.fs
-.RData
-R/.Rhistory
+server/R/.RData
+server/R/.Rhistory
