@@ -14,15 +14,9 @@ file <- paste(tempdir(), "/ccd.rdata", sep="")
 download.file("https://github.com/ropensci/cleanEHR/raw/master/data/sample_ccd.RData", file)
 load(file)
 
-#dt <- ccd_demographic_table(anon_ccd, dtype=TRUE)
-dt <- ccd_demographic_table(ccd, dtype=TRUE)
+response <-head(ccd@infotb)
 
-```
-
-That should hopefully have written a dataframe called dt to the data store.
-
-```r
-
+# dt <- ccd_demographic_table(ccd, dtype=TRUE)
 names_ts_variables <- c()
 counter <- 1
 for (i in 1:length(ccd@episodes)){
@@ -36,9 +30,6 @@ for (i in 1:length(ccd@episodes)){
 names_ts_variables <- sort(unique(names_ts_variables))
 short_names_ts_variables <- lapply(names_ts_variables, FUN = code2stname)
 
-```
-
-```r
 index_variable <- "NIHR_HIC_ICU_0005"
 # prepare lists of measurements from time series
 ts_measures <- c("mean","1st_quartile","median","3rd_quartile")
@@ -52,26 +43,23 @@ for (sn in short_names_ts_variables){
 dts <- data.frame(matrix(NA, nrow=0, ncol=length(names_for_dts)))
 names(dts) <- names_for_dts
 
-```
-
-Prepare TS dataset
-
-```r
-for (i in 1:length(anon_ccd@episodes)){
-  adno <- as.numeric(anon_ccd@episodes[[i]]@data[index_variable][[1]])
+for (i in 1:length(ccd@episodes)){
+  adno <- as.numeric(ccd@episodes[[i]]@data[index_variable][[1]])
   measurements <- c(adno)
   for (n in names_ts_variables){
-    if (!is.null(anon_ccd@episodes[[1]]@data[n][[1]])){
+    if (!is.null(ccd@episodes[[1]]@data[n][[1]])){
       for (measure in ts_measures_funcs){
-        measurements <- c(measurements,measure(as.numeric(anon_ccd@episodes[[i]]@data[n][[1]]["item2d"][[1]]))[[1]])
+        measurements <- c(measurements,measure(as.numeric(ccd@episodes[[i]]@data[n][[1]]["item2d"][[1]]))[[1]])
       }
-    } else {
-      measurements <- c(measurements,rep(NA,length(ts_measures)))
-    }
+    } 
   }
   dts <- rbind(dts,measurements)
-  names(dts) <- names_for_dts
 }
 ```
 
-dts should now be a dataframe that we can use in Python...
+That should hopefully have written a dataframe called dts to the data store.
+
+```python
+DTSInPython = dts
+```
+Can we call dts in python? :smiley: Maquette/Monaco does not render emojis? @tpetricek Fix this!

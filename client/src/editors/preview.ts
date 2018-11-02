@@ -4,7 +4,7 @@ import * as Values from '../definitions/values';
 function printPreview(triggerSelect:(number) => void, selectedTable:number, cellValues:Values.DataFrame) {
   let tableNames:Array<string> = Object.keys(cellValues)
   let tabComponents = printTabs(triggerSelect, selectedTable, tableNames);
-  return h('div', {}, [ tabComponents, printCurrentTable(cellValues[tableNames[selectedTable]].data) ]);
+  return h('div', {}, [ tabComponents, printCurrentTable(cellValues[tableNames[selectedTable]].data,tableNames[selectedTable]) ]);
 }
 
 function printTabs(triggerSelect:(number) => void, selectedTable:number, tableNames:Array<string>) {
@@ -16,34 +16,41 @@ function printTabs(triggerSelect:(number) => void, selectedTable:number, tableNa
   return h('div', {class: "tabs"},[buttonComponents]);
 }
 
-function printCurrentTable(aTable) {
-  
-  let tableHeaders:Array<string> = getCurrentHeaders(aTable[0]);
-  
-  let rowsComponents:Array<any> = []
-  let headerComponents:Array<any> = []
-  // for this table, create headers
-  for (let i = 0; i < tableHeaders.length; i++) {
-    headerComponents.push(h('th',{}, [tableHeaders[i]]))
-  }
-  rowsComponents.push(h('tr',{},[headerComponents]))
-  
-  // for every row in dataframe, create rows
-  for (let row = 0; row < aTable.length; row++) {
-    let values = getCurrentRow(aTable[row], tableHeaders);
-    let columnsComponents:Array<any> = []
-    for (let v = 0; v < values.length; v++) {
-      columnsComponents.push(h('td', {}, [values[v].toString()]))
+function printCurrentTable(aTable: any, tableName:string) {
+  if (aTable.length > 0) {
+    let tableHeaders:Array<string> = getCurrentHeaders(aTable[0]);
+    let rowsComponents:Array<any> = []
+    let headerComponents:Array<any> = []
+    // for this table, create headers
+    for (let i = 0; i < tableHeaders.length; i++) {
+      headerComponents.push(h('th',{key: tableName+"header"+i}, [tableHeaders[i]]))
     }
-    rowsComponents.push(h('tr',{},[columnsComponents]))
-  }
+    rowsComponents.push(h('tr',{key: tableName+"rowheader"},[headerComponents]))
+    
+    // for every row in dataframe, create rows
+    for (let row = 0; row < aTable.length; row++) {
+      let values = getCurrentRow(aTable[row], tableHeaders);
+      let columnsComponents:Array<any> = []
+      for (let v = 0; v < values.length; v++) {
+        if (values[v]==undefined){
+          columnsComponents.push(h('td', {key: tableName+"column"+v}, ["WTF??"]))
+        }
+        else
+          columnsComponents.push(h('td', {key: tableName+"column"+v}, [values[v].toString()]))
+      }
+      rowsComponents.push(h('tr',{key: tableName+"row"+row},[columnsComponents]))
+    }
 
-  let tableComponent = h('table', {style: "width:100%"},[rowsComponents]);
-  return tableComponent
+    let tableComponent = h('table', {style: "width:100%", key:tableName},[rowsComponents]);
+    return tableComponent
+  }
+  return h('table', {style: "width:100%", key:tableName},[]);
 }
 
 function getCurrentHeaders(firstDataFrameRow) {
-  let tableHeaders:Array<string> = Object.keys(firstDataFrameRow)
+  let tableHeaders:Array<string> = []
+  if (Object.keys(firstDataFrameRow).length > 0)
+    tableHeaders = Object.keys(firstDataFrameRow)
   return tableHeaders;
 }
 

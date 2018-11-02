@@ -7,7 +7,8 @@ interface DocumentElement {
 
 async function getSampleDocument(): Promise<Array<DocumentElement>> {
     async function getDocumentMd() : Promise<string> {
-      let response = await axios.get("/sample.md")
+      let response = await axios.get("/cleanEHR.md")
+      // let response = await axios.get("/sample.md")
       return response.data
     }
     let documents = []; 
