@@ -1,8 +1,5 @@
 # Welcome to Wrattler
-This is an attempt to load an data file in R, manipulate it a bit, and output a dataframe that will be used
-for some analysis in Python.
-
-Change the data_folder path to point to where the anon_public1000.RData file is stored.
+### This is an attempt to load an data file in R, manipulate it a bit, and output multiple (two, really) dataframes that will be used for some analysis in Python.
 
 ```r
 
@@ -14,9 +11,7 @@ file <- paste(tempdir(), "/ccd.rdata", sep="")
 download.file("https://github.com/ropensci/cleanEHR/raw/master/data/sample_ccd.RData", file)
 load(file)
 
-response <-head(ccd@infotb)
-
-# dt <- ccd_demographic_table(ccd, dtype=TRUE)
+dt <- ccd_demographic_table(ccd, dtype=TRUE)
 names_ts_variables <- c()
 counter <- 1
 for (i in 1:length(ccd@episodes)){
@@ -57,9 +52,16 @@ for (i in 1:length(ccd@episodes)){
 }
 ```
 
-That should hopefully have written a dataframe called dts to the data store.
+That should hopefully have written dataframes called `dt` and `dts` to the data store.
 
 ```python
-DTSInPython = dts
+dtPython = dt
+dtsPython = dts
 ```
 Can we call dts in python? :smiley: Maquette/Monaco does not render emojis? @tpetricek Fix this!
+Start analytical challenge code here
+
+```python
+dtf = dtPython.merge(dtsPython, left_on="ADNO", right_on="ADNO", how="inner")
+```
+
