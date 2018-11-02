@@ -5,14 +5,17 @@ for some analysis in Python.
 Change the data_folder path to point to where the anon_public1000.RData file is stored.
 
 ```r
-data_folder = "/path/to/data"
 
 library(purrr)
 library(cleanEHR)
 # full dataset
-load(paste(data_folder,"anon_public1000.RData",sep="/"))
 
-dt <- ccd_demographic_table(anon_ccd, dtype=TRUE)
+file <- paste(tempdir(), "/ccd.rdata", sep="")
+download.file("https://github.com/ropensci/cleanEHR/raw/master/data/sample_ccd.RData", file)
+load(file)
+
+#dt <- ccd_demographic_table(anon_ccd, dtype=TRUE)
+dt <- ccd_demographic_table(ccd, dtype=TRUE)
 
 ```
 
@@ -68,6 +71,7 @@ for (i in 1:length(anon_ccd@episodes)){
   }
   dts <- rbind(dts,measurements)
   names(dts) <- names_for_dts
+}
 ```
 
 dts should now be a dataframe that we can use in Python...

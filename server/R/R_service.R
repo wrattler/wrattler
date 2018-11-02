@@ -29,14 +29,14 @@ writeFrame <- function(frameData, frameName, frameHash) {
     url <- makeURL(frameName, frameHash)
     ## doesn't like converting numbers into json
     if (is.numeric(frameData)) frameData <- as.character(frameData)
-    ## see if it is json-able:
-    isJSONable <- tryCatch({ !is.null(jsonlite::toJSON(frameData)) },
+    ## explicitly convert into a dataframe if we can
+    frameData <- tryCatch({ as.data.frame(frameData) },
                            error=function(cond) {
-                               return(FALSE)
+                               return(NULL)
                            })
 
     ## put it into the datastore if it is convertable to json
-    if (isJSONable) {
+    if (!is.null(frameData)) {
         r <- PUT(url, body=frameData, encode="json")
         return(status_code(r) == 200)
     }
