@@ -88,6 +88,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       }
       catch (error) {
         console.error(error);
+        throw error;
       }
     }
   
@@ -103,6 +104,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       }
       catch (error) {
         console.error(error);
+        throw error;
       }
     }
   
@@ -131,14 +133,14 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     return new ExternalBlockKind(code, this.language);
   }
 
-  bind (scopeDictionary: Langs.ScopeDictionary, block: Langs.Block) {
+  bind (scopeDictionary: Langs.ScopeDictionary, block: Langs.Block) : Promise<Langs.BindingResult> {
     let exBlock = <ExternalBlockKind>block
     let dependencies:Graph.ExternalExportNode[] = [];
     let node:Graph.ExternalCodeNode = {language:this.language, 
       antecedents:[],
       exportedVariables:[],
       kind: 'code',
-      value: undefined,
+      value: null,
       source: exBlock.source}
     let url = this.serviceURI.concat("/exports")
     let hash = Md5.hashStr(exBlock.source)
@@ -153,7 +155,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         for (var n = 0 ; n < response.data.exports.length; n++) {
           let exportNode:Graph.ExternalExportNode = {
               variableName: response.data.exports[n],
-              value: undefined,
+              value: null,
               language:language,
               code: node, 
               kind: 'export',
@@ -172,6 +174,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       }
       catch (error) {
         console.error(error);
+        throw error
       }
     }
     return getExports(this.language)

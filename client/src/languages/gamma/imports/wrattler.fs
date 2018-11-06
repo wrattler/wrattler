@@ -5,6 +5,19 @@ open Fable.Core
 open Fable.Import.JS
 open Wrattler.Html
 
+type [<AllowNullLiteral>] Range =
+    abstract block: string with get, set
+    abstract start: float with get, set
+    abstract ``end``: float with get, set
+
+type [<AllowNullLiteral>] Syntax<'T> =
+    abstract syntax: 'T with get, set
+    abstract range: Range with get, set
+    abstract node: Node option with get, set
+
+type [<AllowNullLiteral>] Type =
+    interface end
+
 /// Types representing the dependency graph.
 /// A node in the dependency graph that Wrattler maintains while the user edits a
 /// notebook. The graph is used to avoid re-computing previously computed parts

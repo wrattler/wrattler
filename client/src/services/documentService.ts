@@ -5,7 +5,7 @@ interface DocumentElement {
   source: string
 }
 
-async function getSampleDocument(): Promise<Array<DocumentElement>> {
+async function getSampleDocument(): Promise<DocumentElement[]> {
     async function getDocumentMd(sourceFile: string) : Promise<string> {
       let sourceURL = "/".concat(sourceFile).concat(".md")
       console.log(sourceURL)
@@ -13,7 +13,7 @@ async function getSampleDocument(): Promise<Array<DocumentElement>> {
       // let response = await axios.get("/sample.md")
       return response.data
     }
-    let documents = []; 
+    let documents : DocumentElement[] = []; 
 
     function getCellCode(language: string, codeCell: string) : DocumentElement {
       let languageMarker = "```".concat(language)

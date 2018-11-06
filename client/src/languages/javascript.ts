@@ -56,7 +56,7 @@ class JavascriptBlockKind implements Langs.Block {
         antecedents:[],
         exportedVariables:[],
         kind: 'code',
-        value: undefined,
+        value: null,
         source: source
       }
 
@@ -71,7 +71,7 @@ class JavascriptBlockKind implements Langs.Block {
               let name = <string>(<ts.Identifier>decl).escapedText 
               let exportNode:Graph.JsExportNode = {
                 variableName: name,
-                value: undefined,
+                value: null,
                 language:"javascript",
                 code: node, 
                 kind: 'export',
@@ -141,6 +141,7 @@ class JavascriptBlockKind implements Langs.Block {
         }
         catch (error) {
           console.error(error);
+          throw error
         }
       }
 
@@ -156,6 +157,7 @@ class JavascriptBlockKind implements Langs.Block {
         }
         catch (error) {
           console.error(error);
+          throw error
         }
       }
 
