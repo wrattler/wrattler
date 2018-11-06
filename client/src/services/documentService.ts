@@ -6,8 +6,10 @@ interface DocumentElement {
 }
 
 async function getSampleDocument(): Promise<Array<DocumentElement>> {
-    async function getDocumentMd() : Promise<string> {
-      let response = await axios.get("/cleanEHR.md")
+    async function getDocumentMd(sourceFile: string) : Promise<string> {
+      let sourceURL = "/".concat(sourceFile).concat(".md")
+      console.log(sourceURL)
+      let response = await axios.get(sourceURL)
       // let response = await axios.get("/sample.md")
       return response.data
     }
@@ -38,7 +40,9 @@ async function getSampleDocument(): Promise<Array<DocumentElement>> {
       return "markdown";
     }
 
-    let paragraph = await getDocumentMd() 
+    let sourceFile = window.location.search.slice(1);
+
+    let paragraph = await getDocumentMd(sourceFile) 
     var regex = /```[a-z]+[^`]*```/g;
     var res; 
     var currentPos = 0;
