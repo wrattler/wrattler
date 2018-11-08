@@ -18,6 +18,12 @@ readFrame <- function(url) {
         print("Unable to access datastore")
         return(NULL)
     }
+    json_data <- content(r,"text")
+    frame <- jsonToDataFrame(json_data)
+    return(frame)
+}
+
+jsonToDataFrame <- function(json_obj) {
     frame <- jsonlite::fromJSON(content(r,"text"))
     return(frame)
 }
@@ -27,20 +33,28 @@ writeFrame <- function(frameData, frameName, frameHash) {
     ## Write a dataframe to the datastore.
     ## use jsonlite to serialize dataframe into json
     url <- makeURL(frameName, frameHash)
-    ## doesn't like converting numbers into json
+    frameJSON <- jsonFromDataFrame
+    ## put it into the datastore if it is not NULL, i.e. was convertable to json
+    if (!is.null(frameJSON)) {
+        r <- PUT(url, body=frameJSON, encode="json")
+        return(status_code(r) == 200)
+    }
+    return(FALSE)
+}
+
+
+jsonFromDataFrame <- function(frameData) {
+    ## jsonlite doesn't like converting numbers into json
     if (is.numeric(frameData)) frameData <- as.character(frameData)
     ## explicitly convert into a dataframe if we can
     frameData <- tryCatch({ as.data.frame(frameData) },
                            error=function(cond) {
                                return(NULL)
                            })
-
-    ## put it into the datastore if it is convertable to json
-    if (!is.null(frameData)) {
-        r <- PUT(url, body=frameData, encode="json")
-        return(status_code(r) == 200)
-    }
-    return(FALSE)
+    if (is.null(frameData)) return(NULL)
+    ## convert to JSON
+    frameJSON <- jsonlite::toJSON(frameData)
+    return(frameJSON)
 }
 
 
