@@ -24,7 +24,7 @@ readFrame <- function(url) {
 }
 
 jsonToDataFrame <- function(json_obj) {
-    frame <- jsonlite::fromJSON(content(r,"text"))
+    frame <- jsonlite::fromJSON(json_obj)
     return(frame)
 }
 
