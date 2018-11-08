@@ -11,3 +11,5 @@ __pycache__/
 server/data-store/src/config.fs
 server/R/.RData
 server/R/.Rhistory
+# emacs autosave files
+*~
