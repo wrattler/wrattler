@@ -6,6 +6,19 @@ context("imports and exports")
 
 source("../R_service.R", chdir=T)
 
+## test whether two dataframes have the same column headings, same number of rows, and same values
+dfSame <- function(df1, df2) {
+    expect_that(length(colnames(df1))==length(colnames(df2)),equals(TRUE))
+    expect_that(nrow(df1)==nrow(df2),equals(TRUE))
+    for (col in colnames(df1)) {
+        for (row in 1:nrow(df1)) {
+            if (df1[[col]][[row]]!=df2[[col]][[row]]) return(FALSE)
+        }
+    }
+    return(TRUE)
+}
+
+
 test_that("We can convert from JSON to a dataframe", {
     expect_that(is.data.frame(jsonToDataFrame('[{"name":"Bob","age":32},{"name":"Bob","age":32}]')),equals(TRUE))
 
@@ -29,12 +42,18 @@ test_that("We can convert from dataframe to JSON to dataframe", {
     df <- data.frame(name=c("Alice","Bob"), age=c(22,33))
     jsonString <- jsonFromDataFrame(df)
     newDf <- jsonToDataFrame(jsonString)
-    expect_that(length(colnames(df))==length(colnames(newDf)),equals(TRUE))
-    expect_that(nrow(df)==nrow(newDf),equals(TRUE))
-    for (col in colnames(df)) {
-        for (row in 1:nrow(df)) {
-            expect_that(df[[col]][[row]]==newDf[[col]][[row]],equals(TRUE))
-        }
-    }
+    expect_that(dfSame(df,newDf), equals(TRUE))
+})
 
+test_that("We get null in the json when we have missing values", {
+    df <- data.frame(name=c("Alice","Bob"), age=c(NA,33))
+    jsonString <- jsonFromDataFrame(df)
+    expect_that(grepl("null",jsonString), equals(TRUE))
+})
+
+
+test_that("We get NA in the dataframe when we have null in the JSON", {
+    jtest <- '[{"name":"Bob","age":32},{"name":"Andrea","age":null}]'
+    df <- jsonToDataFrame(jtest)
+    expect_that(is.na(df[["age"]][[2]]), equals(TRUE))
 })

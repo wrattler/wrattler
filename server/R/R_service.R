@@ -59,7 +59,7 @@ jsonFromDataFrame <- function(frameData) {
                            })
     if (is.null(frameData)) return(NULL)
     ## convert to JSON
-    frameJSON <- jsonlite::toJSON(frameData)
+    frameJSON <- jsonlite::toJSON(frameData, na="null")
     return(frameJSON)
 }
 
