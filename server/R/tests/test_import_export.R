@@ -57,3 +57,10 @@ test_that("We get NA in the dataframe when we have null in the JSON", {
     df <- jsonToDataFrame(jtest)
     expect_that(is.na(df[["age"]][[2]]), equals(TRUE))
 })
+
+test_that("We get null in the json when we have NaN values", {
+    df <- data.frame(name=c("Alice","Bob"), age=c(21,0/0))
+    expect_that(is.nan(df[["age"]][[2]]), equals(TRUE))
+    jsonString <- jsonFromDataFrame(df)
+    expect_that(grepl("null",jsonString), equals(TRUE))
+})
