@@ -1,10 +1,20 @@
 import {h, VNode} from 'maquette';
 import * as Values from '../definitions/values'; 
 
-function printPreview(triggerSelect:(number) => void, selectedTable:number, cellValues:Values.DataFrame) {
+function printPreview(triggerSelect:(number) => void, selectedTable:number, cellValues:Values.ExportsValue) {
   let tableNames:Array<string> = Object.keys(cellValues)
   let tabComponents = printTabs(triggerSelect, selectedTable, tableNames);
-  return h('div', {}, [ tabComponents, printCurrentTable(cellValues[tableNames[selectedTable]].data,tableNames[selectedTable]) ]);
+  return h('div', {}, [ tabComponents, printCurrentTable(cellValues[tableNames[selectedTable]],tableNames[selectedTable]) ]);
+}
+
+function printCurrentValue(value:Values.Value, tableName:string) {
+  switch(value.kind)
+  {
+    case "dataframe":
+      return printCurrentTable((<Values.DataFrame>value).data, tableName);
+    default:
+      return h('div', {}, ["No idea what this is"])
+  }
 }
 
 function printTabs(triggerSelect:(number) => void, selectedTable:number, tableNames:Array<string>) {

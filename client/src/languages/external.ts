@@ -97,9 +97,11 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       let headers = {'Content-Type': 'application/json'}
       try {
         let response = await axios.post(url, body, {headers: headers});
-        var results : Values.ExportsValue = {}
-        for(var df of response.data.frames) 
-          results[df.name] = {url: df.url, data: await getValue(df.url)}
+        var results : Values.ExportsValue = { kind:"exports", exports:{} }
+        for(var df of response.data.frames) {
+          let exp : Values.DataFrame = {kind:"dataframe", url:<string>df.url, data: await getValue(df.url)};
+          results.exports[df.name] = exp
+        }
         return results;
       }
       catch (error) {
