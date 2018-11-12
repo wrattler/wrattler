@@ -14,4 +14,7 @@ var yy = y_nts_pred;
 addOutput(function(id) {
   document.getElementById(id).innerHTML = "<h1 style='color:red'>Yadda yadda</h1>";
 })
+addOutput(function(id) {
+  document.getElementById(id).innerHTML = "<h1 style='color:blue'>Another yadda yadda</h1>";
+})
 ```

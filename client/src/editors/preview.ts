@@ -15,8 +15,10 @@ function printCurrentValue(cellId:number, value:Values.Value, tableName:string) 
       return h('div', {}, [printCurrentTable(df.data, tableName)]);
     case "jsoutput":
       let js = <Values.JavaScriptOutputValue>value
-      let afterCreateHandler = (el) => js.render(el.id);
-      return h('div', {}, [ h('div', {id: "output_" + cellId.toString() + "_" + tableName, afterCreate:afterCreateHandler }, [ "Yo!" ]) ]);
+      let callRender = (el) => js.render(el.id);
+      return h('div', {}, [ 
+        h('div', {id: "output_" + cellId.toString() + "_" + tableName, afterCreate:callRender, afterUpdate:callRender }, [])
+      ])
     default:
       return h('div', {}, ["No idea what this is"])
   }
