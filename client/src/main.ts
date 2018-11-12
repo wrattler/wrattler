@@ -8,7 +8,7 @@ import * as Graph from './definitions/graph'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
 import { externalLanguagePlugin } from './languages/external'
-import { gammaLangaugePlugin } from "./languages/gamma/plugin"
+// import { gammaLangaugePlugin } from "./languages/gamma/plugin"
 import { getSampleDocument } from './services/documentService'
 
 declare var PYTHONSERVICE_URI: string;
@@ -25,7 +25,7 @@ languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
 languagePlugins["python"] = new externalLanguagePlugin("python", PYTHONSERVICE_URI);
 languagePlugins["r"] = new externalLanguagePlugin("r", RSERVICE_URI);
-languagePlugins["thegamma"] = gammaLangaugePlugin;
+// languagePlugins["thegamma"] = gammaLangaugePlugin;
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
 interface NotebookAddEvent { kind:'add', id: number }

@@ -33,8 +33,8 @@ function printCurrentTable(aTable: any, tableName:string) {
       let values = getCurrentRow(aTable[row], tableHeaders);
       let columnsComponents:Array<any> = []
       for (let v = 0; v < values.length; v++) {
-        if (values[v]==undefined){
-          columnsComponents.push(h('td', {key: tableName+"column"+v}, ["WTF??"]))
+        if (values[v]==null) {
+          columnsComponents.push(h('td', {key: tableName+"column"+v}, [""]))
         }
         else
           columnsComponents.push(h('td', {key: tableName+"column"+v}, [values[v].toString()]))

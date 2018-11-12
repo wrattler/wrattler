@@ -5,7 +5,7 @@ import * as Values from '../definitions/values';
 import {createEditor} from '../editors/editor';
 import {printPreview} from '../editors/preview'; 
 
-
+// import Plotly from 'Plotly';
 import ts from 'typescript';
 import axios from 'axios';
 import {Md5} from 'ts-md5';
@@ -120,6 +120,12 @@ class JavascriptBlockKind implements Langs.Block {
       let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
       let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(triggerSelect, state.tabID, <Values.DataFrame>cell.code.value))]);
       let code = createEditor("javascript", state.block.source, cell, context)
+      // let viz = h('div', 
+      //   {key: "viz_".concat(cell.editor.id.toString()), 
+      //     id: "tester", 
+      //     style: "width:600px;height:250px;"}, [])
+      // let TESTER = document.getElementById('tester');
+      // Plotly.plot( TESTER, [{x: [1, 2, 3, 4, 5],y: [1, 2, 4, 8, 16] }], {margin: { t: 0 } } );
       return h('div', { }, [code, preview])
     }
   }
