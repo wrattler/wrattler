@@ -200,7 +200,7 @@ class JavascriptBlockKind implements Langs.Block {
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName
           let exportsValue = <Values.ExportsValue>jsExportNode.code.value
-          return exportsValue[exportNodeName]
+          return exportsValue.exports[exportNodeName]
       }
     },
     parse: (code:string) => {
