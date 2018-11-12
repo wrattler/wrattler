@@ -58,7 +58,7 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
   render: (cell: Langs.BlockState, state:ExternalState, context:Langs.EditorContext<ExternalEvent>) => {
     let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
     let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
-    let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
+    let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
     let code = createEditor(cell.code.language, state.block.source, cell, context)
     return h('div', { }, [code, preview])
   }

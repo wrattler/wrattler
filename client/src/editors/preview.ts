@@ -1,17 +1,22 @@
 import {h, VNode} from 'maquette';
 import * as Values from '../definitions/values'; 
 
-function printPreview(triggerSelect:(number) => void, selectedTable:number, cellValues:Values.ExportsValue) {
+function printPreview(cellId:number, triggerSelect:(number) => void, selectedTable:number, cellValues:Values.ExportsValue) {
   let tableNames:Array<string> = Object.keys(cellValues.exports)
   let tabComponents = printTabs(triggerSelect, selectedTable, tableNames);
-  return h('div', {}, [ tabComponents, printCurrentValue(cellValues.exports[tableNames[selectedTable]],tableNames[selectedTable]) ]);
+  return h('div', {}, [ tabComponents, printCurrentValue(cellId, cellValues.exports[tableNames[selectedTable]],tableNames[selectedTable]) ]);
 }
 
-function printCurrentValue(value:Values.Value, tableName:string) {
+function printCurrentValue(cellId:number, value:Values.Value, tableName:string) {
   switch(value.kind)
   {
     case "dataframe":
-      return h('div', {}, [printCurrentTable((<Values.DataFrame>value).data, tableName)]);
+      let df = <Values.DataFrame>value
+      return h('div', {}, [printCurrentTable(df.data, tableName)]);
+    case "jsoutput":
+      let js = <Values.JavaScriptOutputValue>value
+      let afterCreateHandler = (el) => js.render(el.id);
+      return h('div', {}, [ h('div', {id: "output_" + cellId.toString() + "_" + tableName, afterCreate:afterCreateHandler }, [ "Yo!" ]) ]);
     default:
       return h('div', {}, ["No idea what this is"])
   }

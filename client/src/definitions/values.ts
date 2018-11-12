@@ -18,7 +18,7 @@ interface Value {
 */
 interface JavaScriptOutputValue extends Value {
   kind : "jsoutput"
-  render : (string) => void
+  render : (id:string) => void
 }
 
 /**
