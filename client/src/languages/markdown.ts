@@ -153,7 +153,7 @@ class MarkdownBlockKind implements Langs.Block {
       let node:Graph.Node = {
         language:"markdown", 
         antecedents:[],
-        value: undefined,
+        value: null,
       }
       return {code: node, exports: []};
     },

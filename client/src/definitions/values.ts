@@ -4,7 +4,7 @@
  * @module Values
  */
 
- /** This comment is needed so that TypeDoc parses the above one correctly */
+/** This comment is needed so that TypeDoc parses the above one correctly */
 
 /**
 * TODO
