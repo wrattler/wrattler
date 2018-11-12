@@ -22,7 +22,7 @@ interface Node {
   antecedents: Node[]
   
   /**  The evaluated value associated with this node */
-  value: Values.Value
+  value: Values.Value | null
 }
 
 /**
