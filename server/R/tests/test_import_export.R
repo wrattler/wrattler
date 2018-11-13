@@ -64,3 +64,13 @@ test_that("We get null in the json when we have NaN values", {
     jsonString <- jsonFromDataFrame(df)
     expect_that(grepl("null",jsonString), equals(TRUE))
 })
+
+
+test_that("We can convert from a list to JSON", {
+    test_list <- c("a","b","c","d")
+    jsonString <- jsonFromDataFrame(test_list)
+    expect_that(is.null(jsonString), equals(FALSE))
+    test_df <- jsonToDataFrame(jsonString)
+    newJson <- jsonFromDataFrame(test_df)
+    expect_that(jsonString == newJson, equals(TRUE))
+})
