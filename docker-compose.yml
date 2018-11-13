@@ -37,15 +37,15 @@ services:
     - wrattler_nw
 
   wrattler_r_service:
-    build:
-      context: server/R
-      dockerfile: Dockerfile
-    ports:
-    - "7103:7103"
-    environment:
-     - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
-    networks:
-    - wrattler_nw
+   build:
+     context: server/R
+     dockerfile: Dockerfile
+   ports:
+   - "7103:7103"
+   environment:
+    - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
+   networks:
+   - wrattler_nw
 
   wrattler_data_store:
     build:

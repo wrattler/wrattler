@@ -58,7 +58,7 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
   render: (cell: Langs.BlockState, state:ExternalState, context:Langs.EditorContext<ExternalEvent>) => {
     let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
     let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
-    let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(triggerSelect, state.tabID, <Values.DataFrame>cell.code.value))]);
+    let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
     let code = createEditor(cell.code.language, state.block.source, cell, context)
     return h('div', { }, [code, preview])
   }
@@ -88,6 +88,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       }
       catch (error) {
         console.error(error);
+        throw error;
       }
     }
   
@@ -96,13 +97,16 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       let headers = {'Content-Type': 'application/json'}
       try {
         let response = await axios.post(url, body, {headers: headers});
-        var results : Values.ExportsValue = {}
-        for(var df of response.data.frames) 
-          results[df.name] = {url: df.url, data: await getValue(df.url)}
+        var results : Values.ExportsValue = { kind:"exports", exports:{} }
+        for(var df of response.data.frames) {
+          let exp : Values.DataFrame = {kind:"dataframe", url:<string>df.url, data: await getValue(df.url)};
+          results.exports[df.name] = exp
+        }
         return results;
       }
       catch (error) {
         console.error(error);
+        throw error;
       }
     }
   
@@ -123,7 +127,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         let exportNode = <Graph.ExternalExportNode>node
         let exportNodeName= exportNode.variableName
         let exportsValue = <Values.ExportsValue>exportNode.code.value
-        return exportsValue[exportNodeName]
+        return exportsValue.exports[exportNodeName]
     }
   }
 
@@ -131,14 +135,14 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     return new ExternalBlockKind(code, this.language);
   }
 
-  bind (scopeDictionary: Langs.ScopeDictionary, block: Langs.Block) {
+  bind (scopeDictionary: Langs.ScopeDictionary, block: Langs.Block) : Promise<Langs.BindingResult> {
     let exBlock = <ExternalBlockKind>block
     let dependencies:Graph.ExternalExportNode[] = [];
     let node:Graph.ExternalCodeNode = {language:this.language, 
       antecedents:[],
       exportedVariables:[],
       kind: 'code',
-      value: undefined,
+      value: null,
       source: exBlock.source}
     let url = this.serviceURI.concat("/exports")
     let hash = Md5.hashStr(exBlock.source)
@@ -153,7 +157,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         for (var n = 0 ; n < response.data.exports.length; n++) {
           let exportNode:Graph.ExternalExportNode = {
               variableName: response.data.exports[n],
-              value: undefined,
+              value: null,
               language:language,
               code: node, 
               kind: 'export',
@@ -172,6 +176,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       }
       catch (error) {
         console.error(error);
+        throw error
       }
     }
     return getExports(this.language)

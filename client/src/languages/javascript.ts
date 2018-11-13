@@ -5,7 +5,7 @@ import * as Values from '../definitions/values';
 import {createEditor} from '../editors/editor';
 import {printPreview} from '../editors/preview'; 
 
-
+// import Plotly from 'Plotly';
 import ts from 'typescript';
 import axios from 'axios';
 import {Md5} from 'ts-md5';
@@ -56,7 +56,7 @@ class JavascriptBlockKind implements Langs.Block {
         antecedents:[],
         exportedVariables:[],
         kind: 'code',
-        value: undefined,
+        value: null,
         source: source
       }
 
@@ -71,7 +71,7 @@ class JavascriptBlockKind implements Langs.Block {
               let name = <string>(<ts.Identifier>decl).escapedText 
               let exportNode:Graph.JsExportNode = {
                 variableName: name,
-                value: undefined,
+                value: null,
                 language:"javascript",
                 code: node, 
                 kind: 'export',
@@ -118,8 +118,14 @@ class JavascriptBlockKind implements Langs.Block {
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
       let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
       let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
-      let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(triggerSelect, state.tabID, <Values.DataFrame>cell.code.value))]);
+      let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
       let code = createEditor("javascript", state.block.source, cell, context)
+      // let viz = h('div', 
+      //   {key: "viz_".concat(cell.editor.id.toString()), 
+      //     id: "tester", 
+      //     style: "width:600px;height:250px;"}, [])
+      // let TESTER = document.getElementById('tester');
+      // Plotly.plot( TESTER, [{x: [1, 2, 3, 4, 5],y: [1, 2, 4, 8, 16] }], {margin: { t: 0 } } );
       return h('div', { }, [code, preview])
     }
   }
@@ -141,21 +147,24 @@ class JavascriptBlockKind implements Langs.Block {
         }
         catch (error) {
           console.error(error);
+          throw error
         }
       }
 
       async function putValues(values) : Promise<Values.ExportsValue> {
         try {
-          var results : Values.ExportsValue = {}
+          var results : Values.ExportsValue = { kind:"exports", exports:{} }
           for (let value in values) {
             let dfString = JSON.stringify(values[value])
             let hash = Md5.hashStr(dfString)
-            results[value] = {url: await putValue(value, hash, dfString), data: values[value]}
+            var exp : Values.DataFrame = {kind:"dataframe", url: await putValue(value, hash, dfString), data: values[value]}
+            results.exports[value] = exp
           }
           return results;
         }
         catch (error) {
           console.error(error);
+          throw error
         }
       }
 
@@ -175,14 +184,23 @@ class JavascriptBlockKind implements Langs.Block {
             argDictionary[imported.variableName] = (<Values.DataFrame>imported.value).data;
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
-          evalCode = "function f(args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n}; f(argDictionary)"
-          let values : Values.ExportsValue = eval(evalCode);
-          return await putValues(values);
+          var outputs : ((id:string) => void)[] = [];
+          var addOutput = function(f) { 
+            outputs.push(f)
+          }
+          evalCode = "(function f(addOutput, args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n})"
+          let values : Values.ExportsValue = eval(evalCode)(addOutput, argDictionary);
+          let exports = await putValues(values)
+          for(let i = 0; i < outputs.length; i++) {
+            var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: outputs[i] }
+            exports.exports["output" + i] = exp
+          }
+          return exports
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName
           let exportsValue = <Values.ExportsValue>jsExportNode.code.value
-          return exportsValue[exportNodeName]
+          return exportsValue.exports[exportNodeName]
       }
     },
     parse: (code:string) => {

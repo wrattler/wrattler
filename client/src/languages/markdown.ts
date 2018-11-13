@@ -3,6 +3,7 @@ import {h,createProjector,VNode} from 'maquette';
 import marked from 'marked';
 import * as Langs from '../definitions/languages'; 
 import * as Graph from '../definitions/graph'; 
+import { Value } from '../definitions/values';
 
 // ------------------------------------------------------------------------------------------------
 // Markdown plugin
@@ -153,12 +154,12 @@ class MarkdownBlockKind implements Langs.Block {
       let node:Graph.Node = {
         language:"markdown", 
         antecedents:[],
-        value: undefined,
+        value: null,
       }
       return {code: node, exports: []};
     },
-    evaluate: async (node:Graph.Node) => {
-      return {};
+    evaluate: async (node:Graph.Node) : Promise<Value> => {
+      return { kind: "nothing" };
     },
   }
   

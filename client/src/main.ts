@@ -8,7 +8,7 @@ import * as Graph from './definitions/graph'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
 import { externalLanguagePlugin } from './languages/external'
-import { gammaLangaugePlugin } from "./languages/gamma/plugin"
+// import { gammaLangaugePlugin } from "./languages/gamma/plugin"
 import { getSampleDocument } from './services/documentService'
 
 declare var PYTHONSERVICE_URI: string;
@@ -25,7 +25,7 @@ languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
 languagePlugins["python"] = new externalLanguagePlugin("python", PYTHONSERVICE_URI);
 languagePlugins["r"] = new externalLanguagePlugin("r", RSERVICE_URI);
-languagePlugins["thegamma"] = gammaLangaugePlugin;
+// languagePlugins["thegamma"] = gammaLangaugePlugin;
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -42,25 +42,24 @@ type NotebookState = {
 }
 
 
-function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>{
-  let languagePlugin = languagePlugins[cell.editor.block.language]
-  return languagePlugin.bind(scopeDictionary, cell.editor.block);
+function bindCell (editor:Langs.EditorState): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>{
+  let languagePlugin = languagePlugins[editor.block.language]
+  return languagePlugin.bind(scopeDictionary, editor.block);
 }
 
-async function bindAllCells(state:NotebookState) {
-  var newCells = []
-  for (var c = 0; c < state.cells.length; c++) {
-    let aCell = state.cells[c]
-    let {code, exports} = await bindCell(aCell);
-    var newCell = { editor:aCell.editor, code:code, exports:exports }
+async function bindAllCells(editors:Langs.EditorState[]) {
+  var newCells : Langs.BlockState[] = []
+  for (var c = 0; c < editors.length; c++) {
+    let editor = editors[c]
+    let {code, exports} = await bindCell(editor);
+    var newCell = { editor:editor, code:code, exports:exports }
     for (var e = 0; e < exports.length; e++ ) {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
     newCells.push(newCell)
   }
-  state.cells = newCells;
-  return state;
+  return newCells;
 }
 
 async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState, newSource: string) {
@@ -74,13 +73,13 @@ async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState,
       }
       let id = state.cells[b].editor.id;
       let editor:Langs.EditorState = languagePlugin.editor.initialize(id, block);
-      let newBlock:Langs.BlockState = {editor: editor, code: null, exports: []};
       var index = state.cells.indexOf(state.cells[b]);
       for (var e = 0; e < state.cells[b].exports.length; e++) {
         let oldExport:Graph.ExportNode = <Graph.ExportNode>state.cells[b].exports[e];
         delete scopeDictionary[oldExport.variableName];
       }
       if (index !== -1) {
+        let newBlock:Langs.BlockState = {editor: editor, code: state.cells[b].code, exports: state.cells[b].exports};
         state.cells[index] = newBlock;
       }
     }
@@ -89,7 +88,7 @@ async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState,
   for (var b=0; b < state.cells.length; b++) {
     if (state.cells[b].editor.id >= cell.editor.id) {
       let aCell = state.cells[b]
-      let {code, exports} = await bindCell(aCell);
+      let {code, exports} = await bindCell(aCell.editor);
       aCell.code = code
       aCell.exports = exports
       for (var e = 0; e < exports.length; e++ ) {
@@ -201,8 +200,8 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       let newPlugin = languagePlugins[newDocument.language];
       let newBlock = newPlugin.parse(newDocument.source);
       let editor:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);
-      let cell:Langs.BlockState = {editor: editor, code: undefined, exports: []}
-      bindCell(cell)
+      let {code, exports} = await bindCell(editor);
+      let cell:Langs.BlockState = {editor: editor, code: code, exports: exports}
       return {counter: state.counter+1, cells: spliceCell(state.cells, cell, evt.id)};
     }
 
@@ -221,7 +220,7 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
   }
 }
 
-async function loadNotebookState() : Promise<NotebookState> {
+async function loadNotebookState() : Promise<{ counter:number, editors:Langs.EditorState[] }> {
   let documents = await getSampleDocument();
 
   // Create an initial notebook state by parsing the sample document
@@ -230,17 +229,19 @@ async function loadNotebookState() : Promise<NotebookState> {
     let languagePlugin = languagePlugins[cell.language]; // TODO: Error handling
     let block = languagePlugin.parse(cell.source);
     let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block);
-    return {editor: editor, code: null, exports: []};
+    return editor;
   })
-  return { counter: index, cells: blockStates };
+  return { counter: index, editors: blockStates };
 }
 
 async function initializeNotebook() {
   let maquetteProjector = createProjector();
   let paperElement = document.getElementById('paper');
+  if (!paperElement) throw "Missing paper element!"
 
-  var state = await loadNotebookState();
-  state = await bindAllCells(state);
+  var {counter, editors} = await loadNotebookState();
+  var cells = await bindAllCells(editors);
+  var state = {counter:counter, cells:cells}
 
   function updateAndRender(event:NotebookEvent) {
     update(state, event).then(newState => {
