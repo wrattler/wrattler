@@ -19,6 +19,7 @@ RUN Rscript -e "install.packages('jug')"
 RUN Rscript -e "install.packages('xml2')"
 RUN Rscript -e "install.packages('httr')"
 RUN Rscript -e "install.packages('purrr')"
+RUN Rscript -e "install.packages('testthat')"
 #RUN Rscript -e "install.packages('devtools')"
 RUN Rscript -e "install.packages('cleanEHR')"
 
