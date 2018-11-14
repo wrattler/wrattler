@@ -57,9 +57,13 @@ for (i in 1:length(ccd@episodes)){
       # Add time limit of 10 hours to measure TS data!
       dts_episode <- ccd@episodes[[i]]@data[n][[1]]
 
+      # the following line broke wrattler (but runs in normal R), as alternative i used the subset function:
+      #dts_episode_sub <- dts_episode[dts_episode$time < 10,]
+
       dts_episode_sub <- subset(dts_episode, dts_episode$time < 10)
 
       values <- dts_episode_sub["item2d"][[1]]
+      
       
     if (!is_empty(values)){
       for (measure in ts_measures_funcs){
