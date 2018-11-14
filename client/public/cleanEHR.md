@@ -55,8 +55,8 @@ for (i in 1:length(ccd@episodes)){
 That should hopefully have written dataframes called `dt` and `dts` to the data store.
 
 ```python
-demographicHeaders = list(dt)
-timeSeriesHeaders = list(dts)
+demographicHeaders = pd.DataFrame(list(pd.DataFrame(dt)))
+timeSeriesHeaders = pd.DataFrame(list(pd.DataFrame(dts)))
 ```
 
 `list(dt)` does not return the headers of the dataframe. Instead it returns the entire dataframe again. 
