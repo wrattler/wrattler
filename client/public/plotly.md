@@ -10,11 +10,31 @@ let y_pred = [{"value": 4278.715153812184}, {"value": 2437.95226262523}, {"value
 And now create a chart...
 
 ```javascript
-var yy = y_nts_pred;
+let y_pred_list = []
+let y_nts_pred_list = []
+let x = []
+
+for (let i = 0; i < y_pred_list.length; i++){
+	y_pred_list.push(y_pred[i].value)
+	y_nts_pred_list.push(y_nts_pred[i].value)
+	x.push(i)
+}
+
+var trace1 = {
+  x: y_nts_pred_list,
+  y: y_pred_list,
+  type: 'line'
+};
+
+var trace2 = {
+  x: x,
+  y: y_nts_pred_list,
+  type: 'line'
+};
+
 addOutput(function(id) {
-  document.getElementById(id).innerHTML = "<h1 style='color:red'>Yadda yadda</h1>";
-})
-addOutput(function(id) {
-  document.getElementById(id).innerHTML = "<h1 style='color:blue'>Another yadda yadda</h1>";
+	console.log(trace1)
+  Plotly.plot( document.getElementById(id), [trace1, trace2], {
+	margin: { t: 0 } } );;
 })
 ```

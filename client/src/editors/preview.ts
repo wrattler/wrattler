@@ -1,10 +1,27 @@
 import {h, VNode} from 'maquette';
 import * as Values from '../definitions/values'; 
 
-function printPreview(triggerSelect:(number) => void, selectedTable:number, cellValues:Values.DataFrame) {
-  let tableNames:Array<string> = Object.keys(cellValues)
+function printPreview(cellId:number, triggerSelect:(number) => void, selectedTable:number, cellValues:Values.ExportsValue) {
+  let tableNames:Array<string> = Object.keys(cellValues.exports)
   let tabComponents = printTabs(triggerSelect, selectedTable, tableNames);
-  return h('div', {}, [ tabComponents, printCurrentTable(cellValues[tableNames[selectedTable]].data,tableNames[selectedTable]) ]);
+  return h('div', {}, [ tabComponents, printCurrentValue(cellId, cellValues.exports[tableNames[selectedTable]],tableNames[selectedTable]) ]);
+}
+
+function printCurrentValue(cellId:number, value:Values.Value, tableName:string) {
+  switch(value.kind)
+  {
+    case "dataframe":
+      let df = <Values.DataFrame>value
+      return h('div', {}, [printCurrentTable(df.data, tableName)]);
+    case "jsoutput":
+      let js = <Values.JavaScriptOutputValue>value
+      let callRender = (el) => js.render(el.id);
+      return h('div', {}, [ 
+        h('div', {id: "output_" + cellId.toString() + "_" + tableName, afterCreate:callRender, afterUpdate:callRender }, [])
+      ])
+    default:
+      return h('div', {}, ["No idea what this is"])
+  }
 }
 
 function printTabs(triggerSelect:(number) => void, selectedTable:number, tableNames:Array<string>) {
@@ -29,7 +46,7 @@ function printCurrentTable(aTable: any, tableName:string) {
     
     // for every row in dataframe, create rows
     let numRows = aTable.length > 10 ? 10 : aTable.length
-    for (let row = 0; row < aTable.length; row++) {
+    for (let row = 0; row < numRows; row++) {
       let values = getCurrentRow(aTable[row], tableHeaders);
       let columnsComponents:Array<any> = []
       for (let v = 0; v < values.length; v++) {

@@ -58,7 +58,7 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
   render: (cell: Langs.BlockState, state:ExternalState, context:Langs.EditorContext<ExternalEvent>) => {
     let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
     let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
-    let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(triggerSelect, state.tabID, <Values.DataFrame>cell.code.value))]);
+    let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
     let code = createEditor(cell.code.language, state.block.source, cell, context)
     return h('div', { }, [code, preview])
   }
@@ -97,9 +97,11 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       let headers = {'Content-Type': 'application/json'}
       try {
         let response = await axios.post(url, body, {headers: headers});
-        var results : Values.ExportsValue = {}
-        for(var df of response.data.frames) 
-          results[df.name] = {url: df.url, data: await getValue(df.url)}
+        var results : Values.ExportsValue = { kind:"exports", exports:{} }
+        for(var df of response.data.frames) {
+          let exp : Values.DataFrame = {kind:"dataframe", url:<string>df.url, data: await getValue(df.url)};
+          results.exports[df.name] = exp
+        }
         return results;
       }
       catch (error) {
@@ -125,7 +127,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         let exportNode = <Graph.ExternalExportNode>node
         let exportNodeName= exportNode.variableName
         let exportsValue = <Values.ExportsValue>exportNode.code.value
-        return exportsValue[exportNodeName]
+        return exportsValue.exports[exportNodeName]
     }
   }
 
