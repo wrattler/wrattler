@@ -46,7 +46,7 @@ function printCurrentTable(aTable: any, tableName:string) {
     
     // for every row in dataframe, create rows
     let numRows = aTable.length > 10 ? 10 : aTable.length
-    for (let row = 0; row < aTable.length; row++) {
+    for (let row = 0; row < numRows; row++) {
       let values = getCurrentRow(aTable[row], tableHeaders);
       let columnsComponents:Array<any> = []
       for (let v = 0; v < values.length; v++) {
