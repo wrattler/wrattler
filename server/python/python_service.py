@@ -10,7 +10,7 @@ import sys
 import json
 import parser
 import pandas as pd
-import numpy
+import numpy as np
 import ast
 import collections
 
@@ -26,9 +26,14 @@ def cleanup(i):
     """
     Function to ensure we can json-ify our values.  For example,
     pandas returns numpy.int64 rather than int, which are not json-serializable,
-    so we convert them to regular ints here
+    so we convert them to regular ints here.
+    Similarly, convert any NaN to None
     """
-    if isinstance(i, numpy.integer): return int(i)
+    if isinstance(i, np.integer): return int(i)
+    try:
+        if np.isnan(i): return None
+    except(TypeError):
+        pass
     return i
 
 
