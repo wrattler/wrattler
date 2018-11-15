@@ -57,8 +57,3 @@ prepCodeString <- function(inputString) {
     eval(tmpExpression)
     return(wrattlerParsedCode)
 }
-
-
-#e <- buildSyntaxTree(quote({ exp1 <- 10; exp2 <- imp1 + exp1 }))
-#e$imports
-#e$exports
