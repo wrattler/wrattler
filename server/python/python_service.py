@@ -54,10 +54,13 @@ def convert_to_pandas_df(frame):
 def convert_from_pandas_df(dataframe):
     """
     converts pandas dataframe into wrattler format, i.e. list of rows.
-    If input is not a pandas dataframe, just return it unchanged.
+    If input is not a pandas dataframe, try to convert it, and return None if we can't
     """
     if not isinstance(dataframe, pd.DataFrame):
-        return dataframe
+        try:
+            dataframe = pd.DataFrame(dataframe)
+        except(ValueError):
+            return None
     row_list = []
     columns = list(dataframe.columns)
     for index, row in dataframe.iterrows():

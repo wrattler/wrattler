@@ -8,6 +8,8 @@ client/docs
 __pycache__/
 *.py[cod]
 *$py.class
+.RData
+.Rhistory
 server/data-store/src/config.fs
 server/R/.RData
 server/R/.Rhistory

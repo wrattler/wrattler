@@ -22,17 +22,29 @@ def test_convert_pandas():
     assert(d_orig == d_new)
 
 
+def test_convert_list():
+    """
+    start with a list, should get converted into a dataframe and then into
+    json, then should get the same df back again
+    """
+    start_list = ["a","b","c","d"]
+    j1 = convert_from_pandas_df(start_list)
+    df = convert_to_pandas_df(j1)
+    j2 = convert_from_pandas_df(df)
+    assert(j1==j2)
+
+
 def test_dont_convert_non_df():
     """
     Check that if we just give a number or a string or something else,
-    we get the same result back
+    we get None back
     """
     x_orig = 345
     x_conv = convert_to_pandas_df(x_orig)
     x_new = convert_from_pandas_df(x_conv)
-    assert(x_orig == x_new)
+    assert(x_new == None)
 
     y_orig = "testing"
     y_conv = convert_to_pandas_df(y_orig)
     y_new = convert_from_pandas_df(y_conv)
-    assert(y_orig == y_new)
+    assert(y_new == None)
