@@ -90,6 +90,6 @@ timeSeriesHeaders = list(dts)
 `list(dt)` does not return the headers of the dataframe. Instead it returns the entire dataframe again. 
 
 ```python
-dtf = dtPython.merge(dtsPython, left_on='ADNO', right_on='ADNO', how='inner')
+dtf = dt.merge(dts, left_on='ADNO', right_on='ADNO', how='inner')
 ```
 
