@@ -2,6 +2,8 @@
 test functions related to manipulating dataframes
 """
 
+import json
+import numpy as np
 import pandas as pd
 
 from python_service import convert_to_pandas_df, \
@@ -48,3 +50,19 @@ def test_dont_convert_non_df():
     y_conv = convert_to_pandas_df(y_orig)
     y_new = convert_from_pandas_df(y_conv)
     assert(y_new == None)
+
+
+def test_convert_null_to_nan():
+    """
+    check we get NaN in the Pandas DF when we have null in the JSON, in a column that has other numbers
+    """
+    json_string = '[{"a": 1, "b": 33},{"a": 2, "b": null}]'
+    json_obj = json.loads(json_string)
+    ## should be converted to None
+    assert(json_obj[1]["b"] == None)
+    df = convert_to_pandas_df(json_obj)
+    ## will now be NaN
+    assert(np.isnan(df["b"][1]))
+    ## but when we convert it back into json, we want it to be None
+    new_json = convert_from_pandas_df(df)
+    assert(new_json[1]["b"] == None)

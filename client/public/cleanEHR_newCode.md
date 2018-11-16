@@ -80,16 +80,90 @@ for (i in 1:length(ccd@episodes)){
 
 ```
 
-That should hopefully have written dataframes called `dt` and `dts` to the data store.
-
 ```python
-demographicHeaders = list(dt)
-timeSeriesHeaders = list(dts)
-```
 
-`list(dt)` does not return the headers of the dataframe. Instead it returns the entire dataframe again. 
 
-```python
-dtf = dt.merge(dts, left_on='ADNO', right_on='ADNO', how='inner')
+dtf = dt.merge(dts, left_on="ADNO", right_on="ADNO", how="inner")
+
+dtf0_headers = list(dtf.shape)
+
+# drop rows without entry and death timestamps or completely null columns
+dtf = dtf[pd.notnull(dtf['DAICU'])&pd.notnull(dtf['DOD'])&pd.notnull(dtf['TOD'])] # columns needed for target (time to die)
+dt = dt[pd.notnull(dt['DAICU'])&pd.notnull(dt['DOD'])&pd.notnull(dt['TOD'])] # columns needed for target (time to die)
+dtf = dtf.dropna(axis=1, how='all')
+dt = dt.dropna(axis=1, how='all')
+
+dtf_headers = list(dtf.shape)
+
+import numpy as np
+
+def export_datetime_slash(s):
+    
+    return str(pd.to_datetime(s,infer_datetime_format=True))
+    
+
+dtf["time_arrive_hospital"] = dtf["DAH"].apply(export_datetime_slash)
+
+dtf_time_hospital = dtf["time_arrive_hospital"]
+
+
+def export_datetime(s):
+
+    if 'NULL' in s:
+        return np.nan
+    if 'None' in s:
+        return np.nan
+    if 'NaN' in s:
+        return np.nan
+        
+    if "T" in s:
+        if len(s.split("T")[1].split(":")) > 2:
+            return str(s.split("T")[0]+" "+s.split("T")[1])
+        else:
+            return str(s.split("T")[0]+" "+s.split("T")[1]+":00")
+    
+    elif " " in s:
+        if len(s.split(" ")[1].split(":")) > 2:
+            return str(s.split(" ")[0]+" "+s.split(" ")[1])
+        else:
+            return str(s.split(" ")[0]+" "+s.split(" ")[1]+":00")
+     
+ 
+
+   
+
+dtf["time_arrive"] = dtf["DAICU"].apply(export_datetime)
+dtf["time_death"] = dtf["DOD"] +"T"+ dtf["TOD"]
+dtf["time_death"] = dtf["time_death"].apply(export_datetime)
+
+dtf = dtf.dropna(subset=['time_death'])
+
+
+dtf["time_to_ICU"] = (pd.to_datetime(dtf["time_arrive"],infer_datetime_format=True) -pd.to_datetime(dtf["time_arrive_hospital"],infer_datetime_format=True))
+dtf["time_to_die"] = (pd.to_datetime(dtf["time_death"],infer_datetime_format=True)-pd.to_datetime(dtf["time_arrive"],infer_datetime_format=True))
+
+from datetime import datetime
+
+def get_ttd(td):
+    
+    if input=='NULL' or input=='NaN' or input==np.nan or input == np.datetime64('NaT')     :
+        return 0
+    else:
+        return (td.days*24*60) + (td.seconds/60)
+        
+
+dtf["time_to_ICU"] = dtf["time_to_ICU"].apply(get_ttd)
+dtf["time_to_die"] = dtf["time_to_die"].apply(get_ttd)
+
+
+dtf_time_to_death = dtf["time_to_die"]
+dtf_time_arrive = dtf["time_arrive"]
+dtf_time_toICU = dtf["time_to_ICU"]
+dtf_time_death = dtf["time_death"]
+
+
+
+
+
 ```
 
