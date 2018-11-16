@@ -257,34 +257,7 @@ dt_final.replace([np.inf, -np.inf], np.nan,inplace=True)
 dtf_final.dropna(thresh=0.50*len(dtf_final), axis=1,inplace=True)
 dt_final.dropna(thresh=0.50*len(dt_final), axis=1,inplace=True)
 
-
-
-# dealing with nans by turning them all to zero (definitely suboptimal!)
-dtf_final.replace([np.nan], -1,inplace=True)
-dt_final.replace([np.nan], -1,inplace=True)
-
-dtf_final.replace(['NULL'], -1,inplace=True)
-dt_final.replace(['NULL'], -1,inplace=True)
-
-# Prepare input features, drop target variables
-dtf_final_X = dtf_final.drop(["time_to_die",'survival_class'], axis=1)
-dt_final_X = dt_final.drop(["time_to_die",'survival_class'], axis=1)
-
-# all data
-y = dtf_final["time_to_die"].values
-X = dtf_final_X.values
-
-# no TS data
-y_nts = dt_final["time_to_die"].values
-X_nts = dt_final_X.values
-
-import sklearn
-from sklearn.model_selection import train_test_split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
-
-# no TS data
-X_nts_train, X_nts_test, y_nts_train, y_nts_test = train_test_split(X_nts, y_nts, test_size=0.20, random_state=42)
-
+# this line breaks the code
+#dtf_final[dtf_final.isna()] = -1
 
 ```
-
