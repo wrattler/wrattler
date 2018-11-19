@@ -76,6 +76,7 @@ for (i in 1:length(ccd@episodes)){
   names(dts) <- names_for_dts
 }
 ```
+
 ### Data wrangling on Python
 ```python
 
@@ -235,8 +236,8 @@ dtf_final_X = dtf_final.drop(["time_to_die",'survival_class'], axis=1)
 dt_final_X = dt_final.drop(["time_to_die",'survival_class'], axis=1)
 #
 ```
-### Data modelling on Python
 
+### Data modelling on Python
 ```python
 # all data
 y = dtf_final["time_to_die"].values
@@ -292,7 +293,8 @@ metrics_training = [explained_variance_score(y_true_reg, y_pred_reg),r2_score(y_
 y_true_reg, y_pred_reg = y_nts_test, clf.predict(X_test)
 metrics_testing =[explained_variance_score(y_true_reg, y_pred_reg), r2_score(y_true_reg, y_pred_reg)]
 
-# Visualisation of the results from the modeling
+```
+### Visualisation of the results from the modeling
 
 #sns.regplot(y_nts_true/60,y_nts_pred/60, label="no TS", marker='o', color='blue', scatter_kws={'s':3})
 #sns.regplot(y_true/60,y_pred/60, label="full data", marker='o', color='red', scatter_kws={'s':3})
@@ -303,9 +305,63 @@ metrics_testing =[explained_variance_score(y_true_reg, y_pred_reg), r2_score(y_t
 #plt.tight_layout()
 #plt.savefig(os.path.join(results_folder,"elasticNet_evaluation.pdf"))
 
+```javascript
+let y_pred_list = []
+let y_true_list = []
+let y_nts_pred_list = []
+let y_nts_true_list = []
+
+for (let i = 0; i < y_pred_reg.length; i++){
+	y_pred_list.push(y_pred_reg[i][0])
+  y_true_list.push(y_true_reg[i][0])
+  
+  y_nts_pred_list.push(y_nts_pred_reg[i][0])
+  y_nts_true_list.push(y_nts_true_reg[i][0])
+}
+
+var trace1 = {
+  x: y_true_list,
+  y: y_pred_list,
+  mode: 'markers',
+  name: 'Prediction',
+};
+
+var trace2 = {
+  x: y_nts_true_list,
+  y: y_nts_pred_list,
+  mode: 'markers',
+  name: 'NTS Prediction',
+};
+
+var layout = {
+  margin: { t: 50 },
+  title: 'Model Time to Death',
+  xaxis: {
+    title: 'True Time to death (hours)',
+    titlefont: {
+      family: 'Courier New, monospace',
+      size: 13,
+      color: '#7f7f7f'
+    }
+  },
+  yaxis: {
+    title: 'Predicted Time to death (hours)',
+    titlefont: {
+      family: 'Courier New, monospace',
+      size: 13,
+      color: '#7f7f7f'
+    }
+  }
+};
+
+addOutput(function(id) {
+  Plotly.plot( document.getElementById(id),[trace1, trace2],layout);
+})
+```
+
 #### Classification modelling on the time to die:
 # ### Classification the survival potential on the first 100 hours:
-
+```python
 # In[19]:
 
 # Demographic only data"
@@ -393,6 +449,7 @@ metrics_Rf_testing_nts=[metrics.accuracy_score(y_true, y_pred)]
 
 # Compute confusion matrix
 cnf_matrix_nts = metrics.confusion_matrix(y_nts_test, y_nts_pred)
+```
 
 # Plot normalized confusion matrix
 
@@ -402,7 +459,7 @@ cnf_matrix_nts = metrics.confusion_matrix(y_nts_test, y_nts_pred)
 #plt.savefig(os.path.join(results_folder,"demographicOnly_classification.pdf"))
 #plt.show()
 
-
+```python
 clf=RandomForestClassifier(n_estimators=100)
 
 # use a full grid over all parameters
@@ -423,7 +480,7 @@ metrics_Rf_testing=[metrics.accuracy_score(y_true, y_pred)]
 
 # Compute confusion matrix
 cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
-
+```
 
 # Plot normalized confusion matrix
 
@@ -432,7 +489,3 @@ cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
 #                      title='All data', normalize=True)
 #plt.savefig(os.path.join(results_folder,"demographicPlusTS_classification.png"))
 #plt.show()
-
-
-```
-
