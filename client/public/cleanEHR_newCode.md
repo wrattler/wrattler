@@ -1,30 +1,20 @@
 # Welcome to Wrattler
-### This is an attempt to load an data file in R, manipulate it a bit, and output multiple (two, really) dataframes that will be used for some analysis in Python.
+## Model "time to patient death" from the Clean EHR dataset
 
+### Data preparation on R
 ```r
-
 library(purrr)
 library(cleanEHR)
 # full dataset
-
-
-
-# full dataset
-#load(paste(data_folder,"anon_public_d.RData",sep="/"))
-#ccd <- anon_ccd
-
-#dt1 <- ccd_demographic_table(anon_ccd, dtype=TRUE)
 
 file <- paste(tempdir(), "/ccd.rdata", sep="")
 download.file("https://github.com/ropensci/cleanEHR/raw/master/data/sample_ccd.RData", file)
 load(file)
 
-
 mean_tail_diff <- function(vector) {
   diff <- mean(vector,na.rm=TRUE) - tail(vector,n=1)
   return (diff)
 }
-
 
 dt <- ccd_demographic_table(ccd, dtype=TRUE)
 
@@ -85,15 +75,13 @@ for (i in 1:length(ccd@episodes)){
   dts <- rbind(dts,measurements)
   names(dts) <- names_for_dts
 }
-
 ```
-
+### Data wrangling on Python
 ```python
 
+import numpy as np
 
 dtf = dt.merge(dts, left_on="ADNO", right_on="ADNO", how="inner")
-
-dtf0_headers = list(dtf.shape)
 
 # drop rows without entry and death timestamps or completely null columns
 dtf = dtf[pd.notnull(dtf['DAICU'])&pd.notnull(dtf['DOD'])&pd.notnull(dtf['TOD'])] # columns needed for target (time to die)
@@ -101,19 +89,13 @@ dt = dt[pd.notnull(dt['DAICU'])&pd.notnull(dt['DOD'])&pd.notnull(dt['TOD'])] # c
 dtf = dtf.dropna(axis=1, how='all')
 dt = dt.dropna(axis=1, how='all')
 
-dtf_headers = list(dtf.shape)
-
-import numpy as np
-
 def export_datetime_slash(s):
     
     return str(pd.to_datetime(s,infer_datetime_format=True))
     
-
 dtf["time_arrive_hospital"] = dtf["DAH"].apply(export_datetime_slash)
 
 dtf_time_hospital = dtf["time_arrive_hospital"]
-
 
 def export_datetime(s):
 
@@ -133,20 +115,15 @@ def export_datetime(s):
             return str(s.split(" ")[0]+" "+s.split(" ")[1]+":00")
      
  
-
    
-
 dtf["time_arrive"] = dtf["DAICU"].apply(export_datetime)
 dtf["time_death"] = dtf["DOD"] +"T"+ dtf["TOD"]
 dtf["time_death"] = dtf["time_death"].apply(export_datetime)
 
 dtf = dtf.dropna(subset=['time_death'])
 
-
 dtf["time_to_ICU"] = (pd.to_datetime(dtf["time_arrive"],infer_datetime_format=True) -pd.to_datetime(dtf["time_arrive_hospital"],infer_datetime_format=True))
 dtf["time_to_die"] = (pd.to_datetime(dtf["time_death"],infer_datetime_format=True)-pd.to_datetime(dtf["time_arrive"],infer_datetime_format=True))
-
-from datetime import datetime
 
 def get_ttd(td):
     
@@ -181,7 +158,6 @@ def get_age(td):
         # returns years 
         return np.abs(td.days)/365
 
-
 # remove persons arrived dead
 dtf = dtf[dtf["time_arrive"] <= dtf["time_death"]] # remove persons arrived dead
 
@@ -194,7 +170,6 @@ dt["time_arrive"] = dt["DAICU"].apply(export_datetime)
 dt["time_death"] = dt["DOD"] +"T"+ dt["TOD"]
 dt["time_death"] = dt["time_death"].apply(export_datetime)
 
-
 dt["time_to_ICU"] = (pd.to_datetime(dt["time_arrive"],infer_datetime_format=True) -pd.to_datetime(dt["time_arrive_hospital"],infer_datetime_format=True))
 dt["time_to_die"] = (pd.to_datetime(dt["time_death"],infer_datetime_format=True)-pd.to_datetime(dt["time_arrive"],infer_datetime_format=True))
 
@@ -206,7 +181,6 @@ dt = dt[dt["time_arrive"] <= dt["time_death"]]
 
 # add survival class
 dt["survival_class"] = dt["time_to_die"].apply(get_survival_class)
-
 
 # get AGE using DOB (this needs to be updated)
 dtf["time_of_birth"] = dtf["DOB"].apply(export_datetime)
@@ -229,7 +203,6 @@ dt["OCPMH_trim"] = dt["OCPMH"].apply(process_diagnosis)
 dtf["age"] = dtf["time_from_birth"]
 dt["age"] = dt["time_from_birth"]
 
-
 # make variables categorical
 dummied = ["RAICU1_trim","RAICU2_trim","OCPMH_trim","SOHA","SEX","RESA","HLOCA","LOCA","PA_V3","SCODE","CLASSNS","PLOCA","TYPEIHA","CCA","CPR_V3","DEP","TNESSA","ITW_V3","OD_V3"]
 dtf_final = pd.get_dummies(dtf, columns=dummied, dummy_na=False)
@@ -238,26 +211,17 @@ dt_final = pd.get_dummies(dt, columns=dummied, dummy_na=False)
 # drop all patients that didnt live 10 hours
 dtf_final = dtf_final[dtf_final['time_to_die']>60*10]
 
-
-# In[10]:
-
-
 # drop columns not needed for predictions
-# columns_to_drop = ["time_arrive_hospital",'REFOD','BCSD','DSD','ARSD','BRSD','ACSD',"GSD",'DHRS','ORGAN_SUPPORT','NSD','LSD','RSD','CCL3D','CCL2D',"time_from_birth","time_of_birth","SOHD","DWFRD","TWFRD","UDIS","DDICU","DDH","HDIS","RESD","UHDIS","URAICU","DDBSD","TDBSD",                   "pid","spell","index","ADNO","ICNNO","bed02","bed03","bed05","time_arrive","time_death", "HCMEST","WKGEST","DAH","DAICU","DIS","DOAH","DOAICU","DLCCA","DTW","TTW","DOB","DOD",                   "TOD","TBRICU","DBRICU","RAICU1","RAICU2","OCPMH","ITW_V3_B","ITW_V3_H","ITW_V3_N",                   "ITW_V3_W","OD_V3_H","OD_V3_N","OD_V3_O","OD_V3_T","BSDTP",'AMUAI','apache_score','apache_prob']
-
-columns_to_drop = ["time_arrive_hospital",'REFOD','BCSD','DSD','ARSD','BRSD','ACSD',"GSD",'ORGAN_SUPPORT','NSD','LSD','RSD','CCL3D','CCL2D',"time_from_birth","time_of_birth","SOHD","DWFRD","TWFRD","UDIS","DDICU","DDH","HDIS","RESD","UHDIS","URAICU","DDBSD","TDBSD",                   "pid","spell","index","ADNO","ICNNO","bed02","bed03","bed05","time_arrive","time_death", "HCMEST","WKGEST","DAH","DAICU","DIS","DOAH","DOAICU","DLCCA","DTW","TTW","DOB","DOD",                   "TOD","TBRICU","DBRICU","RAICU1","RAICU2","OCPMH","ITW_V3_B","ITW_V3_N", "ITW_V3_W","OD_V3_N","BSDTP",'AMUAI','apache_score','apache_prob']
+columns_to_drop = ["time_arrive_hospital",'ETHNIC','PCODE','REFOD','BCSD','DSD','ARSD','BRSD','ACSD',"GSD",'ORGAN_SUPPORT','NSD','LSD','RSD','CCL3D','CCL2D',"time_from_birth","time_of_birth","SOHD","DWFRD","TWFRD","UDIS","DDICU","DDH","HDIS","RESD","UHDIS","URAICU","DDBSD","TDBSD",                   "pid","spell","index","ADNO","ICNNO","bed02","bed03","bed05","time_arrive","time_death", "HCMEST","WKGEST","DAH","DAICU","DIS","DOAH","DOAICU","DLCCA","DTW","TTW","DOB","DOD",                   "TOD","TBRICU","DBRICU","RAICU1","RAICU2","OCPMH","ITW_V3_B","ITW_V3_N", "ITW_V3_W","OD_V3_N","BSDTP",'AMUAI','apache_score','apache_prob']
 
 dtf_final.drop(columns=columns_to_drop,inplace=True)
 dt_final.drop(columns=columns_to_drop,inplace=True)
-
 
 dtf_final.replace([np.inf, -np.inf], np.nan,inplace=True)
 dt_final.replace([np.inf, -np.inf], np.nan,inplace=True)
 
 dtf_final.dropna(thresh=0.50*len(dtf_final), axis=1,inplace=True)
 dt_final.dropna(thresh=0.50*len(dt_final), axis=1,inplace=True)
-
-
 
 # dealing with nans by turning them all to zero (definitely suboptimal!)
 dtf_final.replace([np.nan], -1,inplace=True)
@@ -269,7 +233,11 @@ dt_final.replace(['NULL'], -1,inplace=True)
 # Prepare input features, drop target variables
 dtf_final_X = dtf_final.drop(["time_to_die",'survival_class'], axis=1)
 dt_final_X = dt_final.drop(["time_to_die",'survival_class'], axis=1)
+#
+```
+### Data modelling on Python
 
+```python
 # all data
 y = dtf_final["time_to_die"].values
 X = dtf_final_X.values
@@ -284,6 +252,186 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random
 
 # no TS data
 X_nts_train, X_nts_test, y_nts_train, y_nts_test = train_test_split(X_nts, y_nts, test_size=0.20, random_state=42)
+
+# apply transformations to data: standardize X
+
+from sklearn.preprocessing import StandardScaler
+X_scaler = StandardScaler()
+y_scaler = StandardScaler()
+X_train = X_scaler.fit_transform(X_train)
+X_test = X_scaler.transform(X_test)
+
+# no TS data
+X_nts_scaler = StandardScaler()
+y_nts_scaler = StandardScaler()
+X_nts_train = X_nts_scaler.fit_transform(X_nts_train)
+X_nts_test = X_nts_scaler.transform(X_nts_test)
+
+from sklearn.linear_model import ElasticNet
+from sklearn.metrics import explained_variance_score, r2_score
+
+# Training Non time series data:
+clf = ElasticNet()
+clf.fit(X_nts_train, y_nts_train)
+
+# Training metrics:
+y_nts_true_reg, y_nts_pred_reg = y_nts_train, clf.predict(X_nts_train)
+metrics_nts_training = [explained_variance_score(y_nts_true_reg, y_nts_pred_reg),r2_score(y_nts_true_reg, y_nts_pred_reg)]
+
+y_nts_true_reg, y_nts_pred_reg = y_nts_test, clf.predict(X_nts_test)
+metrics_nts_testing =[explained_variance_score(y_nts_true_reg, y_nts_pred_reg), r2_score(y_nts_true_reg, y_nts_pred_reg)]
+
+# Training demographic+ time series data:
+clf = ElasticNet()
+clf.fit(X_train, y_train)
+
+# Training metrics:
+y_true_reg, y_pred_reg = y_train, clf.predict(X_train)
+metrics_training = [explained_variance_score(y_true_reg, y_pred_reg),r2_score(y_true_reg, y_pred_reg)]
+
+y_true_reg, y_pred_reg = y_nts_test, clf.predict(X_test)
+metrics_testing =[explained_variance_score(y_true_reg, y_pred_reg), r2_score(y_true_reg, y_pred_reg)]
+
+# Visualisation of the results from the modeling
+
+#sns.regplot(y_nts_true/60,y_nts_pred/60, label="no TS", marker='o', color='blue', scatter_kws={'s':3})
+#sns.regplot(y_true/60,y_pred/60, label="full data", marker='o', color='red', scatter_kws={'s':3})
+#plt.xlabel("True Time to death (hours)",fontsize=13)
+#plt.ylabel("Predicted Time to death (hours)",fontsize=13)
+#plt.legend(fontsize=13)
+
+#plt.tight_layout()
+#plt.savefig(os.path.join(results_folder,"elasticNet_evaluation.pdf"))
+
+#### Classification modelling on the time to die:
+# ### Classification the survival potential on the first 100 hours:
+
+# In[19]:
+
+# Demographic only data"
+# Class 1; time of death within the first 100 hours'
+Class_1_nts = [round(dt_final[dt_final["survival_class"]==1].shape[0]/dt_final.shape[0],3)]
+#Class 2: time of death after the first 100 hours',
+Class_2_nts = [round(dt_final[dt_final["survival_class"]==0].shape[0]/dt_final.shape[0],3)]
+
+#Demographic plus time series data")
+#Class 1: time of death within the first 100 hours',
+Class_1= [round(dtf_final[dtf_final["survival_class"]==1].shape[0]/dtf_final.shape[0],3)]
+#Class 2: time of death after the first 100 hours'
+Class_2= [round(dtf_final[dtf_final["survival_class"]==0].shape[0]/dtf_final.shape[0],3)]
+
+
+# In[20]:
+
+
+# Prepare input features, drop target variables
+
+#  Demographic + time series data
+y = dtf_final["survival_class"].values
+dtf_final_X = dtf_final.drop(["time_to_die",'survival_class'], axis=1)
+X_columns = dtf_final_X.columns
+X = dtf_final_X.values
+
+# Only demographic data
+y_nts = dt_final["survival_class"].values
+dt_final_X = dt_final.drop(["time_to_die",'survival_class'], axis=1)
+X_nts_columns = dt_final_X.columns
+X_nts = dt_final_X.values
+
+
+#split training and testing datasets
+
+# demographic + time series data
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
+
+# demographic only data
+X_nts_train, X_nts_test, y_nts_train, y_nts_test = train_test_split(X_nts, y_nts, test_size=0.20, random_state=42)
+
+
+# In[22]:
+
+
+# apply transformations to data: standardize X
+
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+X_scaler = StandardScaler()
+y_scaler = StandardScaler()
+X_train = X_scaler.fit_transform(X_train)
+X_test = X_scaler.transform(X_test)
+
+# no TS data
+X_nts_scaler = StandardScaler()
+y_nts_scaler = StandardScaler()
+X_nts_train = X_nts_scaler.fit_transform(X_nts_train)
+X_nts_test = X_nts_scaler.transform(X_nts_test)
+
+
+
+#Import Random Forest Model
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import metrics
+
+#Create a Gaussian Classifier
+clf_nts=RandomForestClassifier(n_estimators=100)
+
+# use a full grid over all parameters
+
+#Train the model using the training sets y_pred=clf.predict(X_test)
+clf_nts.fit(X_nts_train,y_nts_train)
+
+y_nts_true, y_nts_pred = y_nts_test, clf_nts.predict(X_nts_test)
+
+#Training metrics:
+y_true, y_pred = y_nts_train, clf_nts.predict(X_nts_train)
+metrics_Rf_training_nts = [metrics.accuracy_score(y_true, y_pred)]
+
+#Testing metrics:
+y_true, y_pred = y_nts_test, clf_nts.predict(X_nts_test)
+metrics_Rf_testing_nts=[metrics.accuracy_score(y_true, y_pred)]
+
+
+# Compute confusion matrix
+cnf_matrix_nts = metrics.confusion_matrix(y_nts_test, y_nts_pred)
+
+# Plot normalized confusion matrix
+
+#plt.figure()
+#plot_confusion_matrix(cnf_matrix, classes=['< 100 hours','> 100 hours'],
+#                      title='No TS data', normalize=True)
+#plt.savefig(os.path.join(results_folder,"demographicOnly_classification.pdf"))
+#plt.show()
+
+
+clf=RandomForestClassifier(n_estimators=100)
+
+# use a full grid over all parameters
+
+#Train the model using the training sets y_pred=clf.predict(X_test)
+clf.fit(X_train,y_train)
+
+y_true, y_pred = y_test, clf.predict(X_test)
+
+#Training metrics:
+y_true, y_pred = y_train, clf.predict(X_train)
+metrics_Rf_training = [metrics.accuracy_score(y_true, y_pred)]
+
+#Testing metrics:
+y_true, y_pred = y_test, clf.predict(X_test)
+metrics_Rf_testing=[metrics.accuracy_score(y_true, y_pred)]
+
+
+# Compute confusion matrix
+cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
+
+
+# Plot normalized confusion matrix
+
+#plt.figure()
+#plot_confusion_matrix(cnf_matrix, classes=['< 100 hours','> 100 hours'],
+#                      title='All data', normalize=True)
+#plt.savefig(os.path.join(results_folder,"demographicPlusTS_classification.png"))
+#plt.show()
 
 
 ```
