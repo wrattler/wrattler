@@ -573,22 +573,23 @@ cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
 ```
 
 ```javascript
-let xValues =  ['< 100 hours', '> 100 hours']
-let yValues =  ['< 100 hours', '> 100 hours']
-let zValues = []
-let aRow = [];
-for (let i  = 0; i < xValues.length; i++) {
-  aRow = [];
-  for (let j  = 0; j < yValues.length; j++) {
-    aRow.push(cnf_matrix[i][j])
+let xValues_cnf = ['< 100 hours', '> 100 hours']
+let yValues_cnf = ['< 100 hours', '> 100 hours']
+
+let zValues_cnf = []
+let aRow_cnf = [];
+for (let i  = 0; i < xValues_cnf.length; i++) {
+  aRow_cnf = [];
+  for (let j  = 0; j < yValues_cnf.length; j++) {
+    aRow_cnf.push(cnf_matrix[i][j])
   }
-  zValues.push(aRow)
+  zValues_cnf.push(aRow_cnf)
 }
 
 let trace4 = {
-  x: xValues, 
-  y: yValues,
-  z: zValues, 
+  x: xValues_cnf, 
+  y: yValues_cnf,
+  z: zValues_cnf, 
   showscale: true,
   type: 'heatmap', 
   zmax: 1.0,
@@ -621,9 +622,9 @@ let layout = {
   }
 };
 
-for ( var i = yValues.length-1; i >=0; i-- ) {
-  for ( var j = 0; j < xValues.length; j++ ) {
-    var currentValue = zValues[i][j];
+for ( var i = yValues_.length-1; i >=0; i-- ) {
+  for ( var j = 0; j < xValues_cnf.length; j++ ) {
+    var currentValue = zValues_cnf[j][i];
     if (currentValue != 0.0) {
       var textColor = 'white';
     }else{
@@ -632,9 +633,9 @@ for ( var i = yValues.length-1; i >=0; i-- ) {
     var result = {
       xref: 'x1',
       yref: 'y1',
-      x: xValues[j],
-      y: yValues[i],
-      text: zValues[i][j],
+      x: xValues_cnf[j],
+      y: yValues_cnf[i],
+      text: zValues_cnf[j][i],
       font: {
         family: 'Arial',
         size: 12,
