@@ -296,14 +296,14 @@ metrics_testing =[explained_variance_score(y_true_reg, y_pred_reg), r2_score(y_t
 ```
 ### Visualisation of the results from the modeling
 
-#sns.regplot(y_nts_true/60,y_nts_pred/60, label="no TS", marker='o', color='blue', scatter_kws={'s':3})
-#sns.regplot(y_true/60,y_pred/60, label="full data", marker='o', color='red', scatter_kws={'s':3})
-#plt.xlabel("True Time to death (hours)",fontsize=13)
-#plt.ylabel("Predicted Time to death (hours)",fontsize=13)
-#plt.legend(fontsize=13)
+sns.regplot(y_nts_true/60,y_nts_pred/60, label="no TS", marker='o', color='blue', scatter_kws={'s':3})
+sns.regplot(y_true/60,y_pred/60, label="full data", marker='o', color='red', scatter_kws={'s':3})
+plt.xlabel("True Time to death (hours)",fontsize=13)
+plt.ylabel("Predicted Time to death (hours)",fontsize=13)
+plt.legend(fontsize=13)
 
-#plt.tight_layout()
-#plt.savefig(os.path.join(results_folder,"elasticNet_evaluation.pdf"))
+plt.tight_layout()
+plt.savefig(os.path.join(results_folder,"elasticNet_evaluation.pdf"))
 
 ```javascript
 let y_pred_list = []
@@ -355,12 +355,12 @@ var layout = {
 };
 
 addOutput(function(id) {
-  Plotly.plot( document.getElementById(id),[trace1, trace2],layout);
+  Plotly.newPlot( document.getElementById(id),[trace1, trace2],layout);
 })
 ```
 
 #### Classification modelling on the time to die:
-# ### Classification the survival potential on the first 100 hours:
+#### Classification the survival potential on the first 100 hours:
 ```python
 # In[19]:
 
@@ -398,19 +398,19 @@ X_nts = dt_final_X.values
 #split training and testing datasets
 
 # demographic + time series data
+import sklearn
+from sklearn.model_selection import train_test_split
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
 
 # demographic only data
 X_nts_train, X_nts_test, y_nts_train, y_nts_test = train_test_split(X_nts, y_nts, test_size=0.20, random_state=42)
 
-
 # In[22]:
-
-
 # apply transformations to data: standardize X
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
 X_scaler = StandardScaler()
 y_scaler = StandardScaler()
 X_train = X_scaler.fit_transform(X_train)
@@ -422,8 +422,6 @@ y_nts_scaler = StandardScaler()
 X_nts_train = X_nts_scaler.fit_transform(X_nts_train)
 X_nts_test = X_nts_scaler.transform(X_nts_test)
 
-
-
 #Import Random Forest Model
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
@@ -431,25 +429,24 @@ from sklearn import metrics
 #Create a Gaussian Classifier
 clf_nts=RandomForestClassifier(n_estimators=100)
 
-# use a full grid over all parameters
+# # use a full grid over all parameters
 
-#Train the model using the training sets y_pred=clf.predict(X_test)
+# #Train the model using the training sets y_pred=clf.predict(X_test)
 clf_nts.fit(X_nts_train,y_nts_train)
 
 y_nts_true, y_nts_pred = y_nts_test, clf_nts.predict(X_nts_test)
 
-#Training metrics:
+# #Training metrics:
 y_true, y_pred = y_nts_train, clf_nts.predict(X_nts_train)
 metrics_Rf_training_nts = [metrics.accuracy_score(y_true, y_pred)]
 
-#Testing metrics:
+# #Testing metrics:
 y_true, y_pred = y_nts_test, clf_nts.predict(X_nts_test)
 metrics_Rf_testing_nts=[metrics.accuracy_score(y_true, y_pred)]
 
 
 # Compute confusion matrix
 cnf_matrix_nts = metrics.confusion_matrix(y_nts_test, y_nts_pred)
-```
 
 # Plot normalized confusion matrix
 
@@ -458,8 +455,95 @@ cnf_matrix_nts = metrics.confusion_matrix(y_nts_test, y_nts_pred)
 #                      title='No TS data', normalize=True)
 #plt.savefig(os.path.join(results_folder,"demographicOnly_classification.pdf"))
 #plt.show()
+```
+
+```javascript
+let xValues =  ['< 100 hours', '> 100 hours']
+let yValues =  ['< 100 hours', '> 100 hours']
+let zValues = []
+let aRow = [];
+for (let i  = 0; i < xValues.length; i++) {
+  aRow = [];
+  for (let j  = 0; j < yValues.length; j++) {
+    aRow.push(cnf_matrix_nts[i][j])
+  }
+  zValues.push(aRow)
+}
+
+let trace3 = {
+  x: xValues, 
+  y: yValues,
+  z: zValues, 
+  showscale: true,
+  type: 'heatmap', 
+  zmax: 1.0,
+  zmin: 0
+};
+
+let layout = {
+  title: 'Confusion Matrix',
+  annotations: [],
+  xaxis: {
+    title: 'Predicted value', 
+    titlefont: {
+      color: '#7f7f7f', 
+      size: 12
+    },
+    ticks: '',
+    side: 'bottom'
+  }, 
+  yaxis: {
+    title: 'True value', 
+    titlefont: {
+      color: '#7f7f7f', 
+      size: 12
+    },
+    ticks: '',
+    side: 'top',
+    width: 700,
+    height: 700,
+    autosize: false
+  }
+};
+
+for ( var i = yValues.length-1; i >=0; i-- ) {
+  for ( var j = 0; j < xValues.length; j++ ) {
+    var currentValue = zValues[i][j];
+    if (currentValue != 0.0) {
+      var textColor = 'white';
+    }else{
+      var textColor = 'black';
+    }
+    var result = {
+      xref: 'x1',
+      yref: 'y1',
+      x: xValues[j],
+      y: yValues[i],
+      text: zValues[i][j],
+      font: {
+        family: 'Arial',
+        size: 12,
+        color: 'rgb(50, 171, 96)'
+      },
+      showarrow: false,
+      font: {
+        color: textColor
+      }
+    };
+    layout.annotations.push(result)
+  }
+}
+  
+addOutput(function(id) {
+  Plotly.newPlot(document.getElementById(id), [trace3], layout);
+});
+```
 
 ```python
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import metrics
+
 clf=RandomForestClassifier(n_estimators=100)
 
 # use a full grid over all parameters
@@ -477,15 +561,15 @@ metrics_Rf_training = [metrics.accuracy_score(y_true, y_pred)]
 y_true, y_pred = y_test, clf.predict(X_test)
 metrics_Rf_testing=[metrics.accuracy_score(y_true, y_pred)]
 
-
 # Compute confusion matrix
 cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
-```
-
-# Plot normalized confusion matrix
+#Plot normalized confusion matrix
 
 #plt.figure()
 #plot_confusion_matrix(cnf_matrix, classes=['< 100 hours','> 100 hours'],
 #                      title='All data', normalize=True)
 #plt.savefig(os.path.join(results_folder,"demographicPlusTS_classification.png"))
 #plt.show()
+```
+
+
