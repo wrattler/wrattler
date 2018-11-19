@@ -572,4 +572,85 @@ cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
 #plt.show()
 ```
 
+```javascript
+let xValues =  ['< 100 hours', '> 100 hours']
+let yValues =  ['< 100 hours', '> 100 hours']
+let zValues = []
+let aRow = [];
+for (let i  = 0; i < xValues.length; i++) {
+  aRow = [];
+  for (let j  = 0; j < yValues.length; j++) {
+    aRow.push(cnf_matrix[i][j])
+  }
+  zValues.push(aRow)
+}
+
+let trace4 = {
+  x: xValues, 
+  y: yValues,
+  z: zValues, 
+  showscale: true,
+  type: 'heatmap', 
+  zmax: 1.0,
+  zmin: 0
+};
+
+let layout = {
+  title: 'Confusion Matrix',
+  annotations: [],
+  xaxis: {
+    title: 'Predicted value', 
+    titlefont: {
+      color: '#7f7f7f', 
+      size: 12
+    },
+    ticks: '',
+    side: 'bottom'
+  }, 
+  yaxis: {
+    title: 'True value', 
+    titlefont: {
+      color: '#7f7f7f', 
+      size: 12
+    },
+    ticks: '',
+    side: 'top',
+    width: 700,
+    height: 700,
+    autosize: false
+  }
+};
+
+for ( var i = yValues.length-1; i >=0; i-- ) {
+  for ( var j = 0; j < xValues.length; j++ ) {
+    var currentValue = zValues[i][j];
+    if (currentValue != 0.0) {
+      var textColor = 'white';
+    }else{
+      var textColor = 'black';
+    }
+    var result = {
+      xref: 'x1',
+      yref: 'y1',
+      x: xValues[j],
+      y: yValues[i],
+      text: zValues[i][j],
+      font: {
+        family: 'Arial',
+        size: 12,
+        color: 'rgb(50, 171, 96)'
+      },
+      showarrow: false,
+      font: {
+        color: textColor
+      }
+    };
+    layout.annotations.push(result)
+  }
+}
+  
+addOutput(function(id) {
+  Plotly.newPlot(document.getElementById(id), [trace4], layout);
+});
+```
 
