@@ -8,10 +8,20 @@ import json
 import requests
 
 from python_service import analyze_code, evaluate_code
+from exceptions import ApiException
 
 
 app = Flask(__name__)
 CORS(app)
+
+
+
+
+@app.errorhandler(ApiException)
+def handle_api_exception(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
 
 
 @app.route("/exports", methods=['POST'])
