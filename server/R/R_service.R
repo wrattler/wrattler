@@ -2,6 +2,8 @@
 
 library(jsonlite)
 library(httr)
+#library(textclean)
+
 source("codeAnalysis.R")
 
 
@@ -91,6 +93,15 @@ uploadOutputs <- function(outputsList, exports, hash) {
     return(resultsDF)
 }
 
+
+cleanString <- function(inputString) {
+    ## remove a preceding [1] and escaped quotes from a string captured by capture.output
+    outputString <- gsub("\\[1\\] ","",inputString)
+    outputString <- gsub('\\"','',outputString)
+    return(outputString)
+}
+
+
 executeCode <- function(code, importsList) {
     ## analyze the code to get imports and exports (only need exports here)
     impexp <- analyzeCode(code)
@@ -116,6 +127,11 @@ executeCode <- function(code, importsList) {
     stringFunc <- paste(stringFunc,  "}\n")
     parsedFunc <- parse(text=stringFunc)
     eval(parsedFunc)
-    returnVars <- wrattler_f()
-    return(returnVars)
+    s <- capture.output(returnVars <- wrattler_f())
+    clean_s <- lapply(s, cleanString)
+    outputString <- paste(clean_s, collapse="\n")
+    ret <- new.env()
+    ret$returnVars <- returnVars
+    ret$outputString <- outputString
+    return(ret)
 }
