@@ -258,13 +258,11 @@ X_nts_train, X_nts_test, y_nts_train, y_nts_test = train_test_split(X_nts, y_nts
 
 from sklearn.preprocessing import StandardScaler
 X_scaler = StandardScaler()
-y_scaler = StandardScaler()
 X_train = X_scaler.fit_transform(X_train)
 X_test = X_scaler.transform(X_test)
 
 # no TS data
 X_nts_scaler = StandardScaler()
-y_nts_scaler = StandardScaler()
 X_nts_train = X_nts_scaler.fit_transform(X_nts_train)
 X_nts_test = X_nts_scaler.transform(X_nts_test)
 
@@ -272,38 +270,21 @@ from sklearn.linear_model import ElasticNet
 from sklearn.metrics import explained_variance_score, r2_score
 
 # Training Non time series data:
-clf = ElasticNet()
-clf.fit(X_nts_train, y_nts_train)
+clf_nts = ElasticNet()
+clf_nts.fit(X_nts_train, y_nts_train)
 
-# Training metrics:
-y_nts_true_reg, y_nts_pred_reg = y_nts_train, clf.predict(X_nts_train)
-metrics_nts_training = [explained_variance_score(y_nts_true_reg, y_nts_pred_reg),r2_score(y_nts_true_reg, y_nts_pred_reg)]
-
-y_nts_true_reg, y_nts_pred_reg = y_nts_test, clf.predict(X_nts_test)
+y_nts_true_reg, y_nts_pred_reg = y_nts_test, clf_nts.predict(X_nts_test)
 metrics_nts_testing =[explained_variance_score(y_nts_true_reg, y_nts_pred_reg), r2_score(y_nts_true_reg, y_nts_pred_reg)]
 
 # Training demographic+ time series data:
 clf = ElasticNet()
 clf.fit(X_train, y_train)
 
-# Training metrics:
-y_true_reg, y_pred_reg = y_train, clf.predict(X_train)
-metrics_training = [explained_variance_score(y_true_reg, y_pred_reg),r2_score(y_true_reg, y_pred_reg)]
-
 y_true_reg, y_pred_reg = y_nts_test, clf.predict(X_test)
 metrics_testing =[explained_variance_score(y_true_reg, y_pred_reg), r2_score(y_true_reg, y_pred_reg)]
 
 ```
 ### Visualisation of the results from the modeling
-
-sns.regplot(y_nts_true/60,y_nts_pred/60, label="no TS", marker='o', color='blue', scatter_kws={'s':3})
-sns.regplot(y_true/60,y_pred/60, label="full data", marker='o', color='red', scatter_kws={'s':3})
-plt.xlabel("True Time to death (hours)",fontsize=13)
-plt.ylabel("Predicted Time to death (hours)",fontsize=13)
-plt.legend(fontsize=13)
-
-plt.tight_layout()
-plt.savefig(os.path.join(results_folder,"elasticNet_evaluation.pdf"))
 
 ```javascript
 let y_pred_list = []
@@ -333,7 +314,7 @@ var trace2 = {
   name: 'NTS Prediction',
 };
 
-var layout = {
+var layout_reg_nts = {
   margin: { t: 50 },
   title: 'Model Time to Death',
   xaxis: {
@@ -355,7 +336,7 @@ var layout = {
 };
 
 addOutput(function(id) {
-  Plotly.newPlot( document.getElementById(id),[trace1, trace2],layout);
+  Plotly.newPlot( document.getElementById(id),[trace1, trace2],layout_reg_nts);
 })
 ```
 
@@ -383,16 +364,16 @@ Class_2= [round(dtf_final[dtf_final["survival_class"]==0].shape[0]/dtf_final.sha
 # Prepare input features, drop target variables
 
 #  Demographic + time series data
-y = dtf_final["survival_class"].values
+y_class = dtf_final["survival_class"].values
 dtf_final_X = dtf_final.drop(["time_to_die",'survival_class'], axis=1)
-X_columns = dtf_final_X.columns
-X = dtf_final_X.values
+X_columns_class = dtf_final_X.columns
+X_class = dtf_final_X.values
 
 # Only demographic data
-y_nts = dt_final["survival_class"].values
+y_nts_class = dt_final["survival_class"].values
 dt_final_X = dt_final.drop(["time_to_die",'survival_class'], axis=1)
-X_nts_columns = dt_final_X.columns
-X_nts = dt_final_X.values
+X_nts_columns_class = dt_final_X.columns
+X_nts_class = dt_final_X.values
 
 
 #split training and testing datasets
@@ -401,52 +382,46 @@ X_nts = dt_final_X.values
 import sklearn
 from sklearn.model_selection import train_test_split
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
+X_train_class, X_test_class, y_train_class, y_test_class = train_test_split(X_class, y_class, test_size=0.20, random_state=42)
 
 # demographic only data
-X_nts_train, X_nts_test, y_nts_train, y_nts_test = train_test_split(X_nts, y_nts, test_size=0.20, random_state=42)
+X_nts_train_class, X_nts_test_class, y_nts_train_class, y_nts_test_class = train_test_split(X_nts_class, y_nts_class, test_size=0.20, random_state=42)
 
 # In[22]:
 # apply transformations to data: standardize X
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-X_scaler = StandardScaler()
-y_scaler = StandardScaler()
-X_train = X_scaler.fit_transform(X_train)
-X_test = X_scaler.transform(X_test)
+X_scaler_class = StandardScaler()
+X_train_class = X_scaler_class.fit_transform(X_train_class)
+X_test_class = X_scaler_class.transform(X_test_class)
 
 # no TS data
-X_nts_scaler = StandardScaler()
-y_nts_scaler = StandardScaler()
-X_nts_train = X_nts_scaler.fit_transform(X_nts_train)
-X_nts_test = X_nts_scaler.transform(X_nts_test)
+X_nts_scaler_class = StandardScaler()
+X_nts_train_class = X_nts_scaler_class.fit_transform(X_nts_train_class)
+X_nts_test_class = X_nts_scaler_class.transform(X_nts_test_class)
 
 #Import Random Forest Model
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 
 #Create a Gaussian Classifier
-clf_nts=RandomForestClassifier(n_estimators=100)
+clf_nts_rf=RandomForestClassifier(n_estimators=100)
 
 # # use a full grid over all parameters
 
 # #Train the model using the training sets y_pred=clf.predict(X_test)
-clf_nts.fit(X_nts_train,y_nts_train)
+clf_nts_rf.fit(X_nts_train_class,y_nts_train_class)
 
-y_nts_true, y_nts_pred = y_nts_test, clf_nts.predict(X_nts_test)
-
-# #Training metrics:
-y_true, y_pred = y_nts_train, clf_nts.predict(X_nts_train)
-metrics_Rf_training_nts = [metrics.accuracy_score(y_true, y_pred)]
+y_nts_true_class, y_nts_pred_class = y_nts_test_class, clf_nts_rf.predict(X_nts_test_class)
 
 # #Testing metrics:
-y_true, y_pred = y_nts_test, clf_nts.predict(X_nts_test)
-metrics_Rf_testing_nts=[metrics.accuracy_score(y_true, y_pred)]
+y_true_class, y_pred_class = y_nts_test_class, clf_nts_rf.predict(X_nts_test_class)
+metrics_Rf_testing_nts=[metrics.accuracy_score(y_true_class, y_pred_class)]
 
 
 # Compute confusion matrix
-cnf_matrix_nts = metrics.confusion_matrix(y_nts_test, y_nts_pred)
+cnf_matrix_nts = metrics.confusion_matrix(y_nts_test_class, y_nts_pred_class)
 
 # Plot normalized confusion matrix
 
@@ -480,7 +455,7 @@ let trace3 = {
   zmin: 0
 };
 
-let layout = {
+let layout_nts = {
   title: 'Confusion Matrix',
   annotations: [],
   xaxis: {
@@ -530,12 +505,12 @@ for ( var i = yValues.length-1; i >=0; i-- ) {
         color: textColor
       }
     };
-    layout.annotations.push(result)
+    layout_nts.annotations.push(result)
   }
 }
   
 addOutput(function(id) {
-  Plotly.newPlot(document.getElementById(id), [trace3], layout);
+  Plotly.newPlot(document.getElementById(id), [trace3], layout_nts);
 });
 ```
 
@@ -544,25 +519,25 @@ addOutput(function(id) {
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 
-clf=RandomForestClassifier(n_estimators=100)
+clf_rf=RandomForestClassifier(n_estimators=100)
 
 # use a full grid over all parameters
 
 #Train the model using the training sets y_pred=clf.predict(X_test)
-clf.fit(X_train,y_train)
+clf_rf.fit(X_train_class,y_train_class)
 
-y_true, y_pred = y_test, clf.predict(X_test)
+y_true_class, y_pred_class = y_test_class, clf_rf.predict(X_test_class)
 
 #Training metrics:
-y_true, y_pred = y_train, clf.predict(X_train)
-metrics_Rf_training = [metrics.accuracy_score(y_true, y_pred)]
+y_true_class, y_pred_class = y_train_class, clf_rf.predict(X_train_class)
+metrics_Rf_training = [metrics.accuracy_score(y_true_class, y_pred_class)]
 
 #Testing metrics:
-y_true, y_pred = y_test, clf.predict(X_test)
-metrics_Rf_testing=[metrics.accuracy_score(y_true, y_pred)]
+y_true_class, y_pred_class = y_test_class, clf_rf.predict(X_test_class)
+metrics_Rf_testing=[metrics.accuracy_score(y_true_class, y_pred_class)]
 
 # Compute confusion matrix
-cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
+cnf_matrix = metrics.confusion_matrix(y_test_class, y_pred_class)
 #Plot normalized confusion matrix
 
 #plt.figure()
@@ -573,30 +548,30 @@ cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
 ```
 
 ```javascript
-let xValues_cnf = ['< 100 hours', '> 100 hours']
-let yValues_cnf = ['< 100 hours', '> 100 hours']
+let xValues_cnf_ = ['< 100 hours', '> 100 hours']
+let yValues_cnf_ = ['< 100 hours', '> 100 hours']
 
-let zValues_cnf = []
-let aRow_cnf = [];
-for (let i  = 0; i < xValues_cnf.length; i++) {
-  aRow_cnf = [];
-  for (let j  = 0; j < yValues_cnf.length; j++) {
-    aRow_cnf.push(cnf_matrix[i][j])
+let zValues_cnf_ = []
+let aRow_cnf_ = [];
+for (let i  = 0; i < xValues_cnf_.length; i++) {
+  aRow_cnf_ = [];
+  for (let j  = 0; j < yValues_cnf_.length; j++) {
+    aRow_cnf_.push(cnf_matrix[i][j])
   }
-  zValues_cnf.push(aRow_cnf)
+  zValues_cnf_.push(aRow_cnf_)
 }
 
 let trace4 = {
-  x: xValues_cnf, 
-  y: yValues_cnf,
-  z: zValues_cnf, 
+  x: xValues_cnf_, 
+  y: yValues_cnf_,
+  z: zValues_cnf_, 
   showscale: true,
   type: 'heatmap', 
   zmax: 1.0,
   zmin: 0
 };
 
-let layout = {
+let layout_cnf= {
   title: 'Confusion Matrix',
   annotations: [],
   xaxis: {
@@ -622,20 +597,20 @@ let layout = {
   }
 };
 
-for ( var i = yValues_.length-1; i >=0; i-- ) {
-  for ( var j = 0; j < xValues_cnf.length; j++ ) {
-    var currentValue = zValues_cnf[j][i];
-    if (currentValue != 0.0) {
-      var textColor = 'white';
+for ( var i = yValues_cnf_.length-1; i >=0; i-- ) {
+  for ( var j = 0; j < xValues_cnf_.length; j++ ) {
+    var currentValue_ = zValues_cnf_[j][i];
+    if (currentValue_ != 0.0) {
+      var textColor_ = 'white';
     }else{
-      var textColor = 'black';
+      var textColor_ = 'black';
     }
-    var result = {
+    var result_ = {
       xref: 'x1',
       yref: 'y1',
-      x: xValues_cnf[j],
-      y: yValues_cnf[i],
-      text: zValues_cnf[j][i],
+      x: xValues_cnf_[j],
+      y: yValues_cnf_[i],
+      text: zValues_cnf_[j][i],
       font: {
         family: 'Arial',
         size: 12,
@@ -643,15 +618,15 @@ for ( var i = yValues_.length-1; i >=0; i-- ) {
       },
       showarrow: false,
       font: {
-        color: textColor
+        color: textColor_
       }
     };
-    layout.annotations.push(result)
+    layout_cnf.annotations.push(result_)
   }
 }
   
 addOutput(function(id) {
-  Plotly.newPlot(document.getElementById(id), [trace4], layout);
+  Plotly.newPlot(document.getElementById(id), [trace4], layout_cnf);
 });
 ```
 
