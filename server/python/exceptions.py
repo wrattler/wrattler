@@ -14,6 +14,6 @@ class ApiException(Exception):
 
     def to_dict(self):
         rv = dict(self.payload or ())
-        rv['output'] = self.message
-        rv['frames'] = []
+        rv["status"] = "error"
+        rv["error"] = self.message
         return rv
