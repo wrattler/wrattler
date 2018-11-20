@@ -1,6 +1,7 @@
 version: '3'
 services:
   wrattler_client:
+    container_name: wrattler_wrattler_client_1
     build:
       context: client
       dockerfile: Dockerfile
@@ -25,6 +26,7 @@ services:
      - DATASTORE_URI=http://localhost:7102
 
   wrattler_python_service:
+    container_name: wrattler_wrattler_python_service_1
     build:
       context: server/python
       dockerfile: Dockerfile
@@ -37,17 +39,19 @@ services:
     - wrattler_nw
 
   wrattler_r_service:
-   build:
-     context: server/R
-     dockerfile: Dockerfile
-   ports:
-   - "7103:7103"
-   environment:
-    - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
-   networks:
-   - wrattler_nw
+    container_name: wrattler_wrattler_r_service_1
+    build:
+      context: server/R
+      dockerfile: Dockerfile
+    ports:
+    - "7103:7103"
+    environment:
+      - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
+    networks:
+    - wrattler_nw
 
   wrattler_data_store:
+    container_name: wrattler_wrattler_data_store_1
     build:
       context: server/data-store
       dockerfile: Dockerfile

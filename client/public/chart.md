@@ -28,14 +28,14 @@ for (let i = 0; i < y_pred.length; i++){
 var trace1 = {
   x: y_true_list,
   y: y_pred_list,
-  mode: 'markers'
+  mode: 'markers',
   name: 'Prediction',
 };
 
 var trace2 = {
   x: y_nts_true_list,
   y: y_nts_pred_list,
-  mode: 'markers'
+  mode: 'markers',
   name: 'NTS Prediction',
 };
 
@@ -70,34 +70,81 @@ cm = pd.DataFrame([[ 0.48, 0.52],[ 0.36, 0.64]])
 ```
 
 ```javascript
+let xValues =  ['< 100 hours', '> 100 hours']
+let yValues =  ['< 100 hours', '> 100 hours']
+let zValues = []
+let aRow = [];
+for (let i  = 0; i < xValues.length; i++) {
+  aRow = [];
+  for (let j  = 0; j < yValues.length; j++) {
+    aRow.push(cm[i][j])
+  }
+  zValues.push(aRow)
+}
+
 let trace3 = {
-  x: [cm[0][0],cm[0][1]], 
-  y: [cm[1][0],cm[1][1]],
-  z: [[128, 355], [2827, 23]], 
-  autocolorscale: false, 
-  colorscale: [['0', 'rgb(255,245,240)'], ['0.2', 'rgb(254,224,210)'], ['0.4', 'rgb(252,187,161)'], ['0.5', 'rgb(252,146,114)'], ['0.6', 'rgb(251,106,74)'], ['0.7', 'rgb(239,59,44)'], ['0.8', 'rgb(203,24,29)'], ['0.9', 'rgb(165,15,21)'], ['1', 'rgb(103,0,13)']], 
+  x: xValues, 
+  y: yValues,
+  z: zValues, 
+  showscale: true,
   type: 'heatmap', 
-  zmax: 333,
-  zmin: 1
+  zmax: 1.0,
+  zmin: 0
 };
 
 let layout = {
   title: 'Confusion Matrix',
+  annotations: [],
   xaxis: {
     title: 'Predicted value', 
     titlefont: {
       color: '#7f7f7f', 
-      size: 18
-    }
+      size: 12
+    },
+    ticks: '',
+    side: 'bottom'
   }, 
   yaxis: {
-    title: 'True Value', 
+    title: 'True value', 
     titlefont: {
       color: '#7f7f7f', 
-      size: 18
-    }
+      size: 12
+    },
+    ticks: '',
+    side: 'top',
+    width: 700,
+    height: 700,
+    autosize: false
   }
 };
+
+for ( var i = yValues.length-1; i >=0; i-- ) {
+  for ( var j = 0; j < xValues.length; j++ ) {
+    var currentValue = zValues[i][j];
+    if (currentValue != 0.0) {
+      var textColor = 'white';
+    }else{
+      var textColor = 'black';
+    }
+    var result = {
+      xref: 'x1',
+      yref: 'y1',
+      x: xValues[j],
+      y: yValues[i],
+      text: zValues[i][j],
+      font: {
+        family: 'Arial',
+        size: 12,
+        color: 'rgb(50, 171, 96)'
+      },
+      showarrow: false,
+      font: {
+        color: textColor
+      }
+    };
+    layout.annotations.push(result)
+  }
+}
   
 addOutput(function(id) {
   Plotly.plot(document.getElementById(id), [trace3], layout);
@@ -105,3 +152,5 @@ addOutput(function(id) {
 
 
 ```
+
+

@@ -20,6 +20,7 @@ RUN pip3 install  flask_cors
 RUN pip3 install requests
 RUN pip3 install pandas
 RUN pip3 install pytest
+RUN pip3 install scikit-learn
 
 ADD . /app
 WORKDIR /app
