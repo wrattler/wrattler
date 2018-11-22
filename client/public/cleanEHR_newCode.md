@@ -6,17 +6,19 @@ the amount of time it takes for a patient to die (in minutes), once arrived at t
 
 The CleanEHR data contains a sample of anonymised medical record data from a
 number of hospitals, including demographic data, drug dosage data, and
-physiological timeseries measurements. The sample used in this analysis is very small and the output of the
-analysis is just for purporse of the demo. The full dataset can be requested online. 
+physiological time-series measurements. The sample used in this analysis is very small and the output of the
+analysis is just for purpose of this demo. The full dataset can be requested online. 
 
 ### Data preparation on R
 
 The dataset comes as a well-formed R object, and is processed using the cleanEHR toolkit which is an R package that covers
  the most common processing and cleaning operations for this type of data.
  
-For the purposes of the analytical challenge twe have to process and convert some variables. More specifically, 
+For the purposes of the analytical challenge we have to process and convert some variables. More specifically, 
 time-varying and single-value fields need to be used in the same model, thus the former have been distilled into a few time-series descriptive variables 
 such as mean, standard deviation or min and max values.
+
+The pre-procesing in R returns two dataframes, one containing only the demographic fields and another including the time-series descriptive fields. 
 
 ```r
 library(purrr)
@@ -71,9 +73,6 @@ for (i in 1:length(ccd@episodes)){
       # Add time limit of 10 hours to measure TS data!
       dts_episode <- ccd@episodes[[i]]@data[n][[1]]
 
-      ## the following line broke wrattler (but runs in normal R), as alternative i used the subset function:
-      #dts_episode_sub <- dts_episode[dts_episode$time < 10,]
-
       dts_episode_sub <- subset(dts_episode, dts_episode$time < 10)
 
       values <- dts_episode_sub["item2d"][[1]]
@@ -96,12 +95,16 @@ for (i in 1:length(ccd@episodes)){
 ### Data wrangling on Python
 
 After pre-processing the data in R with the cleanEHR dedicated libraries, we move to python where we
-start with merging the two data frames (for fixed-value and time-varying fields) into a single one using the ADNO (admission number) field.
+start with merging the two data frames (for fixed-value and time-varying fields) into a single one using the ADNO (admission number) field. 
+
+For this exercise the data wrangling and modelling is done in both the demographic only dataset as well as the demographic plus time-series sample.
+The performance of the modeling in the two samples is meant to be compared.
 
 ```python
+# merge the two dataframes
 dtf = dt.merge(dts, left_on="ADNO", right_on="ADNO", how="inner")
 ```
-we drop rows without entry and death timestamps or completely null columns
+we drop rows without entries, missing death timestamps or completely null columns.
 ```python
 dtf = dtf[pd.notnull(dtf['DAICU'])&pd.notnull(dtf['DOD'])&pd.notnull(dtf['TOD'])] # columns needed for target (time to die)
 dt = dt[pd.notnull(dt['DAICU'])&pd.notnull(dt['DOD'])&pd.notnull(dt['TOD'])] # columns needed for target (time to die)
@@ -109,7 +112,7 @@ dtf = dtf.dropna(axis=1, how='all')
 dt = dt.dropna(axis=1, how='all')
 ```
 
-Create funtions to help with the wrangling challenges such as datetime format processing: 
+Create functions to help with the wrangling challenges such as datetime format processing: 
 ```python
 def export_datetime_slash(s):
     
@@ -131,7 +134,8 @@ def export_datetime(s):
             return str(s.split(" ")[0]+" "+s.split(" ")[1])
         else:
             return str(s.split(" ")[0]+" "+s.split(" ")[1]+":00")
-            
+
+# process the dates of arrival and death            
 dtf["time_arrive_hospital"] = dtf["DAH"].apply(export_datetime_slash)
 dtf["time_arrive"] = dtf["DAICU"].apply(export_datetime)
 dtf["time_death"] = dtf["DOD"] +"T"+ dtf["TOD"]
@@ -149,8 +153,8 @@ dt["time_of_birth"] = dt["DOB"].apply(export_datetime)
 
 ```
 
-Create new variables such as the time the patient was on the hospital before getting to the ICU, and the time to die, the time from birth. Then build
-afunction to transform this datetime type variables (time_to_ICU, time_to_die) to minutes.
+Create new variables such as the time the patient was on the hospital before getting to the ICU, the time to dieand the time from birth. Then build
+a function to transform these datetime type variables (time_to_ICU, time_to_die) to minutes.
 
 
 ```python  
@@ -171,15 +175,15 @@ def get_ttd(td):
     else:
         return (td.days*24*60) + (td.seconds/60)
         
-
+# convert time to ICU and time to die to minutes
 dtf["time_to_ICU"] = dtf["time_to_ICU"].apply(get_ttd)
 dtf["time_to_die"] = dtf["time_to_die"].apply(get_ttd)
 
 dt["time_to_die"] = dt["time_to_die"].apply(get_ttd)
-
 dt["time_to_ICU"] = dt["time_to_ICU"].apply(get_ttd)
 
 # remove persons arrived dead
+dtf = dtf[dtf["time_arrive"] <= dtf["time_death"]] 
 dt = dt[dt["time_arrive"] <= dt["time_death"]] 
 
 ```
@@ -211,7 +215,8 @@ def get_age(td):
     else:
         # returns years 
         return np.abs(td.days)/365
-
+        
+# apply conversion from date-time object to years.
 dtf["time_from_birth"] = dtf["time_from_birth"].apply(get_age)
 dt["time_from_birth"] = dt["time_from_birth"].apply(get_age)
 dtf["age"] = dtf["time_from_birth"]
@@ -267,16 +272,19 @@ deemed as not important for the patient/condition at hand. Considering this, it 
 of NaN values. For the remaining NaN values, the default value of -1 was chosen to represent such
 a situation (the default value of 0 is first considered, however there are fields where zero can be the result of a measurement).
 ```python
+# convertinf infs to nans 
 dtf_final = dtf_final.replace([np.inf, -np.inf], np.nan)
 dt_final = dt_final.replace([np.inf, -np.inf], np.nan)
 
+# removing columns with more than 50% of nans 
 dtf_final.dropna(thresh=0.50*len(dtf_final), axis=1,inplace=True)
 dt_final.dropna(thresh=0.50*len(dt_final), axis=1,inplace=True)
 
-# dealing with nans by turning them all to zero (definitely suboptimal!)
+# dealing with nans by turning them all to -1 (definitely suboptimal!)
 dtf_final.replace([np.nan], -1,inplace=True)
 dt_final.replace([np.nan], -1,inplace=True)
 
+# dealing with NULLs by turning them all to -1 (definitely suboptimal!)
 dtf_final.replace(['NULL'], -1,inplace=True)
 dt_final.replace(['NULL'], -1,inplace=True)
 ```
@@ -291,13 +299,13 @@ dt_final_X = dt_final.drop(["time_to_die",'survival_class'], axis=1)
 #### Regression modelling
 First, a linear regression model with ElasticNet regularization (joint L1 and L2) is implemented to try to predict the amount of time (in minutes) elapsed from admission to death. 
 
-Start peparing the features and target samples.
+Start preparing the features and target samples.
 ```python
-# all data
+# demographic plus time-series data
 y = dtf_final["time_to_die"].values
 X = dtf_final_X.values
 
-# no TS data
+# demographic only data
 y_nts = dt_final["time_to_die"].values
 X_nts = dt_final_X.values
 ```
@@ -307,39 +315,47 @@ Split datasets into training/testing samples.
 ```python
 import sklearn
 from sklearn.model_selection import train_test_split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
 
-# no TS data
+# demographic only data
 X_nts_train, X_nts_test, y_nts_train, y_nts_test = train_test_split(X_nts, y_nts, test_size=0.20, random_state=42)
 
-# apply transformations to data: standardize X
 
+# demographic + time series data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
+
+```
+
+Standardise both datasets and run the modelling. 
+```python
+
+# y_nts_train = y_nts_train
+# y_train = y_train
+# apply transformations to data: standardize X
 from sklearn.preprocessing import StandardScaler
 X_scaler = StandardScaler()
-X_train_scaled = X_scaler.fit_transform(X_train)
-X_test_scaled = X_scaler.transform(X_test)
+X_train = X_scaler.fit_transform(X_train)
+X_test = X_scaler.transform(X_test)
 
-# no TS data
+# demographic only data
 X_nts_scaler = StandardScaler()
-X_nts_train_scaled = X_nts_scaler.fit_transform(X_nts_train)
-X_nts_test_scaled = X_nts_scaler.transform(X_nts_test)
-
+X_nts_train = X_nts_scaler.fit_transform(X_nts_train)
+X_nts_test = X_nts_scaler.transform(X_nts_test)
 
 from sklearn.linear_model import ElasticNet
 from sklearn.metrics import explained_variance_score, r2_score
 
-# Training Non time series data:
+# Training on demographic only data
 clf_nts = ElasticNet()
-clf_nts.fit(X_nts_train_scaled, y_nts_train)
+clf_nts.fit(X_nts_train, y_nts_train)
 
-y_nts_true_reg, y_nts_pred_reg = y_nts_test, clf_nts.predict(X_nts_test_scaled)
+y_nts_true_reg, y_nts_pred_reg = y_nts_test, clf_nts.predict(X_nts_test)
 metrics_nts_testing =[explained_variance_score(y_nts_true_reg, y_nts_pred_reg), r2_score(y_nts_true_reg, y_nts_pred_reg)]
 
-# Training demographic+ time series data:
+# Training on demographic+ time series data:
 clf = ElasticNet()
-clf.fit(X_train_scaled, y_train)
+clf.fit(X_train, y_train)
 
-y_true_reg, y_pred_reg = y_nts_test, clf.predict(X_test_scaled)
+y_true_reg, y_pred_reg = y_test, clf.predict(X_test)
 metrics_testing =[explained_variance_score(y_true_reg, y_pred_reg), r2_score(y_true_reg, y_pred_reg)]
 
 ```
