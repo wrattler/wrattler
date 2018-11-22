@@ -15,9 +15,12 @@ ENV LC_ALL en_GB.UTF-8
 
 
 RUN pip3 install  flask
+RUN pip3 install flask_restful
 RUN pip3 install  flask_cors
 RUN pip3 install requests
 RUN pip3 install pandas
+RUN pip3 install pytest
+RUN pip3 install scikit-learn
 
 ADD . /app
 WORKDIR /app

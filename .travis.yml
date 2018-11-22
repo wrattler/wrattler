@@ -1,0 +1,16 @@
+sudo: required
+
+language: r
+
+services:
+  - docker
+
+before_install:
+  - docker-compose build
+
+script:
+  - docker run wrattler_wrattler_r_service /bin/bash -c "Rscript run-tests.r"
+  - docker run wrattler_wrattler_python_service /bin/bash -c "export WRATTLER_LOCAL_TEST=True;pytest -s"
+
+after_success:
+  - docker-compose down

@@ -52,3 +52,17 @@ def test_confusing_names():
     print(result)
     assert(result["exports"]==["xx"])
     assert(result["imports"]==["x"])
+
+
+def test_out_of_scope_assignments():
+    """
+    variables assigned e.g. inside function definitions should not
+    be added to exports
+    """
+    code = 'def hello():\n    x = pd.DataFrame({"xx":[1,2,3]})\n    return x\n\nnewx = hello()\n\n'
+    testdata = {"code": code,
+                "frames": [],
+                "hash": "irrelevant"}
+    result = analyze_code(testdata)
+    print(result)
+    assert(result["exports"]==["newx"])

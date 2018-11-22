@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "strictNullChecks": true,
     "sourceMap": true,
     "esModuleInterop": true,
     "declaration": true,

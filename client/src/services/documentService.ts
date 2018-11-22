@@ -5,12 +5,16 @@ interface DocumentElement {
   source: string
 }
 
-async function getSampleDocument(): Promise<Array<DocumentElement>> {
-    async function getDocumentMd() : Promise<string> {
-      let response = await axios.get("/sample.md")
+async function getSampleDocument(): Promise<DocumentElement[]> {
+    async function getDocumentMd(sourceFile: string) : Promise<string> {
+      let sources = ["cleanEHR","sample"]
+      // if (sourceFile.)
+      let sourceURL = "/".concat(sourceFile).concat(".md")
+      let response = await axios.get(sourceURL)
+      // let response = await axios.get("/sample.md")
       return response.data
     }
-    let documents = []; 
+    let documents : DocumentElement[] = []; 
 
     function getCellCode(language: string, codeCell: string) : DocumentElement {
       let languageMarker = "```".concat(language)
@@ -37,7 +41,11 @@ async function getSampleDocument(): Promise<Array<DocumentElement>> {
       return "markdown";
     }
 
-    let paragraph = await getDocumentMd() 
+    let sourceFile = ""
+    if (window.location.search.slice(1).length > 0){
+      sourceFile = window.location.search.slice(1)
+    }
+    let paragraph = await getDocumentMd(sourceFile) 
     var regex = /```[a-z]+[^`]*```/g;
     var res; 
     var currentPos = 0;

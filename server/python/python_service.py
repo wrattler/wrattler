@@ -10,7 +10,7 @@ import sys
 import json
 import parser
 import pandas as pd
-import numpy
+import numpy as np
 import ast
 import collections
 
@@ -26,9 +26,14 @@ def cleanup(i):
     """
     Function to ensure we can json-ify our values.  For example,
     pandas returns numpy.int64 rather than int, which are not json-serializable,
-    so we convert them to regular ints here
+    so we convert them to regular ints here.
+    Similarly, convert any NaN to None
     """
-    if isinstance(i, numpy.integer): return int(i)
+    if isinstance(i, np.integer): return int(i)
+    try:
+        if np.isnan(i): return None
+    except(TypeError):
+        pass
     return i
 
 
@@ -54,10 +59,13 @@ def convert_to_pandas_df(frame):
 def convert_from_pandas_df(dataframe):
     """
     converts pandas dataframe into wrattler format, i.e. list of rows.
-    If input is not a pandas dataframe, just return it unchanged.
+    If input is not a pandas dataframe, try to convert it, and return None if we can't
     """
     if not isinstance(dataframe, pd.DataFrame):
-        return dataframe
+        try:
+            dataframe = pd.DataFrame(dataframe)
+        except(ValueError):
+            return None
     row_list = []
     columns = list(dataframe.columns)
     for index, row in dataframe.iterrows():
@@ -110,6 +118,8 @@ def find_assignments(code_string):
                 _find_elements(node.value, output_dict, "input_vals")
             elif isinstance(node, ast.Name) and parent:
                 output_dict[parent].append(node.id)
+            elif isinstance(node, ast.FunctionDef):  ## don't go inside..
+                return output_dict
             else:
                 for a,b in ast.iter_fields(node):
                     _find_elements(b, output_dict, parent)

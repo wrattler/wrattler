@@ -13,12 +13,24 @@ makeURL <- function(name, hash) {
 readFrame <- function(url) {
     ## Read a dataframe from the datastore.
     ## use jsonlite to deserialize json into a data.frame
+
+    ## TEMP HACK FOR RUNNING LOCALLY
+    if (Sys.getenv("DATASTORE_URI") == "http://localhost:7102") {
+        url <- gsub("wrattler_wrattler_data_store_1","localhost",url)
+    }
+    ###
     r<-GET(url)
     if ( r$status != 200) {
         print("Unable to access datastore")
         return(NULL)
     }
-    frame <- jsonlite::fromJSON(content(r,"text"))
+    json_data <- content(r,"text")
+    frame <- jsonToDataFrame(json_data)
+    return(frame)
+}
+
+jsonToDataFrame <- function(json_obj) {
+    frame <- jsonlite::fromJSON(json_obj)
     return(frame)
 }
 
@@ -27,11 +39,28 @@ writeFrame <- function(frameData, frameName, frameHash) {
     ## Write a dataframe to the datastore.
     ## use jsonlite to serialize dataframe into json
     url <- makeURL(frameName, frameHash)
-    ## doesn't like converting numbers into json
+    frameJSON <- jsonFromDataFrame(frameData)
+    ## put it into the datastore if it is not NULL, i.e. was convertable to json
+    if (!is.null(frameJSON)) {
+        r <- PUT(url, body=frameJSON, encode="json")
+        return(status_code(r) == 200)
+    }
+    return(FALSE)
+}
+
+
+jsonFromDataFrame <- function(frameData) {
+    ## jsonlite doesn't like converting numbers into json
     if (is.numeric(frameData)) frameData <- as.character(frameData)
-    ## put it into the datastore
-    r <- PUT(url, body=frameData, encode="json")
-    return(status_code(r) == 200)
+    ## explicitly convert into a dataframe if we can
+    frameData <- tryCatch({ as.data.frame(frameData) },
+                           error=function(cond) {
+                               return(NULL)
+                           })
+    if (is.null(frameData)) return(NULL)
+    ## convert to JSON
+    frameJSON <- jsonlite::toJSON(frameData, na="null")
+    return(frameJSON)
 }
 
 
@@ -80,7 +109,7 @@ executeCode <- function(code, importsList) {
     for (i in seq_along(impexp$exports)) {
         stringFunc<- paste0(stringFunc,"'", impexp$exports[i],"'=",impexp$exports[i])
         if (i != length(impexp$exports)) {
-            stringFunc <- paste(stringFunc, ,",")
+            stringFunc <- paste(stringFunc,",")
         }
     }
     stringFunc <- paste(stringFunc,") \n    return(returnVars) \n")

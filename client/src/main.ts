@@ -8,7 +8,7 @@ import * as Graph from './definitions/graph'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
 import { externalLanguagePlugin } from './languages/external'
-import { gammaLangaugePlugin } from "./languages/gamma/plugin"
+// import { gammaLangaugePlugin } from "./languages/gamma/plugin"
 import { getSampleDocument } from './services/documentService'
 
 declare var PYTHONSERVICE_URI: string;
@@ -25,7 +25,7 @@ languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
 languagePlugins["python"] = new externalLanguagePlugin("python", PYTHONSERVICE_URI);
 languagePlugins["r"] = new externalLanguagePlugin("r", RSERVICE_URI);
-languagePlugins["thegamma"] = gammaLangaugePlugin;
+// languagePlugins["thegamma"] = gammaLangaugePlugin;
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
 interface NotebookAddEvent { kind:'add', id: number }
@@ -42,25 +42,24 @@ type NotebookState = {
 }
 
 
-function bindCell (cell:Langs.BlockState): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>{
-  let languagePlugin = languagePlugins[cell.editor.block.language]
-  return languagePlugin.bind(scopeDictionary, cell.editor.block);
+function bindCell (editor:Langs.EditorState): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>{
+  let languagePlugin = languagePlugins[editor.block.language]
+  return languagePlugin.bind(scopeDictionary, editor.block);
 }
 
-async function bindAllCells(state:NotebookState) {
-  var newCells = []
-  for (var c = 0; c < state.cells.length; c++) {
-    let aCell = state.cells[c]
-    let {code, exports} = await bindCell(aCell);
-    var newCell = { editor:aCell.editor, code:code, exports:exports }
+async function bindAllCells(editors:Langs.EditorState[]) {
+  var newCells : Langs.BlockState[] = []
+  for (var c = 0; c < editors.length; c++) {
+    let editor = editors[c]
+    let {code, exports} = await bindCell(editor);
+    var newCell = { editor:editor, code:code, exports:exports }
     for (var e = 0; e < exports.length; e++ ) {
       let exportNode = exports[e];
       scopeDictionary[exportNode.variableName] = exportNode;
     }
     newCells.push(newCell)
   }
-  state.cells = newCells;
-  return state;
+  return newCells;
 }
 
 async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState, newSource: string) {
@@ -73,14 +72,14 @@ async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState,
         console.log(block)
       }
       let id = state.cells[b].editor.id;
-      let editor:Langs.EditorState = languagePlugin.editor.initialize(id, block); 
-      let newBlock:Langs.BlockState = {editor: editor, code: null, exports: []};  
+      let editor:Langs.EditorState = languagePlugin.editor.initialize(id, block);
       var index = state.cells.indexOf(state.cells[b]);
       for (var e = 0; e < state.cells[b].exports.length; e++) {
         let oldExport:Graph.ExportNode = <Graph.ExportNode>state.cells[b].exports[e];
         delete scopeDictionary[oldExport.variableName];
       }
       if (index !== -1) {
+        let newBlock:Langs.BlockState = {editor: editor, code: state.cells[b].code, exports: state.cells[b].exports};
         state.cells[index] = newBlock;
       }
     }
@@ -89,7 +88,7 @@ async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState,
   for (var b=0; b < state.cells.length; b++) {
     if (state.cells[b].editor.id >= cell.editor.id) {
       let aCell = state.cells[b]
-      let {code, exports} = await bindCell(aCell);
+      let {code, exports} = await bindCell(aCell.editor);
       aCell.code = code
       aCell.exports = exports
       for (var e = 0; e < exports.length; e++ ) {
@@ -105,7 +104,7 @@ async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState,
 async function evaluate(node:Graph.Node) {
   if ((node.value)&&(Object.keys(node.value).length > 0)) return;
   for(var ant of node.antecedents) await evaluate(ant);
-  
+
   let languagePlugin = languagePlugins[node.language]
   node.value = await languagePlugin.evaluate(node);
   // console.log("Received value: "+JSON.stringify(node.value));
@@ -116,11 +115,11 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
 
   let nodes = state.cells.map(cell => {
     // The `context` object is passed to the render function. The `trigger` method
-    // of the object can be used to trigger events that cause a state update. 
+    // of the object can be used to trigger events that cause a state update.
     let context : Langs.EditorContext<any> = {
-      trigger: (event:any) => 
+      trigger: (event:any) =>
         trigger({ kind:'block', id:cell.editor.id, event:event }),
-      
+
       evaluate: async (block:Langs.BlockState) => {
         await evaluate(block.code)
         for(var exp of block.exports) await evaluate(exp)
@@ -132,9 +131,9 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
       // rebind all blocks after this one
       rebindSubsequent: (block:Langs.BlockState, newSource: string) => {
         trigger({kind: 'rebind', block: block, newSource: newSource})
-      } 
+      }
     }
-  
+
     let plugin = languagePlugins[cell.editor.block.language]
     // let vnode = plugin.editor.render(state.editor, context)
     let vnode = plugin.editor.render(cell, cell.editor, context)
@@ -146,15 +145,15 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
         h('div', [controls]),vnode
       ]
     );
-  }); 
+  });
 
   return h('div', {class:'container-fluid', id:'paper'}, [nodes])
 }
 
 async function update(state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
   function spliceCell (cells:Langs.BlockState[], newCell: Langs.BlockState, idOfAboveBlock: number) {
-    return cells.map (cell => 
-      { 
+    return cells.map (cell =>
+      {
         if (cell.editor.id === idOfAboveBlock) {
           return [cell, newCell];
         }
@@ -164,8 +163,8 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       }).reduce ((a,b)=> a.concat(b));
   }
   function removeCell (cells:Langs.BlockState[], idOfSelectedBlock: number) {
-    return cells.map (cell => 
-      { 
+    return cells.map (cell =>
+      {
         if (cell.editor.id === idOfSelectedBlock) {
           return [];
         }
@@ -177,16 +176,16 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
 
   // console.log(state);
   switch(evt.kind) {
-    
+
     case 'block': {
       let newCells = state.cells.map(state => {
-        if (state.editor.id != evt.id) 
+        if (state.editor.id != evt.id)
           return state
         else
-        { 
+        {
           return {
-            editor: languagePlugins[state.editor.block.language].editor.update(state.editor, evt.event) , 
-            code: state.code, 
+            editor: languagePlugins[state.editor.block.language].editor.update(state.editor, evt.event) ,
+            code: state.code,
             exports: state.exports
           };
         }
@@ -194,14 +193,15 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       return { counter: state.counter, cells: newCells };
     }
     case 'add': {
+
       let newId = state.counter + 1;
-      let newDocument = { "language": "python", 
+      let newDocument = { "language": "python",
                           "source": "var z = "+newId};
-      let newPlugin = languagePlugins[newDocument.language]; 
+      let newPlugin = languagePlugins[newDocument.language];
       let newBlock = newPlugin.parse(newDocument.source);
-      let editor:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);  
-      let cell:Langs.BlockState = {editor: editor, code: undefined, exports: []}
-      bindCell(cell)
+      let editor:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);
+      let {code, exports} = await bindCell(editor);
+      let cell:Langs.BlockState = {editor: editor, code: code, exports: exports}
       return {counter: state.counter+1, cells: spliceCell(state.cells, cell, evt.id)};
     }
 
@@ -209,8 +209,9 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       return state;
 
     case 'remove':
+
       return {counter: state.counter, cells: removeCell(state.cells, evt.id)};
-    
+
     case 'rebind': {
       // console.log("Rebind in update: "+JSON.stringify(evt))
       return await rebindSubsequentCells(state, evt.block, evt.newSource);
@@ -219,7 +220,7 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
   }
 }
 
-async function loadNotebookState() : Promise<NotebookState> {
+async function loadNotebookState() : Promise<{ counter:number, editors:Langs.EditorState[] }> {
   let documents = await getSampleDocument();
 
   // Create an initial notebook state by parsing the sample document
@@ -227,18 +228,20 @@ async function loadNotebookState() : Promise<NotebookState> {
   let blockStates = documents.map(cell => {
     let languagePlugin = languagePlugins[cell.language]; // TODO: Error handling
     let block = languagePlugin.parse(cell.source);
-    let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block); 
-    return {editor: editor, code: null, exports: []};  
+    let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block);
+    return editor;
   })
-  return { counter: index, cells: blockStates };
+  return { counter: index, editors: blockStates };
 }
 
 async function initializeNotebook() {
   let maquetteProjector = createProjector();
   let paperElement = document.getElementById('paper');
-  
-  var state = await loadNotebookState();
-  state = await bindAllCells(state);
+  if (!paperElement) throw "Missing paper element!"
+
+  var {counter, editors} = await loadNotebookState();
+  var cells = await bindAllCells(editors);
+  var state = {counter:counter, cells:cells}
 
   function updateAndRender(event:NotebookEvent) {
     update(state, event).then(newState => {
@@ -246,13 +249,13 @@ async function initializeNotebook() {
       maquetteProjector.scheduleRender()
     });
   }
-    
-  maquetteProjector.replace(paperElement, () => 
+
+  maquetteProjector.replace(paperElement, () =>
     render(updateAndRender, state))
 };
 
 initializeNotebook()
- 
+
 Log.trace("test1","hi1 %O", {"a":123})
 Log.trace("test2","hi2 %O", {"a":123})
 Log.trace("test3","hi3 %O", {"a":123})
