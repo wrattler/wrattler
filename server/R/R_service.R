@@ -2,7 +2,6 @@
 
 library(jsonlite)
 library(httr)
-#library(textclean)
 
 source("codeAnalysis.R")
 
@@ -108,6 +107,7 @@ executeCode <- function(code, importsList) {
     ## construct a function that assigns retrieved frames to the imported variables,
     ## then contains the code block.
     stringFunc <- "wrattler_f <- function() {\n"
+    stringFunc <- paste(stringFunc," \n    png('test.png') \n")
     if (length(importsList) > 0) {
         for (i in seq_along(importsList)) {
             stringFunc <- paste0(stringFunc,"    ",
@@ -123,14 +123,30 @@ executeCode <- function(code, importsList) {
             stringFunc <- paste(stringFunc,",")
         }
     }
-    stringFunc <- paste(stringFunc,") \n    return(returnVars) \n")
+    stringFunc <- paste(stringFunc,") \n")
+    stringFunc <- paste(stringFunc," \n    dev.off() \n")
+    stringFunc <- paste(stringFunc," \n    return(returnVars) \n")
     stringFunc <- paste(stringFunc,  "}\n")
+    print(stringFunc)
     parsedFunc <- parse(text=stringFunc)
+
     eval(parsedFunc)
+  #  png('wrattlerPlot.png')
     s <- capture.output(returnVars <- wrattler_f())
+  #  dev.off()
+#    print("should have made a png")
     clean_s <- lapply(s, cleanString)
     outputString <- paste(clean_s, collapse="\n")
+    ## try to capture plots as a png
+#    plotStatus <- tryCatch({ dev.copy(png,'wrattlerPlot.png')
+#        print("found a plot")
+#        dev.off()},
+#        error=function(cond) {
+#            print("nothing here")
+ #           return(NULL)
+ #       })
     ret <- new.env()
+ #   ret$plot <- !is.null(plotStatus)
     ret$returnVars <- returnVars
     ret$outputString <- outputString
     return(ret)
