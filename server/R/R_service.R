@@ -15,11 +15,6 @@ readFrame <- function(url) {
     ## Read a dataframe from the datastore.
     ## use jsonlite to deserialize json into a data.frame
 
-    ## TEMP HACK FOR RUNNING LOCALLY
-    if (Sys.getenv("DATASTORE_URI") == "http://localhost:7102") {
-        url <- gsub("wrattler_wrattler_data_store_1","localhost",url)
-    }
-    ###
     r<-GET(url)
     if ( r$status != 200) {
         print("Unable to access datastore")
