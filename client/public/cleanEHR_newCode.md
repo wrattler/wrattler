@@ -18,13 +18,13 @@ For the purposes of the analytical challenge we have to process and convert some
 time-varying and single-value fields need to be used in the same model, thus the former have been distilled into a few time-series descriptive variables 
 such as mean, standard deviation or min and max values.
 
-The pre-procesing in R returns two dataframes, one containing only the demographic fields and another including the time-series descriptive fields. 
+The pre-processing in R returns two dataframes, one containing only the demographic fields and another including the time-series descriptive fields. 
 
 ```r
 library(purrr)
 library(cleanEHR)
-# full dataset
 
+# download and read full dataset
 file <- paste(tempdir(), "/ccd.rdata", sep="")
 download.file("https://github.com/ropensci/cleanEHR/raw/master/data/sample_ccd.RData", file)
 load(file)
@@ -310,7 +310,8 @@ y_nts = dt_final["time_to_die"].values
 X_nts = dt_final_X.values
 ```
 
-Split datasets into training/testing samples.
+Split datasets into training/testing samples. Standardise both datasets and run the modelling. 
+
 
 ```python
 import sklearn
@@ -323,13 +324,6 @@ X_nts_train, X_nts_test, y_nts_train, y_nts_test = train_test_split(X_nts, y_nts
 # demographic + time series data
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
 
-```
-
-Standardise both datasets and run the modelling. 
-```python
-
-# y_nts_train = y_nts_train
-# y_train = y_train
 # apply transformations to data: standardize X
 from sklearn.preprocessing import StandardScaler
 X_scaler = StandardScaler()
@@ -421,8 +415,6 @@ The dataset is almost divided in half with patients that survive the first 100 h
 
 
 ```python
-# In[19]:
-
 # Demographic only data"
 # Class 1; time of death within the first 100 hours'
 Class_1_nts = [round(dt_final[dt_final["survival_class"]==1].shape[0]/dt_final.shape[0],3)]
@@ -496,7 +488,7 @@ metrics_Rf_testing_nts=[metrics.accuracy_score(y_true_class, y_pred_class)]
 cnf_matrix_nts = metrics.confusion_matrix(y_nts_test_class, y_nts_pred_class)
 
 ```
-#### Visualise the confusion matrix for demographic only sample
+#### Visualise the confusion matrix for the sample with demographic only data
 
 ```javascript
 let xValues =  ['< 100 hours', '> 100 hours']
@@ -579,7 +571,7 @@ addOutput(function(id) {
   Plotly.newPlot(document.getElementById(id), [trace3], layout_nts);
 });
 ```
-classification for demographic plus time-series sample.
+Now we run the classification for the sample with demographic plus time-series data.
 ```python
 
 from sklearn.ensemble import RandomForestClassifier
@@ -605,7 +597,7 @@ cnf_matrix = metrics.confusion_matrix(y_test_class, y_pred_class)
 #Plot normalized confusion matrix
 
 ```
-#### Visualise the confusion matrix for demographic plus time-series sample
+#### Visualise the confusion matrix for the sample with demographic plus time-series data
 
 ```javascript
 let xValues_cnf_ = ['< 100 hours', '> 100 hours']
