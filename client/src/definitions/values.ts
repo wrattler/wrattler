@@ -40,8 +40,7 @@ interface DataFrame extends Value {
 
 interface Printout extends Value {
   kind : "printout"
-  url : string
-  data : Array<string>
+  data : string
 }
 
 export {

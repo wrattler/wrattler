@@ -13,6 +13,9 @@ function printCurrentValue(cellId:number, value:Values.Value, tableName:string) 
     case "dataframe":
       let df = <Values.DataFrame>value
       return h('div', {}, [printCurrentTable(df.data, tableName)]);
+    case "printout":
+      let printout = <Values.Printout>value
+      return h('div', {}, [h('p', {innerHTML: printout.data.toLocaleString()}, [])])
     case "jsoutput":
       let js = <Values.JavaScriptOutputValue>value
       let callRender = (el) => js.render(el.id);
