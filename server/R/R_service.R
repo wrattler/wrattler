@@ -2,6 +2,7 @@
 
 library(jsonlite)
 library(httr)
+
 source("codeAnalysis.R")
 
 
@@ -14,11 +15,6 @@ readFrame <- function(url) {
     ## Read a dataframe from the datastore.
     ## use jsonlite to deserialize json into a data.frame
 
-    ## TEMP HACK FOR RUNNING LOCALLY
-    if (Sys.getenv("DATASTORE_URI") == "http://localhost:7102") {
-        url <- gsub("wrattler_wrattler_data_store_1","localhost",url)
-    }
-    ###
     r<-GET(url)
     if ( r$status != 200) {
         print("Unable to access datastore")
@@ -91,12 +87,22 @@ uploadOutputs <- function(outputsList, exports, hash) {
     return(resultsDF)
 }
 
+
+cleanString <- function(inputString) {
+    ## remove a preceding [1] and escaped quotes from a string captured by capture.output
+    outputString <- gsub("\\[1\\] ","",inputString)
+    outputString <- gsub('\\"','',outputString)
+    return(outputString)
+}
+
+
 executeCode <- function(code, importsList) {
     ## analyze the code to get imports and exports (only need exports here)
     impexp <- analyzeCode(code)
     ## construct a function that assigns retrieved frames to the imported variables,
     ## then contains the code block.
     stringFunc <- "wrattler_f <- function() {\n"
+    stringFunc <- paste(stringFunc," \n    png('test.png') \n")
     if (length(importsList) > 0) {
         for (i in seq_along(importsList)) {
             stringFunc <- paste0(stringFunc,"    ",
@@ -112,10 +118,31 @@ executeCode <- function(code, importsList) {
             stringFunc <- paste(stringFunc,",")
         }
     }
-    stringFunc <- paste(stringFunc,") \n    return(returnVars) \n")
+    stringFunc <- paste(stringFunc,") \n")
+    stringFunc <- paste(stringFunc," \n    dev.off() \n")
+    stringFunc <- paste(stringFunc," \n    return(returnVars) \n")
     stringFunc <- paste(stringFunc,  "}\n")
+    print(stringFunc)
     parsedFunc <- parse(text=stringFunc)
+
     eval(parsedFunc)
-    returnVars <- wrattler_f()
-    return(returnVars)
+  #  png('wrattlerPlot.png')
+    s <- capture.output(returnVars <- wrattler_f())
+  #  dev.off()
+#    print("should have made a png")
+    clean_s <- lapply(s, cleanString)
+    outputString <- paste(clean_s, collapse="\n")
+    ## try to capture plots as a png
+#    plotStatus <- tryCatch({ dev.copy(png,'wrattlerPlot.png')
+#        print("found a plot")
+#        dev.off()},
+#        error=function(cond) {
+#            print("nothing here")
+ #           return(NULL)
+ #       })
+    ret <- new.env()
+ #   ret$plot <- !is.null(plotStatus)
+    ret$returnVars <- returnVars
+    ret$outputString <- outputString
+    return(ret)
 }

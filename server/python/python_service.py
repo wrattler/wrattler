@@ -13,13 +13,26 @@ import pandas as pd
 import numpy as np
 import ast
 import collections
+from io import StringIO
+import contextlib
 
+from exceptions import ApiException
 
 if 'DATASTORE_URI' in os.environ.keys():
     DATASTORE_URI = os.environ['DATASTORE_URI']
 else:
     DATASTORE_URI = 'http://localhost:7102'
-#DATASTORE_URI = 'https://wrattler-data-store.azurewebsites.net'
+
+
+## Useful function (thanks
+@contextlib.contextmanager
+def stdoutIO(stdout=None):
+    old = sys.stdout
+    if stdout is None:
+        stdout = StringIO()
+    sys.stdout = stdout
+    yield stdout
+    sys.stdout = old
 
 
 def cleanup(i):
@@ -83,7 +96,7 @@ def read_frame(frame_name, frame_hash):
     url = '{}/{}/{}'.format(DATASTORE_URI, frame_hash, frame_name)
     r=requests.get(url)
     if r.status_code is not 200:
-        raise RuntimeError("Could not retrieve dataframe")
+        raise ApiException("Could not retrieve dataframe", status_code=r.status_code)
     data = json.loads(r.content.decode("utf-8"))
     return data
 
@@ -160,7 +173,7 @@ def retrieve_frames(input_frames):
     for frame in input_frames:
         r=requests.get(frame["url"])
         if r.status_code != 200:
-            raise RuntimeError("Problem retrieving dataframe %s"%frame["name"])
+            raise ApiException("Problem retrieving dataframe %s"%frame["name"],status_code=r.status_code)
         frame_content = json.loads(r.content.decode("utf-8"))
         frame_dict[frame["name"]] = frame_content
     return frame_dict
@@ -176,17 +189,20 @@ def evaluate_code(data):
 
     input_frames = data["frames"]
     frame_dict = retrieve_frames(input_frames)
+    ## execute the code, get back a dict {"output": <string_output>, "results":<list_of_vals>}
+    results_dict = execute_code(code_string, frame_dict, assign_dict['targets'])
 
-    results = execute_code(code_string, frame_dict, assign_dict['targets'])
-    frame_names = assign_dict['targets']
-
-    if len(results) != len(frame_names):
-        raise RuntimeError("no. of output frames does not match no. results")
-    ## there can be more than one output frame
+    results = results_dict["results"]
+    ## prepare a return dictionary
     return_dict = {
-        "output": "",
+        "output": results_dict["output"],
         "frames": []
     }
+
+    frame_names = assign_dict['targets']
+    if len(results) != len(frame_names):
+        raise ApiException("Error: no. of output frames does not match no. results", status_code=500)
+
     wrote_ok=True
     for i, name in enumerate(frame_names):
         wrote_ok &= write_frame(results[i], name, output_hash)
@@ -221,13 +237,21 @@ def execute_code(code, input_val_dict, return_vars, verbose=False):
     if verbose:
         print(func_string)
     exec(func_string)
-    func_output = eval('wrattler_f()')
+    return_dict = {"output": "", "results": []}
+    try:
+        with stdoutIO() as s:
+            func_output = eval('wrattler_f()')
+            return_dict["output"] = s.getvalue()
+            if isinstance(func_output, collections.Iterable):
+                results = []
+                for item in func_output:
+                    results.append(convert_from_pandas_df(item))
+                return_dict["results"] = results
+            else:
+                result = convert_from_pandas_df(func_output)
+                return_dict["results"] = [result]
+    except Exception as e:
+        output = "{}: {}".format(type(e).__name__, e)
+        raise ApiException(output, status_code=500)
 
-    if isinstance(func_output, collections.Iterable):
-        results = []
-        for item in func_output:
-            results.append(convert_from_pandas_df(item))
-        return results
-    else:
-        result = convert_from_pandas_df(func_output)
-        return result
+    return return_dict

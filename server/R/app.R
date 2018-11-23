@@ -1,6 +1,5 @@
 library(jug)
 library(jsonlite)
-#library(futile.logger)
 
 source("R_service.R")
 
@@ -20,15 +19,17 @@ handle_eval <- function(code,frames,hash) {
     ## get a list of the expected output names from the code
     exportsList <- analyzeCode(code)$exports
     ## executeCode will return a named list of all the evaluated outputs
-    outputsList <- executeCode(code, frames)
+    outputs <- executeCode(code, frames)
+    outputsList <- outputs$returnVars
     ## uploadOutputs will put results onto datastore, and return a dataframe of names and urls
     results <- uploadOutputs(outputsList, exportsList, hash)
     ## placeholder for text output
-    textOutput <- "Some output"
-    returnValue <- list(frames=results, output=textOutput)
+    textOutput <- outputs$outputString
+    returnValue <- list(frames=results, output=unbox(textOutput))
     return(jsonlite::toJSON(returnValue))
 }
 
+## the jug app itself, use infix to chain endpoints together.
 
 jug() %>%
     cors(path=NULL, allow_methods=c("POST"),allow_origin='*',

@@ -2,9 +2,11 @@
 Test that we can write some frames with simple variable
 assignments, then use these to do a simple join
 """
+import pytest
 import pandas as pd
 
 from python_service import execute_code, find_assignments
+from exceptions import ApiException
 
 def test_execute_pd_concat():
     """
@@ -15,7 +17,8 @@ def test_execute_pd_concat():
     input_vals = {"x" : [{"a":1, "b":2},{"a":2,"b":3}],
                   "y": [{"b":4,"c": 2},{"b": 5,"c": 7}]}
     return_targets = find_assignments(input_code)["targets"]
-    result = execute_code(input_code, input_vals, return_targets)
+    result_dict = execute_code(input_code, input_vals, return_targets)
+    result = result_dict["results"]
     print(result)  # result will be a list of lists of dicts
     assert(len(result) == 1) # only one output of function
     assert(len(result[0]) == 4) # four 'rows' of dataframe
@@ -30,6 +33,45 @@ def test_execute_simple_func():
     input_code='import numpy\ndef squareroot(x):\n  return numpy.sqrt(x)\n\ndf= pd.DataFrame({\"a\":[numpy.sqrt(9),squareroot(12),13],\"b\":[14,15,16]})'
     input_vals={}
     return_targets = find_assignments(input_code)["targets"]
-    result = execute_code(input_code, input_vals, return_targets)
+    result_dict = execute_code(input_code, input_vals, return_targets)
+    result = result_dict["results"]
     assert(result)
     assert(isinstance(result,list))
+
+
+def test_get_error_output():
+    """
+    Do something stupid (division by zero) and test that we get an error in the output
+    """
+    input_code='x = 1/0'
+    input_vals={}
+    return_targets = find_assignments(input_code)["targets"]
+    with pytest.raises(ApiException) as exc:
+        result_dict = execute_code(input_code, input_vals, return_targets)
+        assert("ZeroDivisionError" in exc.message)
+
+
+def test_get_normal_output():
+    """
+    Write simple print statement and test that we get it in the output
+    """
+    input_code='print("hello world")'
+    input_vals={}
+    return_targets = find_assignments(input_code)["targets"]
+    result_dict = execute_code(input_code, input_vals, return_targets)
+    output = result_dict["output"]
+    assert(output)
+    assert("hello world" in output)
+
+
+def test_get_normal_output_in_func():
+    """
+    Write simple print statement inside a function and test that we get it in the output
+    """
+    input_code='def printy():\n print("hello funcky world")\n\nprinty()'
+    input_vals={}
+    return_targets = find_assignments(input_code)["targets"]
+    result_dict = execute_code(input_code, input_vals, return_targets)
+    output = result_dict["output"]
+    assert(output)
+    assert("hello funcky world" in output)
