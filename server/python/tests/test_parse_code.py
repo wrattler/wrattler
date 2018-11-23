@@ -66,3 +66,16 @@ def test_out_of_scope_assignments():
     result = analyze_code(testdata)
     print(result)
     assert(result["exports"]==["newx"])
+
+
+def test_non_assignment_imports():
+    """
+    variables can be used in statements that are not assignments..
+    """
+    code = "a.dosomething(b,c)" # b and c should be imports
+    testdata = {"code": code,
+                "frames": ["b","c"],
+                "hash": "irrelevant"}
+    result = analyze_code(testdata)
+    print(result)
+    assert(result["imports"] == ["b","c"])

@@ -61,7 +61,23 @@ def test_get_normal_output():
     result_dict = execute_code(input_code, input_vals, return_targets)
     output = result_dict["output"]
     assert(output)
+    assert(isinstance(output,str))
     assert("hello world" in output)
+
+def test_get_two_normal_outputs():
+    """
+    Write two simple print statement and test that we get a single output string with two lines
+    """
+    input_code='print("hello world")\nprint("hi again")\n'
+    input_vals={}
+    return_targets = find_assignments(input_code)["targets"]
+    result_dict = execute_code(input_code, input_vals, return_targets)
+    output = result_dict["output"]
+    assert(output)
+    assert(isinstance(output,str))
+    assert("hello world" in output)
+    assert("hi again" in output)
+    assert(output.count("\n")==1)
 
 
 def test_get_normal_output_in_func():
@@ -74,4 +90,5 @@ def test_get_normal_output_in_func():
     result_dict = execute_code(input_code, input_vals, return_targets)
     output = result_dict["output"]
     assert(output)
+    assert(isinstance(output,str))
     assert("hello funcky world" in output)

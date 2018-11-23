@@ -129,6 +129,8 @@ def find_assignments(code_string):
             if isinstance(node, ast.Assign):
                 _find_elements(node.targets, output_dict, "targets")
                 _find_elements(node.value, output_dict, "input_vals")
+            elif isinstance(node, ast.Call):
+                _find_elements(node.args, output_dict, "input_vals")
             elif isinstance(node, ast.Name) and parent:
                 output_dict[parent].append(node.id)
             elif isinstance(node, ast.FunctionDef):  ## don't go inside..
@@ -241,7 +243,7 @@ def execute_code(code, input_val_dict, return_vars, verbose=False):
     try:
         with stdoutIO() as s:
             func_output = eval('wrattler_f()')
-            return_dict["output"] = s.getvalue()
+            return_dict["output"] = s.getvalue().strip()
             if isinstance(func_output, collections.Iterable):
                 results = []
                 for item in func_output:
