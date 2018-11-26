@@ -70,6 +70,7 @@ match System.Environment.GetCommandLineArgs() |> Seq.tryPick (fun s ->
 | Some port ->
     let serverConfig =
       { Web.defaultConfig with
+          maxContentLength = 1024 * 1024 * 1024 
           bindings = [ HttpBinding.createSimple HTTP "0.0.0.0" port ] }
     Web.startWebServer serverConfig app
 | _ -> ()
