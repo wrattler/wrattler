@@ -2,9 +2,14 @@ import {h, VNode} from 'maquette';
 import * as Values from '../definitions/values'; 
 
 function printPreview(cellId:number, triggerSelect:(number) => void, selectedTable:number, cellValues:Values.ExportsValue) {
+  
   let tableNames:Array<string> = Object.keys(cellValues.exports)
-  let tabComponents = printTabs(triggerSelect, selectedTable, tableNames);
-  return h('div', {}, [ tabComponents, printCurrentValue(cellId, cellValues.exports[tableNames[selectedTable]],tableNames[selectedTable]) ]);
+  if (tableNames.length > 0) {
+    let tabComponents = printTabs(triggerSelect, selectedTable, tableNames);
+    return h('div', {}, [ tabComponents, printCurrentValue(cellId, cellValues.exports[tableNames[selectedTable]],tableNames[selectedTable]) ]);
+  }
+  else 
+    return h('div', {},[])
 }
 
 function printCurrentValue(cellId:number, value:Values.Value, tableName:string) {
