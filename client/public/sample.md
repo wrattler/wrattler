@@ -11,6 +11,7 @@ Second, we create one frame in Python:
 
 ```python
 two = pd.DataFrame({"name":["Jim"], "age":[51]})
+print("Hello me")
 ```
 
 Finally, we create one more frame in R:
@@ -40,6 +41,6 @@ joinR <- rbind(rbind(one,two),three)
 
 On an unrelated note, try if TheGamma integration does anything at all:
 
-```thegamma
+```markdown
 1+2
 ```
