@@ -28,8 +28,6 @@ def handle_api_exception(error):
 def exports():
     data = json.loads(request.data.decode("utf-8"))
     imports_exports = analyze_code(data)
-
-    print("code is {}".format(data["code"]))
     return jsonify(imports_exports)
 
 @app.route("/eval", methods=['POST'])

@@ -10,7 +10,7 @@
 * TODO
 */
 interface Value {
-  kind : "jsoutput" | "dataframe" | "exports" | "nothing"
+  kind : "jsoutput" | "dataframe" | "exports" | "nothing" | "printout"
 }
 
 /**
@@ -38,9 +38,15 @@ interface DataFrame extends Value {
   data : any
 }
 
+interface Printout extends Value {
+  kind : "printout"
+  data : string
+}
+
 export {
   Value, 
   ExportsValue,
   JavaScriptOutputValue,
+  Printout,
   DataFrame
 }

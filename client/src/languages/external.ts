@@ -97,11 +97,21 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       let headers = {'Content-Type': 'application/json'}
       try {
         let response = await axios.post(url, body, {headers: headers});
+        // console.log(response)
+        
         var results : Values.ExportsValue = { kind:"exports", exports:{} }
-        for(var df of response.data.frames) {
-          let exp : Values.DataFrame = {kind:"dataframe", url:<string>df.url, data: await getValue(df.url)};
-          results.exports[df.name] = exp
+        
+        if (response.data.output.toString().length > 0){
+          let printouts : Values.Printout = { kind:"printout", data:response.data.output.toString() }
+          results.exports['console'] = printouts
         }
+        
+        for(let df of response.data.frames) {
+          let exp : Values.DataFrame = {kind:"dataframe", url:<string>df.url, data: await getValue(df.url)};
+          if (Array.isArray(exp.data))
+            results.exports[df.name] = exp
+        }
+        
         return results;
       }
       catch (error) {
