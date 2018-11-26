@@ -78,7 +78,7 @@ retrieveFrames <- function(inputFrames) {
 uploadOutputs <- function(outputsList, exports, hash) {
     ## take a named list, upload the results, and return dataframe of names and urls
     url <- c()
-    for (i in 1:length(exports)) {
+    for (i in seq_along(exports)) {
         uploaded_ok <- writeFrame(outputsList[[exports[[i]]]],exports[[i]],hash)
         url <- c(url, makeURL(exports[[i]], hash))
     }
@@ -96,7 +96,9 @@ cleanString <- function(inputString) {
 }
 
 
-executeCode <- function(code, importsList) {
+constructFuncString <- function(code, importsList) {
+    ## construct a string containing a function definition wrapping our code.
+
     ## analyze the code to get imports and exports (only need exports here)
     impexp <- analyzeCode(code)
     ## construct a function that assigns retrieved frames to the imported variables,
@@ -122,7 +124,13 @@ executeCode <- function(code, importsList) {
     stringFunc <- paste(stringFunc," \n    dev.off() \n")
     stringFunc <- paste(stringFunc," \n    return(returnVars) \n")
     stringFunc <- paste(stringFunc,  "}\n")
-    print(stringFunc)
+    return(stringFunc)
+}
+
+executeCode <- function(code, importsList) {
+    ## Call the function to create stringFunc, then parse and execute it.
+
+    stringFunc <- constructFuncString(code, importsList)
     parsedFunc <- parse(text=stringFunc)
 
     eval(parsedFunc)
