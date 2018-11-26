@@ -100,16 +100,12 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         // console.log(response)
         
         var results : Values.ExportsValue = { kind:"exports", exports:{} }
-        console.log(response.data.output.toString().length)
-        console.log(response.data.output.toString())
+        
         if (response.data.output.toString().length > 0){
           let printouts : Values.Printout = { kind:"printout", data:response.data.output.toString() }
           results.exports['printout'] = printouts
         }
-        else {
-          let printouts : Values.Printout = { kind:"printout", data:"Placeholder" }
-          results.exports['printout'] = printouts
-        }
+        
         for(let df of response.data.frames) {
           let exp : Values.DataFrame = {kind:"dataframe", url:<string>df.url, data: await getValue(df.url)};
           results.exports[df.name] = exp
