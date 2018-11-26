@@ -39,6 +39,11 @@ Finally, test if we can access all from R:
 joinR <- rbind(rbind(one,two),three)
 ```
 
+```python
+from sklearn.linear_model import ElasticNet
+clf = ElasticNet()
+```
+
 On an unrelated note, try if TheGamma integration does anything at all:
 
 ```markdown

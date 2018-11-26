@@ -103,12 +103,13 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         
         if (response.data.output.toString().length > 0){
           let printouts : Values.Printout = { kind:"printout", data:response.data.output.toString() }
-          results.exports['printout'] = printouts
+          results.exports['console'] = printouts
         }
         
         for(let df of response.data.frames) {
           let exp : Values.DataFrame = {kind:"dataframe", url:<string>df.url, data: await getValue(df.url)};
-          results.exports[df.name] = exp
+          if (Array.isArray(exp.data))
+            results.exports[df.name] = exp
         }
         
         return results;
