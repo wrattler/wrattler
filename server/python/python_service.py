@@ -131,6 +131,7 @@ def find_assignments(code_string):
                 _find_elements(node.value, output_dict, "input_vals")
             elif isinstance(node, ast.Call):
                 _find_elements(node.args, output_dict, "input_vals")
+                _find_elements(node.func, output_dict, "input_vals")
             elif isinstance(node, ast.Name) and parent:
                 output_dict[parent].append(node.id)
             elif isinstance(node, ast.FunctionDef):  ## don't go inside..

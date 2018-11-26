@@ -72,10 +72,25 @@ def test_non_assignment_imports():
     """
     variables can be used in statements that are not assignments..
     """
-    code = "a.dosomething(b,c)" # b and c should be imports
+    code = "a.dosomething(b,c)" # a, b and c should be imports
     testdata = {"code": code,
-                "frames": ["b","c"],
+                "frames": ["a","b","c"],
                 "hash": "irrelevant"}
     result = analyze_code(testdata)
     print(result)
-    assert(result["imports"] == ["b","c"])
+    assert(sorted(result["imports"]) == ["a","b","c"])
+
+
+
+def test_method_calling_imports():
+    """
+    variables can be used in statements that are not assignments..
+    """
+    code = "x = a.dosomething(b,c)" # a, b and c should be imports
+    testdata = {"code": code,
+                "frames": ["a","b","c"],
+                "hash": "irrelevant"}
+    result = analyze_code(testdata)
+    print(result)
+    assert(sorted(result["imports"]) == ["a","b","c"])
+    assert(result["exports"] == ["x"])
