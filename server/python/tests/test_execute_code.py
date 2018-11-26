@@ -63,6 +63,8 @@ def test_get_normal_output():
     assert(output)
     assert(isinstance(output,str))
     assert("hello world" in output)
+    assert(len(result_dict["results"])==0)
+
 
 def test_get_two_normal_outputs():
     """

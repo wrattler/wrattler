@@ -220,11 +220,11 @@ def evaluate_code(data):
         raise RuntimeError("Could not write result to datastore")
 
 
-def execute_code(code, input_val_dict, return_vars, verbose=False):
+def construct_func_string(code, input_val_dict, return_vars):
     """
-    Construct a string func_string that defines a function f()
-    then do exec(func_string), then define another string call_string that calls this function,
-    and then finally do eval(call_string)
+    Construct a string func_string that defines a function wrattler_f()
+    using the input and output variables defined from the code
+    analysis.
     """
     func_string = "def wrattler_f():\n"
     for k,v in input_val_dict.items():
@@ -237,12 +237,25 @@ def execute_code(code, input_val_dict, return_vars, verbose=False):
     for rv in return_vars:
         func_string += "{},".format(rv)
     func_string += "\n"
+    return func_string
+
+
+def execute_code(code, input_val_dict, return_vars, verbose=False):
+    """
+    Call a function that constructs a string containing a function definition,
+    then do exec(func_string), then define another string call_string
+    that calls this function,
+    and then finally do eval(call_string)
+    """
+    func_string = construct_func_string(code, input_val_dict, return_vars)
     if verbose:
         print(func_string)
     exec(func_string)
     return_dict = {"output": "", "results": []}
     try:
         with stdoutIO() as s:
+            ### wrattler_f should now be in the namespace as the function
+            ### wrapping the input code string.
             func_output = eval('wrattler_f()')
             return_dict["output"] = s.getvalue().strip()
             if isinstance(func_output, collections.Iterable):
@@ -250,6 +263,8 @@ def execute_code(code, input_val_dict, return_vars, verbose=False):
                 for item in func_output:
                     results.append(convert_from_pandas_df(item))
                 return_dict["results"] = results
+            elif not func_output:
+                return_dict["results"] = []
             else:
                 result = convert_from_pandas_df(func_output)
                 return_dict["results"] = [result]
