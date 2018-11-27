@@ -2,6 +2,7 @@
 
 library(jsonlite)
 library(httr)
+library(base64enc)
 
 source("codeAnalysis.R")
 
@@ -35,7 +36,13 @@ writeFrame <- function(frameData, frameName, frameHash) {
     ## Write a dataframe to the datastore.
     ## use jsonlite to serialize dataframe into json
     url <- makeURL(frameName, frameHash)
-    frameJSON <- jsonFromDataFrame(frameData)
+    if ("ggplot" %in% class(frameData)) {
+        ## could be an image, saved as a png file on /tmp
+        frameJSON <- jsonFromImageFile(frameName, frameHash)
+
+    } else {
+        frameJSON <- jsonFromDataFrame(frameData)
+    }
     ## put it into the datastore if it is not NULL, i.e. was convertable to json
     if (!is.null(frameJSON)) {
         r <- PUT(url, body=frameJSON, encode="json")
@@ -44,15 +51,24 @@ writeFrame <- function(frameData, frameName, frameHash) {
     return(FALSE)
 }
 
+jsonFromImageFile <- function(frameName, frameHash) {
+    ## see if there is a png file at /tmp/frameHash/frameName.png
+    filename <- file.path("/tmp",frameHash,paste0(frameName,".png"))
+    if (! file.exists(filename)) return(NULL)
+    IMAGE <- base64enc::base64encode(filename)
+    frameJSON <- jsonlite::toJSON(as.data.frame(IMAGE))
+    return(frameJSON)
+}
+
 
 jsonFromDataFrame <- function(frameData) {
     ## jsonlite doesn't like converting numbers into json
     if (is.numeric(frameData)) frameData <- as.character(frameData)
     ## explicitly convert into a dataframe if we can
     frameData <- tryCatch({ as.data.frame(frameData) },
-                           error=function(cond) {
-                               return(NULL)
-                           })
+                          error=function(cond) {
+                              return(NULL)
+                          })
     if (is.null(frameData)) return(NULL)
     ## convert to JSON
     frameJSON <- jsonlite::toJSON(frameData, na="null")
