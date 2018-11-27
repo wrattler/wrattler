@@ -96,7 +96,7 @@ cleanString <- function(inputString) {
 }
 
 
-constructFuncString <- function(code, importsList) {
+constructFuncString <- function(code, importsList, hash) {
     ## construct a string containing a function definition wrapping our code.
 
     ## analyze the code to get imports and exports (only need exports here)
@@ -121,35 +121,47 @@ constructFuncString <- function(code, importsList) {
         }
     }
     stringFunc <- paste(stringFunc,") \n")
-    stringFunc <- paste(stringFunc," \n    dev.off() \n")
+    ## search for ggplot objects in this environment
+    stringFunc <- paste(stringFunc," \n    for (envitem in ls(environment())) { \n")
+    stringFunc <- paste(stringFunc,"       if ('ggplot' %in% class(get(envitem,environment()))) {\n")
+    ## write any ggplot objects to a filename constructed from the cell hash and
+    ## the object name
+    stringFunc <- paste(stringFunc,"         writePlotToFile(get(envitem,environment()), '")
+    stringFunc <- paste0(stringFunc, hash,"', envitem) \n")
+    stringFunc <- paste(stringFunc,"       }\n")
+    stringFunc <- paste(stringFunc,"     }\n")
+    ## return the returnVars
     stringFunc <- paste(stringFunc," \n    return(returnVars) \n")
     stringFunc <- paste(stringFunc,  "}\n")
     return(stringFunc)
 }
 
-executeCode <- function(code, importsList) {
+
+writePlotToFile <- function(plot, hash, plotName) {
+    ## use png device to save output to a file
+    dir.create(file.path("/tmp",hash), showWarnings=FALSE)
+    filename = file.path("/tmp",hash,paste0(plotName,".png"))
+    png(file=filename)
+    print(plot)
+    dev.off()
+}
+
+
+
+executeCode <- function(code, importsList, hash) {
     ## Call the function to create stringFunc, then parse and execute it.
 
-    stringFunc <- constructFuncString(code, importsList)
+    stringFunc <- constructFuncString(code, importsList, hash)
     parsedFunc <- parse(text=stringFunc)
 
     eval(parsedFunc)
-  #  png('wrattlerPlot.png')
+    png('wrattlerPlot.png')
     s <- capture.output(returnVars <- wrattler_f())
-  #  dev.off()
-#    print("should have made a png")
+
     clean_s <- lapply(s, cleanString)
     outputString <- paste(clean_s, collapse="\n")
-    ## try to capture plots as a png
-#    plotStatus <- tryCatch({ dev.copy(png,'wrattlerPlot.png')
-#        print("found a plot")
-#        dev.off()},
-#        error=function(cond) {
-#            print("nothing here")
- #           return(NULL)
- #       })
+
     ret <- new.env()
- #   ret$plot <- !is.null(plotStatus)
     ret$returnVars <- returnVars
     ret$outputString <- outputString
     return(ret)
