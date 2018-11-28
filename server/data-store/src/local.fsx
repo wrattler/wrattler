@@ -53,6 +53,7 @@ let reloadScript () =
 
 let getLocalServerConfig port =
   { defaultConfig with
+      maxContentLength = 1024 * 1024 * 1024 
       homeFolder = Some __SOURCE_DIRECTORY__
       bindings = [ HttpBinding.createSimple HTTP  "0.0.0.0" port ] }
 
