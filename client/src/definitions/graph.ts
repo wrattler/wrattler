@@ -7,6 +7,9 @@
 /** This comment is needed so that TypeDoc parses the above one correctly */
 import * as Values from './values';
 
+interface Error {
+  message: string
+}
 
 /** 
  * A node in the dependency graph that Wrattler maintains while the user edits a
@@ -23,6 +26,8 @@ interface Node {
   
   /**  The evaluated value associated with this node */
   value: Values.Value | null
+
+  errors: Error[]
 }
 
 /**
@@ -86,5 +91,6 @@ export {
   JsCodeNode,
   ExternalNode,
   ExternalExportNode,
-  ExternalCodeNode
+  ExternalCodeNode,
+  Error
 }

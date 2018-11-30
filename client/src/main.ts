@@ -106,9 +106,15 @@ async function evaluate(node:Graph.Node) {
   for(var ant of node.antecedents) await evaluate(ant);
 
   let languagePlugin = languagePlugins[node.language]
-  node.value = await languagePlugin.evaluate(node);
-  // console.log("Received value: "+JSON.stringify(node.value));
-  return;
+  let evalResult = await languagePlugin.evaluate(node);
+  switch(evalResult.kind) {
+    case "success": 
+      node.value = evalResult.value;
+      break;
+    case "error":
+      node.errors = evalResult.errors;
+      break;
+  }
 }
 
 function render(trigger:(NotebookEvent) => void, state:NotebookState) {

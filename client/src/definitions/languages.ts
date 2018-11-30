@@ -18,6 +18,16 @@ interface ScopeDictionary {
   [variable:string] : Graph.Node
 }
 
+interface EvaluationSuccess {
+  kind: 'success'
+  value: Values.Value
+}
+interface EvaluationFailure {
+  kind: 'error'
+  errors: Graph.Error[]
+}
+type EvaluationResult = EvaluationSuccess | EvaluationFailure
+
 /**
  * A plugin that implements language specific functionality such as creating an
  * editor for the language, parsing code, creating dependency graph, evaluation, etc.
@@ -36,7 +46,7 @@ interface LanguagePlugin {
   parse(code:string) : Block
 
   
-  evaluate(node:Graph.Node): Promise<Values.Value>
+  evaluate(node:Graph.Node): Promise<EvaluationResult>
 
   /**
    * Given a parsed block and a dictionary that tracks variables that are in scope, 
@@ -133,5 +143,8 @@ export {
   LanguagePlugin,
   BlockState,
   BindingResult,
-  ScopeDictionary
+  ScopeDictionary,
+  EvaluationResult,
+  EvaluationSuccess,
+  EvaluationFailure
 }
