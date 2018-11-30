@@ -118,7 +118,8 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       }
       catch (error) {
         console.error(error);
-        throw error;
+        let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [error]} 
+        return evalResults
       }
     }
   
