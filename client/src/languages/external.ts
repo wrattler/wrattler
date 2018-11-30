@@ -60,7 +60,8 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
     let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
     let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
     let code = createEditor(cell.code.language, state.block.source, cell, context)
-    return h('div', { }, [code, preview])
+    let errors = h('div', {}, [(cell.code.errors.length == 0) ? "" : "Errors"])
+    return h('div', { }, [code, , errors, preview])
   }
 }
 
@@ -75,7 +76,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     this.editor = ExternalEditor;
   }
 
-  async evaluate(node:Graph.Node) : Promise<Values.Value> {
+  async evaluate(node:Graph.Node) : Promise<Langs.EvaluationResult> {
     let externalNode = <Graph.ExternalNode>node
 
     async function getValue(blob) : Promise<Values.Value> {
@@ -92,7 +93,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       }
     }
   
-    async function getEval(body, serviceURI ) : Promise<Values.ExportsValue> {
+    async function getEval(body, serviceURI ) : Promise<Langs.EvaluationResult> {
       let url = serviceURI.concat("/eval")
       let headers = {'Content-Type': 'application/json'}
       try {
@@ -112,7 +113,8 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
             results.exports[df.name] = exp
         }
         
-        return results;
+        let evalResults:Langs.EvaluationResult = {kind: 'success', value: results} 
+        return evalResults;
       }
       catch (error) {
         console.error(error);
@@ -137,7 +139,9 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         let exportNode = <Graph.ExternalExportNode>node
         let exportNodeName= exportNode.variableName
         let exportsValue = <Values.ExportsValue>exportNode.code.value
-        return exportsValue.exports[exportNodeName]
+        let evalResults:Langs.EvaluationResult = {kind: 'success', value: exportsValue.exports[exportNodeName]} 
+        //return exportsValue.exports[exportNodeName]
+        return evalResults;
     }
   }
 
@@ -153,7 +157,8 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       exportedVariables:[],
       kind: 'code',
       value: null,
-      source: exBlock.source}
+      source: exBlock.source,
+      errors: []}
     let url = this.serviceURI.concat("/exports")
     let hash = Md5.hashStr(exBlock.source)
     let body = {"code": exBlock.source,
@@ -171,7 +176,8 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
               language:language,
               code: node, 
               kind: 'export',
-              antecedents:[node]
+              antecedents:[node],
+              errors: []
               };
           dependencies.push(exportNode) 
           node.exportedVariables.push(exportNode.variableName)
