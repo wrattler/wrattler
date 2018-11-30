@@ -61,7 +61,7 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
     let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
     let code = createEditor(cell.code.language, state.block.source, cell, context)
     let errors = h('div', {}, [(cell.code.errors.length == 0) ? "" : "Errors"])
-    return h('div', { }, [code, , errors, preview])
+    return h('div', { }, [code, (cell.code.errors.length >0)?errors:preview])
   }
 }
 
@@ -166,6 +166,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       "frames": Object.keys(scopeDictionary)
     }
     let headers = {'Content-Type': 'application/json'}
+    console.log("Binding")
     async function getExports(language:string) {
       try {
         let response = await axios.post(url, body, {headers: headers});
@@ -192,7 +193,9 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       }
       catch (error) {
         console.error(error);
-        throw error
+        node.errors.push(error)
+        return {code: node, exports: []};
+        // throw error
       }
     }
     return getExports(this.language)
