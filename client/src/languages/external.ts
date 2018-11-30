@@ -60,7 +60,7 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
     let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
     let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
     let code = createEditor(cell.code.language, state.block.source, cell, context)
-    let errors = h('div', {}, [(cell.code.errors.length == 0) ? "" : "Errors"])
+    let errors = h('div', {}, [(cell.code.errors.length == 0) ? "" : cell.code.errors.map(err => {return h('p',{}, [err.message])})])
     return h('div', { }, [code, (cell.code.errors.length >0)?errors:preview])
   }
 }
