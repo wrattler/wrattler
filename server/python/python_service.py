@@ -193,7 +193,7 @@ def evaluate_code(data):
     input_frames = data["frames"]
     frame_dict = retrieve_frames(input_frames)
     ## execute the code, get back a dict {"output": <string_output>, "results":<list_of_vals>}
-    results_dict = execute_code(code_string, frame_dict, assign_dict['targets'])
+    results_dict = execute_code(code_string, frame_dict, assign_dict['targets'], output_hash)
 
     results = results_dict["results"]
     ## prepare a return dictionary
@@ -220,19 +220,28 @@ def evaluate_code(data):
         raise RuntimeError("Could not write result to datastore")
 
 
-def construct_func_string(code, input_val_dict, return_vars):
+def construct_func_string(code, input_val_dict, return_vars, output_hash):
     """
     Construct a string func_string that defines a function wrattler_f()
     using the input and output variables defined from the code
     analysis.
     """
     func_string = "def wrattler_f():\n"
+    func_string += "    import os\n"
+    func_string += "    import matplotlib\n"
+    func_string += "    matplotlib.use('Cairo')\n\n"
     for k,v in input_val_dict.items():
         func_string += "    {} = convert_to_pandas_df({})\n".format(k,v)
     ## need to worry about indentation for multi-line code fragments.
     ## split the code string by newline character, and prepend 4 spaces to each line.
     for line in code.strip().split("\n"):
         func_string += "    {}\n".format(line)
+    ## save any plot output to a file in /tmp/<hash>/
+    func_string += "    try:\n"
+    func_string += "        os.makedirs('/tmp/{}',exist_ok=True)\n".format(output_hash)
+    func_string += "        plt.savefig('/tmp/{}/fig.png')\n".format(output_hash)
+    func_string += "    except(NameError):\n"
+    func_string += "        pass\n"
     func_string += "    return "
     for rv in return_vars:
         func_string += "{},".format(rv)
@@ -240,14 +249,17 @@ def construct_func_string(code, input_val_dict, return_vars):
     return func_string
 
 
-def execute_code(code, input_val_dict, return_vars, verbose=False):
+def execute_code(code, input_val_dict, return_vars, output_hash, verbose=False):
     """
     Call a function that constructs a string containing a function definition,
     then do exec(func_string), then define another string call_string
     that calls this function,
     and then finally do eval(call_string)
     """
-    func_string = construct_func_string(code, input_val_dict, return_vars)
+    func_string = construct_func_string(code,
+                                        input_val_dict,
+                                        return_vars,
+                                        output_hash)
     if verbose:
         print(func_string)
     exec(func_string)
