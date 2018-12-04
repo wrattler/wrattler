@@ -107,6 +107,7 @@ async function evaluate(node:Graph.Node) {
 
   let languagePlugin = languagePlugins[node.language]
   let evalResult = await languagePlugin.evaluate(node);
+  console.log(evalResult)
   switch(evalResult.kind) {
     case "success": 
       node.value = evalResult.value;

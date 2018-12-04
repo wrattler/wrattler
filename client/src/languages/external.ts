@@ -61,6 +61,7 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
     let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
     let code = createEditor(cell.code.language, state.block.source, cell, context)
     let errors = h('div', {}, [(cell.code.errors.length == 0) ? "" : cell.code.errors.map(err => {return h('p',{}, [err.message])})])
+    console.log(cell);
     return h('div', { }, [code, (cell.code.errors.length >0)?errors:preview])
   }
 }
@@ -97,9 +98,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       let url = serviceURI.concat("/eval")
       let headers = {'Content-Type': 'application/json'}
       try {
-        let response = await axios.post(url, body, {headers: headers});
-        // console.log(response)
-        
+        let response = await axios.post(url, body, {headers: headers});        
         var results : Values.ExportsValue = { kind:"exports", exports:{} }
         
         if (response.data.output.toString().length > 0){
@@ -117,8 +116,9 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         return evalResults;
       }
       catch (error) {
-        console.error(error);
-        let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [error]} 
+        console.log(error.response.data.error);
+        let e = {message:<string>error.response.data.error}
+        let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [e]} 
         return evalResults
       }
     }
@@ -140,9 +140,25 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         let exportNode = <Graph.ExternalExportNode>node
         let exportNodeName= exportNode.variableName
         let exportsValue = <Values.ExportsValue>exportNode.code.value
-        let evalResults:Langs.EvaluationResult = {kind: 'success', value: exportsValue.exports[exportNodeName]} 
+        if (exportsValue==null) {
+          if (exportNode.errors.length > 0) {
+            console.log({kind: 'error', errors: exportNode.errors} )
+            return {kind: 'error', errors: exportNode.errors} 
+          }
+          else {
+            let errorMessage = "Fail to export".concat(exportNode.variableName);
+            let graphError = {message: errorMessage}
+            console.log({kind: 'error', errors: [graphError.message]})
+            return {kind: 'error', errors: [graphError]} 
+          }
+        }
+        else {
+          console.log({kind: 'success', value: exportsValue.exports[exportNodeName]})
+          return {kind: 'success', value: exportsValue.exports[exportNodeName]} 
+        }
+        // let evalResults:Langs.EvaluationResult = {kind: 'success', value: exportsValue.exports[exportNodeName]} 
         //return exportsValue.exports[exportNodeName]
-        return evalResults;
+        // return evalResults;
     }
   }
 
@@ -167,7 +183,6 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       "frames": Object.keys(scopeDictionary)
     }
     let headers = {'Content-Type': 'application/json'}
-    console.log("Binding")
     async function getExports(language:string) {
       try {
         let response = await axios.post(url, body, {headers: headers});
