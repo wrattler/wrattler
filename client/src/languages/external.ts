@@ -1,4 +1,5 @@
 import {h} from 'maquette';
+import { Log } from "../common/log"
 import * as Langs from '../definitions/languages'; 
 import * as Graph from '../definitions/graph'; 
 import * as Values from '../definitions/values'; 
@@ -83,7 +84,9 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       let headers = {'Content-Type': 'application/json'}
       let url = DATASTORE_URI.concat(pathname)
       try {
+        Log.trace("data-store", "Fetching data frame: %s", pathname)
         let response = await axios.get(url, {headers: headers});
+        Log.trace("data-store", "Got data frame (%s rows): %s", response.data.length, pathname)
         return response.data
       }
       catch (error) {
@@ -135,7 +138,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         return await getEval(body, this.serviceURI);
       case 'export':
         let exportNode = <Graph.ExternalExportNode>node
-        let exportNodeName= exportNode.variableName
+        let exportNodeName = exportNode.variableName
         let exportsValue = <Values.ExportsValue>exportNode.code.value
         return exportsValue.exports[exportNodeName]
     }
