@@ -25,18 +25,21 @@ library(purrr)
 library(cleanEHR)
 
 # download and read full dataset
-file <- paste(tempdir(), "/ccd.rdata", sep="")
-download.file("https://github.com/ropensci/cleanEHR/raw/master/data/sample_ccd.RData", file)
-load(file)
+load("anon_public_d.RData")
+dt <- ccd_demographic_table(anon_ccd, dtype=TRUE)
 
-dt <- ccd_demographic_table(ccd, dtype=TRUE)
+mean_tail_diff <- function(vector) {
+  
+  diff <- mean(vector,na.rm=TRUE) - tail(vector,n=1)
+  return (diff)
+}
 
 # get the codes of time series variables
 names_ts_variables <- c()
 counter <- 1
-for (i in 1:length(ccd@episodes)){
-  for (n in names(ccd@episodes[[i]]@data)){
-    if (length(ccd@episodes[[i]]@data[n][[1]]) == 2){ # guarantee time series
+for (i in 1:length(anon_ccd@episodes)){
+  for (n in names(anon_ccd@episodes[[i]]@data)){
+    if (length(anon_ccd@episodes[[i]]@data[n][[1]]) == 2){ # guarantee time series
       names_ts_variables[[counter]] <- n
       counter <- counter+1
     }
@@ -44,11 +47,6 @@ for (i in 1:length(ccd@episodes)){
 }
 names_ts_variables <- sort(unique(names_ts_variables))
 short_names_ts_variables <- lapply(names_ts_variables, FUN = code2stname)
-
-mean_tail_diff <- function(vector) {
-  diff <- mean(vector,na.rm=TRUE) - tail(vector,n=1)
-  return (diff)
-}
 
 # our index is NIHR_HIC_ICU_0005, corresponding to a unique (per episode/patient) admission number, or ADNO
 index_variable <- "NIHR_HIC_ICU_0005"
@@ -66,17 +64,17 @@ dts <- data.frame(matrix(NA, nrow=0, ncol=length(names_for_dts)))
 names(dts) <- names_for_dts
 
 ## prepare TS dataset
-for (i in 1:length(ccd@episodes)){
-  adno <- as.numeric(ccd@episodes[[i]]@data[index_variable][[1]])
+## length(anon_ccd@episodes)
+for (i in 1:length(anon_ccd@episodes)){
+  adno <- as.numeric(anon_ccd@episodes[[i]]@data[index_variable][[1]])
   measurements <- c(adno)
   for (n in names_ts_variables){
       # Add time limit of 10 hours to measure TS data!
-      dts_episode <- ccd@episodes[[i]]@data[n][[1]]
+      dts_episode <- anon_ccd@episodes[[i]]@data[n][[1]]
 
       dts_episode_sub <- subset(dts_episode, dts_episode$time < 10)
 
       values <- dts_episode_sub["item2d"][[1]]
-      
       
     if (!is_empty(values)){
       for (measure in ts_measures_funcs){
@@ -106,24 +104,34 @@ dtf = dt.merge(dts, left_on="ADNO", right_on="ADNO", how="inner")
 ```
 we drop rows without entries, missing death timestamps or completely null columns.
 ```python
+dtf = dtf.replace(['NULL'], np.nan)
+dt = dt.replace(['NULL'], np.nan)
+
 dtf = dtf[pd.notnull(dtf['DAICU'])&pd.notnull(dtf['DOD'])&pd.notnull(dtf['TOD'])] # columns needed for target (time to die)
 dt = dt[pd.notnull(dt['DAICU'])&pd.notnull(dt['DOD'])&pd.notnull(dt['TOD'])] # columns needed for target (time to die)
 dtf = dtf.dropna(axis=1, how='all')
 dt = dt.dropna(axis=1, how='all')
+
+dtf_1= list(dtf.shape)
+dt_1= list(dt.shape)
 ```
 
 Create functions to help with the wrangling challenges such as datetime format processing: 
 ```python
-def export_datetime_slash(s):
-    
-    return str(pd.to_datetime(s,infer_datetime_format=True))
+import numpy as np
+def export_datetime_slash(input_):
+    s = str(input_)
+    if s == 'None' or s == np.datetime64('NaT') or s=='NULL' or s=='NaT' or s==None or ('NULL' in s):
+        return np.nan
+    else:    
+        return str(pd.to_datetime(s,infer_datetime_format=True))
 
-def export_datetime(s):
-
-    if 'NULL' in s or 'None' in s or 'NaN' in s or s == np.datetime64('NaT'):
-        return "1969-01-01	01:00:00"
+def export_datetime(input_):
+    s = str(input_)
+    if s == 'None' or s == np.datetime64('NaT') or s=='NULL' or s=='NaT' or ('NULL' in s):
+        return np.nan
         
-    if "T" in s:
+    elif "T" in s:
         if len(s.split("T")[1].split(":")) > 2:
             return str(s.split("T")[0]+" "+s.split("T")[1])
         else:
@@ -150,7 +158,6 @@ dt["time_death"] = dt["time_death"].apply(export_datetime)
 # get AGE using DOB 
 dtf["time_of_birth"] = dtf["DOB"].apply(export_datetime)
 dt["time_of_birth"] = dt["DOB"].apply(export_datetime)
-
 ```
 
 Create new variables such as the time the patient was on the hospital before getting to the ICU, the time to dieand the time from birth. Then build
@@ -201,7 +208,6 @@ dtf["survival_class"] = dtf["time_to_die"].apply(get_survival_class)
 
 # add survival class
 dt["survival_class"] = dt["time_to_die"].apply(get_survival_class)
-
 ```
 Function to parse the time from birth into age in years.
 
@@ -221,7 +227,6 @@ dtf["time_from_birth"] = dtf["time_from_birth"].apply(get_age)
 dt["time_from_birth"] = dt["time_from_birth"].apply(get_age)
 dtf["age"] = dtf["time_from_birth"]
 dt["age"] = dt["time_from_birth"]
-
 ```
 Transform the taxonomies used for diagnoses into dummy variables by one-hot encoding (`RAICU1`, `RAICU2` and `OCPMH` above).
 
@@ -255,14 +260,12 @@ As the first 10 hours of time-series data is used to build the model, the  predi
 ```python
 # drop all patients that didnt live 10 hours
 dtf_final = dtf_final[dtf_final['time_to_die']>60*10]
-
-
 ```
 Drop unneccessary columns (either judged as not predictive or duplicated after the creation of dummy variables) as well as
 columns that can leak the time of death target information (eg. number of days on the ICU `CCL3D`).
 ```python
 # drop columns not needed for predictions
-columns_to_drop = ["time_arrive_hospital",'ETHNIC','GPCODE','PCODE','REFOD','BCSD','DSD','ARSD','BRSD','ACSD',"GSD",'ORGAN_SUPPORT','NSD','LSD','RSD','CCL3D','CCL2D',"time_from_birth","time_of_birth","SOHD","DWFRD","TWFRD","UDIS","DDICU","DDH","HDIS","RESD","UHDIS","URAICU","DDBSD","TDBSD",                   "pid","spell","index","ADNO","ICNNO","bed02","bed03","bed05","time_arrive","time_death", "HCMEST","WKGEST","DAH","DAICU","DIS","DOAH","DOAICU","DLCCA","DTW","TTW","DOB","DOD",                   "TOD","TBRICU","DBRICU","RAICU1","RAICU2","OCPMH","ITW_V3_B","ITW_V3_N", "ITW_V3_W","OD_V3_N","BSDTP",'AMUAI','apache_score','apache_prob']
+columns_to_drop = ["time_arrive_hospital",'REFOD','BCSD','DSD','ARSD','BRSD','ACSD',"GSD",'DHRS','ORGAN_SUPPORT','NSD','LSD','RSD','CCL3D','CCL2D',"time_from_birth","time_of_birth","SOHD","DWFRD","TWFRD","UDIS","DDICU","DDH","HDIS","RESD","UHDIS","URAICU","DDBSD","TDBSD","pid","spell","index","ADNO","ICNNO","bed02","bed03","bed05","time_arrive","time_death", "HCMEST","WKGEST","DAH","DAICU","DIS","DOAH","DOAICU","DLCCA","DTW","TTW","DOB","DOD","TOD","TBRICU","DBRICU","RAICU1","RAICU2","OCPMH","ITW_V3_B","ITW_V3_H","ITW_V3_N","ITW_V3_W","OD_V3_H","OD_V3_N","OD_V3_O","OD_V3_T","BSDTP",'AMUAI','apache_score','apache_prob']
 
 dtf_final = dtf_final.drop(columns=columns_to_drop)
 dt_final = dt_final.drop(columns=columns_to_drop)
@@ -276,6 +279,10 @@ a situation (the default value of 0 is first considered, however there are field
 dtf_final = dtf_final.replace([np.inf, -np.inf], np.nan)
 dt_final = dt_final.replace([np.inf, -np.inf], np.nan)
 
+# dealing with NULLs by turning them all to nans
+dtf_final.replace(['NULL'], np.nan,inplace=True)
+dt_final.replace(['NULL'], np.nan,inplace=True)
+
 # removing columns with more than 50% of nans 
 dtf_final.dropna(thresh=0.50*len(dtf_final), axis=1,inplace=True)
 dt_final.dropna(thresh=0.50*len(dt_final), axis=1,inplace=True)
@@ -284,16 +291,14 @@ dt_final.dropna(thresh=0.50*len(dt_final), axis=1,inplace=True)
 dtf_final.replace([np.nan], -1,inplace=True)
 dt_final.replace([np.nan], -1,inplace=True)
 
-# dealing with NULLs by turning them all to -1 (definitely suboptimal!)
-dtf_final.replace(['NULL'], -1,inplace=True)
-dt_final.replace(['NULL'], -1,inplace=True)
+dtf_final_n= list(dtf_final.shape)
+dt_final_n= list(dt_final.shape)
 ```
 Prepare the final dataset for modelling.
 ```python
 # Prepare input features, drop target variables
 dtf_final_X = dtf_final.drop(["time_to_die",'survival_class'], axis=1)
 dt_final_X = dt_final.drop(["time_to_die",'survival_class'], axis=1)
-#
 ```
 ### Data modelling on Python
 #### Regression modelling
@@ -339,19 +344,19 @@ from sklearn.linear_model import ElasticNet
 from sklearn.metrics import explained_variance_score, r2_score
 
 # Training on demographic only data
-clf_nts = ElasticNet()
+
+clf_nts = ElasticNet(alpha=5.0,l1_ratio=0.5)
 clf_nts.fit(X_nts_train, y_nts_train)
 
 y_nts_true_reg, y_nts_pred_reg = y_nts_test, clf_nts.predict(X_nts_test)
 metrics_nts_testing =[explained_variance_score(y_nts_true_reg, y_nts_pred_reg), r2_score(y_nts_true_reg, y_nts_pred_reg)]
 
 # Training on demographic+ time series data:
-clf = ElasticNet()
+clf = ElasticNet(alpha=5.0,l1_ratio=0.3)
 clf.fit(X_train, y_train)
 
 y_true_reg, y_pred_reg = y_test, clf.predict(X_test)
 metrics_testing =[explained_variance_score(y_true_reg, y_pred_reg), r2_score(y_true_reg, y_pred_reg)]
-
 ```
 #### Visualisation of the results from the modeling
 
@@ -362,25 +367,25 @@ let y_nts_pred_list = []
 let y_nts_true_list = []
 
 for (let i = 0; i < y_pred_reg.length; i++){
-	y_pred_list.push(y_pred_reg[i][0])
-  y_true_list.push(y_true_reg[i][0])
+	y_pred_list.push(y_pred_reg[i][0]/60)
+  y_true_list.push(y_true_reg[i][0]/60)
   
-  y_nts_pred_list.push(y_nts_pred_reg[i][0])
-  y_nts_true_list.push(y_nts_true_reg[i][0])
+  y_nts_pred_list.push(y_nts_pred_reg[i][0]/60)
+  y_nts_true_list.push(y_nts_true_reg[i][0]/60)
 }
 
 var trace1 = {
   x: y_true_list,
   y: y_pred_list,
   mode: 'markers',
-  name: 'Prediction',
+  name: 'All data',
 };
 
 var trace2 = {
   x: y_nts_true_list,
   y: y_nts_pred_list,
   mode: 'markers',
-  name: 'NTS Prediction',
+  name: 'Demographic-only data',
 };
 
 var layout_reg_nts = {
@@ -427,6 +432,14 @@ Class_1= [round(dtf_final[dtf_final["survival_class"]==1].shape[0]/dtf_final.sha
 #Class 2: time of death after the first 100 hours'
 Class_2= [round(dtf_final[dtf_final["survival_class"]==0].shape[0]/dtf_final.shape[0],3)]
 ```
+
+```python
+dt_1= list(dt_final[dt_final["survival_class"]==1].shape)
+dt_0= list(dt_final[dt_final["survival_class"]==0].shape)
+
+dtf_1 = list(dtf_final[dtf_final["survival_class"]==1].shape)
+dtf_0= list(dtf_final[dtf_final["survival_class"]==0].shape)
+```
 Prepare input features, drop target variables
 
 ```python
@@ -453,7 +466,6 @@ X_train_class, X_test_class, y_train_class, y_test_class = train_test_split(X_cl
 
 # demographic only data
 X_nts_train_class, X_nts_test_class, y_nts_train_class, y_nts_test_class = train_test_split(X_nts_class, y_nts_class, test_size=0.20, random_state=42)
-
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 X_scaler_class = StandardScaler()
@@ -469,10 +481,8 @@ X_nts_test_class = X_nts_scaler_class.transform(X_nts_test_class)
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 
-#Create a Gaussian Classifier
-clf_nts_rf=RandomForestClassifier(n_estimators=100)
-
-# # use a full grid over all parameters
+#Create a random forest Classifier with optimised parameters
+clf_nts_rf=RandomForestClassifier(n_estimators=100,bootstrap= True, criterion='gini', max_depth=10,max_features=10, min_samples_split=20)
 
 # #Train the model using the training sets y_pred=clf.predict(X_test)
 clf_nts_rf.fit(X_nts_train_class,y_nts_train_class)
@@ -486,19 +496,18 @@ metrics_Rf_testing_nts=[metrics.accuracy_score(y_true_class, y_pred_class)]
 
 # Compute confusion matrix
 cnf_matrix_nts = metrics.confusion_matrix(y_nts_test_class, y_nts_pred_class)
-
 ```
 #### Visualise the confusion matrix for the sample with demographic only data
 
 ```javascript
 let xValues =  ['< 100 hours', '> 100 hours']
-let yValues =  ['< 100 hours', '> 100 hours']
+let yValues =  ['> 100 hours','< 100 hours']
 let zValues = []
 let aRow = [];
-for (let i  = 0; i < xValues.length; i++) {
+for ( var i = xValues.length-1; i >=0; i-- ) {
   aRow = [];
   for (let j  = 0; j < yValues.length; j++) {
-    aRow.push(cnf_matrix_nts[i][j])
+    aRow.push((cnf_matrix_nts[i][j]/(cnf_matrix_nts[i][0]+cnf_matrix_nts[i][1])).toFixed(2))
   }
   zValues.push(aRow)
 }
@@ -514,7 +523,7 @@ let trace3 = {
 };
 
 let layout_nts = {
-  title: 'Confusion Matrix',
+  title: 'Confusion Matrix for Demographic-only data',
   annotations: [],
   xaxis: {
     title: 'Predicted value', 
@@ -573,12 +582,10 @@ addOutput(function(id) {
 ```
 Now we run the classification for the sample with demographic plus time-series data.
 ```python
-
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 
-clf_rf=RandomForestClassifier(n_estimators=100)
-
+clf_rf=RandomForestClassifier(n_estimators=100,bootstrap= False, criterion='entropy', max_depth=100,max_features=10, min_samples_split=2)
 #Train the model using the training sets y_pred=clf.predict(X_test)
 clf_rf.fit(X_train_class,y_train_class)
 
@@ -594,21 +601,19 @@ metrics_Rf_testing=[metrics.accuracy_score(y_true_class, y_pred_class)]
 
 # Compute confusion matrix
 cnf_matrix = metrics.confusion_matrix(y_test_class, y_pred_class)
-#Plot normalized confusion matrix
-
 ```
 #### Visualise the confusion matrix for the sample with demographic plus time-series data
 
 ```javascript
 let xValues_cnf_ = ['< 100 hours', '> 100 hours']
-let yValues_cnf_ = ['< 100 hours', '> 100 hours']
+let yValues_cnf_ =  ['> 100 hours','< 100 hours']
 
 let zValues_cnf_ = []
 let aRow_cnf_ = [];
-for (let i  = 0; i < xValues_cnf_.length; i++) {
+for ( var i = xValues.length-1; i >=0; i-- ) {
   aRow_cnf_ = [];
   for (let j  = 0; j < yValues_cnf_.length; j++) {
-    aRow_cnf_.push(cnf_matrix[i][j])
+    aRow_cnf_.push((cnf_matrix[i][j]/(cnf_matrix[i][0]+cnf_matrix[i][1])).toFixed(2))
   }
   zValues_cnf_.push(aRow_cnf_)
 }
@@ -624,7 +629,7 @@ let trace4 = {
 };
 
 let layout_cnf= {
-  title: 'Confusion Matrix',
+  title: 'Confusion Matrix for All data',
   annotations: [],
   xaxis: {
     title: 'Predicted value', 
@@ -651,7 +656,7 @@ let layout_cnf= {
 
 for ( var i = yValues_cnf_.length-1; i >=0; i-- ) {
   for ( var j = 0; j < xValues_cnf_.length; j++ ) {
-    var currentValue_ = zValues_cnf_[j][i];
+    var currentValue_ = zValues_cnf_[i][j];
     if (currentValue_ != 0.0) {
       var textColor_ = 'white';
     }else{
@@ -662,7 +667,7 @@ for ( var i = yValues_cnf_.length-1; i >=0; i-- ) {
       yref: 'y1',
       x: xValues_cnf_[j],
       y: yValues_cnf_[i],
-      text: zValues_cnf_[j][i],
+      text: zValues_cnf_[i][j],
       font: {
         family: 'Arial',
         size: 12,
