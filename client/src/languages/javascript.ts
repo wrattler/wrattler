@@ -57,7 +57,8 @@ class JavascriptBlockKind implements Langs.Block {
         exportedVariables:[],
         kind: 'code',
         value: null,
-        source: source
+        source: source,
+        errors: []
       }
 
       let walk = function (expr) {
@@ -75,7 +76,8 @@ class JavascriptBlockKind implements Langs.Block {
                 language:"javascript",
                 code: node, 
                 kind: 'export',
-                antecedents:[node]
+                antecedents:[node],
+                errors:[]
                 };
               dependencies.push(exportNode);
               node.exportedVariables.push(exportNode.variableName);
@@ -134,7 +136,7 @@ class JavascriptBlockKind implements Langs.Block {
     language: "javascript",
     editor: javascriptEditor,
  
-    evaluate: async (node:Graph.Node) : Promise<Values.Value> => {
+    evaluate: async (node:Graph.Node) : Promise<Langs.EvaluationResult> => {
       let jsnode = <Graph.JsNode>node
 
       async function putValue(variableName, hash, value) : Promise<string> {
@@ -195,12 +197,14 @@ class JavascriptBlockKind implements Langs.Block {
             var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: outputs[i] }
             exports.exports["output" + i] = exp
           }
-          return exports
+          // return exports
+          return {kind: 'success', value: exports} 
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName
           let exportsValue = <Values.ExportsValue>jsExportNode.code.value
-          return exportsValue.exports[exportNodeName]
+          // return exportsValue.exports[exportNodeName]
+          return {kind: 'success', value: exportsValue.exports[exportNodeName]} 
       }
     },
     parse: (code:string) => {

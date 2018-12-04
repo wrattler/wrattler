@@ -155,11 +155,12 @@ class MarkdownBlockKind implements Langs.Block {
         language:"markdown", 
         antecedents:[],
         value: null,
+        errors: []
       }
       return {code: node, exports: []};
     },
-    evaluate: async (node:Graph.Node) : Promise<Value> => {
-      return { kind: "nothing" };
+    evaluate: async (node:Graph.Node) : Promise<Langs.EvaluationResult> => {
+      return { kind: "success", value: { kind: "nothing" } };
     },
   }
   

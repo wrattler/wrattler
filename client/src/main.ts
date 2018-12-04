@@ -108,9 +108,18 @@ async function evaluate(node:Graph.Node) {
   let languagePlugin = languagePlugins[node.language]
   let source = (<any>node).source ? (<any>node).source.substr(0, 100) + "..." : "(no source)"
   Log.trace("evaluation","Evaluating %s node: %s", node.language, source)
-  node.value = await languagePlugin.evaluate(node);
+  let evalResult = await languagePlugin.evaluate(node);
   Log.trace("evaluation","Evaluated %s node. Result: %O", node.language, node.value)
-  return;
+  switch(evalResult.kind) {
+    case "success": 
+      node.value = evalResult.value;
+      break;
+    case "error":
+      node.errors = evalResult.errors;
+      break;
+  }
+ return;
+
 }
 
 function render(trigger:(NotebookEvent) => void, state:NotebookState) {
