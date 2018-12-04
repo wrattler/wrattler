@@ -86,6 +86,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       try {
         Log.trace("data-store", "Fetching data frame: %s", pathname)
         let response = await axios.get(url, {headers: headers});
+        Log.trace("data-store", "Got data frame (%s rows): %s", response.data.length, pathname)
         return response.data
       }
       catch (error) {

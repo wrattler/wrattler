@@ -106,7 +106,7 @@ async function evaluate(node:Graph.Node) {
   for(var ant of node.antecedents) await evaluate(ant);
 
   let languagePlugin = languagePlugins[node.language]
-  let source = (<any>node).source ? (<any>node).source.substr(0, 100) : "(no source)"
+  let source = (<any>node).source ? (<any>node).source.substr(0, 100) + "..." : "(no source)"
   Log.trace("evaluation","Evaluating %s node: %s", node.language, source)
   node.value = await languagePlugin.evaluate(node);
   Log.trace("evaluation","Evaluated %s node. Result: %O", node.language, node.value)
