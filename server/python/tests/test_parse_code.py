@@ -37,7 +37,7 @@ def test_multiple_assignment():
                 "hash": "doesntmatter"}
     result = analyze_code(testdata)
     print(result)
-    assert(result["exports"] == ["x","y"])
+    assert(sorted(result["exports"]) == ["x","y"])
     assert(result["imports"] == ["z"])
 
 
@@ -107,3 +107,31 @@ def test_method_calling_imports():
     print(result)
     assert(sorted(result["imports"]) == ["a","b","c"])
     assert(result["exports"] == ["x"])
+
+
+def test_imports_same_var_twice():
+    """
+    We only want to read in a dataframe once, even if
+    the variable appears in the code fragment multiple times.
+    """
+    code = "x = a + b\ny = a + c\n"
+    testdata = {"code": code,
+                "frames": ["a","b","c"],
+                "hash": "irrelevant"}
+    result = analyze_code(testdata)
+    print(result)
+    assert(result["imports"].count("a")==1)
+
+
+def test_exports_same_var_twice():
+    """
+    We only want to upload a dataframe once, even if
+    the variable appears in the code fragment multiple times.
+    """
+    code = "x = a + b\nx = c + d\n"
+    testdata = {"code": code,
+                "frames": ["a","b","c"],
+                "hash": "irrelevant"}
+    result = analyze_code(testdata)
+    print(result)
+    assert(result["exports"].count("x")==1)

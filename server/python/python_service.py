@@ -182,6 +182,9 @@ def analyze_code(data):
     for variable in assignment_dict["input_vals"]:
         if variable in frames:
             imports.append(variable)
+    ## ensure that each variable only appears once
+    imports = list(set(imports))
+    exports = list(set(exports))
     return {"imports": imports,
             "exports": exports}
 
