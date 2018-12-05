@@ -120,7 +120,7 @@ constructFuncString <- function(code, importsList, hash) {
     ## construct a function that assigns retrieved frames to the imported variables,
     ## then contains the code block.
     stringFunc <- "wrattler_f <- function() {\n"
-    stringFunc <- paste(stringFunc," \n    png('test.png') \n")
+#    stringFunc <- paste(stringFunc," \n    png('test.png') \n")
     if (length(importsList) > 0) {
         for (i in seq_along(importsList)) {
             stringFunc <- paste0(stringFunc,"    ",
@@ -138,14 +138,14 @@ constructFuncString <- function(code, importsList, hash) {
     }
     stringFunc <- paste(stringFunc,") \n")
     ## search for ggplot objects in this environment
-    stringFunc <- paste(stringFunc," \n    for (envitem in ls(environment())) { \n")
-    stringFunc <- paste(stringFunc,"       if ('ggplot' %in% class(get(envitem,environment()))) {\n")
-    ## write any ggplot objects to a filename constructed from the cell hash and
-    ## the object name
-    stringFunc <- paste(stringFunc,"         writePlotToFile(get(envitem,environment()), '")
-    stringFunc <- paste0(stringFunc, hash,"', envitem) \n")
-    stringFunc <- paste(stringFunc,"       }\n")
-    stringFunc <- paste(stringFunc,"     }\n")
+#    stringFunc <- paste(stringFunc," \n    for (envitem in ls(environment())) { \n")
+#    stringFunc <- paste(stringFunc,"       if ('ggplot' %in% class(get(envitem,environment()))) {\n")
+#    ## write any ggplot objects to a filename constructed from the cell hash and
+#    ## the object name
+#    stringFunc <- paste(stringFunc,"         writePlotToFile(get(envitem,environment()), '")
+#    stringFunc <- paste0(stringFunc, hash,"', envitem) \n")
+#    stringFunc <- paste(stringFunc,"       }\n")
+#    stringFunc <- paste(stringFunc,"     }\n")
     ## return the returnVars
     stringFunc <- paste(stringFunc," \n    return(returnVars) \n")
     stringFunc <- paste(stringFunc,  "}\n")

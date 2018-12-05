@@ -13,6 +13,21 @@ test_that("We can parse code that takes subset of a DF using subset method", {
     expect_that(impExpEnv$exports == "subs",equals(TRUE))
 })
 
+test_that("Imports only appear once", {
+    code <- "x <- a+b\ny <- a + d"
+    impExpEnv <- analyzeCode(code)
+    expect_that(table(impExpEnv$imports)[["a"]],equals(1))
+
+})
+
+
+test_that("Exports only appear once", {
+    code <- "x <- a+b\nx <- c + d"
+    impExpEnv <- analyzeCode(code)
+    expect_that(table(impExpEnv$exports)[["x"]],equals(1))
+
+})
+
 ## FOLLOWING TEST WILL FAIL UNLESS WE CAN FIX/REPLACE CODETOOLS WALKCODE
 
 #test_that("We can parse code that takes subset of a DF using a trailing comma", {
