@@ -23,6 +23,9 @@ RUN Rscript -e "install.packages('testthat')"
 #RUN Rscript -e "install.packages('textclean')"
 #RUN Rscript -e "install.packages('devtools')"
 RUN Rscript -e "install.packages('cleanEHR')"
+RUN Rscript -e "install.packages('reshape2')"
+RUN Rscript -e "install.packages('plyr')"
+RUN Rscript -e "install.packages('dplyr')"
 
 
 # copy current working directory
