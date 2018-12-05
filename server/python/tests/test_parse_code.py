@@ -68,6 +68,19 @@ def test_out_of_scope_assignments():
     assert(result["exports"]==["newx"])
 
 
+def test_imports_used_in_functions():
+    """
+    imported variables can be used inside functions.
+    """
+    code = 'def hello():\n    x = a + b\n    return x\n\nnewx = hello()\n\n'
+    testdata = {"code": code,
+                "frames": ["a","b"],
+                "hash": "irrelevant"}
+    result = analyze_code(testdata)
+    print(result)
+    assert(result["exports"]==["newx"])
+    assert(sorted(result["imports"])==["a","b"])
+
 def test_non_assignment_imports():
     """
     variables can be used in statements that are not assignments..

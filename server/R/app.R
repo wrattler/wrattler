@@ -12,14 +12,14 @@ handle_exports <- function(code, frames, hash) {
     return(jsonlite::toJSON(impExpList))
 }
 
-handle_eval <- function(code,frames,hash) {
+handle_eval <- function(code, frames, hash) {
     ## frames, parsed from json structure like [{"name":<name>,"url":<url>},{...}
     ## will be a list of named-lists.
 
     ## get a list of the expected output names from the code
     exportsList <- analyzeCode(code)$exports
     ## executeCode will return a named list of all the evaluated outputs
-    outputs <- executeCode(code, frames)
+    outputs <- executeCode(code, frames, hash)
     outputsList <- outputs$returnVars
     ## uploadOutputs will put results onto datastore, and return a dataframe of names and urls
     results <- uploadOutputs(outputsList, exportsList, hash)

@@ -2,6 +2,7 @@
 
 library(jsonlite)
 library(httr)
+library(base64enc)
 
 source("codeAnalysis.R")
 
@@ -35,7 +36,13 @@ writeFrame <- function(frameData, frameName, frameHash) {
     ## Write a dataframe to the datastore.
     ## use jsonlite to serialize dataframe into json
     url <- makeURL(frameName, frameHash)
-    frameJSON <- jsonFromDataFrame(frameData)
+    if ("ggplot" %in% class(frameData)) {
+        ## could be an image, saved as a png file on /tmp
+        frameJSON <- jsonFromImageFile(frameName, frameHash)
+
+    } else {
+        frameJSON <- jsonFromDataFrame(frameData)
+    }
     ## put it into the datastore if it is not NULL, i.e. was convertable to json
     if (!is.null(frameJSON)) {
         r <- PUT(url, body=frameJSON, encode="json")
@@ -44,15 +51,24 @@ writeFrame <- function(frameData, frameName, frameHash) {
     return(FALSE)
 }
 
+jsonFromImageFile <- function(frameName, frameHash) {
+    ## see if there is a png file at /tmp/frameHash/frameName.png
+    filename <- file.path("/tmp",frameHash,paste0(frameName,".png"))
+    if (! file.exists(filename)) return(NULL)
+    IMAGE <- base64enc::base64encode(filename)
+    frameJSON <- jsonlite::toJSON(as.data.frame(IMAGE))
+    return(frameJSON)
+}
+
 
 jsonFromDataFrame <- function(frameData) {
     ## jsonlite doesn't like converting numbers into json
     if (is.numeric(frameData)) frameData <- as.character(frameData)
     ## explicitly convert into a dataframe if we can
     frameData <- tryCatch({ as.data.frame(frameData) },
-                           error=function(cond) {
-                               return(NULL)
-                           })
+                          error=function(cond) {
+                              return(NULL)
+                          })
     if (is.null(frameData)) return(NULL)
     ## convert to JSON
     frameJSON <- jsonlite::toJSON(frameData, na="null")
@@ -78,7 +94,7 @@ retrieveFrames <- function(inputFrames) {
 uploadOutputs <- function(outputsList, exports, hash) {
     ## take a named list, upload the results, and return dataframe of names and urls
     url <- c()
-    for (i in 1:length(exports)) {
+    for (i in seq_along(exports)) {
         uploaded_ok <- writeFrame(outputsList[[exports[[i]]]],exports[[i]],hash)
         url <- c(url, makeURL(exports[[i]], hash))
     }
@@ -96,7 +112,9 @@ cleanString <- function(inputString) {
 }
 
 
-executeCode <- function(code, importsList) {
+constructFuncString <- function(code, importsList, hash) {
+    ## construct a string containing a function definition wrapping our code.
+
     ## analyze the code to get imports and exports (only need exports here)
     impexp <- analyzeCode(code)
     ## construct a function that assigns retrieved frames to the imported variables,
@@ -119,29 +137,47 @@ executeCode <- function(code, importsList) {
         }
     }
     stringFunc <- paste(stringFunc,") \n")
-    stringFunc <- paste(stringFunc," \n    dev.off() \n")
+    ## search for ggplot objects in this environment
+    stringFunc <- paste(stringFunc," \n    for (envitem in ls(environment())) { \n")
+    stringFunc <- paste(stringFunc,"       if ('ggplot' %in% class(get(envitem,environment()))) {\n")
+    ## write any ggplot objects to a filename constructed from the cell hash and
+    ## the object name
+    stringFunc <- paste(stringFunc,"         writePlotToFile(get(envitem,environment()), '")
+    stringFunc <- paste0(stringFunc, hash,"', envitem) \n")
+    stringFunc <- paste(stringFunc,"       }\n")
+    stringFunc <- paste(stringFunc,"     }\n")
+    ## return the returnVars
     stringFunc <- paste(stringFunc," \n    return(returnVars) \n")
     stringFunc <- paste(stringFunc,  "}\n")
-    print(stringFunc)
+    return(stringFunc)
+}
+
+
+writePlotToFile <- function(plot, hash, plotName) {
+    ## use png device to save output to a file
+    dir.create(file.path("/tmp",hash), showWarnings=FALSE)
+    filename = file.path("/tmp",hash,paste0(plotName,".png"))
+    png(file=filename)
+    print(plot)
+    dev.off()
+}
+
+
+
+executeCode <- function(code, importsList, hash) {
+    ## Call the function to create stringFunc, then parse and execute it.
+
+    stringFunc <- constructFuncString(code, importsList, hash)
     parsedFunc <- parse(text=stringFunc)
 
     eval(parsedFunc)
-  #  png('wrattlerPlot.png')
+    png('wrattlerPlot.png')
     s <- capture.output(returnVars <- wrattler_f())
-  #  dev.off()
-#    print("should have made a png")
+
     clean_s <- lapply(s, cleanString)
     outputString <- paste(clean_s, collapse="\n")
-    ## try to capture plots as a png
-#    plotStatus <- tryCatch({ dev.copy(png,'wrattlerPlot.png')
-#        print("found a plot")
-#        dev.off()},
-#        error=function(cond) {
-#            print("nothing here")
- #           return(NULL)
- #       })
+
     ret <- new.env()
- #   ret$plot <- !is.null(plotStatus)
     ret$returnVars <- returnVars
     ret$outputString <- outputString
     return(ret)
