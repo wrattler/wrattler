@@ -236,7 +236,7 @@ def evaluate_code(data):
                                               output_hash,
                                               name)})
 
-    wrote_ok &= write_image(output_hash)
+##    wrote_ok &= write_image(output_hash)
     if wrote_ok:
         return return_dict
     else:
