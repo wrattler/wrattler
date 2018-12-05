@@ -151,7 +151,9 @@ def find_assignments(code_string):
                 _find_elements(node.func, output_dict, "input_vals", global_scope)
             elif isinstance(node, ast.Name) and parent:
                 if global_scope or parent=="input_vals":
-                    output_dict[parent].append(node.id)
+                    ## only add this name if it isn't already in the list
+                    if not node.id in output_dict[parent]:
+                        output_dict[parent].append(node.id)
             elif isinstance(node, ast.FunctionDef):  ## will no longer be in global scope
                 for a,b in ast.iter_fields(node):
                     _find_elements(b, output_dict, parent, False)

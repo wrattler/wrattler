@@ -2,7 +2,7 @@
 See if we can get the input and output frames from a code snippet
 """
 
-from python_service import analyze_code
+from python_service import analyze_code, construct_func_string
 
 def test_simple_exports():
     """
@@ -135,3 +135,17 @@ def test_exports_same_var_twice():
     result = analyze_code(testdata)
     print(result)
     assert(result["exports"].count("x")==1)
+
+
+def test_func_string_same_input_var_twice():
+    """
+    As test above, but checking that the func string only reads the
+    variable from datastore once.
+    """
+    code = "x = a + b\ny = a + c\n"
+    frame_dict = {"a": 2, "b":3, "c":4}
+    return_vars = ["x","y"]
+    output_hash = "testhash"
+    func_string = construct_func_string(code, frame_dict, return_vars, output_hash)
+    assert(func_string.count("a = ") == 1)
+    print(func_string)
