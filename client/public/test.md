@@ -14,13 +14,16 @@ Second, we create one frame in Python:
 
 ```python
 two = pd.DataFrame({"name":["Jim"], "age":[51]})
+joinPy = one.append(two); 
 print("Hello me")
 ```
+
+
 
 Finally, we create one more frame in R:
 
 ```r
-three <- data.frame(name=c("Jim"), age=c(51))
+one <- data.frame(name=c("Jim"), age=c(51))
 ```
 
 Now, test if we can access all from JavaScript:

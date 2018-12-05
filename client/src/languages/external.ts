@@ -132,6 +132,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
   
     switch(externalNode.kind) {
       case 'code': 
+      console.log(externalNode)
         let importedFrames : { name:string, url:string }[] = [];
         for (var ant of externalNode.antecedents) {
           let imported = <Graph.ExportNode>ant
@@ -187,25 +188,35 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     async function getExports(language:string) {
       try {
         let response = await axios.post(url, body, {headers: headers});
+        let namesOfExports:Array<string> = []
         for (var n = 0 ; n < response.data.exports.length; n++) {
-          let exportNode:Graph.ExternalExportNode = {
-              variableName: response.data.exports[n],
-              value: null,
-              language:language,
-              code: node, 
-              kind: 'export',
-              antecedents:[node],
-              errors: []
-              };
-          dependencies.push(exportNode) 
-          node.exportedVariables.push(exportNode.variableName)
-        }
-        for (var n = 0 ; n < response.data.imports.length; n++) {
-          if (response.data.imports[n] in scopeDictionary) {
-            let antecedentNode = scopeDictionary[response.data.imports[n]]
-            node.antecedents.push(antecedentNode);
+          if (namesOfExports.indexOf(response.data.exports[n]) < 0) {
+            namesOfExports.push(response.data.exports[n])
+            let exportNode:Graph.ExternalExportNode = {
+                variableName: response.data.exports[n],
+                value: null,
+                language:language,
+                code: node, 
+                kind: 'export',
+                antecedents:[node],
+                errors: []
+                };
+            dependencies.push(exportNode) 
+            node.exportedVariables.push(exportNode.variableName)
           }
         }
+        // console.log("Imp: "+JSON.stringify(response.data.imports))
+        let namesOfImports:Array<string> = []
+        for (var n = 0 ; n < response.data.imports.length; n++) {
+          if (namesOfImports.indexOf(response.data.imports[n]) < 0) {
+            namesOfImports.push(response.data.imports[n])
+            if (response.data.imports[n] in scopeDictionary) {
+              let antecedentNode = scopeDictionary[response.data.imports[n]]
+              node.antecedents.push(antecedentNode);
+            }
+          }
+        }
+        // console.log(node)
         return {code: node, exports: dependencies};
       }
       catch (error) {

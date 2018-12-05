@@ -63,13 +63,13 @@ async function bindAllCells(editors:Langs.EditorState[]) {
 }
 
 async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState, newSource: string) {
+  console.log("Rebinding")
   for (var b=0; b < state.cells.length; b++) {
-    if (state.cells[b].editor.id >= cell.editor.id) {
+    // if (state.cells[b].editor.id >= cell.editor.id) {
       let languagePlugin = languagePlugins[state.cells[b].editor.block.language]
       let block = state.cells[b].editor.block;
       if (state.cells[b].editor.id == cell.editor.id) {
         block = languagePlugin.parse(newSource);
-        console.log(block)
       }
       let id = state.cells[b].editor.id;
       let editor:Langs.EditorState = languagePlugin.editor.initialize(id, block);
@@ -82,22 +82,23 @@ async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState,
         let newBlock:Langs.BlockState = {editor: editor, code: state.cells[b].code, exports: state.cells[b].exports};
         state.cells[index] = newBlock;
       }
-    }
+    // }
   }
-  console.log(state.cells);
   for (var b=0; b < state.cells.length; b++) {
-    if (state.cells[b].editor.id >= cell.editor.id) {
+    // if (state.cells[b].editor.id >= cell.editor.id) {
       let aCell = state.cells[b]
       let {code, exports} = await bindCell(aCell.editor);
       aCell.code = code
       aCell.exports = exports
+      console.log(aCell)
       for (var e = 0; e < exports.length; e++ ) {
         let exportNode = exports[e];
         scopeDictionary[exportNode.variableName] = exportNode;
       }
-    }
+      
+    // }
   }
-  console.log(state.cells);
+  
   return state;
 }
 
