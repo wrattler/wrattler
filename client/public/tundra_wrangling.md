@@ -102,10 +102,107 @@ teamtraits.long$Units[teamtraits.long$Trait=="LDMC"] <- "ratio"
 
 # Add genus name
 teamtraits.long$Genus<-as.vector(sapply(strsplit(teamtraits.long$AccSpeciesName," ",fixed=FALSE), "[", 1))
-teamtraits.clean <- teamtraits.long
+
+drops <- c("teamtraits.long")
+teamtraits.clean <- teamtraits.long %>% select(-one_of(drops))
+
 ```
 ```r
 ## Step 1: individual records against the entire distribution (except plant height and leaf area)
-teamtraits.clean2 <- teamtraits.clean %>% dplyr::mutate_each(nrow=row_number()) %>% group_by(Trait) %>% dplyr::mutate_each(mean_all = round(((sum(Value) - Value)/(n()-1)),5), n_all = n(), median_all = median(Value),sd_all = sd(Value), ErrorRisk_all = round((abs(Value-mean_all)/sd_all),4),ErrorRiskMedian_all = round((abs(Value-median_all)/sd_all),4))
+teamtraits.clean2 <- teamtraits.clean %>% dplyr::mutate(nrow=row_number()) %>% group_by(Trait) %>% dplyr::mutate(mean_all = round(((sum(Value) - Value)/(n()-1)),5), n_all = n(), median_all = median(Value),sd_all = sd(Value), ErrorRisk_all = round((abs(Value-mean_all)/sd_all),4),ErrorRiskMedian_all = round((abs(Value-median_all)/sd_all),4))
+
+teamtraits.clean3 <- subset(teamtraits.clean2,(is.finite(teamtraits.clean2$ErrorRisk_all) & teamtraits.clean2$ErrorRisk_all > 8 & teamtraits.clean2$Trait %in% c("PlantHeight","LeafArea") == F) == FALSE)
 ```
 
+```r
+## Step 2: datasets-by-species against species distribution
+teamtraits.clean4 <- teamtraits.clean3 %>% group_by(Trait, AccSpeciesName) %>% dplyr::mutate(
+  ndataset = length(unique(SiteName)), 
+  mean_species = round(((sum(Value) - Value)/(n()-1)),5), 
+  median_species = median(Value),
+  sd_species = sd(Value), 
+  n_species = n(), 
+  ErrorRisk_species = round((abs(Value-mean_species)/sd_species),4),
+  ErrorRiskMedian_species = round((abs(Value-median_species)/sd_species),4)) %>% 
+  
+  group_by(Trait, Genus) %>% dplyr::mutate(
+    mean_genus = round(((sum(Value) - Value)/(n()-1)),5),
+    median_genus = median(Value),
+    sd_genus = sd(Value), 
+    n_genus = n(), 
+    ErrorRisk_genus = round((abs(Value-mean_genus)/sd_genus),4),
+    ErrorRiskMedian_genus = round((abs(Value-median_genus)/sd_genus),4)) %>% 
+  
+  group_by(Trait, AccSpeciesName, SiteName) %>% dplyr::mutate(
+    mean_spdataset = round(((sum(mean_species) - mean_species)/(n()-1)),5), 
+    median_spdataset = median(Value),
+    sd_spdataset = sd(Value), 
+    n_spdataset = n(), 
+    ErrorRisk_spdataset = round((abs(mean_spdataset-mean_species)/sd_species),4),
+    ErrorRiskMedian_spdataset = round((abs(median_spdataset-median_species)/sd_species),4)) %>% 
+  
+  group_by(Trait, Genus, SiteName) %>% dplyr::mutate(
+    mean_gspdataset = round(((sum(mean_genus) - mean_genus)/(n()-1)),5), 
+    median_gspdataset = median(Value),
+    sd_gspdataset = sd(Value), 
+    n_gdataset = n(), 
+    ErrorRisk_gspdataset = round((abs(mean_spdataset-mean_genus)/sd_genus),4),
+    ErrorRiskMedian_gspdataset = round((abs(median_spdataset-median_genus)/sd_genus),4))
+   
+```
+```r
+# > 4 datasets per species
+teamtraits.clean5 <- subset(teamtraits.clean4,(teamtraits.clean4$ndataset >= 4 & is.finite(teamtraits.clean4$ErrorRisk_spdataset) & teamtraits.clean4$ErrorRisk_spdataset > 3) == FALSE) 
+
+## Step 3: datasets-by-species agaist genus distribution
+teamtraits.clean6 <- subset(teamtraits.clean5,(teamtraits.clean5$ndataset >= 1 & teamtraits.clean5$ndataset < 4 & is.finite(teamtraits.clean5$ErrorRisk_gspdataset) & teamtraits.clean5$ErrorRisk_gspdataset > 3.5) == FALSE) #CHECK THIS!
+
+```
+```r
+## Step 4: individual records against the species distribution
+teamtraits.clean7 <- teamtraits.clean6 %>% group_by(Trait, AccSpeciesName) %>% dplyr::mutate(
+  ndataset = length(unique(SiteName)), 
+  mean_species = round(((sum(Value) - Value)/(n()-1)),5), 
+  mad_species = mad(Value, constant=1), 
+  sd_species = sd(Value), n_species = n(), 
+  ErrorRisk_species = round((abs(Value-mean_species)/sd_species),4))
+```
+```r
+# 4 - 9 records
+teamtraits.clean8 <- subset(teamtraits.clean7,(teamtraits.clean7$n_species >= 4 & teamtraits.clean7$n_species < 10 & is.finite(teamtraits.clean7$ErrorRisk_species) & teamtraits.clean7$ErrorRisk_species > 2.25) == FALSE)
+
+# 10 - 19 records
+teamtraits.clean9 <- subset(teamtraits.clean8,(teamtraits.clean8$n_species >= 10 & teamtraits.clean8$n_species < 20 & is.finite(teamtraits.clean8$ErrorRisk_species) & teamtraits.clean8$ErrorRisk_species > 2.75) == FALSE)
+
+# 20 - 29 records
+teamtraits.clean10 <- subset(teamtraits.clean9,(teamtraits.clean9$n_species >= 20 & teamtraits.clean9$n_species < 30 & is.finite(teamtraits.clean9$ErrorRisk_species) & teamtraits.clean9$ErrorRisk_species > 3.25) == FALSE)
+
+# >30 records
+teamtraits.clean.final <- subset(teamtraits.clean10,(teamtraits.clean10$n_species >= 30 & is.finite(teamtraits.clean10$ErrorRisk_species) & teamtraits.clean10$ErrorRisk_species > 4) == FALSE)
+
+teamtraits.clean <- as.data.frame(teamtraits.clean.final)
+```
+```r
+# Check data removal
+
+ttt.clean <- subset(teamtraits.clean,select = c("IndividualID","AccSpeciesName","OriginalName","Lat","Lon","Altitude","SiteName","SubsiteName","DOY_measured","Year_measured","DataContributor","File.name","Comments","ValueKindName","Trait","TraitPretty","TraitTRY","Value","Units","ErrorRisk_species"))
+
+ttt.clean <- plyr::ddply(ttt.clean, .(Trait, AccSpeciesName), transform, nObsSpp = length(Value[!is.na(Value)]))
+                         
+                   
+```
+```r
+ttt.clean$ErrorRisk_species[ttt.clean$nObsSpp < 10] <- NA
+ttt.save <- subset(ttt.clean,select = c("IndividualID","AccSpeciesName","OriginalName","Lat","Lon","Altitude","SiteName","SubsiteName","DOY_measured","Year_measured","DataContributor","Comments","ValueKindName","TraitTRY","Value","Units","ErrorRisk_species"))
+colnames(ttt.save)[which(colnames(ttt.save)=="TraitTRY")] <- "Trait"
+colnames(ttt.save)[which(colnames(ttt.save)=="ErrorRisk_species")] <- "ErrorRisk"
+colnames(ttt.save)[which(colnames(ttt.save)=="DOY_measured")] <- "DayOfYear"
+colnames(ttt.save)[which(colnames(ttt.save)=="Year_measured")] <- "Year"
+colnames(ttt.save)[which(colnames(ttt.save)=="Lat")] <- "Latitude"
+colnames(ttt.save)[which(colnames(ttt.save)=="Lon")] <- "Longitude"
+colnames(ttt.save)[which(colnames(ttt.save)=="Altitude")] <- "Elevation"
+
+ttt.save <- subset(ttt.save,select=c("AccSpeciesName","OriginalName","IndividualID","Latitude","Longitude","Elevation","SiteName","SubsiteName","DayOfYear","Year","DataContributor","ValueKindName","Trait","Value","Units","ErrorRisk","Comments"))
+
+
+```
