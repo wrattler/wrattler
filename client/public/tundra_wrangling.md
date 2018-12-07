@@ -204,5 +204,38 @@ colnames(ttt.save)[which(colnames(ttt.save)=="Altitude")] <- "Elevation"
 
 ttt.save <- subset(ttt.save,select=c("AccSpeciesName","OriginalName","IndividualID","Latitude","Longitude","Elevation","SiteName","SubsiteName","DayOfYear","Year","DataContributor","ValueKindName","Trait","Value","Units","ErrorRisk","Comments"))
 
+```
 
+```r
+filtered_dataset <- subset(ttt.save,((!is.na(ttt.save$Latitude)) & (!is.na(ttt.save$Longitude)) & (!is.na(ttt.save$Year)))==TRUE) # keep only existing Lat and Long with a year
+
+# Keep only species represented in more than 4 sites
+filtered_dataset <- filtered_dataset %>%group_by(AccSpeciesName) %>%mutate(unique_sites = n_distinct(SiteName))
+filtered_dataset <- subset(filtered_dataset,filtered_dataset$unique_sites > 3) # only species present in 4 or more distinct sites
+```
+
+```r
+# Get site information, trim by number of observations (> 10)
+filtered_dataset$lat_trimmed = round(filtered_dataset$Latitude,digits=2)
+filtered_dataset$log_trimmed = round(filtered_dataset$Longitude,digits=2)
+sites <- subset(filtered_dataset,c("lat_trimmed","log_trimmed","SiteName"))
+sites <- sites %>% group_by(SiteName,lat_trimmed,log_trimmed) %>% filter(n()>10) #summarise(freq=sum(!is.na(SiteName)))
+rounding <- function(a) round(a,digits = 2)
+sites <- na.omit(unique(sites))
+
+```
+
+```r
+# Create grid with site indexes
+index_pos <- function(n,cnt=90){ # 90 for latitude, 180 for longitude
+  dec_part = n%%1
+  int_part = floor(n)
+  incr = 1
+  if (dec_part >= 0.5) {incr = 2}
+  return((int_part+cnt)*2+incr)
+}
+sites$lat_index = index_pos(sites$lat_trimmed)
+sites$log_index = index_pos(sites$log_trimmed,180)
+# join with data frame
+filtered_dataset <- merge(filtered_dataset, sites, by=c("SiteName","lat_trimmed","log_trimmed"))
 ```
