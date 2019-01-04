@@ -17,7 +17,7 @@ function printCurrentValue(cellId:number, value:Values.Value, tableName:string) 
   {
     case "dataframe":
       let df = <Values.DataFrame>value
-      return h('div', {}, [printCurrentTable(df.data, tableName)]);
+      return h('div', {class:'table-container'}, [printCurrentTable(df.data, tableName)]);
     case "printout":
       let printout = <Values.Printout>value
       return h('div', {}, [h('p', {innerHTML: printout.data.toLocaleString()}, [])])
@@ -53,7 +53,7 @@ function printCurrentTable(aTable: any, tableName:string) {
     rowsComponents.push(h('tr',{key: tableName+"rowheader"},[headerComponents]))
     
     // for every row in dataframe, create rows
-    let numRows = aTable.length > 10 ? 10 : aTable.length
+    let numRows = aTable.length > 100 ? 100 : aTable.length
     for (let row = 0; row < numRows; row++) {
       let values = getCurrentRow(aTable[row], tableHeaders);
       let columnsComponents:Array<any> = []
@@ -67,7 +67,7 @@ function printCurrentTable(aTable: any, tableName:string) {
       rowsComponents.push(h('tr',{key: tableName+"row"+row},[columnsComponents]))
     }
 
-    let tableComponent = h('table', {style: "width:100%", key:tableName},[rowsComponents]);
+    let tableComponent = h('table', {class:'table', key:tableName},[rowsComponents]);
     return tableComponent
   }
   return h('table', {style: "width:100%", key:tableName},[]);
