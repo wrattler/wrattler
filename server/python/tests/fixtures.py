@@ -38,6 +38,6 @@ def mock_write_frame(mock_datastore,data, frame_name,frame_hash):
 
 
 def mock_read_frame(mock_datastore, frame_name, frame_hash):
-    data = mock_datastore.retrieve(frame, hash)
+    data = mock_datastore.retrieve(frame_name, frame_hash)
     print(data)
     return data

@@ -111,11 +111,14 @@ def write_frame(data, frame_name, frame_hash):
     write a frame to the data store
     """
     url = '{}/{}/{}'.format(DATASTORE_URI, frame_hash, frame_name)
-    r=requests.put(url,json=data)
-    tokenized_response = r.content.decode("utf-8").split()
-    if 'StatusMessage:Created' in tokenized_response:
-        return True
-    return r.status_code == 200
+    try:
+        r=requests.put(url,json=data)
+        tokenized_response = r.content.decode("utf-8").split()
+        if 'StatusMessage:Created' in tokenized_response:
+            return True
+        return r.status_code == 200
+    except(TypeError):
+        return False
 
 
 def write_image(frame_hash):
@@ -232,13 +235,18 @@ def evaluate_code(data):
 
     wrote_ok=True
     for i, name in enumerate(frame_names):
+        ## check here if the result is JSON serializable - if not, skip it
+        try:
+            json_test = json.dumps(results[i])
+        except(TypeError):
+            continue
         wrote_ok &= write_frame(results[i], name, output_hash)
         return_dict["frames"].append({"name": name,"url": "{}/{}/{}"\
                                       .format(DATASTORE_URI,
                                               output_hash,
                                               name)})
 
-##    wrote_ok &= write_image(output_hash)
+    wrote_ok &= write_image(output_hash)
     if wrote_ok:
         return return_dict
     else:
@@ -253,6 +261,7 @@ def construct_func_string(code, input_val_dict, return_vars, output_hash):
     """
     func_string = "def wrattler_f():\n"
     func_string += "    import os\n"
+    func_string += "    import contextlib\n"
     func_string += "    import matplotlib\n"
     func_string += "    matplotlib.use('Cairo')\n\n"
     for k,v in input_val_dict.items():
@@ -266,6 +275,9 @@ def construct_func_string(code, input_val_dict, return_vars, output_hash):
     func_string += "        os.makedirs(os.path.join('{}','{}'),exist_ok=True)\n".format(TMPDIR,output_hash)
     func_string += "        plt.savefig(os.path.join('{}','{}','fig.png'))\n".format(TMPDIR,output_hash)
     func_string += "    except(NameError):\n"
+    func_string += "        with contextlib.suppress(FileNotFoundError):\n"
+    func_string += "            os.rmdir(os.path.join('{}','{}'))\n".format(TMPDIR,output_hash)
+    func_string += "            pass\n"
     func_string += "        pass\n"
     func_string += "    return "
     for rv in return_vars:
