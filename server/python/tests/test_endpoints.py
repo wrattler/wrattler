@@ -14,11 +14,12 @@ from python_service import *
 
 
 def test_exports(mock_datastore):
-    with patch('python_service.write_frame') as mock_write_frame:
+
+    with patch('tests.test_endpoints.write_frame') as mock_write_frame:
         write_frame({"a":4},"a","abc")
 
 
 def test_eval(mock_datastore):
-    with patch('python_service.read_frame') as mock_read_frame:
+    with patch('tests.test_endpoints.read_frame') as mock_read_frame:
         f=read_frame("a","abc")
         print(f)
