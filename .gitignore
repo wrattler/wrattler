@@ -11,8 +11,8 @@ __pycache__/
 .RData
 .Rhistory
 server/data-store/src/config.fs
+server/R/*.RData
 anon_public_d.RData
-server/R/.RData
 server/R/.Rhistory
 # emacs autosave files
 *~

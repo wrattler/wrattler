@@ -74,3 +74,12 @@ test_that("We can convert from a list to JSON", {
     newJson <- jsonFromDataFrame(test_df)
     expect_that(jsonString == newJson, equals(TRUE))
 })
+
+test_that("We can convert an image file to JSON", {
+    testFilePath <- file.path("/tmp","testimg","test.png")
+    dir.create(file.path("/tmp","testimg"))
+    download.file('https://commons.wikimedia.org/wiki/File:Test.png',testFilePath)
+    json <- jsonFromImageFile("test","testimg")
+    expect_that(is.null(json), equals(FALSE))
+
+})

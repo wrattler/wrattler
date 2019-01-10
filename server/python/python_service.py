@@ -23,8 +23,13 @@ if 'DATASTORE_URI' in os.environ.keys():
 else:
     DATASTORE_URI = 'http://localhost:7102'
 
+## define temporary dir for Windows or *nix
+if os.name == "posix":
+    TMPDIR = "/tmp"
+else:
+    TMPDIR = "%TEMP%"
 
-## Useful function (thanks
+
 @contextlib.contextmanager
 def stdoutIO(stdout=None):
     old = sys.stdout
@@ -106,12 +111,24 @@ def write_frame(data, frame_name, frame_hash):
     write a frame to the data store
     """
     url = '{}/{}/{}'.format(DATASTORE_URI, frame_hash, frame_name)
-#    print(" url is {}".format(url), file=sys.stderr)
     r=requests.put(url,json=data)
     tokenized_response = r.content.decode("utf-8").split()
     if 'StatusMessage:Created' in tokenized_response:
         return True
     return r.status_code == 200
+
+
+def write_image(frame_hash):
+    """
+    See if there is an image on TMPDIR and send it to the datastore if so
+    """
+    file_path = os.path.join(TMPDIR,frame_hash)
+    if not os.path.exists(file_path):
+        return True
+    url = '{}/{}/figures'.format(DATASTORE_URI, frame_hash)
+    file_data = [('figures',('fig.png',open(os.path.join(file_path,'fig.png'),'rb'), 'image/png'))]
+    r = requests.put(url, files=file_data)
+    return (r.status_code == 200)
 
 
 def find_assignments(code_string):
@@ -124,24 +141,28 @@ def find_assignments(code_string):
                    }
     node = ast.parse(code_string)
     ## recursive function to navigate the tree and find assignment targets and input values
-    def _find_elements(node, output_dict, parent=None):
+    def _find_elements(node, output_dict, parent=None, global_scope=True):
         if isinstance(node, ast.AST):
             if isinstance(node, ast.Assign):
-                _find_elements(node.targets, output_dict, "targets")
-                _find_elements(node.value, output_dict, "input_vals")
+                _find_elements(node.targets, output_dict, "targets", global_scope)
+                _find_elements(node.value, output_dict, "input_vals", global_scope)
             elif isinstance(node, ast.Call):
-                _find_elements(node.args, output_dict, "input_vals")
-                _find_elements(node.func, output_dict, "input_vals")
+                _find_elements(node.args, output_dict, "input_vals", global_scope)
+                _find_elements(node.func, output_dict, "input_vals", global_scope)
             elif isinstance(node, ast.Name) and parent:
-                output_dict[parent].append(node.id)
-            elif isinstance(node, ast.FunctionDef):  ## don't go inside..
-                return output_dict
+                if global_scope or parent=="input_vals":
+                    ## only add this name if it isn't already in the list
+                    if not node.id in output_dict[parent]:
+                        output_dict[parent].append(node.id)
+            elif isinstance(node, ast.FunctionDef):  ## will no longer be in global scope
+                for a,b in ast.iter_fields(node):
+                    _find_elements(b, output_dict, parent, False)
             else:
                 for a,b in ast.iter_fields(node):
-                    _find_elements(b, output_dict, parent)
+                    _find_elements(b, output_dict, parent, global_scope)
         elif isinstance(node, list):
             for element in node:
-                _find_elements(element, output_dict, parent)
+                _find_elements(element, output_dict, parent, global_scope)
         return output_dict
     final_dict = _find_elements(node, output_dict)
     return final_dict
@@ -163,6 +184,9 @@ def analyze_code(data):
     for variable in assignment_dict["input_vals"]:
         if variable in frames:
             imports.append(variable)
+    ## ensure that each variable only appears once
+    imports = list(set(imports))
+    exports = list(set(exports))
     return {"imports": imports,
             "exports": exports}
 
@@ -193,7 +217,7 @@ def evaluate_code(data):
     input_frames = data["frames"]
     frame_dict = retrieve_frames(input_frames)
     ## execute the code, get back a dict {"output": <string_output>, "results":<list_of_vals>}
-    results_dict = execute_code(code_string, frame_dict, assign_dict['targets'])
+    results_dict = execute_code(code_string, frame_dict, assign_dict['targets'], output_hash)
 
     results = results_dict["results"]
     ## prepare a return dictionary
@@ -214,35 +238,61 @@ def evaluate_code(data):
                                               output_hash,
                                               name)})
 
+##    wrote_ok &= write_image(output_hash)
     if wrote_ok:
         return return_dict
     else:
         raise RuntimeError("Could not write result to datastore")
 
 
-def execute_code(code, input_val_dict, return_vars, verbose=False):
+def construct_func_string(code, input_val_dict, return_vars, output_hash):
     """
-    Construct a string func_string that defines a function f()
-    then do exec(func_string), then define another string call_string that calls this function,
-    and then finally do eval(call_string)
+    Construct a string func_string that defines a function wrattler_f()
+    using the input and output variables defined from the code
+    analysis.
     """
     func_string = "def wrattler_f():\n"
+    func_string += "    import os\n"
+    func_string += "    import matplotlib\n"
+    func_string += "    matplotlib.use('Cairo')\n\n"
     for k,v in input_val_dict.items():
         func_string += "    {} = convert_to_pandas_df({})\n".format(k,v)
     ## need to worry about indentation for multi-line code fragments.
     ## split the code string by newline character, and prepend 4 spaces to each line.
     for line in code.strip().split("\n"):
         func_string += "    {}\n".format(line)
+    ## save any plot output to a file in /tmp/<hash>/
+    func_string += "    try:\n"
+    func_string += "        os.makedirs(os.path.join('{}','{}'),exist_ok=True)\n".format(TMPDIR,output_hash)
+    func_string += "        plt.savefig(os.path.join('{}','{}','fig.png'))\n".format(TMPDIR,output_hash)
+    func_string += "    except(NameError):\n"
+    func_string += "        pass\n"
     func_string += "    return "
     for rv in return_vars:
         func_string += "{},".format(rv)
     func_string += "\n"
+    return func_string
+
+
+def execute_code(code, input_val_dict, return_vars, output_hash, verbose=False):
+    """
+    Call a function that constructs a string containing a function definition,
+    then do exec(func_string), then define another string call_string
+    that calls this function,
+    and then finally do eval(call_string)
+    """
+    func_string = construct_func_string(code,
+                                        input_val_dict,
+                                        return_vars,
+                                        output_hash)
     if verbose:
         print(func_string)
     exec(func_string)
     return_dict = {"output": "", "results": []}
     try:
         with stdoutIO() as s:
+            ### wrattler_f should now be in the namespace as the function
+            ### wrapping the input code string.
             func_output = eval('wrattler_f()')
             return_dict["output"] = s.getvalue().strip()
             if isinstance(func_output, collections.Iterable):
@@ -250,6 +300,8 @@ def execute_code(code, input_val_dict, return_vars, verbose=False):
                 for item in func_output:
                     results.append(convert_from_pandas_df(item))
                 return_dict["results"] = results
+            elif not func_output:
+                return_dict["results"] = []
             else:
                 result = convert_from_pandas_df(func_output)
                 return_dict["results"] = [result]

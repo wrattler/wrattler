@@ -62,7 +62,6 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
     let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
     let code = createEditor(cell.code.language, state.block.source, cell, context)
     let errors = h('div', {}, [(cell.code.errors.length == 0) ? "" : cell.code.errors.map(err => {return h('p',{}, [err.message])})])
-    console.log(cell);
     return h('div', { }, [code, (cell.code.errors.length >0)?errors:preview])
   }
 }
@@ -92,7 +91,6 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         return response.data
       }
       catch (error) {
-        console.error(error);
         throw error;
       }
     }
@@ -119,15 +117,22 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         return evalResults;
       }
       catch (error) {
-        console.log(error.response.data.error);
-        let e = {message:<string>error.response.data.error}
-        let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [e]} 
-        return evalResults
+        if (error.response != null) {
+          let e = {message:<string>error.response.data.error}
+          let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [e]} 
+          return evalResults
+        }
+        else {
+          let e = {message:'Failed to evaluate'}
+          let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [e]} 
+          return evalResults
+        }
       }
     }
   
     switch(externalNode.kind) {
       case 'code': 
+      console.log(externalNode)
         let importedFrames : { name:string, url:string }[] = [];
         for (var ant of externalNode.antecedents) {
           let imported = <Graph.ExportNode>ant
@@ -145,23 +150,17 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         let exportsValue = <Values.ExportsValue>exportNode.code.value
         if (exportsValue==null) {
           if (exportNode.errors.length > 0) {
-            console.log({kind: 'error', errors: exportNode.errors} )
             return {kind: 'error', errors: exportNode.errors} 
           }
           else {
             let errorMessage = "Fail to export".concat(exportNode.variableName);
             let graphError = {message: errorMessage}
-            console.log({kind: 'error', errors: [graphError.message]})
             return {kind: 'error', errors: [graphError]} 
           }
         }
         else {
-          console.log({kind: 'success', value: exportsValue.exports[exportNodeName]})
           return {kind: 'success', value: exportsValue.exports[exportNodeName]} 
         }
-        // let evalResults:Langs.EvaluationResult = {kind: 'success', value: exportsValue.exports[exportNodeName]} 
-        //return exportsValue.exports[exportNodeName]
-        // return evalResults;
     }
   }
 
@@ -189,25 +188,35 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     async function getExports(language:string) {
       try {
         let response = await axios.post(url, body, {headers: headers});
+        let namesOfExports:Array<string> = []
         for (var n = 0 ; n < response.data.exports.length; n++) {
-          let exportNode:Graph.ExternalExportNode = {
-              variableName: response.data.exports[n],
-              value: null,
-              language:language,
-              code: node, 
-              kind: 'export',
-              antecedents:[node],
-              errors: []
-              };
-          dependencies.push(exportNode) 
-          node.exportedVariables.push(exportNode.variableName)
-        }
-        for (var n = 0 ; n < response.data.imports.length; n++) {
-          if (response.data.imports[n] in scopeDictionary) {
-            let antecedentNode = scopeDictionary[response.data.imports[n]]
-            node.antecedents.push(antecedentNode);
+          if (namesOfExports.indexOf(response.data.exports[n]) < 0) {
+            namesOfExports.push(response.data.exports[n])
+            let exportNode:Graph.ExternalExportNode = {
+                variableName: response.data.exports[n],
+                value: null,
+                language:language,
+                code: node, 
+                kind: 'export',
+                antecedents:[node],
+                errors: []
+                };
+            dependencies.push(exportNode) 
+            node.exportedVariables.push(exportNode.variableName)
           }
         }
+        // console.log("Imp: "+JSON.stringify(response.data.imports))
+        let namesOfImports:Array<string> = []
+        for (var n = 0 ; n < response.data.imports.length; n++) {
+          if (namesOfImports.indexOf(response.data.imports[n]) < 0) {
+            namesOfImports.push(response.data.imports[n])
+            if (response.data.imports[n] in scopeDictionary) {
+              let antecedentNode = scopeDictionary[response.data.imports[n]]
+              node.antecedents.push(antecedentNode);
+            }
+          }
+        }
+        // console.log(node)
         return {code: node, exports: dependencies};
       }
       catch (error) {
