@@ -6,6 +6,34 @@ library(base64enc)
 
 source("codeAnalysis.R")
 
+handle_exports <- function(code, frames, hash) {
+    ## top-level function to get imports and exports from the code snippet
+    impExpEnv <- analyzeCode(code)
+    impExpList <- list(imports=as.character(impExpEnv$imports),
+                      exports=as.character(impExpEnv$exports))
+    return(jsonlite::toJSON(impExpList))
+}
+
+handle_eval <- function(code, frames, hash) {
+    ## top-level function to evaluate a code block and return any outputs
+    ## as json.
+
+    ## The 'frames' argument, parsed from json structure like
+    ##    [{"name":<name>,"url":<url>},{...}, ...]
+    ## will be a list of named-lists.
+
+    ## get a list of the expected output names from the code
+    exportsList <- analyzeCode(code)$exports
+    ## executeCode will return a named list of all the evaluated outputs
+    outputs <- executeCode(code, frames, hash)
+    outputsList <- outputs$returnVars
+    ## uploadOutputs will put results onto datastore, and return a dataframe of names and urls
+    results <- uploadOutputs(outputsList, exportsList, hash)
+    ## placeholder for text output
+    textOutput <- outputs$outputString
+    returnValue <- list(frames=results, output=unbox(textOutput))
+    return(jsonlite::toJSON(returnValue))
+}
 
 makeURL <- function(name, hash) {
     return(paste0(Sys.getenv("DATASTORE_URI"),"/",hash,"/",name))
