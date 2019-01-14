@@ -6,6 +6,8 @@ library(base64enc)
 
 source("codeAnalysis.R")
 
+TMPDIR <- "/tmp"
+
 handle_exports <- function(code, frames, hash) {
     ## top-level function to get imports and exports from the code snippet
     impExpEnv <- analyzeCode(code)
@@ -13,6 +15,7 @@ handle_exports <- function(code, frames, hash) {
                       exports=as.character(impExpEnv$exports))
     return(jsonlite::toJSON(impExpList))
 }
+
 
 handle_eval <- function(code, frames, hash) {
     ## top-level function to evaluate a code block and return any outputs
@@ -29,7 +32,7 @@ handle_eval <- function(code, frames, hash) {
     outputsList <- outputs$returnVars
     ## uploadOutputs will put results onto datastore, and return a dataframe of names and urls
     results <- uploadOutputs(outputsList, exportsList, hash)
-    ## placeholder for text output
+    ## text output from executing code
     textOutput <- outputs$outputString
     returnValue <- list(frames=results, output=unbox(textOutput))
     return(jsonlite::toJSON(returnValue))
@@ -67,7 +70,13 @@ writeFrame <- function(frameData, frameName, frameHash) {
     if ("ggplot" %in% class(frameData)) {
         ## could be an image, saved as a png file on /tmp
         frameJSON <- jsonFromImageFile(frameName, frameHash)
-
+        filename <- file.path(TMPDIR,frameHash,paste0(frameName,".png"))
+        print("File exists!")
+        if (! file.exists(filename))
+            return(FALSE)
+        print("About to put image file on datastore")
+        r <- PUT(url, body=upload_file(filename), encode="raw")
+        return(status_code(r) == 200)
     } else {
         frameJSON <- jsonFromDataFrame(frameData)
     }
@@ -79,9 +88,10 @@ writeFrame <- function(frameData, frameName, frameHash) {
     return(FALSE)
 }
 
+## following method is depracated - we now send image as binary file rather than base64 encoded.
 jsonFromImageFile <- function(frameName, frameHash) {
     ## see if there is a png file at /tmp/frameHash/frameName.png
-    filename <- file.path("/tmp",frameHash,paste0(frameName,".png"))
+    filename <- file.path(TMPDIR,frameHash,paste0(frameName,".png"))
     if (! file.exists(filename)) return(NULL)
     IMAGE <- base64enc::base64encode(filename)
     frameJSON <- jsonlite::toJSON(as.data.frame(IMAGE))
@@ -183,8 +193,8 @@ constructFuncString <- function(code, importsList, hash) {
 
 writePlotToFile <- function(plot, hash, plotName) {
     ## use png device to save output to a file
-    dir.create(file.path("/tmp",hash), showWarnings=FALSE)
-    filename = file.path("/tmp",hash,paste0(plotName,".png"))
+    dir.create(file.path(TMPDIR,hash), showWarnings=FALSE)
+    filename = file.path(TMPDIR,hash,paste0(plotName,".png"))
     png(file=filename)
     print(plot)
     dev.off()
