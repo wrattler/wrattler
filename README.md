@@ -1,3 +1,5 @@
+![Build status](https://api.travis-ci.com/wrattler/wrattler.svg?branch=master)
+
 If you get
 
 > ERROR: for wrattler_wrattler_client_1  Cannot create container for service wrattler_client: b'Drive has not been shared'
