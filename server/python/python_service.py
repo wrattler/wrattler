@@ -268,8 +268,9 @@ def evaluate_code(data):
     ## see if there is an image in /tmp, and if so upload to datastore
     wrote_image = write_image(output_hash)
     ## if there was an image written, it should be stores as <hash>/figures
-    return_dict["frames"].append({"name": "figures",
-                                  "url": "{}/{}/figures".format(DATASTORE_URI,output_hash)})
+    if wrote_image:
+        return_dict["frames"].append({"name": "figures",
+                                      "url": "{}/{}/figures".format(DATASTORE_URI,output_hash)})
     if wrote_ok:
         return return_dict
     else:
