@@ -133,9 +133,9 @@ def write_image(frame_hash):
     if not os.path.exists(file_path):
         return True
     url = '{}/{}/figures'.format(DATASTORE_URI, frame_hash)
-    file_data = [('figures',('fig.png',open(os.path.join(file_path,'fig.png'),'rb'), 'image/png'))]
+    file_data = open(os.path.join(file_path,'fig.png'),'rb')
     try:
-        r = requests.put(url, files=file_data)
+        r = requests.put(url, data=file_data, headers={'Content-Type': 'application/octet-stream'})
         return (r.status_code == 200)
     except(requests.exceptions.ConnectionError):
         raise ApiException("Could not write image to datastore {}".format(DATASTORE_URI),
