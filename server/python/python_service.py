@@ -127,11 +127,13 @@ def write_frame(data, frame_name, frame_hash):
 
 def write_image(frame_hash):
     """
-    See if there is an image on TMPDIR and send it to the datastore if so
+    See if there is an image on TMPDIR and send it to the datastore if so.
+    Return True if an image is written to the datastore, False if there is nothing to write,
+    and raise an ApiException if there is a problem writing it.
     """
     file_path = os.path.join(TMPDIR,frame_hash)
     if not os.path.exists(file_path):
-        return True
+        return False
     url = '{}/{}/figures'.format(DATASTORE_URI, frame_hash)
     file_data = open(os.path.join(file_path,'fig.png'),'rb')
     try:
@@ -263,7 +265,11 @@ def evaluate_code(data):
                                               output_hash,
                                               name)})
 
-    wrote_ok &= write_image(output_hash)
+    ## see if there is an image in /tmp, and if so upload to datastore
+    wrote_image = write_image(output_hash)
+    ## if there was an image written, it should be stores as <hash>/figures
+    return_dict["frames"].append({"name": "figures",
+                                  "url": "{}/{}/figures".format(DATASTORE_URI,output_hash)})
     if wrote_ok:
         return return_dict
     else:
