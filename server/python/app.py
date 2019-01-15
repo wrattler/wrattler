@@ -15,8 +15,6 @@ app = Flask(__name__)
 CORS(app)
 
 
-
-
 @app.errorhandler(ApiException)
 def handle_api_exception(error):
     response = jsonify(error.to_dict())

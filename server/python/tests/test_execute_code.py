@@ -1,6 +1,5 @@
 """
-Test that we can write some frames with simple variable
-assignments, then use these to do a simple join
+Test that we can execute a variety of simple python commands and get the expected result
 """
 import pytest
 import pandas as pd
@@ -80,6 +79,7 @@ def test_get_two_normal_outputs():
     output_hash = "somehash"
     result_dict = execute_code(input_code, input_vals, return_targets, output_hash)
     output = result_dict["output"]
+    print(output)
     assert(output)
     assert(isinstance(output,str))
     assert("hello world" in output)

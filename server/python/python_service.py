@@ -99,11 +99,14 @@ def read_frame(frame_name, frame_hash):
     read a frame from the data store
     """
     url = '{}/{}/{}'.format(DATASTORE_URI, frame_hash, frame_name)
-    r=requests.get(url)
-    if r.status_code is not 200:
-        raise ApiException("Could not retrieve dataframe", status_code=r.status_code)
-    data = json.loads(r.content.decode("utf-8"))
-    return data
+    try:
+        r=requests.get(url)
+        if r.status_code is not 200:
+            raise ApiException("Could not retrieve dataframe", status_code=r.status_code)
+        data = json.loads(r.content.decode("utf-8"))
+        return data
+    except(requests.exceptions.ConnectionError):
+        raise ApiException("Unable to connect to datastore {}".format(DATASTORE_URI),status_code=500)
 
 
 def write_frame(data, frame_name, frame_hash):
@@ -111,24 +114,34 @@ def write_frame(data, frame_name, frame_hash):
     write a frame to the data store
     """
     url = '{}/{}/{}'.format(DATASTORE_URI, frame_hash, frame_name)
-    r=requests.put(url,json=data)
-    tokenized_response = r.content.decode("utf-8").split()
-    if 'StatusMessage:Created' in tokenized_response:
-        return True
-    return r.status_code == 200
+    try:
+        r=requests.put(url,json=data)
+        tokenized_response = r.content.decode("utf-8").split()
+        if 'StatusMessage:Created' in tokenized_response:
+            return True
+        return r.status_code == 200
+    except(requests.exceptions.ConnectionError):
+        raise ApiException("Unable to connect to datastore {}".format(DATASTORE_URI),status_code=500)
+    return False
 
 
 def write_image(frame_hash):
     """
-    See if there is an image on TMPDIR and send it to the datastore if so
+    See if there is an image on TMPDIR and send it to the datastore if so.
+    Return True if an image is written to the datastore, False if there is nothing to write,
+    and raise an ApiException if there is a problem writing it.
     """
     file_path = os.path.join(TMPDIR,frame_hash)
     if not os.path.exists(file_path):
-        return True
+        return False
     url = '{}/{}/figures'.format(DATASTORE_URI, frame_hash)
-    file_data = [('figures',('fig.png',open(os.path.join(file_path,'fig.png'),'rb'), 'image/png'))]
-    r = requests.put(url, files=file_data)
-    return (r.status_code == 200)
+    file_data = open(os.path.join(file_path,'fig.png'),'rb')
+    try:
+        r = requests.put(url, data=file_data, headers={'Content-Type': 'application/octet-stream'})
+        return (r.status_code == 200)
+    except(requests.exceptions.ConnectionError):
+        raise ApiException("Could not write image to datastore {}".format(DATASTORE_URI),
+                           status_code=500)
 
 
 def find_assignments(code_string):
@@ -198,11 +211,20 @@ def retrieve_frames(input_frames):
     """
     frame_dict = {}
     for frame in input_frames:
-        r=requests.get(frame["url"])
-        if r.status_code != 200:
-            raise ApiException("Problem retrieving dataframe %s"%frame["name"],status_code=r.status_code)
-        frame_content = json.loads(r.content.decode("utf-8"))
-        frame_dict[frame["name"]] = frame_content
+        try:
+            r=requests.get(frame["url"])
+            if r.status_code != 200:
+                raise ApiException("Problem retrieving dataframe %s"%frame["name"],status_code=r.status_code)
+            frame_content = json.loads(r.content.decode("utf-8"))
+            frame_dict[frame["name"]] = frame_content
+        except(requests.exceptions.ConnectionError):
+            ## try falling back on read_frame method (using env var DATASTORE_URI)
+            try:
+                frame_hash, frame_name = frame["url"].split("/")[-2:]
+                frame_data = read_frame(frame_name, frame_hash)
+                frame_dict[frame["name"]] = frame_data
+            except(requests.exceptions.ConnectionError):
+                raise ApiException("Unable to connect to {}".format(frame["url"]))
     return frame_dict
 
 
@@ -232,13 +254,23 @@ def evaluate_code(data):
 
     wrote_ok=True
     for i, name in enumerate(frame_names):
+        ## check here if the result is JSON serializable - if not, skip it
+        try:
+            json_test = json.dumps(results[i])
+        except(TypeError):
+            continue
         wrote_ok &= write_frame(results[i], name, output_hash)
         return_dict["frames"].append({"name": name,"url": "{}/{}/{}"\
                                       .format(DATASTORE_URI,
                                               output_hash,
                                               name)})
 
-##    wrote_ok &= write_image(output_hash)
+    ## see if there is an image in /tmp, and if so upload to datastore
+    wrote_image = write_image(output_hash)
+    ## if there was an image written, it should be stores as <hash>/figures
+    if wrote_image:
+        return_dict["frames"].append({"name": "figures",
+                                      "url": "{}/{}/figures".format(DATASTORE_URI,output_hash)})
     if wrote_ok:
         return return_dict
     else:
@@ -253,6 +285,7 @@ def construct_func_string(code, input_val_dict, return_vars, output_hash):
     """
     func_string = "def wrattler_f():\n"
     func_string += "    import os\n"
+    func_string += "    import contextlib\n"
     func_string += "    import matplotlib\n"
     func_string += "    matplotlib.use('Cairo')\n\n"
     for k,v in input_val_dict.items():
@@ -266,6 +299,9 @@ def construct_func_string(code, input_val_dict, return_vars, output_hash):
     func_string += "        os.makedirs(os.path.join('{}','{}'),exist_ok=True)\n".format(TMPDIR,output_hash)
     func_string += "        plt.savefig(os.path.join('{}','{}','fig.png'))\n".format(TMPDIR,output_hash)
     func_string += "    except(NameError):\n"
+    func_string += "        with contextlib.suppress(FileNotFoundError):\n"
+    func_string += "            os.rmdir(os.path.join('{}','{}'))\n".format(TMPDIR,output_hash)
+    func_string += "            pass\n"
     func_string += "        pass\n"
     func_string += "    return "
     for rv in return_vars:

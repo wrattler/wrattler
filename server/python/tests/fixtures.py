@@ -14,6 +14,10 @@ def demo_app():
     setup a flask app
     """
     app = Flask(__name__)
+    app.testing = True
+    api = Api(app)
+    return app
+
 
 class MockDataStore(object):
     def __init__(self):
@@ -23,6 +27,7 @@ class MockDataStore(object):
 
     def retrieve(self,frame, hash):
         return self.data_dict[hash+"/"+frame]
+
 
 @pytest.fixture
 def mock_datastore(scope='module'):
@@ -35,9 +40,12 @@ def mock_write_frame(mock_datastore,data, frame_name,frame_hash):
     mock_datastore.store(data,frame_name, frame_hash)
     return True
 
+def mock_write_image(mock_datastore,data, frame_hash):
+    return True
+
 
 
 def mock_read_frame(mock_datastore, frame_name, frame_hash):
-    data = mock_datastore.retrieve(frame, hash)
+    data = mock_datastore.retrieve(frame_name, frame_hash)
     print(data)
     return data
