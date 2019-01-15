@@ -47,14 +47,11 @@ let app =
       let! blob = Storage.tryReadBlobBytesAsync connStrBlob "data" file
       logf "Read blob: %s (length = %d)" file (match blob with Some b -> b.Length | _ -> -1)
       match blob with
-      | Some json -> 
-          System.IO.File.WriteAllBytes("C:/temp/reading.png", json)
-          return! Successful.ok json ctx
+      | Some json -> return! Successful.ok json ctx
       | None -> return! RequestErrors.NOT_FOUND "" ctx })
 
     PUT >=> pathScan "/%s" (fun file ctx -> async {
       let json = ctx.request.rawForm
-      System.IO.File.WriteAllBytes("C:/temp/writing.png", json)
       logf "Uploading blob: %s (length = %d)" file json.Length
       do! Storage.writeBlobBytesAsync connStrBlob "data" file json
       logf "Uploaded blob: %s" file
