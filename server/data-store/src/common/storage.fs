@@ -43,6 +43,17 @@ let tryReadBlobAsync connStr source file = async {
     else return None
   else return None }
 
+let tryReadBlobBytesAsync connStr source file = async {
+  let container = createCloudBlobClient(connStr).GetContainerReference(source)
+  if container.ExistsAsync().Result then
+    let blob = container.GetBlockBlobReference(file)
+    if blob.ExistsAsync().Result then 
+      use ms = new MemoryStream()
+      do! blob.DownloadToStreamAsync(ms, AccessCondition(), Blob.BlobRequestOptions(), OperationContext()) |> Async.AwaitTask
+      return Some (ms.ToArray())
+    else return None
+  else return None }
+
 let writeBlob connStr source file data = 
   let container = createCloudBlobClient(connStr).GetContainerReference(source)
   if container.ExistsAsync().Result then
@@ -55,6 +66,13 @@ let writeBlobAsync connStr source file data = async {
   if container.ExistsAsync().Result then
     let blob = container.GetBlockBlobReference(file)
     do! blob.UploadTextAsync(data, System.Text.Encoding.UTF8, AccessCondition(), Blob.BlobRequestOptions(), OperationContext()) |> Async.AwaitTask
+  else return failwithf "container '%s' not found" source }
+
+let writeBlobBytesAsync connStr source file data = async {
+  let container = createCloudBlobClient(connStr).GetContainerReference(source)
+  if container.ExistsAsync().Result then
+    let blob = container.GetBlockBlobReference(file)
+    do! blob.UploadFromByteArrayAsync(data, 0, data.Length, AccessCondition(), Blob.BlobRequestOptions(), OperationContext()) |> Async.AwaitTask
   else return failwithf "container '%s' not found" source }
 
 let writeRecordsToBlob connStr source dir file (records:seq<string[]>) = 

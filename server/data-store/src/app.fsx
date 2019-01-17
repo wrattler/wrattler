@@ -44,16 +44,16 @@ let app =
 
     GET >=> pathScan "/%s" (fun file ctx -> async {
       logf "Reading blob: %s" file
-      let! blob = Storage.tryReadBlobAsync connStrBlob "data" file
+      let! blob = Storage.tryReadBlobBytesAsync connStrBlob "data" file
       logf "Read blob: %s (length = %d)" file (match blob with Some b -> b.Length | _ -> -1)
       match blob with
-      | Some json -> return! Successful.OK json ctx
+      | Some json -> return! Successful.ok json ctx
       | None -> return! RequestErrors.NOT_FOUND "" ctx })
 
     PUT >=> pathScan "/%s" (fun file ctx -> async {
-      let json = System.Text.UTF32Encoding.UTF8.GetString(ctx.request.rawForm)
+      let json = ctx.request.rawForm
       logf "Uploading blob: %s (length = %d)" file json.Length
-      do! Storage.writeBlobAsync connStrBlob "data" file json
+      do! Storage.writeBlobBytesAsync connStrBlob "data" file json
       logf "Uploaded blob: %s" file
       return! Successful.OK "Created" ctx })
   ]
