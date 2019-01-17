@@ -230,7 +230,18 @@ def retrieve_frames(input_frames):
 
 def evaluate_code(data):
     """
-    retrieve inputs from storage, execute code, and store output.
+    recieves data posted to eval endpoint, in format:
+    { "code": <code_string>,
+      "hash": <cell_hash>,
+      "frames" [<frame_name>, ... ]
+    }
+    This function will analyze and execute code, including retrieving input frames,
+    and will return output as a dict:
+       { "output": <text_output_from_cell>,
+         "frames" [ {"name": <frame_name>, "url": <frame_url>}, ... ]
+         "figures": [ {"name": <fig_name>, "url": <fig_url>}, ... ]
+       }
+
     """
     code_string = data["code"]
     output_hash = data["hash"]
@@ -245,7 +256,8 @@ def evaluate_code(data):
     ## prepare a return dictionary
     return_dict = {
         "output": results_dict["output"],
-        "frames": []
+        "frames": [],
+        "figures": []
     }
 
     frame_names = assign_dict['targets']
@@ -269,8 +281,8 @@ def evaluate_code(data):
     wrote_image = write_image(output_hash)
     ## if there was an image written, it should be stores as <hash>/figures
     if wrote_image:
-        return_dict["frames"].append({"name": "figures",
-                                      "url": "{}/{}/figures".format(DATASTORE_URI,output_hash)})
+        return_dict["figures"].append({"name": "figures",
+                                       "url": "{}/{}/figures".format(DATASTORE_URI,output_hash)})
     if wrote_ok:
         return return_dict
     else:
