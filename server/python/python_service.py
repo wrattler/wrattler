@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import ast
 import collections
+import base64
 from io import StringIO
 import contextlib
 
@@ -137,7 +138,10 @@ def write_image(frame_hash):
     url = '{}/{}/figures'.format(DATASTORE_URI, frame_hash)
     file_data = open(os.path.join(file_path,'fig.png'),'rb')
     try:
-        r = requests.put(url, data=file_data, headers={'Content-Type': 'application/octet-stream'})
+        img_b64 = base64.b64encode(file_data.read())
+        data = [{"IMAGE": img_b64.encode("utf-8")}]
+        r = requests.put(url, json=data)
+#        r = requests.put(url, data=file_data, headers={'Content-Type': 'application/octet-stream'})
         return (r.status_code == 200)
     except(requests.exceptions.ConnectionError):
         raise ApiException("Could not write image to datastore {}".format(DATASTORE_URI),

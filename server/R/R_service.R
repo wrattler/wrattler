@@ -89,12 +89,15 @@ writeFigure <- function(figureData, figureName, cellHash) {
     url <- makeURL(figureName, cellHash)
     if ("ggplot" %in% class(figureData)) {
         ## image should be saved as a png file on /tmp
-        filename <- file.path(TMPDIR,cellHash,paste0(figureName,".png"))
-        print("File exists!")
-        if (! file.exists(filename))
-            return(FALSE)
+        figJSON <- jsonFromImageFile(figureName, cellHash)
+
+#        filename <- file.path(TMPDIR,cellHash,paste0(figureName,".png"))
+#        print("File exists!")
+#        if (! file.exists(filename))
+#            return(FALSE)
         print("About to put image file on datastore")
-        r <- PUT(url, body=upload_file(filename), encode="raw")
+#        r <- PUT(url, body=upload_file(filename), encode="raw")
+        r <- PUT(url, body=figJSON, encode="json")
         return(status_code(r) == 200)
     } else {
         return(FALSE)
