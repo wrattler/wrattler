@@ -19,9 +19,12 @@ handle_exports <- function(code, frames, hash) {
 
 handle_eval <- function(code, frames, hash) {
     ## top-level function to evaluate a code block and return any outputs
-    ## as json.
+    ## as json in the following format:
+    ##  {"output": <text_output>,
+    ##   "frames": [{"name":<name>,"url":<url>},...],
+    ##   "figures": [{"name":<name>,"url":<url>},...]}
 
-    ## The 'frames' argument, parsed from json structure like
+    ## The 'frames' input argument, parsed from json structure like
     ##    [{"name":<name>,"url":<url>},{...}, ...]
     ## will be a list of named-lists.
 
@@ -34,7 +37,7 @@ handle_eval <- function(code, frames, hash) {
     results <- uploadOutputs(outputsList, exportsList, hash)
     ## text output from executing code
     textOutput <- outputs$outputString
-    returnValue <- list(frames=results, output=unbox(textOutput))
+    returnValue <- list(frames=results$frames, figures=results$figures, output=unbox(textOutput))
     return(jsonlite::toJSON(returnValue))
 }
 
@@ -63,21 +66,14 @@ jsonToDataFrame <- function(json_obj) {
 }
 
 
-writeFrame <- function(frameData, frameName, frameHash) {
+writeFrame <- function(frameData, frameName, cellHash) {
     ## Write a dataframe to the datastore.
     ## use jsonlite to serialize dataframe into json
-    url <- makeURL(frameName, frameHash)
+    url <- makeURL(frameName, cellHash)
     if ("ggplot" %in% class(frameData)) {
-        ## could be an image, saved as a png file on /tmp
-        frameJSON <- jsonFromImageFile(frameName, frameHash)
-        filename <- file.path(TMPDIR,frameHash,paste0(frameName,".png"))
-        print("File exists!")
-        if (! file.exists(filename))
-            return(FALSE)
-        print("About to put image file on datastore")
-        r <- PUT(url, body=upload_file(filename), encode="raw")
-        return(status_code(r) == 200)
+        return(FALSE) # this will be done by writeFigure instead
     } else {
+        # hopefully a dataframe that can be converted into JSON
         frameJSON <- jsonFromDataFrame(frameData)
     }
     ## put it into the datastore if it is not NULL, i.e. was convertable to json
@@ -88,6 +84,25 @@ writeFrame <- function(frameData, frameName, frameHash) {
     return(FALSE)
 }
 
+writeFigure <- function(figureData, figureName, cellHash) {
+    ## Analogue to writeFrame, but for figures
+    url <- makeURL(figureName, cellHash)
+    if ("ggplot" %in% class(figureData)) {
+        ## image should be saved as a png file on /tmp
+        filename <- file.path(TMPDIR,cellHash,paste0(figureName,".png"))
+        print("File exists!")
+        if (! file.exists(filename))
+            return(FALSE)
+        print("About to put image file on datastore")
+        r <- PUT(url, body=upload_file(filename), encode="raw")
+        return(status_code(r) == 200)
+    } else {
+        return(FALSE)
+    }
+}
+
+
+#############
 ## following method is depracated - we now send image as binary file rather than base64 encoded.
 jsonFromImageFile <- function(frameName, frameHash) {
     ## see if there is a png file at /tmp/frameHash/frameName.png
@@ -97,6 +112,7 @@ jsonFromImageFile <- function(frameName, frameHash) {
     frameJSON <- jsonlite::toJSON(as.data.frame(IMAGE))
     return(frameJSON)
 }
+###############
 
 
 jsonFromDataFrame <- function(frameData) {
@@ -130,15 +146,35 @@ retrieveFrames <- function(inputFrames) {
 }
 
 uploadOutputs <- function(outputsList, exports, hash) {
-    ## take a named list, upload the results, and return dataframe of names and urls
-    url <- c()
+    ## take a named list, upload the results, and return dataframes of names and urls
+    outputData <- new.env()
+    frame_url <- c()
+    frame_name <- c()
+    fig_url <- c()
+    fig_name <- c()
     for (i in seq_along(exports)) {
-        uploaded_ok <- writeFrame(outputsList[[exports[[i]]]],exports[[i]],hash)
-        url <- c(url, makeURL(exports[[i]], hash))
+        ## first try to write object out as a dataframe
+        uploaded_frame <- writeFrame(outputsList[[exports[[i]]]],exports[[i]],hash)
+        if (uploaded_frame) {
+            frame_url <- c(frame_url, makeURL(exports[[i]], hash))
+            frame_name <- c(frame_name, exports[[i]])
+        } else {
+            ## try uploading it as a figure
+            uploaded_fig <- writeFigure(outputsList[[exports[[i]]]], exports[[i]], hash)
+            if (uploaded_fig) {
+                fig_url <- c(fig_url, makeURL(exports[[i]], hash))
+                fig_name <- c(fig_name, exports[[i]])
+            }
+        }
     }
-    name <- exports
-    resultsDF <- data.frame(name, url)
-    return(resultsDF)
+    frameDF <- data.frame(name=frame_name, url=frame_url)
+    figDF <- data.frame(name=fig_name, url=fig_url)
+    outputData$frames <- frameDF
+    outputData$figures <- figDF
+    return(outputData)
+#    name <- exports
+ #   resultsDF <- data.frame(name, url)
+ #   return(resultsDF)
 }
 
 
