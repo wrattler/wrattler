@@ -113,10 +113,11 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           if (Array.isArray(exp.data))
             results.exports[df.name] = exp
         }
-
+        console.log(response.data)
         let figureIndex = 0;
         for(let df of response.data.figures) {
-          let exp : Values.Figure = {kind:"figure", data: await getValue(df.url)};
+          let raw = await getValue(df.url)
+          let exp : Values.Figure = {kind:"figure", data: raw[0]['IMAGE']};
           results.exports['figure'+figureIndex.toString()] = exp
           figureIndex++;
         }

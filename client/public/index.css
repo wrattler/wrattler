@@ -145,6 +145,12 @@ body{
   margin: auto;
 }
 
+.plot {
+	width: 50%;
+	display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
 @media only screen and (max-width: 900px) and (min-width: 600px){ 
 	#paper { 
 		min-width: 90%; 

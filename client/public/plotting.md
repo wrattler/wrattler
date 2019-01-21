@@ -12,5 +12,6 @@ Next, we create a ggplot in R.  Note that we need to assign the plot to a variab
 
 ```r
 library(ggplot2)
+x <- 1
 p <- ggplot(mpg,aes(x=class)) + geom_bar()
 ```
