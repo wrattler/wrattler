@@ -87,6 +87,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       try {
         Log.trace("data-store", "Fetching data frame: %s", pathname)
         let response = await axios.get(url, {headers: headers});
+      
         Log.trace("data-store", "Got data frame (%s rows): %s", response.data.length, pathname)
         return response.data
       }
@@ -111,6 +112,13 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           let exp : Values.DataFrame = {kind:"dataframe", url:<string>df.url, data: await getValue(df.url)};
           if (Array.isArray(exp.data))
             results.exports[df.name] = exp
+        }
+
+        let figureIndex = 0;
+        for(let df of response.data.figures) {
+          let exp : Values.Figure = {kind:"figure", data: await getValue(df.url)};
+          results.exports['figure'+figureIndex.toString()] = exp
+          figureIndex++;
         }
         
         let evalResults:Langs.EvaluationResult = {kind: 'success', value: results} 
