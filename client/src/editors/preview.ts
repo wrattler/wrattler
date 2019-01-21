@@ -6,7 +6,8 @@ function printPreview(cellId:number, triggerSelect:(number) => void, selectedTab
   let tableNames:Array<string> = Object.keys(cellValues.exports)
   if (tableNames.length > 0) {
     let tabComponents = printTabs(triggerSelect, selectedTable, tableNames);
-    return h('div', {}, [ tabComponents, printCurrentValue(cellId, cellValues.exports[tableNames[selectedTable]],tableNames[selectedTable]) ]);
+    let image = h('img', {src:"https://imgs.xkcd.com/comics/impostor.png"})
+    return h('div', {}, [ tabComponents, printCurrentValue(cellId, cellValues.exports[tableNames[selectedTable]],tableNames[selectedTable]), image ]);
   }
   else 
     return h('div', {},[])
