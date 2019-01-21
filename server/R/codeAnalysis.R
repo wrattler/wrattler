@@ -26,6 +26,7 @@ getImportsExports <- function(e) {
   for(i in res$imports)
     if (!i %in% res$exports) realImports <- c(realImports, i)
   res$imports <- realImports
+  res$exports <- unique(res$exports)
   res
 }
 impexpCall <- function(e, w) {

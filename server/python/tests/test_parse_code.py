@@ -2,7 +2,7 @@
 See if we can get the input and output frames from a code snippet
 """
 
-from python_service import analyze_code
+from python_service import analyze_code, construct_func_string
 
 def test_simple_exports():
     """
@@ -37,7 +37,7 @@ def test_multiple_assignment():
                 "hash": "doesntmatter"}
     result = analyze_code(testdata)
     print(result)
-    assert(result["exports"] == ["x","y"])
+    assert(sorted(result["exports"]) == ["x","y"])
     assert(result["imports"] == ["z"])
 
 
@@ -68,6 +68,19 @@ def test_out_of_scope_assignments():
     assert(result["exports"]==["newx"])
 
 
+def test_imports_used_in_functions():
+    """
+    imported variables can be used inside functions.
+    """
+    code = 'def hello():\n    x = a + b\n    return x\n\nnewx = hello()\n\n'
+    testdata = {"code": code,
+                "frames": ["a","b"],
+                "hash": "irrelevant"}
+    result = analyze_code(testdata)
+    print(result)
+    assert(result["exports"]==["newx"])
+    assert(sorted(result["imports"])==["a","b"])
+
 def test_non_assignment_imports():
     """
     variables can be used in statements that are not assignments..
@@ -94,3 +107,45 @@ def test_method_calling_imports():
     print(result)
     assert(sorted(result["imports"]) == ["a","b","c"])
     assert(result["exports"] == ["x"])
+
+
+def test_imports_same_var_twice():
+    """
+    We only want to read in a dataframe once, even if
+    the variable appears in the code fragment multiple times.
+    """
+    code = "x = a + b\ny = a + c\n"
+    testdata = {"code": code,
+                "frames": ["a","b","c"],
+                "hash": "irrelevant"}
+    result = analyze_code(testdata)
+    print(result)
+    assert(result["imports"].count("a")==1)
+
+
+def test_exports_same_var_twice():
+    """
+    We only want to upload a dataframe once, even if
+    the variable appears in the code fragment multiple times.
+    """
+    code = "x = a + b\nx = c + d\n"
+    testdata = {"code": code,
+                "frames": ["a","b","c"],
+                "hash": "irrelevant"}
+    result = analyze_code(testdata)
+    print(result)
+    assert(result["exports"].count("x")==1)
+
+
+def test_func_string_same_input_var_twice():
+    """
+    As test above, but checking that the func string only reads the
+    variable from datastore once.
+    """
+    code = "x = a + b\ny = a + c\n"
+    frame_dict = {"a": 2, "b":3, "c":4}
+    return_vars = ["x","y"]
+    output_hash = "testhash"
+    func_string = construct_func_string(code, frame_dict, return_vars, output_hash)
+    assert(func_string.count("a = ") == 1)
+    print(func_string)
