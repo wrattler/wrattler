@@ -139,7 +139,7 @@ def write_image(frame_hash):
     file_data = open(os.path.join(file_path,'fig.png'),'rb')
     try:
         img_b64 = base64.b64encode(file_data.read())
-        data = [{"IMAGE": img_b64.encode("utf-8")}]
+        data = [{"IMAGE": img_b64.decode("utf-8")}]
         r = requests.put(url, json=data)
 #        r = requests.put(url, data=file_data, headers={'Content-Type': 'application/octet-stream'})
         return (r.status_code == 200)
