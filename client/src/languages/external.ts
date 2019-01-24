@@ -57,9 +57,9 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
   },
 
   render: (cell: Langs.BlockState, state:ExternalState, context:Langs.EditorContext<ExternalEvent>) => {
-    let previewButton = h('button', { onclick:() => context.evaluate(cell) }, ["Preview"])
+    let previewButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell) }, ["Evaluate"])
     let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
-    let preview = h('div', {}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
+    let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
     let code = createEditor(cell.code.language, state.block.source, cell, context)
     let errors = h('div', {}, [(cell.code.errors.length == 0) ? "" : cell.code.errors.map(err => {return h('p',{}, [err.message])})])
     return h('div', { }, [code, (cell.code.errors.length >0)?errors:preview])
@@ -87,6 +87,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       try {
         Log.trace("data-store", "Fetching data frame: %s", pathname)
         let response = await axios.get(url, {headers: headers});
+      
         Log.trace("data-store", "Got data frame (%s rows): %s", response.data.length, pathname)
         return response.data
       }
@@ -112,6 +113,14 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           if (Array.isArray(exp.data))
             results.exports[df.name] = exp
         }
+        console.log(response.data)
+        let figureIndex = 0;
+        for(let df of response.data.figures) {
+          let raw = await getValue(df.url)
+          let exp : Values.Figure = {kind:"figure", data: raw[0]['IMAGE']};
+          results.exports['figure'+figureIndex.toString()] = exp
+          figureIndex++;
+        }
         
         let evalResults:Langs.EvaluationResult = {kind: 'success', value: results} 
         return evalResults;
@@ -132,6 +141,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
   
     switch(externalNode.kind) {
       case 'code': 
+      console.log(externalNode)
         let importedFrames : { name:string, url:string }[] = [];
         for (var ant of externalNode.antecedents) {
           let imported = <Graph.ExportNode>ant
@@ -187,25 +197,35 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     async function getExports(language:string) {
       try {
         let response = await axios.post(url, body, {headers: headers});
+        let namesOfExports:Array<string> = []
         for (var n = 0 ; n < response.data.exports.length; n++) {
-          let exportNode:Graph.ExternalExportNode = {
-              variableName: response.data.exports[n],
-              value: null,
-              language:language,
-              code: node, 
-              kind: 'export',
-              antecedents:[node],
-              errors: []
-              };
-          dependencies.push(exportNode) 
-          node.exportedVariables.push(exportNode.variableName)
-        }
-        for (var n = 0 ; n < response.data.imports.length; n++) {
-          if (response.data.imports[n] in scopeDictionary) {
-            let antecedentNode = scopeDictionary[response.data.imports[n]]
-            node.antecedents.push(antecedentNode);
+          if (namesOfExports.indexOf(response.data.exports[n]) < 0) {
+            namesOfExports.push(response.data.exports[n])
+            let exportNode:Graph.ExternalExportNode = {
+                variableName: response.data.exports[n],
+                value: null,
+                language:language,
+                code: node, 
+                kind: 'export',
+                antecedents:[node],
+                errors: []
+                };
+            dependencies.push(exportNode) 
+            node.exportedVariables.push(exportNode.variableName)
           }
         }
+        // console.log("Imp: "+JSON.stringify(response.data.imports))
+        let namesOfImports:Array<string> = []
+        for (var n = 0 ; n < response.data.imports.length; n++) {
+          if (namesOfImports.indexOf(response.data.imports[n]) < 0) {
+            namesOfImports.push(response.data.imports[n])
+            if (response.data.imports[n] in scopeDictionary) {
+              let antecedentNode = scopeDictionary[response.data.imports[n]]
+              node.antecedents.push(antecedentNode);
+            }
+          }
+        }
+        // console.log(node)
         return {code: node, exports: dependencies};
       }
       catch (error) {

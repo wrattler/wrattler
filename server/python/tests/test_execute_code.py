@@ -1,6 +1,5 @@
 """
-Test that we can write some frames with simple variable
-assignments, then use these to do a simple join
+Test that we can execute a variety of simple python commands and get the expected result
 """
 import pytest
 import pandas as pd
@@ -16,8 +15,9 @@ def test_execute_pd_concat():
     input_code = "z = pd.concat([x,y],join='outer', ignore_index=True)"
     input_vals = {"x" : [{"a":1, "b":2},{"a":2,"b":3}],
                   "y": [{"b":4,"c": 2},{"b": 5,"c": 7}]}
+    output_hash = "somehash"
     return_targets = find_assignments(input_code)["targets"]
-    result_dict = execute_code(input_code, input_vals, return_targets)
+    result_dict = execute_code(input_code, input_vals, return_targets, output_hash)
     result = result_dict["results"]
     print(result)  # result will be a list of lists of dicts
     assert(len(result) == 1) # only one output of function
@@ -33,7 +33,8 @@ def test_execute_simple_func():
     input_code='import numpy\ndef squareroot(x):\n  return numpy.sqrt(x)\n\ndf= pd.DataFrame({\"a\":[numpy.sqrt(9),squareroot(12),13],\"b\":[14,15,16]})'
     input_vals={}
     return_targets = find_assignments(input_code)["targets"]
-    result_dict = execute_code(input_code, input_vals, return_targets)
+    output_hash = "somehash"
+    result_dict = execute_code(input_code, input_vals, return_targets, output_hash)
     result = result_dict["results"]
     assert(result)
     assert(isinstance(result,list))
@@ -46,8 +47,9 @@ def test_get_error_output():
     input_code='x = 1/0'
     input_vals={}
     return_targets = find_assignments(input_code)["targets"]
+    output_hash = "somehash"
     with pytest.raises(ApiException) as exc:
-        result_dict = execute_code(input_code, input_vals, return_targets)
+        result_dict = execute_code(input_code, input_vals, return_targets, output_hash)
         assert("ZeroDivisionError" in exc.message)
 
 
@@ -58,11 +60,14 @@ def test_get_normal_output():
     input_code='print("hello world")'
     input_vals={}
     return_targets = find_assignments(input_code)["targets"]
-    result_dict = execute_code(input_code, input_vals, return_targets)
+    output_hash = "somehash"
+    result_dict = execute_code(input_code, input_vals, return_targets, output_hash)
     output = result_dict["output"]
     assert(output)
     assert(isinstance(output,str))
     assert("hello world" in output)
+    assert(len(result_dict["results"])==0)
+
 
 def test_get_two_normal_outputs():
     """
@@ -71,8 +76,10 @@ def test_get_two_normal_outputs():
     input_code='print("hello world")\nprint("hi again")\n'
     input_vals={}
     return_targets = find_assignments(input_code)["targets"]
-    result_dict = execute_code(input_code, input_vals, return_targets)
+    output_hash = "somehash"
+    result_dict = execute_code(input_code, input_vals, return_targets, output_hash)
     output = result_dict["output"]
+    print(output)
     assert(output)
     assert(isinstance(output,str))
     assert("hello world" in output)
@@ -87,7 +94,8 @@ def test_get_normal_output_in_func():
     input_code='def printy():\n print("hello funcky world")\n\nprinty()'
     input_vals={}
     return_targets = find_assignments(input_code)["targets"]
-    result_dict = execute_code(input_code, input_vals, return_targets)
+    output_hash = "somehash"
+    result_dict = execute_code(input_code, input_vals, return_targets, output_hash)
     output = result_dict["output"]
     assert(output)
     assert(isinstance(output,str))

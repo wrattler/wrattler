@@ -7,7 +7,6 @@ interface DocumentElement {
 
 async function getSampleDocument(): Promise<DocumentElement[]> {
     async function getDocumentMd(sourceFile: string) : Promise<string> {
-      let sources = ["cleanEHR","sample"]
       // if (sourceFile.)
       let sourceURL = "/".concat(sourceFile).concat(".md")
       let response = await axios.get(sourceURL)
@@ -22,8 +21,8 @@ async function getSampleDocument(): Promise<DocumentElement[]> {
       if (languageMarkerBegin > -1)
       {
         let languageMarkerEnd = codeCell.indexOf("```", languageMarkerBegin+languageMarker.length+1)
-        return {language: language, 
-          source: codeCell.substring(languageMarkerBegin+languageMarker.length,languageMarkerEnd)}
+        let source = codeCell.substring(languageMarkerBegin+languageMarker.length,languageMarkerEnd).trim()
+        return {language: language, source: source }
       }
       return {language: language, 
         source: "Unknown language: \n"+codeCell}
