@@ -90,14 +90,8 @@ writeFigure <- function(figureData, figureName, cellHash) {
     url <- makeURL(figureName, cellHash)
     if ("ggplot" %in% class(figureData)) {
         ## image should be saved as a png file on /tmp
+        ## convert to base64 so we can put it in a JSON object
         figJSON <- jsonFromImageFile(figureName, cellHash)
-
-#        filename <- file.path(TMPDIR,cellHash,paste0(figureName,".png"))
-#        print("File exists!")
-#        if (! file.exists(filename))
-#            return(FALSE)
-        print("About to put image file on datastore")
-#        r <- PUT(url, body=upload_file(filename), encode="raw")
         r <- PUT(url, body=figJSON, encode="json")
         return(status_code(r) == 200)
     } else {
@@ -106,8 +100,6 @@ writeFigure <- function(figureData, figureName, cellHash) {
 }
 
 
-#############
-## following method is depracated - we now send image as binary file rather than base64 encoded.
 jsonFromImageFile <- function(frameName, frameHash) {
     ## see if there is a png file at /tmp/frameHash/frameName.png
     filename <- file.path(TMPDIR,frameHash,paste0(frameName,".png"))
@@ -116,7 +108,6 @@ jsonFromImageFile <- function(frameName, frameHash) {
     frameJSON <- jsonlite::toJSON(as.data.frame(IMAGE))
     return(frameJSON)
 }
-###############
 
 
 jsonFromDataFrame <- function(frameData) {
@@ -153,6 +144,7 @@ retrieveFrames <- function(inputFrames) {
 
 }
 
+
 uploadOutputs <- function(outputsList, exports, hash) {
     ## take a named list, upload the results, and return dataframes of names and urls
     outputData <- new.env()
@@ -180,9 +172,6 @@ uploadOutputs <- function(outputsList, exports, hash) {
     outputData$frames <- frameDF
     outputData$figures <- figDF
     return(outputData)
-#    name <- exports
- #   resultsDF <- data.frame(name, url)
- #   return(resultsDF)
 }
 
 
@@ -201,7 +190,6 @@ constructFuncString <- function(code, importsList, hash) {
     ## construct a function that assigns retrieved frames to the imported variables,
     ## then contains the code block.
     stringFunc <- "wrattler_f <- function() {\n"
-#    stringFunc <- paste(stringFunc," \n    png('test.png') \n")
     if (length(importsList) > 0) {
         for (i in seq_along(importsList)) {
             stringFunc <- paste0(stringFunc,"    ",
@@ -221,8 +209,7 @@ constructFuncString <- function(code, importsList, hash) {
     ## search for ggplot objects in this environment
     stringFunc <- paste(stringFunc," \n    for (envitem in ls(environment())) { \n")
     stringFunc <- paste(stringFunc,"       if ('ggplot' %in% class(get(envitem,environment()))) {\n")
-    ## write any ggplot objects to a filename constructed from the cell hash and
-    ## the object name
+    ## write any ggplot objects to a filename constructed from the cell hash and the object name
     stringFunc <- paste(stringFunc,"         writePlotToFile(get(envitem,environment()), '")
     stringFunc <- paste0(stringFunc, hash,"', envitem) \n")
     stringFunc <- paste(stringFunc,"       }\n")
@@ -242,7 +229,6 @@ writePlotToFile <- function(plot, hash, plotName) {
     print(plot)
     dev.off()
 }
-
 
 
 executeCode <- function(code, importsList, hash) {
