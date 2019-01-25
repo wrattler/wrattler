@@ -14,8 +14,13 @@ knownNames
 # This uses `makeCodeWalker` from `codetools` to walk over the expression and
 # it looks for imports (i.e. names not defined locally and not in `knownNames`)
 # and exports (i.e. names that appear on the left of <-).
-getImportsExports <- function(e) {
+getImportsExports <- function(e, frames=NULL) {
   res <- new.env()
+  if (! is.null(frames)) {
+      res$existingFrames <- frames
+  } else {
+      res$existingFrames <- c()
+  }
   res$imports <- c()
   res$exports <- c()
   w <- makeCodeWalker(call=impexpCall, leaf=impexpLeaf, res=res)
@@ -29,6 +34,7 @@ getImportsExports <- function(e) {
   res$exports <- unique(res$exports)
   res
 }
+
 impexpCall <- function(e, w) {
   el <- as.list(e)
   # if the expression is <name> <- <whatever>, add <name> to exports
@@ -40,9 +46,9 @@ impexpCall <- function(e, w) {
 impexpLeaf <- function(e, w) {
   if (typeof(e) == "symbol") {
     c <- as.character(e)
-    # if we found symbol that's not in knownNames and not already
-    # in the list of imports, add it!
-    if (!c %in% knownNames && !c %in% w$res$imports)
+    ## if we found symbol that's (in list of frames exported from previous cells OR not in knownNames) AND
+    ## not already in the list of imports, add it!
+    if (((c %in% w$res$existingFrames) || (!c %in% knownNames)) && !c %in% w$res$imports)
       w$res$imports <- c(w$res$imports, c)
   }
 }

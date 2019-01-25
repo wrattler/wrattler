@@ -10,7 +10,8 @@ TMPDIR <- "/tmp"
 
 handle_exports <- function(code, frames, hash) {
     ## top-level function to get imports and exports from the code snippet
-    impExpEnv <- analyzeCode(code)
+    ## here, "frames" is just a list of the names of frames exported from other cells
+    impExpEnv <- analyzeCode(code, frames)
     impExpList <- list(imports=as.character(impExpEnv$imports),
                       exports=as.character(impExpEnv$exports))
     return(jsonlite::toJSON(impExpList))
@@ -133,10 +134,14 @@ jsonFromDataFrame <- function(frameData) {
 }
 
 
-analyzeCode <- function(code) {
+analyzeCode <- function(code, frames=NULL) {
     ## code here will be a string - first parse it, then find imports and exports
     parsedCode <- prepCodeString(code)
-    impexp <- getImportsExports(parsedCode)
+    if (is.null(frames)) {
+        impexp <- getImportsExports(parsedCode)
+    } else {
+        impexp <- getImportsExports(parsedCode, frames)
+    }
     return(impexp)
 }
 
@@ -191,7 +196,6 @@ cleanString <- function(inputString) {
 
 constructFuncString <- function(code, importsList, hash) {
     ## construct a string containing a function definition wrapping our code.
-
     ## analyze the code to get imports and exports (only need exports here)
     impexp <- analyzeCode(code)
     ## construct a function that assigns retrieved frames to the imported variables,
