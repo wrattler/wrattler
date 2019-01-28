@@ -150,14 +150,16 @@ teamtraits.clean4 <- teamtraits.clean3 %>% group_by(Trait, AccSpeciesName) %>% d
     ErrorRiskMedian_gspdataset = round((abs(median_spdataset-median_genus)/sd_genus),4))
    
 ```
+
 ```r
 # > 4 datasets per species
-teamtraits.clean5 <- subset(teamtraits.clean4,(teamtraits.clean4$ndataset >= 4 & is.finite(teamtraits.clean4$ErrorRisk_spdataset) & teamtraits.clean4$ErrorRisk_spdataset > 3) == FALSE) 
-
-## Step 3: datasets-by-species agaist genus distribution
-teamtraits.clean6 <- subset(teamtraits.clean5,(teamtraits.clean5$ndataset >= 1 & teamtraits.clean5$ndataset < 4 & is.finite(teamtraits.clean5$ErrorRisk_gspdataset) & teamtraits.clean5$ErrorRisk_gspdataset > 3.5) == FALSE) #CHECK THIS!
-
+teamtraits.clean5 <- subset(teamtraits.clean4,(teamtraits.clean4$ndataset >= 4 & 
+    is.finite(teamtraits.clean4$ErrorRisk_spdataset) & teamtraits.clean4$ErrorRisk_spdataset > 3) == FALSE) 
+    
+teamtraits.clean6 <- subset(teamtraits.clean5,(teamtraits.clean5$ndataset >= 1& teamtraits.clean5$ndataset < 4  
+    & is.finite(teamtraits.clean5$ErrorRisk_gspdataset) & teamtraits.clean5$ErrorRisk_gspdataset > 3.5)==FALSE)
 ```
+
 ```r
 ## Step 4: individual records against the species distribution
 teamtraits.clean7 <- teamtraits.clean6 %>% group_by(Trait, AccSpeciesName) %>% dplyr::mutate(
@@ -181,15 +183,17 @@ teamtraits.clean10 <- subset(teamtraits.clean9,(teamtraits.clean9$n_species >= 2
 teamtraits.clean.final <- subset(teamtraits.clean10,(teamtraits.clean10$n_species >= 30 & is.finite(teamtraits.clean10$ErrorRisk_species) & teamtraits.clean10$ErrorRisk_species > 4) == FALSE)
 
 teamtraits.clean <- as.data.frame(teamtraits.clean.final)
-```
-```r
-# Check data removal
 
+#66308
+teamtraits.clean_rows <- nrow(teamtraits.clean)
+ #66752
+teamtraits.clean_long_rows <- nrow(teamtraits.long)
+```
+
+```r
 ttt.clean <- subset(teamtraits.clean,select = c("IndividualID","AccSpeciesName","OriginalName","Lat","Lon","Altitude","SiteName","SubsiteName","DOY_measured","Year_measured","DataContributor","File.name","Comments","ValueKindName","Trait","TraitPretty","TraitTRY","Value","Units","ErrorRisk_species"))
 
-ttt.clean <- plyr::ddply(ttt.clean, .(Trait, AccSpeciesName), transform, nObsSpp = length(Value[!is.na(Value)]))
-                         
-                   
+ttt.clean <- plyr::ddply(ttt.clean, .(Trait, AccSpeciesName), transform, nObsSpp = length(Value[!is.na(Value)]))                                       
 ```
 ```r
 ttt.clean$ErrorRisk_species[ttt.clean$nObsSpp < 10] <- NA
@@ -203,39 +207,44 @@ colnames(ttt.save)[which(colnames(ttt.save)=="Lon")] <- "Longitude"
 colnames(ttt.save)[which(colnames(ttt.save)=="Altitude")] <- "Elevation"
 
 ttt.save <- subset(ttt.save,select=c("AccSpeciesName","OriginalName","IndividualID","Latitude","Longitude","Elevation","SiteName","SubsiteName","DayOfYear","Year","DataContributor","ValueKindName","Trait","Value","Units","ErrorRisk","Comments"))
-
 ```
 
 ```r
-filtered_dataset <- subset(ttt.save,((!is.na(ttt.save$Latitude)) & (!is.na(ttt.save$Longitude)) & (!is.na(ttt.save$Year)))==TRUE) # keep only existing Lat and Long with a year
+# 66308 observations
+observations <- nrow(ttt.clean) 
+# 18 traits
+n_traits <- length(unique(ttt.clean$Trait))
+# 538 species minus 10 "sp" equals 528 species
+n_species <-length(unique(ttt.clean$AccSpeciesName))
 
-# Keep only species represented in more than 4 sites
-filtered_dataset <- filtered_dataset %>%group_by(AccSpeciesName) %>%mutate(unique_sites = n_distinct(SiteName))
-filtered_dataset <- subset(filtered_dataset,filtered_dataset$unique_sites > 3) # only species present in 4 or more distinct sites
+# percent of observations with lat/lon info # 0.27 % don't have lat/long
+missing_lat_long<- nrow(subset(ttt.clean, is.na(ttt.clean$Lat) | is.na(ttt.clean$Lon)))/nrow(ttt.clean) 
 ```
 
 ```r
-# Get site information, trim by number of observations (> 10)
-filtered_dataset$lat_trimmed = round(filtered_dataset$Latitude,digits=2)
-filtered_dataset$log_trimmed = round(filtered_dataset$Longitude,digits=2)
-sites <- subset(filtered_dataset,c("lat_trimmed","log_trimmed","SiteName"))
-sites <- sites %>% group_by(SiteName,lat_trimmed,log_trimmed) %>% filter(n()>10) #summarise(freq=sum(!is.na(SiteName)))
-rounding <- function(a) round(a,digits = 2)
-sites <- na.omit(unique(sites))
-
+# count of unique sites
+unique_sites <- length(unique(paste(round(ttt.clean$Lat,1),round(ttt.clean$Lon,1), sep="_"))) # 191
+# 198
+unique_sites_names <- length(unique(ttt.clean$SiteName))
 ```
 
 ```r
-# Create grid with site indexes
-index_pos <- function(n,cnt=90){ # 90 for latitude, 180 for longitude
-  dec_part = n%%1
-  int_part = floor(n)
-  incr = 1
-  if (dec_part >= 0.5) {incr = 2}
-  return((int_part+cnt)*2+incr)
-}
-sites$lat_index = index_pos(sites$lat_trimmed)
-sites$log_index = index_pos(sites$log_trimmed,180)
-# join with data frame
-filtered_dataset <- merge(filtered_dataset, sites, by=c("SiteName","lat_trimmed","log_trimmed"))
+ttt.clean$SiteCode <- paste("Site",round(ttt.clean$Lat,1),round(ttt.clean$Lon,1), sep="_")
+# average number of observations per site
+obs.per.site <- ddply(ttt.clean, c("SiteCode","Trait"), summarise,count = length(Value[!is.na(Value)]))
+```
+
+```r
+avg_obs_per_trait_site <- mean(obs.per.site$count) # 141.7 observations per trait per site
+med_obs_per_trait_site <- median(obs.per.site$count) # 36.5 median
+# 2555 max (plant height at Barrow)
+max_obs_per_trait_site <- max(obs.per.site$count) 
+```
+
+```r
+# percent of observations on individual
+observations_individual <- unique(ttt.clean$ValueKindName)
+# 4.7%
+percentage_observations_individual_ <- nrow(subset(ttt.clean,ttt.clean$ValueKindName %in% c("Site specific mean","Plot mean","Maximum in plot")))/nrow(ttt.clean) 
+
 ```
