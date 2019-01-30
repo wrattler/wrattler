@@ -24,13 +24,17 @@ RUN Rscript -e "install.packages('httr')"
 RUN Rscript -e "install.packages('purrr')"
 RUN Rscript -e "install.packages('testthat')"
 RUN Rscript -e "install.packages('httptest')"
-#RUN Rscript -e "install.packages('textclean')"
+#RUN Rscript -e "install.packages('rworldmap')"
 #RUN Rscript -e "install.packages('devtools')"
 RUN Rscript -e "install.packages('cleanEHR')"
 RUN Rscript -e "install.packages('reshape2')"
 RUN Rscript -e "install.packages('plyr')"
 RUN Rscript -e "install.packages('tidyverse')"
-
+RUN Rscript -e "install.packages('rworldmap')"
+RUN Rscript -e "install.packages('lattice')"
+RUN Rscript -e "install.packages('gridExtra')"
+RUN Rscript -e "install.packages('dplyr')"
+RUN Rscript -e "install.packages('readr')"
 
 
 # copy current working directory
