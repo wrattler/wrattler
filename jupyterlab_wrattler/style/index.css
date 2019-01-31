@@ -1,0 +1,7 @@
+:root {
+    --jp-icon-wrattler: url('./snake.png');
+  }
+
+.WrattlerIcon {
+    background-image: var(--jp-icon-wrattler);
+  }
