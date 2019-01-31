@@ -2,7 +2,6 @@ import {h, VNode} from 'maquette';
 import * as Values from '../definitions/values'; 
 
 function printPreview(cellId:number, triggerSelect:(number) => void, selectedTable:number, cellValues:Values.ExportsValue) {
-  
   let tableNames:Array<string> = Object.keys(cellValues.exports)
   if (tableNames.length > 0) {
     let tabComponents = printTabs(triggerSelect, selectedTable, tableNames);
@@ -13,22 +12,27 @@ function printPreview(cellId:number, triggerSelect:(number) => void, selectedTab
 }
 
 function printCurrentValue(cellId:number, value:Values.Value, tableName:string) {
+  console.log(tableName)
+  let componentRootId = "_"+cellId.toString() + "_" + tableName
   switch(value.kind)
   {
     case "dataframe":
       let df = <Values.DataFrame>value
-      return h('div', {class:'table-container'}, [printCurrentTable(df.data, tableName)]);
+      return h('div', {key: "dataframe"+componentRootId, class:'table-container'}, [printCurrentTable(df.data, tableName)]);
     case "printout":
       let printout = <Values.Printout>value
-      return h('div', {}, [h('p', {innerHTML: printout.data.toLocaleString()}, [])])
+      return h('div', {key: "printout"+componentRootId}, [h('p', {innerHTML: printout.data.toLocaleString()}, [])])
     case "jsoutput":
       let js = <Values.JavaScriptOutputValue>value
       let callRender = (el) => js.render(el.id);
-      return h('div', {}, [ 
-        h('div', {id: "output_" + cellId.toString() + "_" + tableName, afterCreate:callRender, afterUpdate:callRender }, [])
+      return h('div', {key: "jsoutputs"+componentRootId}, [ 
+        h('div', {key: "jsoutput"+componentRootId, id: "output_" + cellId.toString() + "_" + tableName, afterCreate:callRender, afterUpdate:callRender }, [])
       ])
+    case "figure":
+      let img = <Values.Figure> value
+      return h('img.plot', {key: "figure"+componentRootId, id: "figure_" + cellId.toString() + "_" + tableName, src: 'data:image/png;base64,'+img.data})
     default:
-      return h('div', {}, ["No idea what this is"])
+      return h('div', {key: "Unsure"+componentRootId}, ["No idea what this is"])
   }
 }
 
