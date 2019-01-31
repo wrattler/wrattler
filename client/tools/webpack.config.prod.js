@@ -7,7 +7,9 @@ console.log("Bundling for production...");
 module.exports = {
   entry: common.config.entry,
   output: {
-    filename: '[name].[hash].js',
+		library: "MyLibrary",
+    libraryTarget: "umd",
+    filename: 'wrattler-[name].js',
     path: common.config.buildDir,
   },
   node: {
@@ -17,10 +19,10 @@ module.exports = {
     rules: common.getModuleRules()
   },
   plugins: common.getPlugins().concat([
-    // new ExtractTextPlugin('style.css'),
     new CopyWebpackPlugin([ { from: common.config.publicDir } ])
   ]),
   resolve: {
-    modules: [common.config.nodeModulesDir]
+    modules: [common.config.nodeModulesDir],
+    extensions: [".ts", ".tsx", ".js", ".fs"]
   },
 };
