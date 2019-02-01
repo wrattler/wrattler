@@ -41,3 +41,12 @@ test_that("We can produce a plot", {
     result <- executeCode(code, importsList, hash)
     expect_that(file.exists(file.path("/tmp",hash,"plt.png")), equals(TRUE))
 })
+
+
+test_that("We can execute code containing a funtion", {
+    hash <- "testfunc"
+    importsList <- c()
+    code <- " x <- 3\n y <- 4\n adder <- function(a,b) {\n  return(a+b)\n }\n z <- adder(x,y)\n"
+    result <- executeCode(code, importsList, hash)
+    expect_that(result$returnVars[[4]]==7,equals(TRUE))
+})
