@@ -11,7 +11,7 @@
     "strict": true,
     "strictNullChecks": false,
     "target": "es2015",
-    "types": []
+    "types": ["node"]
   },
   "include": ["src/*"]
 }

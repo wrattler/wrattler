@@ -1,3 +1,17 @@
+.jp-xkcdWidget {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.jp-xkcdCartoon {
+  margin: auto;
+}
+
+.jp-xkcdAttribution {
+  margin: 20px auto;
+}
+
 :root {
     --jp-icon-wrattler: url('./snake.png');
   }

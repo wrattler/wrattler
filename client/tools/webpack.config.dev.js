@@ -24,6 +24,11 @@ module.exports = {
     port: 8080,
     hot: true,
     inline: true,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
+    }
   },
   module: {
     rules: common.getModuleRules()
@@ -35,4 +40,9 @@ module.exports = {
     modules: [common.config.nodeModulesDir],
     extensions: [".ts", ".tsx", ".js", ".fs"]
   },
+  plugins: [
+    new webpack.optimize.LimitChunkCountPlugin({
+      maxChunks: 1,
+    }),
+  ]
 };

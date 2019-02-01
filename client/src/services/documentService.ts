@@ -8,9 +8,9 @@ interface DocumentElement {
 async function getSampleDocument(): Promise<DocumentElement[]> {
     async function getDocumentMd(sourceFile: string) : Promise<string> {
       // if (sourceFile.)
-      let sourceURL = "/".concat(sourceFile).concat(".md")
-      let response = await axios.get(sourceURL)
-      // let response = await axios.get("/sample.md")
+      // let sourceURL = "/".concat(sourceFile).concat(".md")
+      // let response = await axios.get(sourceURL)
+      let response = await axios.get("http://localhost:8080/sample.md")
       return response.data
     }
     let documents : DocumentElement[] = []; 

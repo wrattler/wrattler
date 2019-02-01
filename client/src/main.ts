@@ -246,9 +246,11 @@ async function loadNotebookState() : Promise<{ counter:number, editors:Langs.Edi
   return { counter: index, editors: blockStates };
 }
 
-async function initializeNotebook(elementID) {
+export async function initializeNotebook(elementID) {
   let maquetteProjector = createProjector();
   let paperElement = document.getElementById(elementID);
+  console.log("elementID "+elementID);
+  console.log("Paper Element "+JSON.stringify(paperElement));
   if (!paperElement) throw "Missing paper element!"
 
   var {counter, editors} = await loadNotebookState();
