@@ -135,7 +135,7 @@ const extensions: IRenderMime.IExtension | IRenderMime.IExtension[] = [
     id: '@jupyterlab/wrattler-extension:factory',
     rendererFactory,
     rank: 0,
-    dataType: 'json',
+    dataType: 'string',
     fileTypes: [
       {
         name: 'wrattler',
