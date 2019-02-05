@@ -43,10 +43,27 @@ test_that("We can produce a plot", {
 })
 
 
-test_that("We can execute code containing a funtion", {
+test_that("We can execute code containing a function", {
     hash <- "testfunc"
     importsList <- c()
     code <- " x <- 3\n y <- 4\n adder <- function(a,b) {\n  return(a+b)\n }\n z <- adder(x,y)\n"
+    result <- executeCode(code, importsList, hash)
+    expect_that(result$returnVars[[4]]==7,equals(TRUE))
+})
+
+test_that("We can execute code with an inline function", {
+    hash <- "testfunc2"
+    importsList <- c()
+    code <- "rounder <- function(a) round(a, digits=3)\ny<-rounder(3.14159)\n"
+    result <- executeCode(code, importsList, hash)
+    expect_that(result$returnVars[[2]]==3.142,equals(TRUE))
+
+})
+
+test_that("We can execute code containing a function with assignments inside", {
+    hash <- "testfunc"
+    importsList <- c()
+    code <- " x <- 3\n y <- 4\n adder <- function(a,b) {\n  aa <- 2*a\n bb<- 2*b\n return(aa+bb)\n }\n z <- adder(x,y)\n"
     result <- executeCode(code, importsList, hash)
     expect_that(result$returnVars[[4]]==7,equals(TRUE))
 })
