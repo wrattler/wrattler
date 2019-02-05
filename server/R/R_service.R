@@ -73,6 +73,8 @@ writeFrame <- function(frameData, frameName, cellHash) {
     url <- makeURL(frameName, cellHash)
     if ("ggplot" %in% class(frameData)) {
         return(FALSE) # this will be done by writeFigure instead
+    } else if (typeof(frameData)=="closure") {
+        return(FALSE) # probably a function definition - we don't want to store this
     } else {
         # hopefully a dataframe that can be converted into JSON
         frameJSON <- jsonFromDataFrame(frameData)
@@ -84,6 +86,7 @@ writeFrame <- function(frameData, frameName, cellHash) {
     }
     return(FALSE)
 }
+
 
 writeFigure <- function(figureData, figureName, cellHash) {
     ## Analogue to writeFrame, but for figures
@@ -238,7 +241,6 @@ executeCode <- function(code, importsList, hash) {
     parsedFunc <- parse(text=stringFunc)
 
     eval(parsedFunc)
-    png('wrattlerPlot.png')
     s <- capture.output(returnVars <- wrattler_f())
 
     clean_s <- lapply(s, cleanString)
