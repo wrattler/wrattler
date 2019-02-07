@@ -24,6 +24,11 @@ RUN pip3 install pytest
 RUN pip3 install scikit-learn
 RUN pip3 install matplotlib
 RUN pip3 install pycairo
+RUN pip3 install sklearn
+RUN pip3 install pandas
+RUN pip3 install numpy
+
+
 
 ADD . /app
 WORKDIR /app
