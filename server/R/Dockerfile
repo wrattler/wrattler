@@ -35,6 +35,7 @@ RUN Rscript -e "install.packages('lattice')"
 RUN Rscript -e "install.packages('gridExtra')"
 RUN Rscript -e "install.packages('dplyr')"
 RUN Rscript -e "install.packages('readr')"
+RUN Rscript -e "install.packages('rlang')"
 
 
 # copy current working directory
