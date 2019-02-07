@@ -9,7 +9,7 @@ import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
 import { externalLanguagePlugin } from './languages/external'
 // import { gammaLangaugePlugin } from "./languages/gamma/plugin"
-import { getSampleDocument, getThisDocument } from './services/documentService'
+import { getNamedDocument, getDocument, DocumentElement } from './services/documentService'
 
 declare var PYTHONSERVICE_URI: string;
 declare var RSERVICE_URI: string;
@@ -233,9 +233,16 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
 }
 
 async function loadNotebookState() : Promise<{ counter:number, editors:Langs.EditorState[] }> {
-  let documents = await getSampleDocument();
+  let documents = await getNamedDocument();
+  return loadNotebook(documents);
+}
 
-  // Create an initial notebook state by parsing the sample document
+async function loadNotebookContent(content:string) : Promise<{ counter:number, editors:Langs.EditorState[] }> {
+  let documents = await getDocument(content);
+  return loadNotebook(documents);
+}
+
+function loadNotebook(documents:DocumentElement[]) {
   let index = 0
   let blockStates = documents.map(cell => {
     let languagePlugin = languagePlugins[cell.language]; // TODO: Error handling
@@ -246,28 +253,21 @@ async function loadNotebookState() : Promise<{ counter:number, editors:Langs.Edi
   return { counter: index, editors: blockStates };
 }
 
-async function loadThisNotebookState(content:string) : Promise<{ counter:number, editors:Langs.EditorState[] }> {
-  let documents = await getThisDocument(content);
+export async function initializeNotebook(elementID:string) {
+  var {counter, editors} = await loadNotebookState();
+  initializeCells(elementID, counter, editors)
+};
 
-  // Create an initial notebook state by parsing the sample document
-  let index = 0
-  let blockStates = documents.map(cell => {
-    let languagePlugin = languagePlugins[cell.language]; // TODO: Error handling
-    let block = languagePlugin.parse(cell.source);
-    let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block);
-    return editor;
-  })
-  return { counter: index, editors: blockStates };
-}
+export async function initializeNotebookJupyterLab(elementID:string, content:string) {
+  var {counter, editors} = await loadNotebookContent(content);
+  initializeCells(elementID, counter, editors)
+};
 
-export async function initializeNotebook(elementID, content:string) {
+async function initializeCells(elementID:string, counter: number, editors:Langs.EditorState[] ) {
   let maquetteProjector = createProjector();
   let paperElement = document.getElementById(elementID);
-  console.log("elementID "+elementID);
-  console.log("Paper Element "+JSON.stringify(paperElement));
   if (!paperElement) throw "Missing paper element!"
 
-  var {counter, editors} = await loadThisNotebookState(content);
   var cells = await bindAllCells(editors);
   var state = {counter:counter, cells:cells}
 
@@ -280,7 +280,8 @@ export async function initializeNotebook(elementID, content:string) {
 
   maquetteProjector.replace(paperElement, () =>
     render(updateAndRender, state))
-};
+}
 
 (<any>window).initializeNotebook = initializeNotebook;
+(<any>window).initializeNotebookJupyterLab = initializeNotebookJupyterLab;
 

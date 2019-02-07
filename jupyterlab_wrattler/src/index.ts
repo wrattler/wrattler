@@ -1,12 +1,6 @@
 import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 import { Widget } from '@phosphor/widgets';
 import '../style/index.css';
-////@ts-ignore
-// import * as wrattler from '../../client/build/wrattler-app.js'
-// import * as wrattler from 'wrattler-app'
-// import wrattler = require("../../client/build/wrattler-app");
-// import {initializeNotebook}
-// var wrattler = require("wrattler-app.js");
 
 /**
  * The CSS class for a Wrattler icon.
@@ -38,7 +32,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
     document.head.appendChild(this.wrattlerScript)
 
     this.wrattlerDiv = document.createElement('div');
-    this.wrattlerDiv.setAttribute("id","wrattler");
+    this.wrattlerDiv.setAttribute("id","paper");
     this.node.appendChild(this.wrattlerDiv);
 
     this.img = document.createElement('img');
@@ -84,7 +78,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
         this.img.alt = data.title;
         this.img.title = data.alt;
 
-        (<any>window).initializeNotebook('wrattler', content)
+        (<any>window).initializeNotebookJupyterLab('paper', content)
         console.log("Rendering notebook")
         
         this.update();

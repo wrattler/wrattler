@@ -2,6 +2,6 @@ interface DocumentElement {
     language: string;
     source: string;
 }
-declare function getSampleDocument(): Promise<DocumentElement[]>;
-declare function getThisDocument(documentContent: string): Promise<DocumentElement[]>;
-export { getThisDocument, getSampleDocument, DocumentElement };
+declare function getDocument(paragraph: string): Promise<DocumentElement[]>;
+declare function getNamedDocument(): Promise<DocumentElement[]>;
+export { getDocument, getNamedDocument, DocumentElement };
