@@ -35,7 +35,8 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
     this.addClass('jp-xkcdWidget');
     
     this.wrattlerScript = document.createElement("script");
-    this.wrattlerScript.setAttribute("src","https://wrattlerdatastore.blob.core.windows.net/lib/wrattler-app.js");
+    // this.wrattlerScript.setAttribute("src","https://wrattlerdatastore.blob.core.windows.net/lib/wrattler-app.js");
+    this.wrattlerScript.setAttribute("src","http://localhost:8080/wrattler-app.js");
     this.wrattlerScript.setAttribute("type","text/javascript");
     document.head.appendChild(this.wrattlerScript)
 
@@ -91,27 +92,15 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    * Render Wrattler into this widget's node.
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    const content = model.data[this._mimeType] as any ;
-    const metadata = (model.metadata[this._mimeType] as any) || {};
-    console.log("data: "+JSON.stringify(content))
-    console.log("metadata: "+JSON.stringify(metadata))
+    const content = model.data[this._mimeType] as string ; 
     return new Promise<void> ((resolve)=>{
       fetch('https://egszlpbmle.execute-api.us-east-1.amazonaws.com/prod').then(response => {
-        console.log("response:"+JSON.stringify(response))
         return response.json();
       }).then(data => {
-        console.log("xkcd: "+JSON.stringify(data.img))
         this.img.src = data.img;
         this.img.alt = data.title;
         this.img.title = data.alt;
 
-        // let contentVar = "let content = \"".concat(content).concat("\"");
-        // let functionCallVar = "window.initializeNotebook('wrattler', contentVar)"
-        // let evalCode = "(function f() {\n\t "+ contentVar + "\n"+functionCallVar+"})"
-        // console.log(evalCode)
-        
-        // eval(evalCode);
-        // eval("window.initializeNotebook('wrattler')")
         (<any>window).initializeNotebook('wrattler', content)
         console.log("Rendering notebook")
         
