@@ -91,9 +91,9 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    * Render Wrattler into this widget's node.
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    const data = model.data[this._mimeType] as any ;
+    const content = model.data[this._mimeType] as any ;
     const metadata = (model.metadata[this._mimeType] as any) || {};
-    console.log("data: "+JSON.stringify(data))
+    console.log("data: "+JSON.stringify(content))
     console.log("metadata: "+JSON.stringify(metadata))
     return new Promise<void> ((resolve)=>{
       fetch('https://egszlpbmle.execute-api.us-east-1.amazonaws.com/prod').then(response => {
@@ -105,10 +105,14 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
         this.img.alt = data.title;
         this.img.title = data.alt;
 
+        // let contentVar = "let content = \"".concat(content).concat("\"");
+        // let functionCallVar = "window.initializeNotebook('wrattler', contentVar)"
+        // let evalCode = "(function f() {\n\t "+ contentVar + "\n"+functionCallVar+"})"
+        // console.log(evalCode)
+        
+        // eval(evalCode);
         // eval("window.initializeNotebook('wrattler')")
-        // this.wrattlerDiv.innerText = "Why doesn't this work";
-        console.log("Element: "+JSON.stringify(document.getElementById("wrattler")));
-        eval("window.initializeNotebook('wrattler')")
+        (<any>window).initializeNotebook('wrattler', content)
         console.log("Rendering notebook")
         
         this.update();

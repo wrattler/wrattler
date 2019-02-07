@@ -1,1 +1,1 @@
-export declare function initializeNotebook(elementID: any): Promise<void>;
+export declare function initializeNotebook(elementID: any, content: string): Promise<void>;

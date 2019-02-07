@@ -3,4 +3,5 @@ interface DocumentElement {
     source: string;
 }
 declare function getSampleDocument(): Promise<DocumentElement[]>;
-export { getSampleDocument, DocumentElement };
+declare function getThisDocument(documentContent: string): Promise<DocumentElement[]>;
+export { getThisDocument, getSampleDocument, DocumentElement };

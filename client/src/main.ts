@@ -9,7 +9,7 @@ import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
 import { externalLanguagePlugin } from './languages/external'
 // import { gammaLangaugePlugin } from "./languages/gamma/plugin"
-import { getSampleDocument } from './services/documentService'
+import { getSampleDocument, getThisDocument } from './services/documentService'
 
 declare var PYTHONSERVICE_URI: string;
 declare var RSERVICE_URI: string;
@@ -246,14 +246,28 @@ async function loadNotebookState() : Promise<{ counter:number, editors:Langs.Edi
   return { counter: index, editors: blockStates };
 }
 
-export async function initializeNotebook(elementID) {
+async function loadThisNotebookState(content:string) : Promise<{ counter:number, editors:Langs.EditorState[] }> {
+  let documents = await getThisDocument(content);
+
+  // Create an initial notebook state by parsing the sample document
+  let index = 0
+  let blockStates = documents.map(cell => {
+    let languagePlugin = languagePlugins[cell.language]; // TODO: Error handling
+    let block = languagePlugin.parse(cell.source);
+    let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block);
+    return editor;
+  })
+  return { counter: index, editors: blockStates };
+}
+
+export async function initializeNotebook(elementID, content:string) {
   let maquetteProjector = createProjector();
   let paperElement = document.getElementById(elementID);
   console.log("elementID "+elementID);
   console.log("Paper Element "+JSON.stringify(paperElement));
   if (!paperElement) throw "Missing paper element!"
 
-  var {counter, editors} = await loadNotebookState();
+  var {counter, editors} = await loadThisNotebookState(content);
   var cells = await bindAllCells(editors);
   var state = {counter:counter, cells:cells}
 
