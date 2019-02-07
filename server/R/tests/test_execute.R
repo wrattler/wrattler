@@ -16,6 +16,16 @@ test_that("We can execute a simple assignment", {
     expect_that(result$returnVars[[1]] == 7,equals(TRUE))
 })
 
+test_that("We can assign a dataframe", {
+    code <- 'myDF <- data.frame(name=c("Johny"), age=c(53))'
+    importsList <- c()
+    hash <- "somehash"
+    result <- executeCode(code, importsList, hash)
+    expect_that(typeof(result$returnVars$myDF)=="list", equals(TRUE))
+    expect_that(result$returnVars$myDF$name[[1]]=="Johny", equals(TRUE))
+    expect_that(result$returnVars$myDF$age[[1]]==53, equals(TRUE))
+
+})
 
 test_that("We can retrieve text output", {
     code <- "print('hello world') \n"
@@ -65,5 +75,5 @@ test_that("We can execute code containing a function with assignments inside", {
     importsList <- c()
     code <- " x <- 3\n y <- 4\n adder <- function(a,b) {\n  aa <- 2*a\n bb<- 2*b\n return(aa+bb)\n }\n z <- adder(x,y)\n"
     result <- executeCode(code, importsList, hash)
-    expect_that(result$returnVars[[4]]==7,equals(TRUE))
+    expect_that(result$returnVars[[4]]==14,equals(TRUE))
 })
