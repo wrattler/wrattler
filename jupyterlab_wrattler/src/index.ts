@@ -24,9 +24,6 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    */
 
   constructor() {
-
-
-    console.log("Constructing RenderedWrattler3")
     super();
 
     this.id = 'wrattler-jupyterlab';
@@ -40,20 +37,9 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
     this.wrattlerScript.setAttribute("type","text/javascript");
     document.head.appendChild(this.wrattlerScript)
 
-    // let entry = document.createElement("script");
-    // entry.setAttribute("src","function go() { initializeNotebook ('main')} ")
-    // document.head.appendChild(entry)
-
     this.wrattlerDiv = document.createElement('div');
     this.wrattlerDiv.setAttribute("id","wrattler");
     this.node.appendChild(this.wrattlerDiv);
-
-    this.wrattlerScript.onload = function() {
-      // go();
-      // initializeNotebook('main')
-      // eval("window.initializeNotebook('wrattler')")
-      console.log("Initialised notebook")
-    }
 
     this.img = document.createElement('img');
     this.img.className = 'jp-xkcdCartoon';
@@ -82,9 +68,6 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    * Dispose of the widget.
    */
   dispose(): void {
-    // Dispose of leaflet map
-    // this._map.remove();
-    // this._map = null;
     super.dispose();
   }
 
