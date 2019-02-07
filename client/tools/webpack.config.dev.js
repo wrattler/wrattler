@@ -40,9 +40,4 @@ module.exports = {
     modules: [common.config.nodeModulesDir],
     extensions: [".ts", ".tsx", ".js", ".fs"]
   },
-  plugins: [
-    new webpack.optimize.LimitChunkCountPlugin({
-      maxChunks: 1,
-    }),
-  ]
 };

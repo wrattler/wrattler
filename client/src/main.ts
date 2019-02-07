@@ -254,6 +254,7 @@ function loadNotebook(documents:DocumentElement[]) {
 }
 
 export async function initializeNotebook(elementID:string) {
+  console.log("wtf")
   var {counter, editors} = await loadNotebookState();
   initializeCells(elementID, counter, editors)
 };
