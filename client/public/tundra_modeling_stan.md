@@ -38,11 +38,7 @@ model_data <- list(n = nrow(train),s = nrow(species),y = train$Value,tmp = train
 
 # model 3 removes the normal distribution generating alpha_sd parameters, best model according to diagnostics
 fit_3 <- stan(file = 'stan_m3.stan', data = model_data, iter = 1000, chains = 4)
-```
 
-
-```r
-### ORIGINAL diagnostics.r
 
 tmp_ranges <- seq(0, 15, length.out = 100)
 exp_model <- function(t) {
@@ -51,12 +47,16 @@ exp_model <- function(t) {
 general_line <- lapply(tmp_ranges, exp_model)
 test_line <- lapply(test$tmp.centered, exp_model)
 
-plot(tmp_ranges, general_line, xlab = "Temperature", ylab = "Predicted trait value")
-plot(test$tmp, test_line, xlab = "Temperature", ylab = "Predicted trait value")
+tmp <- test$tmp
 
-predicted_df <- data.frame(col1=test$tmp, col2=array(as.numeric(unlist(test_line))))
+test_line
+
+
+predicted_df <- data.frame(col1=tmp, col2=array(as.numeric(unlist(test_line))))
 colnames(predicted_df) <- c("tmp","Value")
+```
 
+```r
 # Function that returns Root Mean Squared Error
 rmse <- function(error)
 {
@@ -79,10 +79,9 @@ r2 <- function(error,mean_error)
 error <- test$Value - predicted_df$Value
 mean_error <- test$Value - mean(test$Value)
 
-# Example of invocation of functions
-rmse(error)
-mae(error)
-r2(error,mean_error)
+
+```
+```r
 
 # These should be the grey lines in Figure 2b: data from species for a given trait, with interpolation
 

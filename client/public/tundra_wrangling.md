@@ -247,9 +247,6 @@ observations_individual <- unique(ttt.clean$ValueKindName)
 # 4.7%
 percentage_observations_individual_ <- nrow(subset(ttt.clean,ttt.clean$ValueKindName %in% c("Site specific mean","Plot mean","Maximum in plot")))/nrow(ttt.clean) 
 
-```
-
-```r
 filtered_dataset <- subset(ttt.save,(!is.na(ttt.save$Latitude)) & (!is.na(ttt.save$Longitude)) & (!is.na(ttt.save$Year))) # keep only existing Lat and Long with a year
 
 
@@ -261,7 +258,10 @@ filtered_dataset <- subset(filtered_dataset,filtered_dataset$unique_sites > 3) #
 filtered_dataset$lat_trimmed = round(filtered_dataset$Latitude,digits=2)
 filtered_dataset$log_trimmed = round(filtered_dataset$Longitude,digits=2)
 ```
+
 ```r
+
+
 sites <- select(filtered_dataset, lat_trimmed,log_trimmed,SiteName)
 sites <- sites %>% group_by(SiteName,lat_trimmed,log_trimmed) %>% filter(n()>10) 
 rounding <- function(a) round(a,digits = 2)
@@ -279,5 +279,46 @@ index_pos <- function(n,cnt=90){ # 90 for latitude, 180 for longitude
 }
 sites$lat_index = index_pos(sites$lat_trimmed)
 sites$log_index = index_pos(sites$log_trimmed,180)
+```
+```r
+filtered_dataset_sites <- merge(filtered_dataset, sites, by=c("SiteName","lat_trimmed","log_trimmed"))
 
+sites_ <- subset(sites, by=c("SiteName","lat_index","log_index"))
+
+sites_ <- unique(sites_)
+rownames(sites_) <- NULL
+sites_["index"] <- c(1:nrow(sites_))
+filtered_dataset_sites <- merge(filtered_dataset_sites, sites_, by=c("SiteName","lat_index","log_index"))
+```
+
+
+```r
+
+## Change commented line to use precipitation rather than temperature data
+# data_folder <- "dataset/401_PRE_monthly_1950_2015" # precipitation data
+data_folder <- "401_TMP_monthly_1950_2015" # temperature data
+myFiles <- list.files(data_folder, pattern = "*.csv") #all files starting with Climate_
+myFiles <- sort(myFiles)
+
+# load time series for mean temperatures (1950-2015)
+l <- 2017-1950
+# create matrix for time series
+
+ts <- rep(NA,nrow(sites_)*l)
+dim(ts) <- c(nrow(sites_),l)
+
+# then read them in, for instance through
+for (filename in myFiles) {
+  year <- as.numeric(substring(filename,nchar(filename)-11,nchar(filename)-8))
+  month <- as.numeric(substring(filename,nchar(filename)-7,nchar(filename)-6))
+  if (month == ref_month){
+    data = read.csv(paste(data_folder, filename, sep = "/"), header = FALSE, skip=45)
+    for (row in 1:nrow(sites_)) {
+      long_i <- sites_[row,"log_index"]
+      lat_i <- sites_[row,"lat_index"]
+      if (data[[long_i+1]][[lat_i]] > -1000){ # note that -10000 is the not observed value for this dataset...
+        ts[row,year-1949] <- data[[long_i+1]][[lat_i]]}
+    }
+  }
+}
 ```
