@@ -1,5 +1,11 @@
 """
-Two API endpoints mocking a python kernel.
+Two API endpoints 'eval' and 'exports' representing the wrattler python service.
+
+A POST request to 'exports' will analyze a code fragment and return lists of 'imports' and 'exports',
+i.e. frames that the code will read in from the datastore and write back to the datastore.
+
+A POST request to 'eval' will evaluate the code fragment and write the output frames to the datastore,
+then return the names and URLs of these frames.
 """
 
 from flask import Flask, request, jsonify
@@ -28,16 +34,17 @@ def exports():
     imports_exports = analyze_code(data)
     return jsonify(imports_exports)
 
+
 @app.route("/eval", methods=['POST'])
 def eval():
     data = json.loads(request.data.decode("utf-8"))
     eval_result = evaluate_code(data)
-
     return jsonify(eval_result)
+
 
 @app.route("/test", methods=["GET"])
 def test():
-    return "Python data service is alive!"
+    return "Python service is alive!"
 
 
 
