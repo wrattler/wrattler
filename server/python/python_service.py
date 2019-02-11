@@ -141,7 +141,6 @@ def write_image(frame_hash):
         img_b64 = base64.b64encode(file_data.read())
         data = [{"IMAGE": img_b64.decode("utf-8")}]
         r = requests.put(url, json=data)
-#        r = requests.put(url, data=file_data, headers={'Content-Type': 'application/octet-stream'})
         return (r.status_code == 200)
     except(requests.exceptions.ConnectionError):
         raise ApiException("Could not write image to datastore {}".format(DATASTORE_URI),
@@ -343,8 +342,7 @@ def execute_code(code, input_val_dict, return_vars, output_hash, verbose=False):
     return_dict = {"output": "", "results": []}
     try:
         with stdoutIO() as s:
-            ### wrattler_f should now be in the namespace as the function
-            ### wrapping the input code string.
+            ### wrapping function wrattler_f should now be in the namespace
             func_output = eval('wrattler_f()')
             return_dict["output"] = s.getvalue().strip()
             if isinstance(func_output, collections.Iterable):

@@ -2,8 +2,8 @@ var fs = require("fs");
 var path = require("path");
 var fableUtils = require("fable-utils");
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-// var HtmlWebpackPolyfillIOPlugin = require('html-webpack-polyfill-io-plugin');
-// var DynamicCdnWebpackPlugin = require('dynamic-cdn-webpack-plugin');
+var webpack = require("webpack");
+var MonacoWebpackPlugin = require('../node_modules/monaco-editor-webpack-plugin');
 
 var packageJson = JSON.parse(fs.readFileSync(resolve('../package.json')).toString());
 var errorMsg = "{0} missing in package.json";
@@ -78,10 +78,19 @@ function getPlugins(isProduction) {
     new HtmlWebpackPlugin({
       filename: path.join(config.buildDir, "index.html"),
       template: config.indexHtmlTemplate,
-      // minify: isProduction ? {} : false
+      minify: false //isProduction ? {} : false
     }),
-    // new HtmlWebpackPolyfillIOPlugin({ features: "es6,fetch" }),
-    // new DynamicCdnWebpackPlugin({ verbose: true, only: config.cdnModules }),
+    new webpack.NamedModulesPlugin(),
+    new MonacoWebpackPlugin(),
+    new webpack.ContextReplacementPlugin(
+      /monaco-editor(\\|\/)esm(\\|\/)vs(\\|\/)editor(\\|\/)common(\\|\/)services/,
+      __dirname
+    ),
+    new webpack.DefinePlugin({
+      PYTHONSERVICE_URI: JSON.stringify(typeof(process.env.PYTHONSERVICE_URI)=="undefined"?"http://localhost:7101":process.env.PYTHONSERVICE_URI),
+      RSERVICE_URI: JSON.stringify(typeof(process.env.RSERVICE_URI)=="undefined"?"http://localhost:7103":process.env.RSERVICE_URI),
+      DATASTORE_URI: JSON.stringify(typeof(process.env.DATASTORE_URI)=="undefined"?"http://localhost:7102":process.env.DATASTORE_URI)
+    })
   ];
 }
 
