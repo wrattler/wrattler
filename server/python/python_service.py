@@ -16,6 +16,7 @@ import collections
 import base64
 from io import StringIO
 import contextlib
+import pyarrow as pa
 
 from exceptions import ApiException
 
@@ -54,6 +55,31 @@ def cleanup(i):
     except(TypeError):
         pass
     return i
+
+
+def pandas_to_arrow(frame):
+    """
+    Convert from a pandas dataframe to apache arrow serialized buffer
+    """
+    try:
+        arrow_table = pa.Table.from_pandas(frame)
+        buffer = pa.serialize(arrow_table).to_buffer()
+        return buffer
+    except:
+        print("Something went wrong")
+
+
+def arrow_to_pandas(buffer):
+    """
+    Convert from an Apache Arrow buffer into a pandas dataframe
+    """
+    try:
+        arrow_table = pa.deserialize(buffer)
+        frame = arrow_table.to_pandas()
+        return frame
+    except:
+        print("Something went wrong")
+
 
 
 def convert_to_pandas_df(frame):
@@ -105,7 +131,8 @@ def read_frame(frame_name, frame_hash):
         r=requests.get(url)
         if r.status_code is not 200:
             raise ApiException("Could not retrieve dataframe", status_code=r.status_code)
-        data = json.loads(r.content.decode("utf-8"))
+        data = r.content
+##        data = json.loads(r.content.decode("utf-8"))
         return data
     except(requests.exceptions.ConnectionError):
         raise ApiException("Unable to connect to datastore {}".format(DATASTORE_URI),status_code=500)
@@ -271,8 +298,9 @@ def evaluate_code(data):
     wrote_ok=True
     for i, name in enumerate(frame_names):
         ## check here if the result is a JSON string - if not, skip it
-        if not (isinstance(results[i],str) and (results[i][0]=='[' or results[i][0]=='{')):
-            continue
+#        if not (isinstance(results[i],str) and (results[i][0]=='[' or results[i][0]=='{')):
+#            print("Not a json string, will continue")
+#            continue
 
         wrote_ok &= write_frame(results[i], name, output_hash)
         return_dict["frames"].append({"name": name,"url": "{}/{}/{}"\
@@ -304,7 +332,8 @@ def construct_func_string(code, input_val_dict, return_vars, output_hash):
     func_string += "    import matplotlib\n"
     func_string += "    matplotlib.use('Cairo')\n\n"
     for k,v in input_val_dict.items():
-        func_string += "    {} = convert_to_pandas_df({})\n".format(k,v)
+        func_string += "    {} = arrow_to_pandas({})\n".format(k,v)
+##        func_string += "    {} = convert_to_pandas_df({})\n".format(k,v)
     ## need to worry about indentation for multi-line code fragments.
     ## split the code string by newline character, and prepend 4 spaces to each line.
     for line in code.strip().split("\n"):
@@ -348,12 +377,16 @@ def execute_code(code, input_val_dict, return_vars, output_hash, verbose=False):
             if isinstance(func_output, collections.Iterable):
                 results = []
                 for item in func_output:
-                    results.append(convert_from_pandas_df(item))
+##                    results.append(convert_from_pandas_df(item))
+                    print("Converting  output from list into arrow")
+                    results.append(pandas_to_arrow(item))
                 return_dict["results"] = results
             elif not func_output:
                 return_dict["results"] = []
             else:
-                result = convert_from_pandas_df(func_output)
+                print("Converting single output to arrow")
+                result = pandas_to_arrow(func_output)
+##                result = convert_from_pandas_df(func_output)
                 return_dict["results"] = [result]
     except Exception as e:
         output = "{}: {}".format(type(e).__name__, e)
