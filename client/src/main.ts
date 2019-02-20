@@ -123,7 +123,7 @@ async function evaluate(node:Graph.Node) {
 function render(trigger:(NotebookEvent) => void, state:State.NotebookState) {
   
   documentContent = saveDocument(state)
-  console.log("Saving document content: "+documentContent)
+  // console.log("Saving document content: "+documentContent)
   let nodes = state.cells.map(cell => {
     // The `context` object is passed to the render function. The `trigger` method
     // of the object can be used to trigger events that cause a state update.
@@ -276,7 +276,7 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
 }
 
 export function exportDocumentContent():string {
-  console.log("Exporting document content: "+documentContent)
+  // console.log("Exporting document content")
   return documentContent
 }
 

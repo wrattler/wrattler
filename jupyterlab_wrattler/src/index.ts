@@ -147,6 +147,8 @@ namespace Private {
 
     wrattlerDiv = document.createElement('div');
     wrattlerDiv.setAttribute("id","paper");
+    
+
     let node = document.createElement('div');
     node.appendChild(wrattlerDiv);
     return node;
