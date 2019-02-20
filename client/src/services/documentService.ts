@@ -58,7 +58,6 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
   if (currentPos < paragraph.length-1) {
     documents.push({language: "markdown", source: paragraph.substring(currentPos)})
   }
-  console.log(documents);
   return documents;
 }
 

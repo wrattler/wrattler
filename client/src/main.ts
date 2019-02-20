@@ -36,7 +36,7 @@ interface NotebookRefreshEvent { kind:'refresh' }
 // interface NotebookSourceChange { kind:'sourceChange' }
 interface NotebookSourceChange { kind:'rebind', block: Langs.BlockState, newSource: string}
 type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent | NotebookRefreshEvent | NotebookSourceChange
-
+let documentContent:string;
 // type NotebookState = {
 //   cells: Langs.BlockState[]
 //   counter: number
@@ -121,7 +121,8 @@ async function evaluate(node:Graph.Node) {
 }
 
 function render(trigger:(NotebookEvent) => void, state:State.NotebookState) {
-  console.log(saveDocument(state))
+  
+  documentContent = saveDocument(state)
   let nodes = state.cells.map(cell => {
     // The `context` object is passed to the render function. The `trigger` method
     // of the object can be used to trigger events that cause a state update.
@@ -201,7 +202,6 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
       return { counter: state.counter, cells: newCells };
     }
     case 'add': {
-
       let newId = state.counter + 1;
       let newDocument = { "language": "python",
                           "source": "var z = "+newId};
@@ -217,14 +217,10 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
       return state;
 
     case 'remove':
-
       return {counter: state.counter, cells: removeCell(state.cells, evt.id)};
 
-    case 'rebind': {
-      // console.log("Rebind in update: "+JSON.stringify(evt))
+    case 'rebind': 
       return await rebindSubsequentCells(state, evt.block, evt.newSource);
-    }
-
   }
 }
 
@@ -278,10 +274,11 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
     render(updateAndRender, state))
 }
 
-// export function saveDocument() {
+export function exportDocumentContent():string {
+  return documentContent
+}
 
-// }
-
+(<any>window).exportDocumentContent = exportDocumentContent;
 (<any>window).initializeNotebook = initializeNotebook;
 (<any>window).initializeNotebookJupyterLab = initializeNotebookJupyterLab;
 

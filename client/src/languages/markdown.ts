@@ -47,10 +47,8 @@ class MarkdownBlockKind implements Langs.Block {
     update: (state:MarkdownState, event:MarkdownEvent) => {
       switch(event.kind) {
         case 'edit': 
-          console.log("Markdown: Switch to edit mode!")
           return { id: state.id, block: state.block, editing: true }
         case 'update': 
-          console.log("Markdown: Set code to:\n%O", event.source);
           let newBlock = markdownLanguagePlugin.parse(event.source)
           return { id: state.id, block: <MarkdownBlockKind>newBlock, editing: false }
       }
@@ -106,7 +104,6 @@ class MarkdownBlockKind implements Langs.Block {
             }
           });    
           numLines = ed['viewModel'].lines.lines.length;
-          console.log(numLines);
   
           let alwaysTrue = ed.createContextKey('alwaysTrue', true);
           let myBinding = ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
