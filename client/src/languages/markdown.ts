@@ -4,6 +4,7 @@ import marked from 'marked';
 import * as Langs from '../definitions/languages'; 
 import * as Graph from '../definitions/graph'; 
 import { Value } from '../definitions/values';
+import { Statement } from 'typescript';
 
 // ------------------------------------------------------------------------------------------------
 // Markdown plugin
@@ -132,7 +133,7 @@ class MarkdownBlockKind implements Langs.Block {
           }
           ed.getModel().onDidChangeContent(resizeEditor);
           resizeEditor();
-
+          
           // el.setHeight("100px");
         }
         return h('div', {}, [
@@ -146,7 +147,6 @@ class MarkdownBlockKind implements Langs.Block {
   export const markdownLanguagePlugin : Langs.LanguagePlugin = {
     language: "markdown",
     editor: markdownEditor,
-
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
     },
@@ -162,5 +162,10 @@ class MarkdownBlockKind implements Langs.Block {
     evaluate: async (node:Graph.Node) : Promise<Langs.EvaluationResult> => {
       return { kind: "success", value: { kind: "nothing" } };
     },
+    save: (block:Langs.Block) => {
+      let mdBlock:MarkdownBlockKind = <MarkdownBlockKind> block
+      return mdBlock.source.concat("\n")
+    },
   }
+
   

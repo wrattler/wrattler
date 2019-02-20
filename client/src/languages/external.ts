@@ -228,4 +228,17 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     }
     return getExports(this.language)
   }
+
+  save (block:Langs.Block) : string {
+    let exBlock:ExternalBlockKind = <ExternalBlockKind> block
+    let content:string = ""
+    content = content
+      .concat("```")
+      .concat(exBlock.language)
+      .concat("\n")
+      .concat(exBlock.source)
+      .concat("\n")
+      .concat("```\n")
+    return content
+  }
 }

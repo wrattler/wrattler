@@ -1,4 +1,10 @@
 import axios from 'axios';
+import * as State from '../definitions/state'
+import * as Langs from '../definitions/languages'
+import { markdownLanguagePlugin } from '../languages/markdown'
+import { externalLanguagePlugin } from '../languages/external'
+import { javascriptLanguagePlugin } from '../languages/javascript'
+import { connect } from 'tls';
 
 interface DocumentElement {
   language: string
@@ -71,9 +77,24 @@ async function getNamedDocument(): Promise<DocumentElement[]> {
     let paragraph = await getDocumentMd(sourceFile) 
     return getDocument(paragraph)
 }
+
+function saveDocument(state:State.NotebookState):string
+{
+  let content:string = ""
+  var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
+  languagePlugins["markdown"] = markdownLanguagePlugin;
+  languagePlugins["javascript"] = javascriptLanguagePlugin;
+  languagePlugins["python"] = new externalLanguagePlugin("python", "PYTHONSERVICE_URI");
+  languagePlugins["r"] = new externalLanguagePlugin("r", "RSERVICE_URI");
+  for (let c = 0; c < state.cells.length; c++){
+    content = content.concat(languagePlugins[state.cells[c].editor.block.language].save(state.cells[c].editor.block))
+  }
+  return content
+}
   
 export {
   getDocument,
   getNamedDocument,
-  DocumentElement
+  DocumentElement,
+  saveDocument
 }

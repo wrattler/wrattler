@@ -213,6 +213,17 @@ class JavascriptBlockKind implements Langs.Block {
     bind: (scopeDictionary: {}, block: Langs.Block) => {
       let jsBlock = <JavascriptBlockKind>block
       return getCodeExports(scopeDictionary, jsBlock.source);
+    },
+    save: (block:Langs.Block) : string => {
+      let jsBlock:JavascriptBlockKind = <JavascriptBlockKind> block
+      let content:string = ""
+      content = content
+        .concat("```javascript\n")
+        .concat(jsBlock.source)
+        .concat("\n")
+        .concat("```\n")
+      return content
+      
     }
   }
 
