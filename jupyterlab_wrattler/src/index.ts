@@ -27,7 +27,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
     this.title.closable = true;       
     this.addClass('jp-xkcdWidget');
     
-    Private.createNode()
+    // Private.createNode()
     
     this.img = document.createElement('img');
     this.img.className = 'jp-xkcdCartoon';
@@ -35,8 +35,11 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
 
     let saveButton = document.createElement('button')
     saveButton.innerHTML = "Save me"
-    saveButton.addEventListener ("click", function() {
-      alert("did something");
+    saveButton.addEventListener ("click", () => {
+      let documentContent:string = Private.wrattlerToMd();
+      let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
+      newOptions.data={"text/plain": documentContent}
+      this.wrattlerDocumentModel.setData(newOptions)
     });
     this.node.appendChild(saveButton);
     
@@ -59,6 +62,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
   // readonly wrattlerDiv: HTMLDivElement;
   // readony wrattlerScript: HTMLScriptElement;
   private _mimeType: string;
+  private wrattlerDocumentModel: IRenderMime.IMimeModel
   
   /**
    * Dispose of the widget.
@@ -72,8 +76,9 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
     console.log("Rendering notebook")
+    this.wrattlerDocumentModel = model
     const content = model.data[this._mimeType] as string ; 
-    console.log(model.data)
+    // console.log(model.data)
     
     // let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
     // newOptions.data={"text/plain": "Why doesn't this work still?"}
@@ -146,8 +151,15 @@ namespace Private {
     node.appendChild(wrattlerDiv);
     return node;
   }
+
   export function mdToWrattler(content:string) {
     (<any>window).initializeNotebookJupyterLab('paper', content)
     console.log("Init Notebook")
+  }
+
+  export function wrattlerToMd():string {
+    let content = (<any>window).exportDocumentContent()
+    // console.log("Exported content: "+content)
+    return content
   }
 }
