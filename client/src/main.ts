@@ -64,6 +64,7 @@ async function bindAllCells(editors:Langs.EditorState[]) {
 }
 
 async function rebindSubsequentCells(state:State.NotebookState, cell:Langs.BlockState, newSource: string) {
+  Log.trace("Binding", "Begin rebinding subsequent cells %O %s", cell, newSource)
   for (var b=0; b < state.cells.length; b++) {
     // if (state.cells[b].editor.id >= cell.editor.id) {
       let languagePlugin = languagePlugins[state.cells[b].editor.block.language]
@@ -95,7 +96,7 @@ async function rebindSubsequentCells(state:State.NotebookState, cell:Langs.Block
         scopeDictionary[exportNode.variableName] = exportNode;
       }
   }
-  
+  Log.trace("Binding", "Finish rebinding subsequent cells")
   return state;
 }
 
@@ -121,8 +122,8 @@ async function evaluate(node:Graph.Node) {
 }
 
 function render(trigger:(NotebookEvent) => void, state:State.NotebookState) {
+
   
-  documentContent = saveDocument(state)
   // console.log("Saving document content: "+documentContent)
   let nodes = state.cells.map(cell => {
     // The `context` object is passed to the render function. The `trigger` method
@@ -184,7 +185,7 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
         }
       }).reduce ((a,b)=> a.concat(b));
   }
-
+  Log.trace('main',"Update called: %O",evt)
   switch(evt.kind) {
 
     case 'block': {
@@ -221,7 +222,10 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
       return {counter: state.counter, cells: removeCell(state.cells, evt.id)};
 
     case 'rebind': 
-      return await rebindSubsequentCells(state, evt.block, evt.newSource);
+      let newState = await rebindSubsequentCells(state, evt.block, evt.newSource);
+      if ((<any>window).documentContentChanged)
+        (<any>window).documentContentChanged(saveDocument(newState))
+      return newState
   }
 }
 
@@ -247,6 +251,7 @@ function loadNotebook(documents:DocumentElement[]) {
 }
 
 export async function initializeNotebook(elementID:string) {
+  Log.trace('main',"Init notebook with ID: %s", elementID)
   var {counter, editors} = await loadNotebookState();
   initializeCells(elementID, counter, editors)
 };

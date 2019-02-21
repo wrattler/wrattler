@@ -33,15 +33,15 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
     this.img.className = 'jp-xkcdCartoon';
     this.node.appendChild(this.img);
 
-    let saveButton = document.createElement('button')
-    saveButton.innerHTML = "Save me"
-    saveButton.addEventListener ("click", () => {
-      let documentContent:string = Private.wrattlerToMd();
-      let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
-      newOptions.data={"text/plain": documentContent}
-      this.wrattlerDocumentModel.setData(newOptions)
-    });
-    this.node.appendChild(saveButton);
+    // let saveButton = document.createElement('button')
+    // saveButton.innerHTML = "Save me"
+    // saveButton.addEventListener ("click", () => {
+    //   let documentContent:string = Private.wrattlerToMd();
+    //   let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
+    //   newOptions.data={"text/plain": documentContent}
+    //   this.wrattlerDocumentModel.setData(newOptions)
+    // });
+    // this.node.appendChild(saveButton);
     
 
     this.img.insertAdjacentHTML('afterend',
@@ -62,7 +62,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
   // readonly wrattlerDiv: HTMLDivElement;
   // readony wrattlerScript: HTMLScriptElement;
   private _mimeType: string;
-  private wrattlerDocumentModel: IRenderMime.IMimeModel
+  // private wrattlerDocumentModel: IRenderMime.IMimeModel
   
   /**
    * Dispose of the widget.
@@ -76,9 +76,9 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
     console.log("Rendering notebook")
-    this.wrattlerDocumentModel = model
-    const content = model.data[this._mimeType] as string ; 
-    // console.log(model.data)
+    // this.wrattlerDocumentModel = model
+    let content = model.data[this._mimeType] as string ; 
+    Private.setWrattlerChangeHandler(model)
     
     // let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
     // newOptions.data={"text/plain": "Why doesn't this work still?"}
@@ -163,5 +163,15 @@ namespace Private {
     let content = (<any>window).exportDocumentContent()
     // console.log("Exported content: "+content)
     return content
+  }
+
+  export function setWrattlerChangeHandler(model: IRenderMime.IMimeModel):void {
+    console.log("Setting Document Content to load from JP");
+    (<any>window).documentContentChanged = function(newContent:string) {
+      console.log("Document content changed from JP")
+      let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
+      newOptions.data={"text/plain": newContent}
+      model.setData(newOptions)
+    }
   }
 }
