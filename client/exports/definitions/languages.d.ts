@@ -44,6 +44,10 @@ interface LanguagePlugin {
      * code block and a list of exported variables (to be added to the scope)
      */
     bind(scopeDictionary: {}, block: Block): Promise<BindingResult>;
+    /**
+     * Given cell:Block, return string of source to be used for saving document in markdown
+     */
+    save(block: Block): string;
 }
 /**
  * A block in a notebook. Blocks are created, rendered and maintained by

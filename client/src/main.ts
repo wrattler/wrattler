@@ -3,13 +3,14 @@
 /** This comment is needed so that TypeDoc parses the above one correctly */
 import {h,createProjector,VNode} from 'maquette'
 import { Log } from "./common/log"
+import * as State from './definitions/state'
 import * as Langs from './definitions/languages'
 import * as Graph from './definitions/graph'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
 import { externalLanguagePlugin } from './languages/external'
 // import { gammaLangaugePlugin } from "./languages/gamma/plugin"
-import { getNamedDocument, getDocument, DocumentElement } from './services/documentService'
+import { getNamedDocument, getDocument, DocumentElement, saveDocument } from './services/documentService'
 
 declare var PYTHONSERVICE_URI: string;
 declare var RSERVICE_URI: string;
@@ -35,11 +36,11 @@ interface NotebookRefreshEvent { kind:'refresh' }
 // interface NotebookSourceChange { kind:'sourceChange' }
 interface NotebookSourceChange { kind:'rebind', block: Langs.BlockState, newSource: string}
 type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent | NotebookRefreshEvent | NotebookSourceChange
-
-type NotebookState = {
-  cells: Langs.BlockState[]
-  counter: number
-}
+let documentContent:string;
+// type NotebookState = {
+//   cells: Langs.BlockState[]
+//   counter: number
+// }
 
 
 function bindCell (editor:Langs.EditorState): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>{
@@ -62,8 +63,8 @@ async function bindAllCells(editors:Langs.EditorState[]) {
   return newCells;
 }
 
-async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState, newSource: string) {
-  console.log("Rebinding")
+async function rebindSubsequentCells(state:State.NotebookState, cell:Langs.BlockState, newSource: string) {
+  Log.trace("Binding", "Begin rebinding subsequent cells %O %s", cell, newSource)
   for (var b=0; b < state.cells.length; b++) {
     // if (state.cells[b].editor.id >= cell.editor.id) {
       let languagePlugin = languagePlugins[state.cells[b].editor.block.language]
@@ -85,20 +86,17 @@ async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState,
     // }
   }
   for (var b=0; b < state.cells.length; b++) {
-    // if (state.cells[b].editor.id >= cell.editor.id) {
+    
       let aCell = state.cells[b]
       let {code, exports} = await bindCell(aCell.editor);
       aCell.code = code
       aCell.exports = exports
-      console.log(aCell)
       for (var e = 0; e < exports.length; e++ ) {
         let exportNode = exports[e];
         scopeDictionary[exportNode.variableName] = exportNode;
       }
-      
-    // }
   }
-  
+  Log.trace("Binding", "Finish rebinding subsequent cells")
   return state;
 }
 
@@ -123,8 +121,10 @@ async function evaluate(node:Graph.Node) {
 
 }
 
-function render(trigger:(NotebookEvent) => void, state:NotebookState) {
+function render(trigger:(NotebookEvent) => void, state:State.NotebookState) {
 
+  
+  // console.log("Saving document content: "+documentContent)
   let nodes = state.cells.map(cell => {
     // The `context` object is passed to the render function. The `trigger` method
     // of the object can be used to trigger events that cause a state update.
@@ -162,7 +162,7 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
   return h('div', {class:'container-fluid', id:'paper'}, [nodes])
 }
 
-async function update(state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
+async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<State.NotebookState> {
   function spliceCell (cells:Langs.BlockState[], newCell: Langs.BlockState, idOfAboveBlock: number) {
     return cells.map (cell =>
       {
@@ -185,8 +185,7 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
         }
       }).reduce ((a,b)=> a.concat(b));
   }
-
-  // console.log(state);
+  Log.trace('main',"Update called: %O",evt)
   switch(evt.kind) {
 
     case 'block': {
@@ -205,7 +204,6 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       return { counter: state.counter, cells: newCells };
     }
     case 'add': {
-
       let newId = state.counter + 1;
       let newDocument = { "language": "python",
                           "source": "var z = "+newId};
@@ -221,14 +219,13 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       return state;
 
     case 'remove':
-
       return {counter: state.counter, cells: removeCell(state.cells, evt.id)};
 
-    case 'rebind': {
-      // console.log("Rebind in update: "+JSON.stringify(evt))
-      return await rebindSubsequentCells(state, evt.block, evt.newSource);
-    }
-
+    case 'rebind': 
+      let newState = await rebindSubsequentCells(state, evt.block, evt.newSource);
+      if ((<any>window).documentContentChanged)
+        (<any>window).documentContentChanged(saveDocument(newState))
+      return newState
   }
 }
 
@@ -254,7 +251,7 @@ function loadNotebook(documents:DocumentElement[]) {
 }
 
 export async function initializeNotebook(elementID:string) {
-  console.log("wtf")
+  Log.trace('main',"Init notebook with ID: %s", elementID)
   var {counter, editors} = await loadNotebookState();
   initializeCells(elementID, counter, editors)
 };
@@ -283,6 +280,12 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
     render(updateAndRender, state))
 }
 
+export function exportDocumentContent():string {
+  // console.log("Exporting document content")
+  return documentContent
+}
+
+(<any>window).exportDocumentContent = exportDocumentContent;
 (<any>window).initializeNotebook = initializeNotebook;
 (<any>window).initializeNotebookJupyterLab = initializeNotebookJupyterLab;
 
