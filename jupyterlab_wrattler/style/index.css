@@ -1,3 +1,17 @@
+.jp-xkcdWidget {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.jp-xkcdCartoon {
+  margin: auto;
+}
+
+.jp-xkcdAttribution {
+  margin: 20px auto;
+}
+
 :root {
     --jp-icon-wrattler: url('./snake.png');
   }
@@ -5,3 +19,184 @@
 .WrattlerIcon {
     background-image: var(--jp-icon-wrattler);
   }
+
+  img {
+    width:3%; /* you can use % */
+    height: auto;
+  }
+  
+  div.tabs {
+    overflow: hidden; 
+    background-color: #f1f1f1;
+    padding:10px 5px 10px 5px;
+  }
+  div.tabs button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 3px 20px 6px 0px;
+    font-size: 17px;
+  }
+  div.tabs button.selected {
+    font-weight:bold;
+  }
+                                                
+  div.editor {
+    border-left-style: double;
+    border-left-color: grey;
+    padding: 5px;
+    margin: 10px;
+    height: 50vh;
+    /* overflow: scroll; */
+  }
+  
+  div.output.rendered {
+    display: block;
+  }
+  
+  div.output {
+    display: none;
+  }
+  
+  div.editor.editable {
+    display: block;
+  }
+  
+  div.editor {
+    display: none;
+  }
+  
+  div.output.rendered {
+    display: block;
+  }
+  
+  div.output {
+    display: none;
+  }
+  
+  div.editor.editable {
+    display: block;
+  }
+  
+  div.editor {
+    display: none;
+  }
+  
+  div.cell{
+    border-left-style: solid;
+    border-left-width: 7px;
+    padding: 5px 5px 5px 15px;
+    width:100%;
+  }
+  
+  div.cell:nth-child(odd){
+   border-left-color: gainsboro; 
+  }
+  
+  div.cell:nth-child(even){
+    border-left-color: grey;
+  }
+  
+  div.controls {
+    float:right;
+    color:#a0a0a0;
+  }
+  
+  div.table-container {
+    overflow-x:auto;
+    overflow-y:scroll;
+    max-height:400px;
+  }
+  
+  div.table-container .table th {
+    border-top-style:none;
+  }
+  div.table-container .table th, div.table-container .table td {
+    padding:4px;
+    font-size:11pt;
+  }
+  div.table-container::-webkit-scrollbar  {
+    width:8px;
+    height:8px;
+    background:#f0f0f0;
+  }
+  div.table-container::-webkit-scrollbar-track {
+    background:transparent;
+  }
+  div.table-container::-webkit-scrollbar-thumb {
+    border-radius:4px;
+    background-color:#c0c0c0;
+  }
+  .preview-button {
+    margin-top:30px;
+  }
+  
+  
+  /* code.indicator {
+    color: darkgray;
+  }
+  div.indicators {
+    float:left;
+    margin-bottom: 5px;
+    border-style: solid;
+    border-color: grey;
+    background-color: gainsboro;
+    color: darkgray;
+  
+    float: left;
+    margin-bottom: 5px;
+    border-style: solid;
+    background-color: #e8e8e8;
+    border-width: 1px;
+    border-color: gainsboro;
+  } */
+  
+  i.control {
+    padding:3px;
+  }
+  
+  body{
+    color:#000;
+    /* background-color:gainsboro; */
+      
+  }
+  
+  #paper {
+    margin: auto;
+  }
+  
+  @media only screen and (max-width: 900px) and (min-width: 600px){ 
+    #paper { 
+      min-width: 90%; 
+      max-width: 90%;
+      /* background-color: red; */
+    }
+   }
+  
+   @media only screen and (max-width: 1200px) and (min-width: 900px){ 
+    #paper { 
+      min-width: 85%; 
+      max-width: 85%;
+      /* background-color: blue; */
+    }
+   }
+  
+   @media only screen and (max-width: 600px){ 
+    #paper { 
+      min-width: 95%; 
+      max-width: 95%;
+      /* background-color: green; */
+    }
+   }
+  
+   @media only screen and (min-width: 1200px){ 
+    #paper { 
+      min-width: 70%; 
+      max-width: 70%;
+      /* background-color: green; */
+    }
+   }
+  
+  

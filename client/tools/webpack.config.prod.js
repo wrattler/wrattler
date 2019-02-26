@@ -18,9 +18,10 @@ module.exports = {
   module: {
     rules: common.getModuleRules()
   },
-  plugins: common.getPlugins().concat([
-    new CopyWebpackPlugin([ { from: common.config.publicDir } ])
-  ]),
+  plugins: 
+    common.getPlugins().concat([new CopyWebpackPlugin([ { from: common.config.publicDir } ]),new webpack.optimize.LimitChunkCountPlugin({maxChunks: 1})])
+    // new webpack.optimize.LimitChunkCountPlugin({maxChunks: 1})
+  ,
   resolve: {
     modules: [common.config.nodeModulesDir],
     extensions: [".ts", ".tsx", ".js", ".fs"]

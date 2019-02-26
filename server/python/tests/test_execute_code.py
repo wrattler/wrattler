@@ -2,6 +2,7 @@
 Test that we can execute a variety of simple python commands and get the expected result
 """
 import pytest
+import json
 import pandas as pd
 
 from python_service import execute_code, find_assignments
@@ -21,8 +22,8 @@ def test_execute_pd_concat():
     result = result_dict["results"]
     print(result)  # result will be a list of lists of dicts
     assert(len(result) == 1) # only one output of function
-    assert(len(result[0]) == 4) # four 'rows' of dataframe
-    assert(len(result[0][0]) == 3) # three 'columns'
+    assert(len(json.loads(result[0])) == 4) # four 'rows' of dataframe
+    assert(len(json.loads(result[0])[0]) == 3) # three 'columns'
 
 
 def test_execute_simple_func():

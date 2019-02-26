@@ -77,3 +77,12 @@ test_that("We can execute code containing a function with assignments inside", {
     result <- executeCode(code, importsList, hash)
     expect_that(result$returnVars[[4]]==14,equals(TRUE))
 })
+
+
+test_that("The 'partial' function works as expected", {
+    hash <- "testhash"
+    code <- "library(purrr)\n pmean <- partial(mean, na.rm=TRUE)\n x <- pmean(3,4,5)\n"
+    importsList <- c()
+    result <- executeCode(code, importsList, hash)
+    expect_that(result$returnVars[[2]]==3, equals(TRUE))
+})

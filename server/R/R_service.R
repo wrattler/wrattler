@@ -9,6 +9,8 @@ source("codeAnalysis.R")
 
 TMPDIR <- "/tmp"
 
+
+
 handle_exports <- function(code, frames, hash) {
     ## top-level function to get imports and exports from the code snippet
     ## here, "frames" is just a list of the names of frames exported from other cells
@@ -33,7 +35,8 @@ handle_eval <- function(code, frames, hash) {
     ## get a list of the expected output names from the code
     exportsList <- analyzeCode(code)$exports
     ## executeCode will return a named list of all the evaluated outputs
-    outputs <- executeCode(code, frames, hash)
+    debug = ! is.na(Sys.getenv("R_SERVICE_DEBUG", unset=NA))
+    outputs <- executeCode(code, frames, hash, debug)
     outputsList <- outputs$returnVars
     ## uploadOutputs will put results onto datastore, and return a dataframe of names and urls
     results <- uploadOutputs(outputsList, exportsList, hash)
@@ -187,21 +190,31 @@ cleanString <- function(inputString) {
 }
 
 
-constructFuncString <- function(code, importsList, hash) {
+constructFuncString <- function(code, importsList, hash, debug=FALSE) {
     ## construct a string containing a function definition wrapping our code.
     ## analyze the code to get imports and exports (only need exports here)
     impexp <- analyzeCode(code)
     ## construct a function that assigns retrieved frames to the imported variables,
     ## then contains the code block.
     stringFunc <- "wrattler_f <- function() {\n"
+    if (debug) {
+        stringFunc <- paste0(stringFunc,"    print(paste(Sys.time(), 'Starting to execute code'))\n")
+    }
     if (length(importsList) > 0) {
         for (i in seq_along(importsList)) {
+
             stringFunc <- paste0(stringFunc,"    ",
                                  importsList[[i]]$name, "<- readFrame('",
                                  importsList[[i]]$url, "') \n")
         }
     }
+    if (debug) {
+        stringFunc <- paste0(stringFunc,"    print(paste(Sys.time(), 'Finished reading input frames'))\n")
+    }
     stringFunc <- paste(stringFunc, "    ", code, "\n")
+    if (debug) {
+        stringFunc <- paste0(stringFunc,"    print(paste(Sys.time(), 'Finished executing code'))\n")
+    }
     stringFunc <- paste(stringFunc, "    returnVars <- list()\n")
     for (i in seq_along(impexp$exports)) {
         ## wrap adding things to returnVars list in a tryCatch, as currently
@@ -237,10 +250,12 @@ writePlotToFile <- function(plot, hash, plotName) {
 }
 
 
-executeCode <- function(code, importsList, hash) {
+executeCode <- function(code, importsList, hash, debug=FALSE) {
     ## Call the function to create stringFunc, then parse and execute it.
-
-    stringFunc <- constructFuncString(code, importsList, hash)
+    if (debug) {
+        print(paste("Executing code block \n",code))
+    }
+    stringFunc <- constructFuncString(code, importsList, hash, debug)
     #parsedFunc <- parse(text=stringFunc)
 
     parsedFunc <- rlang::parse_expr(stringFunc)

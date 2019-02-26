@@ -85,14 +85,15 @@ def convert_from_pandas_df(dataframe):
             dataframe = pd.DataFrame(dataframe)
         except(ValueError):
             return None
-    row_list = []
-    columns = list(dataframe.columns)
-    for index, row in dataframe.iterrows():
-        this_row = {}
-        for column in columns:
-            this_row[column] = cleanup(row[column])
-        row_list.append(this_row)
-    return row_list
+    return dataframe.to_json(orient='records')
+#    row_list = []
+#    columns = list(dataframe.columns)
+#    for index, row in dataframe.iterrows():
+#        this_row = {}
+#        for column in columns:
+#            this_row[column] = cleanup(row[column])
+#        row_list.append(this_row)
+#    return row_list
 
 
 def read_frame(frame_name, frame_hash):
@@ -116,7 +117,7 @@ def write_frame(data, frame_name, frame_hash):
     """
     url = '{}/{}/{}'.format(DATASTORE_URI, frame_hash, frame_name)
     try:
-        r=requests.put(url,json=data)
+        r=requests.put(url,data=data)
         tokenized_response = r.content.decode("utf-8").split()
         if 'StatusMessage:Created' in tokenized_response:
             return True
@@ -269,11 +270,10 @@ def evaluate_code(data):
 
     wrote_ok=True
     for i, name in enumerate(frame_names):
-        ## check here if the result is JSON serializable - if not, skip it
-        try:
-            json_test = json.dumps(results[i])
-        except(TypeError):
+        ## check here if the result is a JSON string - if not, skip it
+        if not (isinstance(results[i],str) and (results[i][0]=='[' or results[i][0]=='{')):
             continue
+
         wrote_ok &= write_frame(results[i], name, output_hash)
         return_dict["frames"].append({"name": name,"url": "{}/{}/{}"\
                                       .format(DATASTORE_URI,

@@ -2,9 +2,6 @@ import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 import { Widget } from '@phosphor/widgets';
 import '../style/index.css';
 
-
-
-
 /**
  * The CSS class for a Wrattler icon.
  */
@@ -19,19 +16,25 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
   /**
    * Construct a new xkcd widget.
    */
+
   constructor() {
-    console.log("Constructing RenderedWrattler2")
     super();
 
-    this.id = 'xkcd-jupyterlab';
-    this.title.label = 'xkcd.com';
+    this.id = 'wrattler-jupyterlab';
+    this.title.label = 'Wrattler';
     this.title.closable = true;       
     this.addClass('jp-xkcdWidget');
     
-    this.wrattler = document.createElement("script");
-    this.wrattler.innerHTML = "../../client/build/wrattler-app.js";
+    this.wrattlerScript = document.createElement("script");
+    // this.wrattlerScript.setAttribute("src","https://wrattlerdatastore.blob.core.windows.net/lib/wrattler-app.js");
+    this.wrattlerScript.setAttribute("src","http://localhost:8080/wrattler-app.js");
+    this.wrattlerScript.setAttribute("type","text/javascript");
+    document.head.appendChild(this.wrattlerScript)
 
-    document.head.appendChild(this.wrattler)
+    this.wrattlerDiv = document.createElement('div');
+    this.wrattlerDiv.setAttribute("id","paper");
+    this.node.appendChild(this.wrattlerDiv);
+
     this.img = document.createElement('img');
     this.img.className = 'jp-xkcdCartoon';
     this.node.appendChild(this.img);
@@ -43,6 +46,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
         </a>
       </div>`
     );
+    
     this._mimeType = MIME_TYPE;
   }
 
@@ -50,16 +54,14 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    * The image element associated with the widget.
    */
   readonly img: HTMLImageElement;
-  readonly wrattler: any;
+  readonly wrattlerDiv: HTMLDivElement;
+  readonly wrattlerScript: HTMLScriptElement;
   private _mimeType: string;
   
   /**
    * Dispose of the widget.
    */
   dispose(): void {
-    // Dispose of leaflet map
-    // this._map.remove();
-    // this._map = null;
     super.dispose();
   }
 
@@ -67,23 +69,23 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    * Render Wrattler into this widget's node.
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    const data = model.data[this._mimeType] as any ;
-    const metadata = (model.metadata[this._mimeType] as any) || {};
-    console.log("data"+JSON.stringify(data))
-    console.log("data"+JSON.stringify(metadata))
+    const content = model.data[this._mimeType] as string ; 
     return new Promise<void> ((resolve)=>{
       fetch('https://egszlpbmle.execute-api.us-east-1.amazonaws.com/prod').then(response => {
-        console.log("response:"+JSON.stringify(response))
         return response.json();
       }).then(data => {
-        console.log("xkcd: "+JSON.stringify(data))
         this.img.src = data.img;
         this.img.alt = data.title;
         this.img.title = data.alt;
+
+        (<any>window).initializeNotebookJupyterLab('paper', content)
+        console.log("Rendering notebook")
+        
         this.update();
         resolve()
       });
     })
+    
   }
 }
 
@@ -95,15 +97,15 @@ export const rendererFactory: IRenderMime.IRendererFactory = {
   safe: true,
   mimeTypes: [MIME_TYPE],
   defaultRank: 75,
-  createRenderer: () => new RenderedWrattler()
+  createRenderer: options => new RenderedWrattler()
 };
 
 const extensions: IRenderMime.IExtension | IRenderMime.IExtension[] = [
   {
-    id: '@jupyterlab/wrattler-renderer:factory',
+    id: '@jupyterlab/wrattler-extension:factory',
     rendererFactory,
     rank: 0,
-    dataType: 'json',
+    dataType: 'string',
     fileTypes: [
       {
         name: 'wrattler',
