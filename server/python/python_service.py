@@ -62,20 +62,24 @@ def pandas_to_arrow(frame):
     Convert from a pandas dataframe to apache arrow serialized buffer
     """
     try:
-        arrow_table = pa.Table.from_pandas(frame)
-        buffer = pa.serialize(arrow_table).to_buffer()
-        return buffer
+        batch = pa.RecordBatch.from_pandas(frame, preserve_index=False)
+        sink = pa.BufferOutputStream()
+        writer = pa.RecordBatchFileWriter(sink, batch.schema)
+        writer.write_batch(batch)
+        writer.close()
+        arrow_buffer = sink.getvalue()
+        return arrow_buffer
     except:
         print("Something went wrong")
 
 
-def arrow_to_pandas(buffer):
+def arrow_to_pandas(arrow_buffer):
     """
     Convert from an Apache Arrow buffer into a pandas dataframe
     """
     try:
-        arrow_table = pa.deserialize(buffer)
-        frame = arrow_table.to_pandas()
+        reader = pa.ipc.open_file(arrow_buffer)
+        frame = reader.read_pandas()
         return frame
     except:
         print("Something went wrong")
