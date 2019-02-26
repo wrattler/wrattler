@@ -4,6 +4,7 @@ library(jsonlite)
 library(httr)
 library(base64enc)
 library(rlang)
+library(arrow)
 
 source("codeAnalysis.R")
 
@@ -60,8 +61,12 @@ readFrame <- function(url) {
         print("Unable to access datastore")
         return(NULL)
     }
-    json_data <- content(r,"text")
-    frame <- jsonToDataFrame(json_data)
+    raw_data <- content(r, "raw")
+    temp <- tempfile()
+    writeBin(raw_data,temp)
+    frame <- as.data.frame(read_arrow(temp))
+#    json_data <- content(r,"text")
+#    frame <- jsonToDataFrame(json_data)
     return(frame)
 }
 
@@ -80,6 +85,8 @@ writeFrame <- function(frameData, frameName, cellHash) {
     } else if (typeof(frameData)=="closure") {
         return(FALSE) # probably a function definition - we don't want to store this
     } else {
+        tf = tempfile()
+
         # hopefully a dataframe that can be converted into JSON
         frameJSON <- jsonFromDataFrame(frameData)
     }
