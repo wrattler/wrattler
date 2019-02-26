@@ -3,6 +3,7 @@
 library(jsonlite)
 library(httr)
 library(base64enc)
+library(rlang)
 
 source("codeAnalysis.R")
 
@@ -38,7 +39,7 @@ handle_eval <- function(code, frames, hash) {
     results <- uploadOutputs(outputsList, exportsList, hash)
     ## text output from executing code
     textOutput <- outputs$outputString
-    returnValue <- list(frames=results$frames, figures=results$figures, output=unbox(textOutput))
+    returnValue <- list(frames=results$frames, figures=results$figures, output=jsonlite::unbox(textOutput))
     return(jsonlite::toJSON(returnValue))
 }
 
@@ -73,6 +74,8 @@ writeFrame <- function(frameData, frameName, cellHash) {
     url <- makeURL(frameName, cellHash)
     if ("ggplot" %in% class(frameData)) {
         return(FALSE) # this will be done by writeFigure instead
+    } else if (typeof(frameData)=="closure") {
+        return(FALSE) # probably a function definition - we don't want to store this
     } else {
         # hopefully a dataframe that can be converted into JSON
         frameJSON <- jsonFromDataFrame(frameData)
@@ -84,6 +87,7 @@ writeFrame <- function(frameData, frameName, cellHash) {
     }
     return(FALSE)
 }
+
 
 writeFigure <- function(figureData, figureName, cellHash) {
     ## Analogue to writeFrame, but for figures
@@ -198,14 +202,16 @@ constructFuncString <- function(code, importsList, hash) {
         }
     }
     stringFunc <- paste(stringFunc, "    ", code, "\n")
-    stringFunc <- paste(stringFunc, "    returnVars <- list(")
+    stringFunc <- paste(stringFunc, "    returnVars <- list()\n")
     for (i in seq_along(impexp$exports)) {
-        stringFunc<- paste0(stringFunc,"'", impexp$exports[i],"'=",impexp$exports[i])
-        if (i != length(impexp$exports)) {
-            stringFunc <- paste(stringFunc,",")
-        }
+        ## wrap adding things to returnVars list in a tryCatch, as currently
+        ## it is possible that some out-of-scope variables will be in the 'exports' list
+        stringFunc <- paste(stringFunc, " tryCatch({ ")
+        stringFunc<- paste0(stringFunc,"returnVars <- append(returnVars,list('",
+                            impexp$exports[i],"'=",impexp$exports[i],"))")
+        stringFunc<- paste(stringFunc, "}, error=function(cond) {}) \n")
+
     }
-    stringFunc <- paste(stringFunc,") \n")
     ## search for ggplot objects in this environment
     stringFunc <- paste(stringFunc," \n    for (envitem in ls(environment())) { \n")
     stringFunc <- paste(stringFunc,"       if ('ggplot' %in% class(get(envitem,environment()))) {\n")
@@ -235,10 +241,11 @@ executeCode <- function(code, importsList, hash) {
     ## Call the function to create stringFunc, then parse and execute it.
 
     stringFunc <- constructFuncString(code, importsList, hash)
-    parsedFunc <- parse(text=stringFunc)
+    #parsedFunc <- parse(text=stringFunc)
+
+    parsedFunc <- rlang::parse_expr(stringFunc)
 
     eval(parsedFunc)
-    png('wrattlerPlot.png')
     s <- capture.output(returnVars <- wrattler_f())
 
     clean_s <- lapply(s, cleanString)
