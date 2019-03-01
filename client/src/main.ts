@@ -1,7 +1,7 @@
 /** @hidden */
 
 /** This comment is needed so that TypeDoc parses the above one correctly */
-import {h,createProjector,VNode} from 'maquette'
+import {h,createProjector} from 'maquette'
 import { Log } from "./common/log"
 import * as State from './definitions/state'
 import * as Langs from './definitions/languages'
@@ -19,8 +19,6 @@ declare var RSERVICE_URI: string;
 // Main notebook rendering code
 // ------------------------------------------------------------------------------------------------
 
-
-
 var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
@@ -29,19 +27,13 @@ languagePlugins["r"] = new externalLanguagePlugin("r", RSERVICE_URI);
 // languagePlugins["thegamma"] = gammaLangaugePlugin;
 var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
-interface NotebookAddEvent { kind:'add', id: number }
+interface NotebookAddEvent { kind:'add', id: number, language:string }
 interface NotebookRemoveEvent { kind:'remove', id: number }
 interface NotebookBlockEvent { kind:'block', id:number, event:any }
 interface NotebookRefreshEvent { kind:'refresh' }
-// interface NotebookSourceChange { kind:'sourceChange' }
 interface NotebookSourceChange { kind:'rebind', block: Langs.BlockState, newSource: string}
 type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent | NotebookRefreshEvent | NotebookSourceChange
 let documentContent:string;
-// type NotebookState = {
-//   cells: Langs.BlockState[]
-//   counter: number
-// }
-
 
 function bindCell (editor:Langs.EditorState): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>{
   let languagePlugin = languagePlugins[editor.block.language]
@@ -123,8 +115,6 @@ async function evaluate(node:Graph.Node) {
 
 function render(trigger:(NotebookEvent) => void, state:State.NotebookState) {
 
-  
-  // console.log("Saving document content: "+documentContent)
   let nodes = state.cells.map(cell => {
     // The `context` object is passed to the render function. The `trigger` method
     // of the object can be used to trigger events that cause a state update.
@@ -139,20 +129,20 @@ function render(trigger:(NotebookEvent) => void, state:State.NotebookState) {
 
       },
 
-      // sourceChange
-      // rebind all blocks after this one
       rebindSubsequent: (block:Langs.BlockState, newSource: string) => {
         trigger({kind: 'rebind', block: block, newSource: newSource})
       }
     }
 
     let plugin = languagePlugins[cell.editor.block.language]
-    // let vnode = plugin.editor.render(state.editor, context)
     let vnode = plugin.editor.render(cell, cell.editor, context)
     let c_language = h('p', {style: 'float:left'}, [cell.editor.block.language] )
-    let c_add = h('i', {id:'add_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id})});
+    let c_addPy = h('i', {id:'addPy_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"python"})},["*.py"]);
+    let c_addMd = h('i', {id:'addMd_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"markdown"})},["*.md"]);
+    let c_addJs = h('i', {id:'addJs_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"javascript"})},["*.js"]);
+    let c_addR = h('i', {id:'addR_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id,language:"r"})},["*.r"]);
     let c_delete = h('i', {id:'remove_'+cell.editor.id, class: 'far fa-trash-alt control', onclick:()=>trigger({kind:'remove', id:cell.editor.id})});
-    let controls = h('div', {class:'controls'}, [c_language, c_add, c_delete])
+    let controls = h('div', {class:'controls'}, [c_language, c_addPy, c_addMd, c_addJs, c_addR, c_delete])
     return h('div', {class:'cell', key:cell.editor.id}, [
         h('div', [controls]),vnode
       ]
@@ -185,7 +175,6 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
         }
       }).reduce ((a,b)=> a.concat(b));
   }
-  Log.trace('main',"Update called: %O",evt)
   switch(evt.kind) {
 
     case 'block': {
@@ -205,8 +194,28 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
     }
     case 'add': {
       let newId = state.counter + 1;
-      let newDocument = { "language": "python",
-                          "source": "var z = "+newId};
+      let newDocument = { "language": evt.language,
+                          "source": ""};
+                          
+      switch (evt.language) {
+        case 'python': {
+          newDocument.source = "# This is a python cell \n# py = pd.DataFrame({\"id\":[\""+newId+"\"], \"language\":[\"python\"]})";
+          break;
+        } 
+        case 'markdown': {
+          newDocument.source = newId+": This is a markdown cell.";
+          break
+        } 
+        case 'r': {
+          newDocument.source = "# This is an R cell \n r <- data.frame(id = "+newId+", language =\"r\")";
+          break
+        }
+        case 'javascript': {
+          newDocument.source = "// This is a javascript cell. \nvar js = [{'id':"+newId+", 'language':'javascript'}]";
+          break
+        } 
+      }
+      console.log(newDocument)
       let newPlugin = languagePlugins[newDocument.language];
       let newBlock = newPlugin.parse(newDocument.source);
       let editor:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);
