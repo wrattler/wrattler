@@ -79,7 +79,28 @@ div.cell:nth-child(even){
 
 div.controls {
 	float:right;
-	color:#a0a0a0;
+	/* margin:10px; */
+}
+
+div.controlsBar {
+	margin:20px;
+	padding:20px;
+	position: relative;
+	border-color: gainsboro;
+	border-style: dotted;
+}
+
+.vertical-center {
+	margin: 0;
+	/* position: absolute; */
+	top: 50%;
+	/* -ms-transform: translateY(-50%); */
+	/* transform: translateY(-50%); */
+  }
+
+div.icon {
+	float:left;
+	color:red;
 }
 
 div.table-container {
@@ -131,8 +152,8 @@ div.indicators {
 	border-color: gainsboro;
 } */
 
-i.control {
-	padding:3px;
+button.delete {
+	margin:3px;
 }
 
 body{

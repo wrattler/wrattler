@@ -136,15 +136,41 @@ function render(trigger:(NotebookEvent) => void, state:State.NotebookState) {
 
     let plugin = languagePlugins[cell.editor.block.language]
     let vnode = plugin.editor.render(cell, cell.editor, context)
+    let icon = ""
+    
+    switch (cell.editor.block.language) {
+      case 'python':
+        icon = 'fab fa-python fa-lg vertical-center'
+        break
+      case 'javascript':
+        icon = 'fab fa-js-square fa-lg vertical-center'
+        break
+      case 'r':
+        icon = 'fab fa-r-project fa-lg'
+        break
+      case 'markdown':
+        icon = 'fab fa-markdown fa-lg'
+        break
+      default:
+        icon = 'far fa-question-circle fa-lg'
+        break
+    }
+
+    console.log(cell.editor.block.language+" : " +icon)
+
+    let c_icon = h('i', {id:'cellIcon_'+cell.editor.id, class: icon }, [])
     let c_language = h('p', {style: 'float:left'}, [cell.editor.block.language] )
-    let c_addPy = h('i', {id:'addPy_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"python"})},["*.py"]);
-    let c_addMd = h('i', {id:'addMd_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"markdown"})},["*.md"]);
-    let c_addJs = h('i', {id:'addJs_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"javascript"})},["*.js"]);
-    let c_addR = h('i', {id:'addR_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id,language:"r"})},["*.r"]);
-    let c_delete = h('i', {id:'remove_'+cell.editor.id, class: 'far fa-trash-alt control', onclick:()=>trigger({kind:'remove', id:cell.editor.id})});
-    let controls = h('div', {class:'controls'}, [c_language, c_addPy, c_addMd, c_addJs, c_addR, c_delete])
+
+    let c_addPy = h('button', {id:'addPy_'+cell.editor.id, onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"python"})},["*.py"]);
+    let c_addMd = h('button', {id:'addMd_'+cell.editor.id, onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"markdown"})},["*.md"]);
+    let c_addJs = h('button', {id:'addJs_'+cell.editor.id, onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"javascript"})},["*.js"]);
+    let c_addR = h('button', {id:'addR_'+cell.editor.id, onclick:()=>trigger({kind:'add', id:cell.editor.id,language:"r"})},["*.r"]);
+
+    let c_delete = h('button', {id:'remove_'+cell.editor.id, class: 'far fa-trash-alt delete', onclick:()=>trigger({kind:'remove', id:cell.editor.id})});
+    let controls = h('div', {class:'controls vertical-center'}, [c_addPy, c_addMd, c_addJs, c_addR, c_delete])
+    let controlsBar = h('div', {class:'controlsBar'}, [c_icon, controls])
     return h('div', {class:'cell', key:cell.editor.id}, [
-        h('div', [controls]),vnode
+        h('div', [controlsBar]),vnode
       ]
     );
   });
@@ -199,7 +225,7 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
                           
       switch (evt.language) {
         case 'python': {
-          newDocument.source = "# This is a python cell \n# py = pd.DataFrame({\"id\":[\""+newId+"\"], \"language\":[\"python\"]})";
+          newDocument.source = "# This is a python cell \n# py"+newId+" = pd.DataFrame({\"id\":[\""+newId+"\"], \"language\":[\"python\"]})";
           break;
         } 
         case 'markdown': {
@@ -207,11 +233,11 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
           break
         } 
         case 'r': {
-          newDocument.source = "# This is an R cell \n r <- data.frame(id = "+newId+", language =\"r\")";
+          newDocument.source = "# This is an R cell \n r"+newId+" <- data.frame(id = "+newId+", language =\"r\")";
           break
         }
         case 'javascript': {
-          newDocument.source = "// This is a javascript cell. \nvar js = [{'id':"+newId+", 'language':'javascript'}]";
+          newDocument.source = "// This is a javascript cell. \nvar js"+newId+" = [{'id':"+newId+", 'language':'javascript'}]";
           break
         } 
       }
