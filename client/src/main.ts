@@ -149,7 +149,7 @@ function render(trigger:(NotebookEvent) => void, state:State.NotebookState) {
         icon = 'fab fa-r-project fa-2x'
         break
       case 'markdown':
-        icon = 'fab fa-markdown fa-2x'
+        icon = 'fas fa-arrow-down fa-2x'
         break
       default:
         icon = 'far fa-question-circle fa-2x'
@@ -160,7 +160,7 @@ function render(trigger:(NotebookEvent) => void, state:State.NotebookState) {
 
     function isMarkdown(language) {
       if (language == "markdown")
-        return "Markdown"
+        return " M"
       else  
         return ""
     }
