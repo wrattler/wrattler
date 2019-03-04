@@ -86,14 +86,6 @@ def convert_from_pandas_df(dataframe):
         except(ValueError):
             return None
     return dataframe.to_json(orient='records')
-#    row_list = []
-#    columns = list(dataframe.columns)
-#    for index, row in dataframe.iterrows():
-#        this_row = {}
-#        for column in columns:
-#            this_row[column] = cleanup(row[column])
-#        row_list.append(this_row)
-#    return row_list
 
 
 def read_frame(frame_name, frame_hash):
