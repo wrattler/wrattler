@@ -140,25 +140,31 @@ function render(trigger:(NotebookEvent) => void, state:State.NotebookState) {
     
     switch (cell.editor.block.language) {
       case 'python':
-        icon = 'fab fa-python fa-lg vertical-center'
+        icon = 'fab fa-python fa-2x'
         break
       case 'javascript':
-        icon = 'fab fa-js-square fa-lg vertical-center'
+        icon = 'fab fa-js-square fa-2x'
         break
       case 'r':
-        icon = 'fab fa-r-project fa-lg'
+        icon = 'fab fa-r-project fa-2x'
         break
       case 'markdown':
-        icon = 'fab fa-markdown fa-lg'
+        icon = 'fab fa-markdown fa-2x'
         break
       default:
-        icon = 'far fa-question-circle fa-lg'
+        icon = 'far fa-question-circle fa-2x'
         break
     }
 
     console.log(cell.editor.block.language+" : " +icon)
 
-    let c_icon = h('i', {id:'cellIcon_'+cell.editor.id, class: icon }, [])
+    function isMarkdown(language) {
+      if (language == "markdown")
+        return "Markdown"
+      else  
+        return ""
+    }
+    let c_icon = h('i', {id:'cellIcon_'+cell.editor.id, class: icon }, [isMarkdown(cell.editor.block.language)])
     let c_language = h('p', {style: 'float:left'}, [cell.editor.block.language] )
 
     let c_addPy = h('button', {id:'addPy_'+cell.editor.id, onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"python"})},["*.py"]);
