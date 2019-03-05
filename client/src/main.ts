@@ -140,37 +140,29 @@ function render(trigger:(NotebookEvent) => void, state:State.NotebookState) {
     
     switch (cell.editor.block.language) {
       case 'python':
-        icon = 'fab fa-python fa-2x'
+        icon = 'icon fab fa-python fa-2x'
         break
       case 'javascript':
-        icon = 'fab fa-js-square fa-2x'
+        icon = 'icon fab fa-js-square fa-2x'
         break
       case 'r':
-        icon = 'fab fa-r-project fa-2x'
+        icon = 'icon fab fa-r-project fa-2x'
         break
       case 'markdown':
-        icon = 'fas fa-arrow-down fa-2x'
+        icon = 'icon fas fa-arrow-down fa-2x'
         break
       default:
-        icon = 'far fa-question-circle fa-2x'
+        icon = 'icon far fa-question-circle fa-2x'
         break
     }
 
-    console.log(cell.editor.block.language+" : " +icon)
-
-    function isMarkdown(language) {
-      if (language == "markdown")
-        return " M"
-      else  
-        return ""
-    }
-    let c_icon = h('i', {id:'cellIcon_'+cell.editor.id, class: icon }, [isMarkdown(cell.editor.block.language)])
+    let c_icon = h('i', {id:'cellIcon_'+cell.editor.id, class: icon }, [])
     let c_language = h('p', {style: 'float:left'}, [cell.editor.block.language] )
 
-    let c_addPy = h('button', {id:'addPy_'+cell.editor.id, onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"python"})},["*.py"]);
-    let c_addMd = h('button', {id:'addMd_'+cell.editor.id, onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"markdown"})},["*.md"]);
-    let c_addJs = h('button', {id:'addJs_'+cell.editor.id, onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"javascript"})},["*.js"]);
-    let c_addR = h('button', {id:'addR_'+cell.editor.id, onclick:()=>trigger({kind:'add', id:cell.editor.id,language:"r"})},["*.r"]);
+    let c_addPy = h('button', {id:'addPy_'+cell.editor.id, class:"add-button", onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"python"})},["*.py"]);
+    let c_addMd = h('button', {id:'addMd_'+cell.editor.id, class:"add-button", onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"markdown"})},["*.md"]);
+    let c_addJs = h('button', {id:'addJs_'+cell.editor.id, class:"add-button", onclick:()=>trigger({kind:'add', id:cell.editor.id, language:"javascript"})},["*.js"]);
+    let c_addR = h('button', {id:'addR_'+cell.editor.id, class:"add-button", onclick:()=>trigger({kind:'add', id:cell.editor.id,language:"r"})},["*.r"]);
 
     let c_delete = h('button', {id:'remove_'+cell.editor.id, class: 'far fa-trash-alt delete', onclick:()=>trigger({kind:'remove', id:cell.editor.id})});
     let controls = h('div', {class:'controls vertical-center'}, [c_addPy, c_addMd, c_addJs, c_addR, c_delete])
