@@ -64,21 +64,25 @@ div.editor {
 
 div.cell{
 	border-left-style: solid;
-	border-left-width: 7px;
+	border-left-width: 5px;
 	padding: 5px 5px 5px 15px;
 	width:100%;
 }
 
 div.cell:nth-child(odd){
- border-left-color: gainsboro; 
+ /* border-left-color: gainsboro;  */
+ border-left-color: #798893
+ /* border-left-color:#0065AB */
 }
 
 div.cell:nth-child(even){
-	border-left-color: grey;
+	/* border-left-color: grey; */
+	border-left-color: #A6D8E7
 }
 
 div.controls {
 	float:right;
+	background: #C1CDD4;
 	/* margin:10px; */
 }
 
@@ -86,9 +90,11 @@ div.controlsBar {
 	margin:20px;
 	padding:10px;
 	position: relative;
-	border-color: gainsboro;
-	border-style: dotted;
+	border-color: #C1CDD4;
+	border-style: solid;
 }
+
+
 
 .vertical-center {
 	margin: 0;
@@ -98,9 +104,8 @@ div.controlsBar {
 	/* transform: translateY(-50%); */
   }
 
-div.icon {
-	float:left;
-	color:red;
+.icon {
+	color: #798893;
 }
 
 div.table-container {
@@ -129,7 +134,13 @@ div.table-container::-webkit-scrollbar-thumb {
 	background-color:#c0c0c0;
 }
 .preview-button {
-	margin-top:30px;
+	margin-top:20px;
+	margin-bottom:20px;
+	background:#C1CDD4;
+}
+
+.add-button {
+	background:#C1CDD4;
 }
 
 
