@@ -1,4 +1,3 @@
-// let enabledCategories = {"*":true}
 let enabledCategories = {"*":true}
 var colorIndex = -1
 var colorMap = {}

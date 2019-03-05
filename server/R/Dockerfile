@@ -1,5 +1,4 @@
 FROM ubuntu:16.04
-
 RUN apt-get update; apt-get install -y libssl-dev
 # install R, and setup CRAN mirror
 RUN apt-get update; apt-get install -y software-properties-common
@@ -7,9 +6,13 @@ RUN apt-get update; apt-get install -y libcurl4-openssl-dev
 RUN apt-get update; apt-get install -y libxml2-dev
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
 
+RUN add-apt-repository -y "ppa:marutter/rrutter"
+RUN add-apt-repository -y "ppa:marutter/c2d4u"
+RUN apt-get update && apt-get -y install r-cran-rstan
 RUN echo "r <- getOption('repos'); r['CRAN'] <- 'http://cran.us.r-project.org'; options(repos='http://cran.rstudio.com/');" > ~/.Rprofile
 
 RUN add-apt-repository 'deb [arch=amd64,i386] https://cran.rstudio.com/bin/linux/ubuntu xenial/'; apt-get update; apt-get -y install r-base
+
 
 
 # install needed R packages
@@ -20,9 +23,19 @@ RUN Rscript -e "install.packages('xml2')"
 RUN Rscript -e "install.packages('httr')"
 RUN Rscript -e "install.packages('purrr')"
 RUN Rscript -e "install.packages('testthat')"
-#RUN Rscript -e "install.packages('textclean')"
+RUN Rscript -e "install.packages('httptest')"
+#RUN Rscript -e "install.packages('rworldmap')"
 #RUN Rscript -e "install.packages('devtools')"
 RUN Rscript -e "install.packages('cleanEHR')"
+RUN Rscript -e "install.packages('reshape2')"
+RUN Rscript -e "install.packages('plyr')"
+RUN Rscript -e "install.packages('tidyverse')"
+RUN Rscript -e "install.packages('rworldmap')"
+RUN Rscript -e "install.packages('lattice')"
+RUN Rscript -e "install.packages('gridExtra')"
+RUN Rscript -e "install.packages('dplyr')"
+RUN Rscript -e "install.packages('readr')"
+RUN Rscript -e "install.packages('rlang')"
 
 
 # copy current working directory

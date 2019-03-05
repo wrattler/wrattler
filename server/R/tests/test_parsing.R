@@ -6,6 +6,19 @@ context("parsing code fragments")
 
 source("../R_service.R", chdir=T)
 
+test_that("imports and exports are correctly identified from a simple assignment", {
+    impExpEnv <- analyzeCode("myNewDataFrame <- anExistingDataFrame")
+    expect_that(impExpEnv$imports[[1]] == "anExistingDataFrame",equals(TRUE))
+    expect_that(impExpEnv$exports[[1]] == "myNewDataFrame",equals(TRUE))
+})
+
+test_that("we can identify imports even when they have a 'known' name", {
+    frames <- c("df")
+    impExpEnv <- analyzeCode("myNewDataFrame <- df", frames)
+    expect_that(impExpEnv$imports[[1]] == "df",equals(TRUE))
+    expect_that(impExpEnv$exports[[1]] == "myNewDataFrame",equals(TRUE))
+})
+
 
 test_that("We can parse code that takes subset of a DF using subset method", {
     impExpEnv <- analyzeCode("subs <- subset(input_df, input_df$somevar < 10)")

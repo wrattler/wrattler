@@ -47,6 +47,7 @@ services:
     - "7103:7103"
     environment:
       - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
+      - R_SERVICE_DEBUG=True
     networks:
     - wrattler_nw
 
