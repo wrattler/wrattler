@@ -165,7 +165,7 @@ function render(trigger:(NotebookEvent) => void, state:State.NotebookState) {
     let c_addR = h('button', {id:'addR_'+cell.editor.id, class:"add-button", onclick:()=>trigger({kind:'add', id:cell.editor.id,language:"r"})},["*.r"]);
 
     let c_delete = h('button', {id:'remove_'+cell.editor.id, class: 'far fa-trash-alt delete', onclick:()=>trigger({kind:'remove', id:cell.editor.id})});
-    let controls = h('div', {class:'controls vertical-center'}, [c_addPy, c_addMd, c_addJs, c_addR, c_delete])
+    let controls = h('div', {class:'controls vertical-center'}, [c_addMd, c_addPy, c_addR, c_addJs, c_delete])
     let controlsBar = h('div', {class:'controlsBar'}, [c_icon, controls])
     return h('div', {class:'cell', key:cell.editor.id}, [
         h('div', [controlsBar]),vnode
@@ -224,6 +224,7 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
       switch (evt.language) {
         case 'python': {
           newDocument.source = "# This is a python cell \n# py"+newId+" = pd.DataFrame({\"id\":[\""+newId+"\"], \"language\":[\"python\"]})";
+          newDocument.source =  newDocument.source.concat('\n# nick = pd.DataFrame({"name":["Nick"], "age":[20], "mood":"tired"})')
           break;
         } 
         case 'markdown': {
@@ -232,10 +233,12 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
         } 
         case 'r': {
           newDocument.source = "# This is an R cell \n r"+newId+" <- data.frame(id = "+newId+", language =\"r\")";
+          newDocument.source =  newDocument.source.concat('\n# camilla <- data.frame(name = "camilla", age=17, mood="apprehensive")')
           break
         }
         case 'javascript': {
-          newDocument.source = "// This is a javascript cell. \nvar js"+newId+" = [{'id':"+newId+", 'language':'javascript'}]";
+          newDocument.source = "// This is a javascript cell. \n//var js"+newId+" = [{'id':"+newId+", 'language':'javascript'}]";
+          newDocument.source =  newDocument.source.concat('\n// var may = [{"name":"may", "age":40, "mood":"terrified"}]')
           break
         } 
       }
