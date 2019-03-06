@@ -57,44 +57,47 @@ def cleanup(i):
     return i
 
 
-def pandas_to_arrow(frame):
+def convert_to_pandas(input_data):
     """
-    Convert from a pandas dataframe to apache arrow serialized buffer
+    convert an unknown input type (either Apache Arrow or JSON) to a pandas dataframe.
     """
-    try:
-        batch = pa.RecordBatch.from_pandas(frame, preserve_index=False)
-        sink = pa.BufferOutputStream()
-        writer = pa.RecordBatchFileWriter(sink, batch.schema)
-        writer.write_batch(batch)
-        writer.close()
-        arrow_buffer = sink.getvalue()
-        return arrow_buffer
-    except:
-        print("Something went wrong")
+    if isinstance(input_data, pa.lib.Buffer):
+        return arrow_to_pandas(input_data)
+    elif isinstance(input_data, list):
+        return json_to_pandas(input_data)
+    else:
+        raise RuntimeError("Unknown data type")
 
 
 def arrow_to_pandas(arrow_buffer):
     """
     Convert from an Apache Arrow buffer into a pandas dataframe
     """
+    if not isinstance(arrow_buffer, pa.lib.Buffer):
+        return False
     try:
         reader = pa.ipc.open_file(arrow_buffer)
         frame = reader.read_pandas()
         return frame
     except:
-        print("Something went wrong")
+        raise(ApiException("Error converting arrow to pandas dataframe"))
 
 
-
-def convert_to_pandas_df(frame):
+def json_to_pandas(json_data):
     """
-    convert wrattler format [{"var1":val1, "var2":val2},{...}]
+    convert row-wise json format [{"var1":val1, "var2":val2},{...}]
     to pandas dataframe.  If it doesn't fit this format, just return
     the input, unchanged.
     """
+    if isinstance(json_data,str):
+        try:
+            json_data = json.loads(json_data)
+        except(json.decoder.JSONDecodeError):
+            raise(ApiException("Unable to read as JSON: {}".format(json_data)))
+
     try:
         frame_dict = {}
-        for row in frame:
+        for row in json_data:
             for k,v in row.items():
                 if not k in frame_dict.keys():
                     frame_dict[k] = []
@@ -102,28 +105,48 @@ def convert_to_pandas_df(frame):
         df = pd.DataFrame(frame_dict)
         return df
     except:  # could be TypeError, AttributeError, ...
-        return frame
+        raise(ApiException("Unable to convert json to pandas dataframe"))
 
 
-def convert_from_pandas_df(dataframe):
+def convert_from_pandas(dataframe, max_size_json=0):
     """
-    converts pandas dataframe into wrattler format, i.e. list of rows.
-    If input is not a pandas dataframe, try to convert it, and return None if we can't
+    convert from pandas dataframe to either Apache Arrow format or JSON,
+    depending on size
     """
     if not isinstance(dataframe, pd.DataFrame):
         try:
             dataframe = pd.DataFrame(dataframe)
         except(ValueError):
             return None
+    if dataframe.size > max_size_json:
+        try:
+            return  pandas_to_arrow(dataframe)
+        except(pa.lib.ArrowTypeError):
+            print("Unable to convert to pyarrow table - inconsistent types in column?")
+            return pandas_to_json(frame)
+    else:
+        return pandas_to_json(dataframe)
+
+
+def pandas_to_arrow(frame):
+    """
+    Convert from a pandas dataframe to apache arrow serialized buffer
+    """
+    batch = pa.RecordBatch.from_pandas(frame, preserve_index=False)
+    sink = pa.BufferOutputStream()
+    writer = pa.RecordBatchFileWriter(sink, batch.schema)
+    writer.write_batch(batch)
+    writer.close()
+    arrow_buffer = sink.getvalue()
+    return arrow_buffer
+
+
+def pandas_to_json(dataframe):
+    """
+    converts pandas dataframe into wrattler format, i.e. list of rows.
+    If input is not a pandas dataframe, try to convert it, and return None if we can't
+    """
     return dataframe.to_json(orient='records')
-#    row_list = []
-#    columns = list(dataframe.columns)
-#    for index, row in dataframe.iterrows():
-#        this_row = {}
-#        for column in columns:
-#            this_row[column] = cleanup(row[column])
-#        row_list.append(this_row)
-#    return row_list
 
 
 def read_frame(frame_name, frame_hash):
@@ -136,7 +159,6 @@ def read_frame(frame_name, frame_hash):
         if r.status_code is not 200:
             raise ApiException("Could not retrieve dataframe", status_code=r.status_code)
         data = r.content
-##        data = json.loads(r.content.decode("utf-8"))
         return data
     except(requests.exceptions.ConnectionError):
         raise ApiException("Unable to connect to datastore {}".format(DATASTORE_URI),status_code=500)
@@ -250,7 +272,7 @@ def retrieve_frames(input_frames):
             r=requests.get(frame["url"])
             if r.status_code != 200:
                 raise ApiException("Problem retrieving dataframe %s"%frame["name"],status_code=r.status_code)
-            frame_content = json.loads(r.content.decode("utf-8"))
+            frame_content = r.content.decode("utf-8")
             frame_dict[frame["name"]] = frame_content
         except(requests.exceptions.ConnectionError):
             ## try falling back on read_frame method (using env var DATASTORE_URI)
@@ -301,10 +323,6 @@ def evaluate_code(data):
 
     wrote_ok=True
     for i, name in enumerate(frame_names):
-        ## check here if the result is a JSON string - if not, skip it
-#        if not (isinstance(results[i],str) and (results[i][0]=='[' or results[i][0]=='{')):
-#            print("Not a json string, will continue")
-#            continue
 
         wrote_ok &= write_frame(results[i], name, output_hash)
         return_dict["frames"].append({"name": name,"url": "{}/{}/{}"\
@@ -336,8 +354,7 @@ def construct_func_string(code, input_val_dict, return_vars, output_hash):
     func_string += "    import matplotlib\n"
     func_string += "    matplotlib.use('Cairo')\n\n"
     for k,v in input_val_dict.items():
-        func_string += "    {} = arrow_to_pandas({})\n".format(k,v)
-##        func_string += "    {} = convert_to_pandas_df({})\n".format(k,v)
+        func_string += "    {} = convert_to_pandas({})\n".format(k,v)
     ## need to worry about indentation for multi-line code fragments.
     ## split the code string by newline character, and prepend 4 spaces to each line.
     for line in code.strip().split("\n"):
@@ -381,16 +398,13 @@ def execute_code(code, input_val_dict, return_vars, output_hash, verbose=False):
             if isinstance(func_output, collections.Iterable):
                 results = []
                 for item in func_output:
-##                    results.append(convert_from_pandas_df(item))
-                    print("Converting  output from list into arrow")
-                    results.append(pandas_to_arrow(item))
+                    results.append(convert_from_pandas(item))
                 return_dict["results"] = results
             elif not func_output:
                 return_dict["results"] = []
             else:
                 print("Converting single output to arrow")
-                result = pandas_to_arrow(func_output)
-##                result = convert_from_pandas_df(func_output)
+                result = convert_from_pandas(func_output)
                 return_dict["results"] = [result]
     except Exception as e:
         output = "{}: {}".format(type(e).__name__, e)
