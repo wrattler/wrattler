@@ -10,7 +10,7 @@ from flask_cors import CORS
 import requests
 import json
 
-from storage import Storage
+from storage import Store
 
 app = Flask(__name__)
 CORS(app)
@@ -18,21 +18,26 @@ CORS(app)
 storage_backend = Store()
 
 @app.route("/<frame_hash>/<frame_name>", methods=['PUT','GET'])
-def store_or_retrieve(frame_name, frame_hash):
+def store_or_retrieve(frame_hash, frame_name):
 
     if request.method == "PUT":
-        data = json.loads(request.data.decode("utf-8"))
-        os.makedirs("/tmp/{}".format(frame_hash), exist_ok=True)
-        outfile = open(filename, "w")
-        outfile.write(json.dumps(data))
-        outfile.close()
-        return jsonify({"status_code": 200})
+        print("HEADERS {}".format(request.headers))
+        if 'Content-Type' in request.headers.keys():
+            if 'application/json' in request.headers['Content-Type']:
+                data = json.loads(request.data.decode("utf-8"))
+            elif 'test/html' in request.headers['Content-Type']:
+                data = request.data.decode("utf-8")
+        else: ## assume it's binary data
+            data = request.data
+        wrote_ok = storage_backend.write(data, frame_hash, frame_name)
+        if wrote_ok:
+            return jsonify({"status_code": 200})
+        else:
+            return jsonify({"status_code": 500})
+
     elif request.method == "GET":
-        if not os.path.exists(filename):
-            print("Error - no such dataframe")
-            return None
-        data = json.load(open(filename))
-        return jsonify(data)
+        data = storage_backend.read(frame_hash, frame_name)
+        return data
 
 
 
