@@ -5,6 +5,8 @@ FROM ubuntu:16.04
 RUN apt-get update; apt-get install -y python3
 RUN apt-get update; apt-get install -y python3-pip
 RUN apt-get update; apt-get install -y locales
+RUN apt-get update; apt-get install -y openssl
+RUN apt-get update; apt-get install -y libssl-dev
 
 # Set the locale
 RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
