@@ -22,11 +22,13 @@ def store_or_retrieve(frame_hash, frame_name):
 
     if request.method == "PUT":
         print("HEADERS {}".format(request.headers))
-        if 'Content-Type' in request.headers.keys():
-            if 'application/json' in request.headers['Content-Type']:
-                data = json.loads(request.data.decode("utf-8"))
-            elif 'test/html' in request.headers['Content-Type']:
-                data = request.data.decode("utf-8")
+
+        if 'Content-Type' in request.headers.keys() \
+           and 'application/json' in request.headers['Content-Type']:
+            data = json.loads(request.data.decode("utf-8"))
+        elif 'Content-Type' in request.headers.keys() \
+             and 'text/html' in request.headers['Content-Type']:
+            data = request.data.decode("utf-8")
         else: ## assume it's binary data
             data = request.data
         wrote_ok = storage_backend.write(data, frame_hash, frame_name)

@@ -3,7 +3,7 @@ Concrete methods to read and write data from/to the chosen storage backend
 """
 
 import os
-import tempdir
+import json
 import pyarrow as pa
 
 if "LOCAL_STORAGE" in os.environ.keys():
@@ -32,10 +32,14 @@ class LocalStore(object):
             outfile = open(filename,"wb")
         elif isinstance(data, str):
             outfile = open(filename,"w")
+        elif isinstance(data, list) or isinstance(data, dict):
+            data = json.dumps(data)
+            outfile = open(filename,"w")
         else:
             raise RuntimeError("Unknown data type")
         outfile.write(data)
         outfile.close()
+        return True
 
 
     def read(self, frame_hash, frame_name, data_format=None):
@@ -70,8 +74,12 @@ class AzureStore(object):
         """
         if isinstance(data, str):
             self.bbs.create_blob_from_text(self.container_name, "{}/{}".format(frame_hash, frame_name), data)
+        elif isinstance(data, list) or isinstance(data, dict):  ## JSON object - convert to a string
+            data = json.dumps(data)
+            self.bbs.create_blob_from_text(self.container_name, "{}/{}".format(frame_hash, frame_name), data)
         else:  ## assume it's binary data
             self.bbs.create_blob_from_bytes(self.container_name, "{}/{}".format(frame_hash, frame_name), data)
+        return True
 
 
     def read(self, frame_hash, frame_name, data_format):
