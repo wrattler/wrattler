@@ -1,4 +1,4 @@
-FROM nbarlow/wrattler_client:v1.0
+FROM nbarlow/wrattler_client:latest
 
 EXPOSE 8080
 CMD ["http-server","./build"]
