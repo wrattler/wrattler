@@ -4,6 +4,7 @@ import marked from 'marked';
 import * as Langs from '../definitions/languages'; 
 import * as Graph from '../definitions/graph'; 
 import { Value } from '../definitions/values';
+import { Statement } from 'typescript';
 
 // ------------------------------------------------------------------------------------------------
 // Markdown plugin
@@ -46,10 +47,8 @@ class MarkdownBlockKind implements Langs.Block {
     update: (state:MarkdownState, event:MarkdownEvent) => {
       switch(event.kind) {
         case 'edit': 
-          console.log("Markdown: Switch to edit mode!")
           return { id: state.id, block: state.block, editing: true }
         case 'update': 
-          console.log("Markdown: Set code to:\n%O", event.source);
           let newBlock = markdownLanguagePlugin.parse(event.source)
           return { id: state.id, block: <MarkdownBlockKind>newBlock, editing: false }
       }
@@ -57,10 +56,7 @@ class MarkdownBlockKind implements Langs.Block {
     
   
     render: (cell: Langs.BlockState, state:MarkdownState, context:Langs.EditorContext<MarkdownEvent>) => {
-      // console.log(state)
-      
-  
-      // The `context` parameter defines `context.trugger` function. We can call this to 
+      // The `context` parameter defines `context.trigger` function. We can call this to 
       // trigger events (i.e. `MarkdownEvent` values). When we trigger an event, the main 
       // loop will call our `update` function to get new state of the editor and it will then
       // re-render the editor (we do not need to do any extra work here!)
@@ -105,7 +101,6 @@ class MarkdownBlockKind implements Langs.Block {
             }
           });    
           numLines = ed['viewModel'].lines.lines.length;
-          console.log(numLines);
   
           let alwaysTrue = ed.createContextKey('alwaysTrue', true);
           let myBinding = ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
@@ -132,7 +127,7 @@ class MarkdownBlockKind implements Langs.Block {
           }
           ed.getModel().onDidChangeContent(resizeEditor);
           resizeEditor();
-
+          
           // el.setHeight("100px");
         }
         return h('div', {}, [
@@ -146,7 +141,6 @@ class MarkdownBlockKind implements Langs.Block {
   export const markdownLanguagePlugin : Langs.LanguagePlugin = {
     language: "markdown",
     editor: markdownEditor,
-
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
     },
@@ -162,5 +156,10 @@ class MarkdownBlockKind implements Langs.Block {
     evaluate: async (node:Graph.Node) : Promise<Langs.EvaluationResult> => {
       return { kind: "success", value: { kind: "nothing" } };
     },
+    save: (block:Langs.Block) => {
+      let mdBlock:MarkdownBlockKind = <MarkdownBlockKind> block
+      return mdBlock.source.concat("\n")
+    },
   }
+
   

@@ -122,12 +122,6 @@ class JavascriptBlockKind implements Langs.Block {
       let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
       let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
       let code = createEditor("javascript", state.block.source, cell, context)
-      // let viz = h('div', 
-      //   {key: "viz_".concat(cell.editor.id.toString()), 
-      //     id: "tester", 
-      //     style: "width:600px;height:250px;"}, [])
-      // let TESTER = document.getElementById('tester');
-      // Plotly.plot( TESTER, [{x: [1, 2, 3, 4, 5],y: [1, 2, 4, 8, 16] }], {margin: { t: 0 } } );
       return h('div', { }, [code, preview])
     }
   }
@@ -213,6 +207,17 @@ class JavascriptBlockKind implements Langs.Block {
     bind: (scopeDictionary: {}, block: Langs.Block) => {
       let jsBlock = <JavascriptBlockKind>block
       return getCodeExports(scopeDictionary, jsBlock.source);
+    },
+    save: (block:Langs.Block) : string => {
+      let jsBlock:JavascriptBlockKind = <JavascriptBlockKind> block
+      let content:string = ""
+      content = content
+        .concat("```javascript\n")
+        .concat(jsBlock.source)
+        .concat("\n")
+        .concat("```\n")
+      return content
+      
     }
   }
 
