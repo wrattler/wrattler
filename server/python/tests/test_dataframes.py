@@ -20,7 +20,8 @@ def test_convert_pandas():
     d_orig = [{"Col1":123, "Col2":"Abc"},
               {"Col1":456, "Col2":"Def"}]
     pd_df = convert_to_pandas_df(d_orig)
-    d_new = convert_from_pandas_df(pd_df)
+    assert(isinstance(pd_df, pd.DataFrame))
+    d_new = json.loads(convert_from_pandas_df(pd_df))
     assert(d_orig == d_new)
 
 
@@ -30,9 +31,9 @@ def test_convert_list():
     json, then should get the same df back again
     """
     start_list = ["a","b","c","d"]
-    j1 = convert_from_pandas_df(start_list)
+    j1 = json.loads(convert_from_pandas_df(start_list))
     df = convert_to_pandas_df(j1)
-    j2 = convert_from_pandas_df(df)
+    j2 = json.loads(convert_from_pandas_df(df))
     assert(j1==j2)
 
 
@@ -64,5 +65,5 @@ def test_convert_null_to_nan():
     ## will now be NaN
     assert(np.isnan(df["b"][1]))
     ## but when we convert it back into json, we want it to be None
-    new_json = convert_from_pandas_df(df)
+    new_json = json.loads(convert_from_pandas_df(df))
     assert(new_json[1]["b"] == None)
