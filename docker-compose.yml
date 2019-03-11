@@ -4,7 +4,7 @@ services:
     container_name: wrattler_wrattler_client_1
     build:
       context: client
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile_azure
     ports:
      - "8080:8080"
     # stdin_open: true
@@ -14,10 +14,7 @@ services:
     - wrattler_data_store
     networks:
     - wrattler_nw
-    environment:
-     - PYTHONSERVICE_URI=http://localhost:7101
-     - RSERVICE_URI=http://localhost:7103
-     - DATASTORE_URI=http://localhost:7102
+
 
   wrattler_python_service:
     container_name: wrattler_wrattler_python_service_1

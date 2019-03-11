@@ -1,0 +1,4 @@
+FROM nbarlow/wrattler_client_azure:latest
+
+EXPOSE 8080
+CMD ["http-server","./build"]
