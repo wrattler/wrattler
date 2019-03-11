@@ -6,7 +6,9 @@ import json
 import numpy as np
 import pandas as pd
 import pyarrow as pa
+import pytest
 
+from exceptions import ApiException
 from python_service import pandas_to_arrow, arrow_to_pandas, \
     pandas_to_json, json_to_pandas, \
     convert_to_pandas, convert_from_pandas
@@ -48,12 +50,14 @@ def test_json_to_pandas():
     assert(isinstance(df,pd.DataFrame))
 
 
-def test_round_trip_json():
+def test_pandas_to_json_to_pandas():
     """
     pandas to json to pandas
     """
-    pass
-
+    df = pd.DataFrame({"a":[1,2,3],"b":[4,5,6]})
+    jdf = json.loads(pandas_to_json(df))
+    newdf = json_to_pandas(jdf)
+    assert(pd.DataFrame.equals(df, newdf))
 
 
 def test_json_to_pandas_to_json():
@@ -64,10 +68,23 @@ def test_json_to_pandas_to_json():
     """
     d_orig = [{"Col1":123, "Col2":"Abc"},
               {"Col1":456, "Col2":"Def"}]
-    pd_df = convert_to_pandas_df(d_orig)
+    pd_df = convert_to_pandas(d_orig)
     assert(isinstance(pd_df, pd.DataFrame))
-    d_new = json.loads(convert_from_pandas_df(pd_df))
+    d_new = json.loads(convert_from_pandas(pd_df, max_size_json=1024))
     assert(d_orig == d_new)
+
+
+def test_json_size_limit():
+    """
+    When converting from pandas, we have an argument max_size_json which
+    determines whether we convert to json or to arrows.  Try a couple of
+    values of this and check we get expected output.
+    """
+    df = pd.DataFrame({"col1": ["blah", "blah"], "col2": ["BLAH","BLAH"]})
+    output_1 = convert_from_pandas(df, max_size_json=0)
+    assert(isinstance(output_1, pa.lib.Buffer))
+    output_2 = convert_from_pandas(df, max_size_json=1024)
+    assert(isinstance(output_2, str))
 
 
 def test_convert_list():
@@ -82,20 +99,16 @@ def test_convert_list():
     assert(j1==j2)
 
 
-def test_dont_convert_non_df():
+def test_dont_convert_non_df_to_pandas():
     """
     Check that if we just give a number or a string or something else,
-    we get None back
+    we get an ApiException
     """
-    x_orig = 345
-    x_conv = convert_to_pandas(x_orig)
-    x_new = convert_from_pandas(x_conv)
-    assert(x_new == None)
 
-    y_orig = "testing"
-    y_conv = convert_to_pandas_df(y_orig)
-    y_new = convert_from_pandas_df(y_conv)
-    assert(y_new == None)
+    with pytest.raises(ApiException) as exception_int:
+        x_conv = convert_to_pandas(345)
+    with pytest.raises(ApiException) as exception_str:
+        x_conv = convert_to_pandas("abc")
 
 
 def test_convert_null_to_nan():
@@ -106,9 +119,9 @@ def test_convert_null_to_nan():
     json_obj = json.loads(json_string)
     ## should be converted to None
     assert(json_obj[1]["b"] == None)
-    df = convert_to_pandas_df(json_obj)
+    df = convert_to_pandas(json_obj)
     ## will now be NaN
     assert(np.isnan(df["b"][1]))
     ## but when we convert it back into json, we want it to be None
-    new_json = json.loads(convert_from_pandas_df(df))
+    new_json = json.loads(convert_from_pandas(df, max_size_json=1024))
     assert(new_json[1]["b"] == None)
