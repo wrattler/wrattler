@@ -6,7 +6,7 @@ import {createEditor} from '../editors/editor';
 import {printPreview} from '../editors/preview'; 
 
 // import Plotly from 'Plotly';
-import ts from 'typescript';
+import ts, { createNoSubstitutionTemplateLiteral } from 'typescript';
 import axios from 'axios';
 import {Md5} from 'ts-md5';
 
@@ -138,8 +138,9 @@ class JavascriptBlockKind implements Langs.Block {
         let headers = {'Content-Type': 'application/json'}
         try {
           var response = await axios.put(url, value, {headers: headers});
-          // return DATASTORE_URI.concat("/"+hash).concat("/"+variableName)
-          return "http://wrattler_wrattler_data_store_1:7102".concat("/"+hash).concat("/"+variableName)
+          console.log(response.data)
+          return DATASTORE_URI.concat("/"+hash).concat("/"+variableName)
+          // return "http://wrattler_wrattler_data_store_1:7102".concat("/"+hash).concat("/"+variableName)
         }
         catch (error) {
           console.error(error);
