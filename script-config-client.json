@@ -1,0 +1,3 @@
+{
+  "commandToExecute": "apt-get -y update && sudo apt install -y docker.io && sudo apt install -y docker-compose && cd /home/vm-admin && git clone https://github.com/wrattler/wrattler.git && cd wrattler/client && git checkout demo-mar-2019 && sudo docker build -t wrattlerclient -f Dockerfile_azure . && sudo nohup docker run -p 8080:8080 wrattlerclient &"
+}
