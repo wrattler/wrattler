@@ -3,8 +3,8 @@
 ## HES wrangling + analysis challenge
 ### 1. Load data
 We read a subset of the data from agd-1a. This corresponds to "houses that were monitored for approximately one month at 2 minute intervals (most households)". There are two further chunks of this category of data (agd-1b and agd-1b)
-
 ```python
+
 # Imports
 import itertools
 import os
@@ -44,6 +44,7 @@ df_profiles =  pd.read_csv("csv/agd-1a/appliance_group_data-1a_0.01.csv",header=
 df_profiles = df_profiles.merge(df_appliance_types, how='left', on='ApplianceCode')
 df_profiles.columns = df_profiles.columns.str.strip()
 df_profiles["Household2"] = df_profiles["Household"]
+
 
 
 ### 2. Drop rows with temperature readings
@@ -350,88 +351,141 @@ The model beats the very naive baseline of the mean of each column. Instead, we 
 
 ##  Modeling results
 
-In the next figures, the results for the modeling for each appliance is shown. The figures compare the data, the 
-baseline and the full model.  
+In the next figures, the results for the modeling for each appliance is shown. The figures compare the data (blue), the 
+baseline (green) and the full model (orange). 
+ 
+
+ 
+ 
 ```python
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error
 
 
-y_test_final = y_test_final.values
-y_train_final = y_train_final.values
-y_pred = y_pred.values
-y_baseline_better = y_baseline_better.values
-appliances = appliances.values
-
 # plot the distribution of the test set, model and baseline
 # the mean absolute error for each appliance group is in brackets in the legend
-fig, ax = plt.subplots(7, 1, figsize=(10, 22.5))
+fig0, ax0 = plt.subplots()
 
-model_label = "Model ({:.4f})".format( mean_absolute_error(y_test_final[:, 0], y_pred[:, 0]))
-baseline_label = "Baseline ({:.4f})".format(mean_absolute_error(y_test_final[:, 0], y_baseline_better[:, 0]))
-sns.distplot(y_test_final[:, 0], norm_hist=False, kde=False, label="Data", ax=ax[0])
-sns.distplot(y_pred[:, 0], norm_hist=False, kde=False, label=model_label, ax=ax[0])
-sns.distplot(y_baseline_better[:, 0], norm_hist=False, kde=False, label=baseline_label, ax=ax[0])
-ax[0].set_title(appliances[0],fontsize=15)
-ax[0].set_ylabel("Frequency",fontsize=14)
-ax[0].legend(fontsize=14)
+mean_absolute_error_model0 = ["Model "+str(appliances.values[0]), round( mean_absolute_error( y_test_final.values[:, 0], y_pred.values[:, 0]),3)]
+mean_absolute_error_baseline0 = ["Baseline "+str(appliances.values[0]), round(mean_absolute_error(y_test_final.values[:, 0], y_baseline_better.values[:, 0]),3)]
+sns.distplot(y_test_final.values[:, 0], norm_hist=False, kde=False, label="Data", ax=ax0)
+sns.distplot(y_pred.values[:, 0], norm_hist=False, kde=False, label=mean_absolute_error_model0, ax=ax0)
+sns.distplot(y_baseline_better.values[:, 0], norm_hist=False, kde=False, label=mean_absolute_error_baseline0, ax=ax0)
+ax0.set_title(appliances.values[0],fontsize=15)
+ax0.set_ylabel("Frequency",fontsize=14)
+#ax0.legend(fontsize=14)
+plt.show()
+```
+```python
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_absolute_error
 
 
-model_label1 = "Model ({:.4f})".format( mean_absolute_error(y_test_final[:, 1], y_pred[:, 1]))
-baseline_label1 = "Baseline ({:.4f})".format(mean_absolute_error(y_test_final[:, 1], y_baseline_better[:, 1]))
-sns.distplot(y_test_final[:, 1], norm_hist=False, kde=False, label="Data", ax=ax[1])
-sns.distplot(y_pred[:, 1], norm_hist=False, kde=False, label=model_label1, ax=ax[1])
-sns.distplot(y_baseline_better[:, 1], norm_hist=False, kde=False, label=baseline_label1, ax=ax[1])
-ax[1].set_title(appliances[1],fontsize=15)
-ax[1].set_ylabel("Frequency",fontsize=14)
-ax[1].legend(fontsize=14)
 
-model_label2 = "Model ({:.4f})".format( mean_absolute_error(y_test_final[:, 2], y_pred[:, 2]))
-baseline_label2 = "Baseline ({:.4f})".format(mean_absolute_error(y_test_final[:, 2], y_baseline_better[:, 2]))
-sns.distplot(y_test_final[:, 2], norm_hist=False, kde=False, label="Data", ax=ax[2])
-sns.distplot(y_pred[:, 2], norm_hist=False, kde=False, label=model_label2, ax=ax[2])
-sns.distplot(y_baseline_better[:, 2], norm_hist=False, kde=False, label=baseline_label2, ax=ax[2])
-ax[2].set_title(appliances[2],fontsize=15)
-ax[2].set_ylabel("Frequency",fontsize=14)
-ax[2].legend(fontsize=14)
+fig1, ax1 = plt.subplots()
+mean_absolute_error_model1 = ["Model "+str(appliances.values[1]), round( mean_absolute_error( y_test_final.values[:, 1], y_pred.values[:, 1]),3)]
+mean_absolute_error_baseline1 = ["Baseline "+str(appliances.values[1]), round(mean_absolute_error(y_test_final.values[:, 1], y_baseline_better.values[:, 1]),3)]
+sns.distplot(y_test_final.values[:, 1], norm_hist=False, kde=False, label="Data", ax=ax1)
+sns.distplot(y_pred.values[:, 1], norm_hist=False, kde=False, label=mean_absolute_error_model1, ax=ax1)
+sns.distplot(y_baseline_better.values[:, 1], norm_hist=False, kde=False, label=mean_absolute_error_baseline1, ax=ax1)
+ax1.set_title(appliances.values[1],fontsize=15)
+ax1.set_ylabel("Frequency",fontsize=14)
+#ax1.legend(fontsize=14)
+plt.show()
 
-model_label3 = "Model ({:.4f})".format( mean_absolute_error(y_test_final[:, 3], y_pred[:, 3]))
-baseline_label3 = "Baseline ({:.4f})".format(mean_absolute_error(y_test_final[:, 3], y_baseline_better[:, 3]))
-sns.distplot(y_test_final[:, 3], norm_hist=False, kde=False, label="Data", ax=ax[3])
-sns.distplot(y_pred[:, 3], norm_hist=False, kde=False, label=model_label3, ax=ax[3])
-sns.distplot(y_baseline_better[:, 3], norm_hist=False, kde=False, label=baseline_label3, ax=ax[3])
-ax[3].set_title(appliances[3],fontsize=15)
-ax[3].set_ylabel("Frequency",fontsize=14)
-ax[3].legend(fontsize=14)
+```
 
-model_label4 = "Model ({:.4f})".format( mean_absolute_error(y_test_final[:, 4], y_pred[:, 4]))
-baseline_label4 = "Baseline ({:.4f})".format(mean_absolute_error(y_test_final[:, 4], y_baseline_better[:, 4]))
-sns.distplot(y_test_final[:, 4], norm_hist=False, kde=False, label="Data", ax=ax[4])
-sns.distplot(y_pred[:, 4], norm_hist=False, kde=False, label=model_label4, ax=ax[4])
-sns.distplot(y_baseline_better[:, 4], norm_hist=False, kde=False, label=baseline_label4, ax=ax[4])
-ax[4].set_title(appliances[4],fontsize=15)
-ax[4].set_ylabel("Frequency",fontsize=14)
-ax[4].legend(fontsize=14)
+```python
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_absolute_error
 
-model_label5 = "Model ({:.4f})".format( mean_absolute_error(y_test_final[:, 5], y_pred[:, 5]))
-baseline_label5 = "Baseline ({:.4f})".format(mean_absolute_error(y_test_final[:, 5], y_baseline_better[:, 5]))
-sns.distplot(y_test_final[:, 5], norm_hist=False, kde=False, label="Data", ax=ax[5])
-sns.distplot(y_pred[:, 5], norm_hist=False, kde=False, label=model_label5, ax=ax[5])
-sns.distplot(y_baseline_better[:, 5], norm_hist=False, kde=False, label=baseline_label5, ax=ax[5])
-ax[5].set_title(appliances[5],fontsize=15)
-ax[5].set_ylabel("Frequency",fontsize=14)
-ax[5].legend(fontsize=14)
 
-model_label6 = "Model ({:.4f})".format( mean_absolute_error(y_test_final[:, 6], y_pred[:, 6]))
-baseline_label6 = "Baseline ({:.4f})".format(mean_absolute_error(y_test_final[:, 6], y_baseline_better[:, 6]))
-sns.distplot(y_test_final[:, 6], norm_hist=False, kde=False, label="Data", ax=ax[6])
-sns.distplot(y_pred[:, 6], norm_hist=False, kde=False, label=model_label6, ax=ax[6])
-sns.distplot(y_baseline_better[:, 6], norm_hist=False, kde=False, label=baseline_label6, ax=ax[6])
-ax[6].set_title(appliances[6],fontsize=15)
-ax[6].set_ylabel("Frequency",fontsize=14)
-ax[6].legend(fontsize=14)
-ax[6].set_xlabel("Normalised consumption",fontsize=14)
+fig2, ax2 = plt.subplots()
+mean_absolute_error_model2 = ["Model "+str(appliances.values[2]), round( mean_absolute_error( y_test_final.values[:, 2], y_pred.values[:, 2]),3)]
+mean_absolute_error_baseline2 = ["Baseline "+str(appliances.values[2]), round(mean_absolute_error(y_test_final.values[:, 2], y_baseline_better.values[:, 2]),3)]
+sns.distplot(y_test_final.values[:, 2], norm_hist=False, kde=False, label="Data", ax=ax2)
+sns.distplot(y_pred.values[:, 2], norm_hist=False, kde=False, label=mean_absolute_error_model2, ax=ax2)
+sns.distplot(y_baseline_better.values[:, 2], norm_hist=False, kde=False, label=mean_absolute_error_baseline2, ax=ax2)
+ax2.set_title(appliances.values[2],fontsize=15)
+ax2.set_ylabel("Frequency",fontsize=14)
+#ax2.legend(fontsize=14)
+plt.show()
+```
 
-plt.tight_layout()
+```python
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_absolute_error
+
+fig3, ax3 = plt.subplots()
+mean_absolute_error_model3 = ["Model "+str(appliances.values[3]), round( mean_absolute_error( y_test_final.values[:, 3], y_pred.values[:, 3]),3)]
+mean_absolute_error_baseline3 = ["Baseline "+str(appliances.values[3]), round(mean_absolute_error(y_test_final.values[:, 3], y_baseline_better.values[:, 3]),3)]
+sns.distplot(y_test_final.values[:, 3], norm_hist=False, kde=False, label="Data", ax=ax3)
+sns.distplot(y_pred.values[:, 3], norm_hist=False, kde=False, label=mean_absolute_error_model3, ax=ax3)
+sns.distplot(y_baseline_better.values[:, 3], norm_hist=False, kde=False, label=mean_absolute_error_baseline3, ax=ax3)
+ax3.set_title(appliances.values[3],fontsize=15)
+ax3.set_ylabel("Frequency",fontsize=14)
+#ax3.legend(fontsize=14)
+plt.show()
+
+```
+
+```python
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_absolute_error
+
+
+fig4, ax4 = plt.subplots()
+mean_absolute_error_model4 = ["Model "+str(appliances.values[4]), round( mean_absolute_error( y_test_final.values[:, 4], y_pred.values[:, 4]),3)]
+mean_absolute_error_baseline4 = ["Baseline "+str(appliances.values[4]), round(mean_absolute_error(y_test_final.values[:, 4], y_baseline_better.values[:, 4]),3)]
+sns.distplot(y_test_final.values[:, 4], norm_hist=False, kde=False, label="Data", ax=ax4)
+sns.distplot(y_pred.values[:, 4], norm_hist=False, kde=False, label=mean_absolute_error_model4, ax=ax4)
+sns.distplot(y_baseline_better.values[:, 4], norm_hist=False, kde=False, label=mean_absolute_error_baseline4, ax=ax4)
+ax4.set_title(appliances.values[4],fontsize=15)
+ax4.set_ylabel("Frequency",fontsize=14)
+#ax4.legend(fontsize=14)
+plt.show()
+
+
+```
+
+```python
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_absolute_error
+
+fig5, ax5 = plt.subplots()
+mean_absolute_error_model5 = ["Model "+str(appliances.values[5]), round( mean_absolute_error( y_test_final.values[:, 5], y_pred.values[:, 5]),3)]
+mean_absolute_error_baseline5 = ["Baseline "+str(appliances.values[5]), round(mean_absolute_error(y_test_final.values[:, 5], y_baseline_better.values[:, 5]),3)]
+sns.distplot(y_test_final.values[:, 5], norm_hist=False, kde=False, label="Data", ax=ax5)
+sns.distplot(y_pred.values[:, 5], norm_hist=False, kde=False, label=mean_absolute_error_model5, ax=ax5)
+sns.distplot(y_baseline_better.values[:, 5], norm_hist=False, kde=False, label=mean_absolute_error_baseline5, ax=ax5)
+ax5.set_title(appliances.values[5],fontsize=15)
+ax5.set_ylabel("Frequency",fontsize=14)
+#ax5.legend(fontsize=14)
+plt.show()
+
+```
+
+```python
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_absolute_error
+
+
+fig6, ax6 = plt.subplots()
+mean_absolute_error_model6 = ["Model "+str(appliances.values[6]), round( mean_absolute_error( y_test_final.values[:,6], y_pred.values[:, 6]),3)]
+mean_absolute_error_baseline6 = ["Baseline "+str(appliances.values[6]), round(mean_absolute_error(y_test_final.values[:, 6], y_baseline_better.values[:, 6]),3)]
+sns.distplot(y_test_final.values[:, 6], norm_hist=False, kde=False, label="Data", ax=ax6)
+sns.distplot(y_pred.values[:, 6], norm_hist=False, kde=False, label=mean_absolute_error_model6, ax=ax6)
+sns.distplot(y_baseline_better.values[:, 6], norm_hist=False, kde=False, label=mean_absolute_error_baseline6, ax=ax6)
+ax6.set_title(appliances.values[6],fontsize=15)
+ax6.set_ylabel("Frequency",fontsize=14)
+#ax6.legend(fontsize=14)
+ax6.set_xlabel("Normalised consumption",fontsize=14)
+plt.show()
 ```
