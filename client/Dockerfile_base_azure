@@ -11,9 +11,9 @@ RUN apt-get update; apt-get -y install yarn
 RUN curl -sL http://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get update; apt-get -y install nodejs
 
-ENV PYTHONSERVICE_URI http://wrattlerpython.westeurope.cloudapp.azure.com:7101
-ENV RSERVICE_URI http://wrattlerr.westeurope.cloudapp.azure.com:7103
-ENV DATASTORE_URI http://wrattlerdatastore.westeurope.cloudapp.azure.com:7102
+ENV PYTHONSERVICE_URI http://wrattlerpython.westeurope.cloudapp.azure.com:8080
+ENV RSERVICE_URI http://wrattlerr.westeurope.cloudapp.azure.com:8080
+ENV DATASTORE_URI http://wrattlerdatastore.westeurope.cloudapp.azure.com:8080
 
 
 RUN mkdir app

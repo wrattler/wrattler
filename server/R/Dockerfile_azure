@@ -1,0 +1,7 @@
+FROM nbarlow/wrattler_r_service:v1.0
+
+ENV DATASTORE_URI http://wrattlerdatastore.westeurope.cloudapp.azure.com:8080
+
+EXPOSE 7103
+
+CMD ["Rscript", "app.R"]

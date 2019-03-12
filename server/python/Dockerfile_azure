@@ -1,0 +1,9 @@
+FROM nbarlow/wrattler_python_service:v1.0
+
+ADD . /app
+WORKDIR /app
+
+ENV FLASK_APP app.py
+ENV DATASTORE_URI http://wrattlerdatastore.westeurope.cloudapp.azure.com:8080
+EXPOSE 7101
+CMD ["python3","app.py"]
