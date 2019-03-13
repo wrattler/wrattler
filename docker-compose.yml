@@ -4,7 +4,7 @@ services:
     container_name: wrattler_wrattler_client_1
     build:
       context: client
-      dockerfile: Dockerfile_azure
+      dockerfile: Dockerfile
     ports:
      - "8080:8080"
     # stdin_open: true
