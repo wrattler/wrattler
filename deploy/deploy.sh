@@ -1,21 +1,19 @@
-
-
-
-declare pythonDeploymentName="wrattlerpython"
-declare rDeploymentName="wrattlerr"
-declare datastoreDeploymentName="wrattlerdatastore"
-declare clientDeploymentName="wrattlerclient"
+#!/bin/bash
 
 declare resourceGroupName="wrattlerDemoTest"
+declare templatePath="./template.json"
 
-declare templatePath="./wrattlerpython/template.json"
-
-declare pythonParameterPath="./wrattlerpython/parameters.json"
-declare rParameterPath="./wrattlerr/parameters.json"
-declare datastoreParameterPath="./wrattlerdatastore/parameters.json"
-declare clientParameterPath="./wrattlerclient/parameters.json"
-
-az group deployment create --name "${pythonDeploymentName}" --resource-group "${resourceGroupName}" --template-file "${templatePath}" --parameters "${pythonParameterPath}"
-az group deployment create --name "${rDeploymentName}" --resource-group "${resourceGroupName}" --template-file "${templatePath}" --parameters "${rParameterPath}"
-az group deployment create --name "${datastoreDeploymentName}" --resource-group "${resourceGroupName}" --template-file "${templatePath}" --parameters "${datastoreParameterPath}"
-az group deployment create --name "${clientDeploymentName}" --resource-group "${resourceGroupName}" --template-file "${templatePath}" --parameters "${clientParameterPath}"
+for service in "client" "datastore" "r" "python";
+  do declare deploymentName="wrattler${service}";
+     declare parameterPath="./wrattler${service}/parameters.json";
+     declare customCmdJson="./wrattler${service}/script-config.json";
+     az group deployment create --name "${deploymentName}" \
+	--resource-group "${resourceGroupName}" \
+	--template-file "${templatePath}" \
+	--parameters "${parameterPath}";
+     az vm extension set \
+        --resource-group "${resourceGroupName}" \
+        --vm-name  "${deploymentName}"  --name customScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings "${customCmdJson}";
+done;
