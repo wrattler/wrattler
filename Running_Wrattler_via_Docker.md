@@ -25,9 +25,9 @@ You can either download the .dmg from [here](https://hub.docker.com/editions/com
 brew install docker docker-compose
 ```
 
-## Clone the repo
+## Clone the wrattler repo
 
-If you haven't already cloned the wrattler repository, do
+If you haven't already cloned the wrattler github repository, do
 ```
 https://github.com/wrattler/wrattler.git
 cd wrattler
