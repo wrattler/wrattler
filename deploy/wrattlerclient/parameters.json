@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "domainNameLabel": {
-            "value": "wrattlerclientservice"
+            "value": "wrattlerclient"
         },
         "location": {
             "value": "westeurope"
@@ -61,7 +61,7 @@
             "value": "wrattlerDemo1Subnet"
         },
         "virtualNetworkId": {
-            "value": "/subscriptions/d1f7f339-8ae0-4652-b9ad-b252376c8120/resourceGroups/wrattlerDemoTest/providers/Microsoft.Network/virtualNetworks/wrattlerDemo1VNET"
+            "value": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/wrattlerDemoTest/providers/Microsoft.Network/virtualNetworks/wrattlerDemo1VNET"
         },
         "publicIpAddressName": {
             "value": "wrattlerclient-ip"
@@ -88,7 +88,7 @@
             "value": "vmadmin"
         },
         "adminPublicKey": {
-            "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyQABIlMsIoDcGz4wnq84BdvqWHLFSadH5hn6C478rouUX8TrOwhT1EDHajku9SQtfcjt/hrbN/lPr+6l7RII63NuQeFShxFMHOcaS0Pty/IpZ+V/IuSXBQpVUCvDXkxr1o2IucuaCj1jkDRQi0YYHTzbo4H5bDdedeUGdfsbImqHdawz0sGEwpqq+iS8yRpc6DRAh3Fp/RpyY8FIvKJTReJxmX5SVKUOyjn0uL2LvNHhrQcndFHz8g+K344mXPeNlR/C7WLCGEOD/1EdVV8ABqIWVRxkLyPwxtIM4Eq0NRvM99J3nvxRUHjFp6Tk1fQe3QNb+E2LhSH1YGp0SqBRt/VSyDJRvkBrNr3KG8FraGQaMlIk4XASDhfC1U0amU2eAZTT6/4rm4we3FkEbnMJEOB/J5PYOFb0YUx3oNATkXzk+IlBu5laRhntPGzut+CnlobghLLjRSvdXm+8EMih98C7HZfUugVDwF1nIzOu4JgcKrabW9JB7wiEL32FTSjxH1DtcTZ45B/72sduCX0UnqfRddZpIXcYLDO69fqFkV/KoiqgOqRKkZ1h3hP/P//CAXj7yoVtPIinIqGckJnklml5waXKgyMZK8R92e1KR2lgSwACptedC91m8R/4GxeuA6rhKXL8Y9kPEWKwUb4bTsA8SxQ7XUfhN9D2QMpJZ7Q== myong@turing.ac.uk"
+            "value": "<SSH_PUBLIC_KEY>"
         },
         "diagnosticsStorageAccountName": {
             "value": "wrattlerdemotestdiag880"
