@@ -6,7 +6,7 @@ import {createEditor} from '../editors/editor';
 import {printPreview} from '../editors/preview'; 
 
 // import Plotly from 'Plotly';
-import ts from 'typescript';
+import ts, { createNoSubstitutionTemplateLiteral } from 'typescript';
 import axios from 'axios';
 import {Md5} from 'ts-md5';
 
@@ -122,12 +122,6 @@ class JavascriptBlockKind implements Langs.Block {
       let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
       let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
       let code = createEditor("javascript", state.block.source, cell, context)
-      // let viz = h('div', 
-      //   {key: "viz_".concat(cell.editor.id.toString()), 
-      //     id: "tester", 
-      //     style: "width:600px;height:250px;"}, [])
-      // let TESTER = document.getElementById('tester');
-      // Plotly.plot( TESTER, [{x: [1, 2, 3, 4, 5],y: [1, 2, 4, 8, 16] }], {margin: { t: 0 } } );
       return h('div', { }, [code, preview])
     }
   }
@@ -144,8 +138,9 @@ class JavascriptBlockKind implements Langs.Block {
         let headers = {'Content-Type': 'application/json'}
         try {
           var response = await axios.put(url, value, {headers: headers});
-          // return DATASTORE_URI.concat("/"+hash).concat("/"+variableName)
-          return "http://wrattler_wrattler_data_store_1:7102".concat("/"+hash).concat("/"+variableName)
+          console.log(response.data)
+          return DATASTORE_URI.concat("/"+hash).concat("/"+variableName)
+          // return "http://wrattler_wrattler_data_store_1:7102".concat("/"+hash).concat("/"+variableName)
         }
         catch (error) {
           console.error(error);
