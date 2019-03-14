@@ -1,4 +1,4 @@
-FROM nbarlow/wrattler_python_service:v1.0
+FROM nbarlow/wrattler_python_service:latest
 
 ADD . /app
 WORKDIR /app
