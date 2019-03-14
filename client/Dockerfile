@@ -18,4 +18,4 @@ WORKDIR /app
 #RUN npm install http-server -g
 
 EXPOSE 8080
-#CMD ["http-server","./build"]
+CMD ["http-server","./build"]

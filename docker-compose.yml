@@ -14,12 +14,6 @@ services:
     - wrattler_data_store
     networks:
     - wrattler_nw
-    volumes:
-      - ./client:/app
-      - ./client/src:/app/src
-      - ./client/src/languagePlugins:/app/src/languagePlugins
-    entrypoint: /bin/bash
-    command: "./entrypoint.sh"
     environment:
      - PYTHONSERVICE_URI=http://localhost:7101
      - RSERVICE_URI=http://localhost:7103
