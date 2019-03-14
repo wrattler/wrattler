@@ -1,4 +1,4 @@
-FROM nbarlow/wrattler_r_service:v1.0
+FROM nbarlow/wrattler_r_service:latest
 
 EXPOSE 7103
 
