@@ -1,6 +1,6 @@
-# Welcome to Wrattler
 ```markdown
-Tundra analysis
+# Welcome to Wrattler
+## Tundra traits analysis
 ```
 
 ```r
@@ -27,7 +27,7 @@ teamtraits.long<-within(teamtraits.long,teamtraits.long$Trait<-as.character(Trai
 # Remove seed mass data from Salix arctica Rebecca Klady because units uncertain and Papaver from me because values seem off (units problem?)
 teamtraits.long <- subset(teamtraits.long,(teamtraits.long$DataContributor=="Anne Bjorkman" & teamtraits.long$AccSpeciesName=="Papaver radicatum" & teamtraits.long$Trait=="SeedMass")==F)
 teamtraits.long <- subset(teamtraits.long,(teamtraits.long$DataContributor=="Rebecca Klady" & teamtraits.long$AccSpeciesName=="Salix arctica" & teamtraits.long$Trait=="SeedMass")==F)
-
+                                       
 # Remove SLA data from Marko's Niwot database
 teamtraits.long <- subset(teamtraits.long,(teamtraits.long$DataContributor=="Marko_Spasojevic" & teamtraits.long$Trait == "SLA")==F)
 

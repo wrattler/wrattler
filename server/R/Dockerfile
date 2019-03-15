@@ -14,7 +14,7 @@ RUN echo "r <- getOption('repos'); r['CRAN'] <- 'http://cran.us.r-project.org'; 
 RUN add-apt-repository 'deb [arch=amd64,i386] https://cran.rstudio.com/bin/linux/ubuntu xenial/'; apt-get update; apt-get -y install r-base
 
 # install needed R packages
-
+RUN Rscript -e "install.packages('cleanEHR')"
 RUN Rscript -e "install.packages('ggplot2')"
 RUN Rscript -e "install.packages('jug')"
 RUN Rscript -e "install.packages('xml2')"
@@ -22,7 +22,6 @@ RUN Rscript -e "install.packages('httr')"
 RUN Rscript -e "install.packages('purrr')"
 RUN Rscript -e "install.packages('testthat')"
 RUN Rscript -e "install.packages('tidyverse')"
-RUN Rscript -e "install.packages('cleanEHR')"
 RUN Rscript -e "install.packages('reshape2')"
 RUN Rscript -e "install.packages('plyr')"
 RUN Rscript -e "install.packages('dplyr')"
