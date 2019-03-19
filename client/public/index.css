@@ -87,23 +87,27 @@ div.controls {
 -----------------------------------------------------------------------------*/
 
 div.tabs {
-	overflow: hidden; 
-	background-color: #f1f1f1;
-	padding:10px 5px 10px 5px;
+	border-bottom:solid 5px #dfdfdf;
+	height:27px;
+	margin-top:5px;
 }
 div.tabs button {
 	background-color: inherit;
 	float: left;
 	border: none;
+	border-bottom:solid 5px #c0c0c0;
 	outline: none;
+	margin:0px 10px 0px 0px;
 	cursor: pointer;
-	padding: 3px 20px 6px 0px;
-	font-size: 17px;
+	font-size:10pt;
+	font-weight:bold;
+	color:#c0c0c0;
 }
 div.tabs button.selected {
-	font-weight:bold;
+	color:#878787;
+	border-bottom-color:#878787;	
 }
-																							
+																						
 div.editor {
 	border-left-style: double;
 	border-left-color: grey;
