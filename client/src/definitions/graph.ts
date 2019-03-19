@@ -27,6 +27,8 @@ interface Node {
   /**  The evaluated value associated with this node */
   value: Values.Value | null
 
+  hash: string
+  
   errors: Error[]
 }
 
@@ -83,6 +85,10 @@ interface ExternalExportNode extends ExportNode {
 
 type ExternalNode = ExternalCodeNode | ExternalExportNode
 
+interface NodeCache {
+  tryFindNode(node:Node) : Node
+}
+
 export {
   Node,
   ExportNode,
@@ -92,5 +98,6 @@ export {
   ExternalNode,
   ExternalExportNode,
   ExternalCodeNode,
-  Error
+  Error,
+  NodeCache
 }

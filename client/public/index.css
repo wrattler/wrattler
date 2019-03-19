@@ -1,33 +1,119 @@
-img {
-	width:3%; /* you can use % */
-	height: auto;
+@import url('https://fonts.googleapis.com/css?family=Roboto|Roboto+Mono');
+
+/* ----------------------------------------------------------------------------
+	General notebook and cells styles	
+-----------------------------------------------------------------------------*/
+
+body { 
+	font-family:Roboto;
+	background:#f0f0f0;
+}
+#paper {
+	margin: auto;
+	padding:0px;
+}
+div.cell {
+	background:white;
+	border-left-style: solid;
+	border-left-width: 5px;
+	border-right-style: solid;
+	border-right-width: 5px;
+	width:100%;
+	padding:0px 25px 0px 25px;
+}
+div.icons-bar {
+	height:25px;
+	margin-top:10px;
+	overflow:hidden;
+	margin-left:-15px;
+}
+div.content-bar {
+	padding:10px 0px 10px 0px;
+}
+div.controls-bar {
+	height:25px;
+	overflow:hidden;
+	margin-right:-15px;
+}
+div.icons {
+	float:left;
+}
+div.controls {
+	float:right;
+}
+.controls-bar a, .icons-bar span {
+	font-size:10pt;
+	font-weight:bold;
+}
+.controls-bar a {
+	margin:0px 0px 0px 15px;
+	cursor: pointer;
+}
+.icons-bar span {
+	margin:0px 0px 0px 0px;
+}
+.controls-bar .fa, .icons-bar .fa, .controls-bar .fab, .icons-bar .fab {
+	font-size:10pt;
+	margin-right:5px;
 }
 
+.cell-c0 .controls-bar a, .cell-c0 .icons-bar span, .cell-c0 .controls-bar .fa, 
+	.cell-c0 .icons-bar .fa, .cell-c0 .controls-bar .fab, .cell-c0 .icons-bar .fab { color:#8DD3C7; }
+.cell-c0 { border-color:#8DD3C7; }
+.cell-c0 a:hover, .cell-c0 a:hover i { color:#4F9589 !important; }
+
+.cell-c1 .controls-bar a, .cell-c1 .icons-bar span, .cell-c1 .controls-bar .fa, 
+	.cell-c1 .icons-bar .fa, .cell-c1 .controls-bar .fab, .cell-c1 .icons-bar .fab { color:#BEBADA; }
+.cell-c1 { border-color:#BEBADA; }
+.cell-c1 a:hover, .cell-c1 a:hover i { color:#827E9E !important; }
+
+.cell-c2 .controls-bar a, .cell-c2 .icons-bar span, .cell-c2 .controls-bar .fa, 
+	.cell-c2 .icons-bar .fa, .cell-c2 .controls-bar .fab, .cell-c2 .icons-bar .fab { color:#FDB462; }
+.cell-c2 { border-color:#FDB462; }
+.cell-c2 a:hover, .cell-c2 a:hover i { color:#C27927 !important; }
+
+.cell-c3 .controls-bar a, .cell-c3 .icons-bar span, .cell-c3 .controls-bar .fa, 
+	.cell-c3 .icons-bar .fa, .cell-c3 .controls-bar .fab, .cell-c3 .icons-bar .fab { color:#B3DE69; }
+.cell-c3 { border-color:#B3DE69; }
+.cell-c3 a:hover, .cell-c3 a:hover i { color:#7AA530 !important; }
+
+.cell-c4 .controls-bar a, .cell-c4 .icons-bar span, .cell-c4 .controls-bar .fa, 
+	.cell-c4 .icons-bar .fa, .cell-c4 .controls-bar .fab, .cell-c4 .icons-bar .fab { color:#FB8072; }
+.cell-c4 { border-color:#FB8072; }
+.cell-c4 a:hover, .cell-c4 a:hover i { color:#B13628 !important; }
+
+/* ----------------------------------------------------------------------------
+	
+-----------------------------------------------------------------------------*/
+
 div.tabs {
-	overflow: hidden; 
-	background-color: #f1f1f1;
-	padding:10px 5px 10px 5px;
+	border-bottom:solid 5px #dfdfdf;
+	height:27px;
+	margin-top:5px;
 }
 div.tabs button {
 	background-color: inherit;
 	float: left;
 	border: none;
+	border-bottom:solid 5px #c0c0c0;
 	outline: none;
+	margin:0px 10px 0px 0px;
 	cursor: pointer;
-	padding: 3px 20px 6px 0px;
-	font-size: 17px;
+	font-size:10pt;
+	font-weight:bold;
+	color:#c0c0c0;
 }
 div.tabs button.selected {
-	font-weight:bold;
+	color:#878787;
+	border-bottom-color:#878787;	
 }
-																							
+																						
 div.editor {
 	border-left-style: double;
 	border-left-color: grey;
 	padding: 5px;
 	margin: 10px;
 	height: 50vh;
-	/* overflow: scroll; */
 }
 
 div.output.rendered {
@@ -62,51 +148,6 @@ div.editor {
 	display: none;
 }
 
-div.cell{
-	border-left-style: solid;
-	border-left-width: 5px;
-	padding: 5px 5px 5px 15px;
-	width:100%;
-}
-
-div.cell:nth-child(odd){
- /* border-left-color: gainsboro;  */
- border-left-color: #798893
- /* border-left-color:#0065AB */
-}
-
-div.cell:nth-child(even){
-	/* border-left-color: grey; */
-	border-left-color: #A6D8E7
-}
-
-div.controls {
-	float:right;
-	background: #C1CDD4;
-	/* margin:10px; */
-}
-
-div.controlsBar {
-	margin:20px;
-	padding:10px;
-	position: relative;
-	border-color: #C1CDD4;
-	border-style: solid;
-}
-
-
-
-.vertical-center {
-	margin: 0;
-	/* position: absolute; */
-	top: 50%;
-	/* -ms-transform: translateY(-50%); */
-	/* transform: translateY(-50%); */
-  }
-
-.icon {
-	color: #798893;
-}
 
 div.table-container {
 	overflow-x:auto;
@@ -133,15 +174,6 @@ div.table-container::-webkit-scrollbar-thumb {
 	border-radius:4px;
 	background-color:#c0c0c0;
 }
-.preview-button {
-	margin-top:20px;
-	margin-bottom:20px;
-	background:#C1CDD4;
-}
-
-.add-button {
-	background:#C1CDD4;
-}
 
 
 /* code.indicator {
@@ -167,16 +199,6 @@ button.delete {
 	margin:3px;
 }
 
-body{
-  color:#000;
-  /* background-color:gainsboro; */
-    
-}
-
-#paper {
-  margin: auto;
-}
-
 .plot {
 	width: 50%;
 	display: block;
@@ -187,7 +209,6 @@ body{
 	#paper { 
 		min-width: 90%; 
 		max-width: 90%;
-		/* background-color: red; */
 	}
  }
 
@@ -195,7 +216,6 @@ body{
 	#paper { 
 		min-width: 85%; 
 		max-width: 85%;
-		/* background-color: blue; */
 	}
  }
 
@@ -203,7 +223,6 @@ body{
 	#paper { 
 		min-width: 95%; 
 		max-width: 95%;
-		/* background-color: green; */
 	}
  }
 
@@ -211,7 +230,6 @@ body{
 	#paper { 
 		min-width: 70%; 
 		max-width: 70%;
-		/* background-color: green; */
 	}
  }
 
