@@ -22,15 +22,7 @@ function printCurrentValue(cellId:number, value:Values.Value, tableName:string) 
       return h('div', {key: "dataframe"+componentRootId, class:'table-container'}, [printCurrentTable(df.data, tableName)]);
     case "printout":
       let printoutValue = <Values.Printout>value
-      let printouts:Array<string> = printoutValue.data.split('\n');
-      let paragraphs:Array<VNode> = []
-      for (let p = 0; p < printouts.length; p++) {
-        console.log(printouts[p])
-        let newP = h('p', {innerHTML: printouts[p]})
-        paragraphs.push(newP)
-      }
-      return h('div', {key: "printout"+componentRootId}, paragraphs)
-      // return h('div', {key: "printout"+componentRootId}, [h('p', {innerHTML: printout}, [])])
+      return h('div', {key: "printout"+componentRootId}, [h('pre', {}, [printoutValue.data])])
     case "jsoutput":
       let js = <Values.JavaScriptOutputValue>value
       let callRender = (el) => js.render(el.id);
