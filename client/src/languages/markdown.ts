@@ -5,6 +5,7 @@ import * as Langs from '../definitions/languages';
 import * as Graph from '../definitions/graph'; 
 import { Value } from '../definitions/values';
 import { Statement } from 'typescript';
+import { Md5 } from 'ts-md5';
 
 // ------------------------------------------------------------------------------------------------
 // Markdown plugin
@@ -75,30 +76,22 @@ class MarkdownBlockKind implements Langs.Block {
           let ed = monaco.editor.create(el, {
             value: state.block.source,
             language: 'markdown',
-            // scrollBeyondLastLine: false,
+            scrollBeyondLastLine: false,
             theme:'vs',
+            minimap: { enabled: false },
+            overviewRulerLanes: 0,
+            lineDecorationsWidth: "0ch",
+            fontSize: 14,
+            fontFamily: 'Roboto Mono',
+            lineNumbersMinChars: 2,
+            lineHeight: 20,
+            lineNumbers: "on",
             scrollbar: {
-              // Subtle shadows to the left & top. Defaults to true.
-              useShadows: false,
-          
-              // Render vertical arrows. Defaults to false.
               verticalHasArrows: true,
-              // Render horizontal arrows. Defaults to false.
               horizontalHasArrows: true,
-          
-              // Render vertical scrollbar.
-              // Accepted values: 'auto', 'visible', 'hidden'.
-              // Defaults to 'auto'
-              vertical: 'visible',
-              // Render horizontal scrollbar.
-              // Accepted values: 'auto', 'visible', 'hidden'.
-              // Defaults to 'auto'
-              horizontal: 'visible',
-          
-              verticalScrollbarSize: 17,
-              horizontalScrollbarSize: 17,
-              arrowSize: 30
-            }
+              vertical: 'none',
+              horizontal: 'none'
+            }        
           });    
           numLines = ed['viewModel'].lines.lines.length;
   
@@ -132,7 +125,7 @@ class MarkdownBlockKind implements Langs.Block {
         }
         return h('div', {}, [
           // h('div', { style: "height:"+heightRequired+"px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
-          h('div', { style: "height:75px; padding-top: 20px; ", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
+          h('div', { id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
         ] )      
       }
     }
@@ -144,10 +137,13 @@ class MarkdownBlockKind implements Langs.Block {
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
     },
-    bind: async (code: Langs.Block) : Promise<Langs.BindingResult> => {
+    bind: async (cache, scope, block: Langs.Block) : Promise<Langs.BindingResult> => {
+      let mdBlock:MarkdownBlockKind = <MarkdownBlockKind> block
+      console.log(block)
       let node:Graph.Node = {
         language:"markdown", 
         antecedents:[],
+        hash:<string>Md5.hashStr(mdBlock.source),
         value: null,
         errors: []
       }
