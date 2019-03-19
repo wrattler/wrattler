@@ -29,7 +29,7 @@ brew install docker docker-compose
 
 If you haven't already cloned the wrattler github repository, do
 ```
-https://github.com/wrattler/wrattler.git
+git clone https://github.com/wrattler/wrattler.git
 cd wrattler
 git checkout demo-mar-2019
 ```
