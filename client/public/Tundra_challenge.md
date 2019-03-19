@@ -1,7 +1,18 @@
-# Welcome to Wrattler
 ```markdown
-Tundra analysis
+# Welcome to Wrattler: Tundra traits analysis
+
+This repo contains a particular analysis of the "Tudra Traits" dataset, one of the AIDA project's "data wrangling challenges".
+The challenge is to infer from this data the extent to which climate affects shrub growth.
+Along the way, the Tundra dataset requires cleaning, filtering, and normalizing operations.
+It also needs to be joined with the temperature/precipitation datasets from the Climatic Research Unit [CRU].
+
+## Data wrangling 
+This is the original Tundra Team cleaning script, slightly modified to work in our framework.
+
+Start with the data cleaning steps (removing data from abnormal sources, renaming variables, removing un-unerstood variabes):
+
 ```
+
 
 ```r
 library(reshape2)
@@ -27,7 +38,7 @@ teamtraits.long<-within(teamtraits.long,teamtraits.long$Trait<-as.character(Trai
 # Remove seed mass data from Salix arctica Rebecca Klady because units uncertain and Papaver from me because values seem off (units problem?)
 teamtraits.long <- subset(teamtraits.long,(teamtraits.long$DataContributor=="Anne Bjorkman" & teamtraits.long$AccSpeciesName=="Papaver radicatum" & teamtraits.long$Trait=="SeedMass")==F)
 teamtraits.long <- subset(teamtraits.long,(teamtraits.long$DataContributor=="Rebecca Klady" & teamtraits.long$AccSpeciesName=="Salix arctica" & teamtraits.long$Trait=="SeedMass")==F)
-
+                                       
 # Remove SLA data from Marko's Niwot database
 teamtraits.long <- subset(teamtraits.long,(teamtraits.long$DataContributor=="Marko_Spasojevic" & teamtraits.long$Trait == "SLA")==F)
 
@@ -107,6 +118,9 @@ drops <- c("teamtraits.long")
 teamtraits.clean <- teamtraits.long %>% select(-one_of(drops))
 
 ```
+Grouping by traits (plant height and leaf area), summarise the other variables.
+
+
 ```r
 ## Step 1: individual records against the entire distribution (except plant height and leaf area)
 teamtraits.clean2 <- teamtraits.clean %>% dplyr::mutate(nrow=row_number()) %>% group_by(Trait) %>% dplyr::mutate(mean_all = round(((sum(Value) - Value)/(n()-1)),5), n_all = n(), median_all = median(Value),sd_all = sd(Value), ErrorRisk_all = round((abs(Value-mean_all)/sd_all),4),ErrorRiskMedian_all = round((abs(Value-median_all)/sd_all),4))
@@ -208,6 +222,7 @@ colnames(ttt.save)[which(colnames(ttt.save)=="Altitude")] <- "Elevation"
 
 ttt.save <- subset(ttt.save,select=c("AccSpeciesName","OriginalName","IndividualID","Latitude","Longitude","Elevation","SiteName","SubsiteName","DayOfYear","Year","DataContributor","ValueKindName","Trait","Value","Units","ErrorRisk","Comments"))
 ```
+cross-checking results against expected values from the original script. 
 
 ```r
 # 66308 observations
@@ -239,9 +254,6 @@ avg_obs_per_trait_site <- mean(obs.per.site$count) # 141.7 observations per trai
 med_obs_per_trait_site <- median(obs.per.site$count) # 36.5 median
 # 2555 max (plant height at Barrow)
 max_obs_per_trait_site <- max(obs.per.site$count) 
-```
-
-```r
 # percent of observations on individual
 observations_individual <- unique(ttt.clean$ValueKindName)
 # 4.7%
@@ -249,6 +261,13 @@ percentage_observations_individual_ <- nrow(subset(ttt.clean,ttt.clean$ValueKind
 
 ttt.save_nrow <- c(nrow(ttt.save),1)
 ttt.save_ncol <- c(ncol(ttt.save) ,1)
+
+```
+
+creating a final dataset with species that have a valid latitude, longitude, year of measurement and that are represented in more than 4 sites. 
+
+```r
+
 
 
 filtered_dataset <- subset(ttt.save,(!is.na(ttt.save$Latitude)) & (!is.na(ttt.save$Longitude)) & (!is.na(ttt.save$Year))) # keep only existing Lat and Long with a year
@@ -273,6 +292,8 @@ filtered_dataset$lat_trimmed = round(filtered_dataset$Latitude,digits=2)
 filtered_dataset$log_trimmed = round(filtered_dataset$Longitude,digits=2)
 ```
 
+
+turn latitude and longitude to indexes.
 ```r
 
 
@@ -295,7 +316,6 @@ sites_ncol2 <- c(ncol(sites) ,1)
 sites <- arrange(sites,SiteName) 
 
 # Create grid with site indexes
-# Create grid with site indexes
 index_pos <- function(n,cnt=90){ # 90 for latitude, 180 for longitude
   dec_part = n%%1
   int_part = floor(n)
@@ -310,6 +330,11 @@ sites_nrow3 <- c(nrow(sites),1)
 sites_ncol3 <- c(ncol(sites) ,1)
 
 ```
+
+Add latitude and longitude index to the final cleaned dataset. Use these indexes to link the measurements from the monthly temperature data.
+A final dataset is created containing all the needed variables for modeling: all tundra traits and the monthly temperature data in the summer (July)
+for the locations of each plant.
+
 ```r
 filtered_dataset_sites <- merge(filtered_dataset, sites, by=c("SiteName","lat_trimmed","log_trimmed"))
 
@@ -329,8 +354,9 @@ filtered_dataset_sites <- merge(filtered_dataset_sites, sites_, by=c("SiteName",
 
 filtered_dataset_sites_nrow1 <- c(nrow(filtered_dataset_sites),1) # Note this final dataset is slightly more aggressivley trimmed than in the paper!
 filtered_dataset_sites_ncol1 <- c(ncol(filtered_dataset_sites) ,1)
+
+
 ## Change commented line to use precipitation rather than temperature data
-# data_folder <- "dataset/401_PRE_monthly_1950_2015" # precipitation data
 data_folder <- "401_TMP_monthly_1950_2015" # temperature data
 myFiles <- list.files(data_folder, pattern = "*.csv") #all files starting with Climate_
 myFiles <- sort(myFiles)
@@ -398,7 +424,9 @@ n_rows_cols <- ncol(filtered_dataset_final)
 # Modelling 
 
 Once the data has been cleaned and aggregated a Bayesian model is fitted using Stan.  
+Many different models were tested, but for this notebook we used the pre-determined one found to have the best performance (stan_m3.stan).
 
+Results are visualised to the "Leaf nitrogen (N) content per leaf dry mass" trait.
 ```r
 library(rstan)
 library(loo)
@@ -446,7 +474,7 @@ Value <-test_line
 predicted_df <- data.frame(col1=tmp, col2=as.numeric((unlist(test_line))))
 colnames(predicted_df) <- c("tmp","Value")
 
-# visualize fit for  Leaf nitrogen (N) content per leaf dry mass 
+# visualize fit for  Leaf nitrogen (N) content per leaf dry mass trait
 figure3 <- ggplot(df, aes(x = tmp, y = Value)) +
   geom_point() +
   geom_smooth(data = train, method = lm, aes(color = "green")) + geom_smooth(data = test, method = lm, aes(color = "blue")) + geom_smooth(data = predicted_df, method = lm, aes(color = "red")) +
@@ -455,6 +483,7 @@ figure3 <- ggplot(df, aes(x = tmp, y = Value)) +
   scale_colour_manual(name="Legend", values=c("green", "blue", "red"), labels = c("Train", "Test", "Predicted from Test")) + guides(fill=TRUE)
 ```
 
+Visualise results for all different traits.
 ```r
 # visualize all fits
 figure2 <- ggplot(df) +
