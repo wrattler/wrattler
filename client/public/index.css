@@ -116,6 +116,10 @@ div.editor {
 	height: 50vh;
 }
 
+div.preview pre {
+	max-height:600px;
+	overflow-y:scroll;
+}
 div.output.rendered {
 	display: block;
 }

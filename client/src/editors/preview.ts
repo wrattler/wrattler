@@ -1,5 +1,6 @@
 import {h, VNode} from 'maquette';
 import * as Values from '../definitions/values'; 
+import { pushd } from 'shelljs';
 
 function printPreview(cellId:number, triggerSelect:(number) => void, selectedTable:number, cellValues:Values.ExportsValue) {
   let tableNames:Array<string> = Object.keys(cellValues.exports)
@@ -12,7 +13,7 @@ function printPreview(cellId:number, triggerSelect:(number) => void, selectedTab
 }
 
 function printCurrentValue(cellId:number, value:Values.Value, tableName:string) {
-  console.log(tableName)
+  // console.log(tableName)
   let componentRootId = "_"+cellId.toString() + "_" + tableName
   switch(value.kind)
   {
@@ -20,8 +21,8 @@ function printCurrentValue(cellId:number, value:Values.Value, tableName:string) 
       let df = <Values.DataFrame>value
       return h('div', {key: "dataframe"+componentRootId, class:'table-container'}, [printCurrentTable(df.data, tableName)]);
     case "printout":
-      let printout = <Values.Printout>value
-      return h('div', {key: "printout"+componentRootId}, [h('p', {innerHTML: printout.data.toLocaleString()}, [])])
+      let printoutValue = <Values.Printout>value
+      return h('div', {key: "printout"+componentRootId}, [h('pre', {}, [printoutValue.data])])
     case "jsoutput":
       let js = <Values.JavaScriptOutputValue>value
       let callRender = (el) => js.render(el.id);
