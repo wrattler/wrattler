@@ -29,7 +29,7 @@ var joinJs = one.concat(two).concat(three)
 Similarly, test if we can access all from Python:
 
 ```python
-joinPy = one.append(two).append(three);
+joinPy = one.append(two).append(three)
 joinPyFlip = three.append(two).append(one)
 ```
 

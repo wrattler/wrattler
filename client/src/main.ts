@@ -215,7 +215,6 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
       switch (evt.language) {
         case 'python': {
           newDocument.source = "# This is a python cell \n# py"+newId+" = pd.DataFrame({\"id\":[\""+newId+"\"], \"language\":[\"python\"]})";
-          // newDocument.source =  newDocument.source.concat('\n# nick = pd.DataFrame({"name":["Nick"], "age":[20], "mood":"tired"})')
           break;
         } 
         case 'markdown': {
@@ -224,16 +223,13 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
         } 
         case 'r': {
           newDocument.source = "# This is an R cell \n r"+newId+" <- data.frame(id = "+newId+", language =\"r\")";
-          // newDocument.source =  newDocument.source.concat('\n# camilla <- data.frame(name = "camilla", age=17, mood="apprehensive")')
           break
         }
         case 'javascript': {
           newDocument.source = "// This is a javascript cell. \n//var js"+newId+" = [{'id':"+newId+", 'language':'javascript'}]";
-          // newDocument.source =  newDocument.source.concat('\n// var may = [{"name":"may", "age":40, "mood":"terrified"}]')
           break
         } 
       }
-      console.log(newDocument)
       let lang = languagePlugins[newDocument.language];
       let newBlock = lang.parse(newDocument.source);
       let editor = lang.editor.initialize(newId, newBlock);
