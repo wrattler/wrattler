@@ -26,10 +26,6 @@ languagePlugins["javascript"] = javascriptLanguagePlugin;
 languagePlugins["python"] = new externalLanguagePlugin("python", PYTHONSERVICE_URI);
 languagePlugins["r"] = new externalLanguagePlugin("r", RSERVICE_URI);
 // languagePlugins["thegamma"] = gammaLangaugePlugin;
-<<<<<<< Updated upstream
-var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
-=======
->>>>>>> Stashed changes
 
 interface NotebookAddEvent { kind:'add', id: number, language:string }
 interface NotebookRemoveEvent { kind:'remove', id: number }
