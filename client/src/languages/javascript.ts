@@ -49,18 +49,7 @@ class JavascriptBlockKind implements Langs.Block {
     );
     // let tree = [];
 
-    let dependencies:Graph.JsExportNode[] = [];
-    let initialNode:Graph.JsCodeNode = {
-      language:"javascript", 
-      antecedents:[],
-      exportedVariables:[],
-      kind: 'code',
-      hash: <string>Md5.hashStr(source),
-      value: null,
-      source: source,
-      errors: []
-    }
-
+    let antecedents : Graph.Node[] = []
     function addAntedents(expr:ts.Node) {
       ts.forEachChild(expr, function(child) { 
         switch(child.kind) {
@@ -69,8 +58,8 @@ class JavascriptBlockKind implements Langs.Block {
             let argumentName = <string>(<ts.Identifier>child).escapedText;
             if (argumentName in scope) {
               let antecedentNode = scope[argumentName]
-              if (initialNode.antecedents.indexOf(antecedentNode) == -1)
-                initialNode.antecedents.push(antecedentNode);
+              if (antecedents.indexOf(antecedentNode) == -1)
+                antecedents.push(antecedentNode);
             }
             break;
         }
@@ -79,7 +68,20 @@ class JavascriptBlockKind implements Langs.Block {
     }
 
     addAntedents(tsSourceFile)
+    let allHash = Md5.hashStr(antecedents.map(a => a.hash).join("-") + source)
+    let initialNode:Graph.JsCodeNode = {
+      language:"javascript", 
+      antecedents:antecedents,
+      exportedVariables:[],
+      kind: 'code',
+      hash: <string>allHash,
+      value: null,
+      source: source,
+      errors: []
+    }
     let cachedNode = <Graph.JsCodeNode>cache.tryFindNode(initialNode)
+
+    let dependencies:Graph.JsExportNode[] = [];
 
     function addExports(expr:ts.Node) {
       ts.forEachChild(expr, function(child) { 
@@ -92,7 +94,7 @@ class JavascriptBlockKind implements Langs.Block {
             let exportNode:Graph.JsExportNode = {
               variableName: name,
               value: null,
-              hash: <string>Md5.hashStr(name),
+              hash: <string>Md5.hashStr(allHash + name),
               language:"javascript",
               code: cachedNode, 
               kind: 'export',
