@@ -5,7 +5,10 @@ declare type NotebookState = {
   cells: Langs.BlockState[]  
   counter: number
   expandedMenu : number
+<<<<<<< HEAD
   cache: Graph.NodeCache
+=======
+>>>>>>> tp-uitweaks
 }
 
 export {NotebookState}

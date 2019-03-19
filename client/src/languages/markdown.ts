@@ -76,30 +76,22 @@ class MarkdownBlockKind implements Langs.Block {
           let ed = monaco.editor.create(el, {
             value: state.block.source,
             language: 'markdown',
-            // scrollBeyondLastLine: false,
+            scrollBeyondLastLine: false,
             theme:'vs',
+            minimap: { enabled: false },
+            overviewRulerLanes: 0,
+            lineDecorationsWidth: "0ch",
+            fontSize: 14,
+            fontFamily: 'Roboto Mono',
+            lineNumbersMinChars: 2,
+            lineHeight: 20,
+            lineNumbers: "on",
             scrollbar: {
-              // Subtle shadows to the left & top. Defaults to true.
-              useShadows: false,
-          
-              // Render vertical arrows. Defaults to false.
               verticalHasArrows: true,
-              // Render horizontal arrows. Defaults to false.
               horizontalHasArrows: true,
-          
-              // Render vertical scrollbar.
-              // Accepted values: 'auto', 'visible', 'hidden'.
-              // Defaults to 'auto'
-              vertical: 'visible',
-              // Render horizontal scrollbar.
-              // Accepted values: 'auto', 'visible', 'hidden'.
-              // Defaults to 'auto'
-              horizontal: 'visible',
-          
-              verticalScrollbarSize: 17,
-              horizontalScrollbarSize: 17,
-              arrowSize: 30
-            }
+              vertical: 'none',
+              horizontal: 'none'
+            }        
           });    
           numLines = ed['viewModel'].lines.lines.length;
   
@@ -133,7 +125,7 @@ class MarkdownBlockKind implements Langs.Block {
         }
         return h('div', {}, [
           // h('div', { style: "height:"+heightRequired+"px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
-          h('div', { style: "height:75px; padding-top: 20px; ", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
+          h('div', { id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
         ] )      
       }
     }
