@@ -179,21 +179,13 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
 
   async bind (cache:Graph.NodeCache, scope:Langs.ScopeDictionary, block: Langs.Block) : Promise<Langs.BindingResult> {
     let exBlock = <ExternalBlockKind>block
-    let hash = Md5.hashStr(exBlock.source)
-    let initialNode:Graph.ExternalCodeNode = 
-      { language:this.language, 
-        antecedents:[],
-        exportedVariables:[],
-        kind: 'code',
-        value: null,
-        hash: <string>hash,
-        source: exBlock.source,
-        errors: []}
+    let initialHash = Md5.hashStr(exBlock.source)
+    let antecedents : Graph.Node[] = []
     try {
       let url = this.serviceURI.concat("/exports")
       let body = 
         { "code": exBlock.source,
-          "hash": hash,
+          "hash": initialHash,
           "frames": Object.keys(scope) }
       let headers = {'Content-Type': 'application/json'}
       let response = await axios.post(url, body, {headers: headers});
@@ -204,11 +196,21 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           namesOfImports.push(response.data.imports[n])
           if (response.data.imports[n] in scope) {
             let antecedentNode = scope[response.data.imports[n]]
-            initialNode.antecedents.push(antecedentNode);
+            antecedents.push(antecedentNode);
           }
         }
       }
 
+      let allHash = Md5.hashStr(antecedents.map(a => a.hash).join("-") + exBlock.source)
+      let initialNode:Graph.ExternalCodeNode = 
+        { language:this.language, 
+          antecedents:antecedents,
+          exportedVariables:[],
+          kind: 'code',
+          value: null,
+          hash: <string>allHash,
+          source: exBlock.source,
+          errors: []}
       let cachedNode = <Graph.ExternalCodeNode>cache.tryFindNode(initialNode)
 
       let namesOfExports:Array<string> = []
@@ -221,7 +223,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
               value: null,
               language:this.language,
               code: cachedNode, 
-              hash: <string>Md5.hashStr(response.data.exports[n]),
+              hash: <string>Md5.hashStr(allHash + response.data.exports[n]),
               kind: 'export',
               antecedents:[cachedNode],
               errors: []
@@ -233,14 +235,21 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       }
 
 
-      Log.trace("binding", "Binding external - hash: %s, dependencies: %s", hash, cachedNode.antecedents.map(n => n.hash))
+      Log.trace("binding", "Binding external - hash: %s, dependencies: %s", allHash, cachedNode.antecedents.map(n => n.hash))
       return {code: cachedNode, exports: dependencies};
     }
     catch (error) {
       console.error(error);
-      initialNode.errors.push(error)
-      return {code: initialNode, exports: []};
-      // throw error
+      let code = 
+        { language:this.language, 
+          antecedents:antecedents,
+          exportedVariables:[],
+          kind: 'code',
+          value: null,
+          hash: <string>Md5.hashStr(exBlock.source),
+          source: exBlock.source,
+          errors: [error]}
+      return {code: code, exports: []};
     }
   }
 
