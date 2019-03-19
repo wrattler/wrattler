@@ -104,6 +104,8 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         var results : Values.ExportsValue = { kind:"exports", exports:{} }
         
         if (response.data.output.toString().length > 0){
+          console.log(response.data.output)
+          console.log(response.data)
           let printouts : Values.Printout = { kind:"printout", data:response.data.output.toString() }
           results.exports['console'] = printouts
         }
@@ -113,7 +115,6 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           if (Array.isArray(exp.data))
             results.exports[df.name] = exp
         }
-        console.log(response.data)
         let figureIndex = 0;
         for(let df of response.data.figures) {
           let raw = await getValue(df.url)
