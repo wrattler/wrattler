@@ -5,6 +5,7 @@ import * as Langs from '../definitions/languages';
 import * as Graph from '../definitions/graph'; 
 import { Value } from '../definitions/values';
 import { Statement } from 'typescript';
+import { Md5 } from 'ts-md5';
 
 // ------------------------------------------------------------------------------------------------
 // Markdown plugin
@@ -144,10 +145,13 @@ class MarkdownBlockKind implements Langs.Block {
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
     },
-    bind: async (code: Langs.Block) : Promise<Langs.BindingResult> => {
+    bind: async (cache, scope, block: Langs.Block) : Promise<Langs.BindingResult> => {
+      let mdBlock:MarkdownBlockKind = <MarkdownBlockKind> block
+      console.log(block)
       let node:Graph.Node = {
         language:"markdown", 
         antecedents:[],
+        hash:<string>Md5.hashStr(mdBlock.source),
         value: null,
         errors: []
       }

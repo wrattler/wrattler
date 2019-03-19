@@ -41,65 +41,74 @@ class JavascriptBlockKind implements Langs.Block {
     tabID: number
   }
   
-  function getCodeExports(scopeDictionary: {}, source: string): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}> {
-    return new Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>(resolve => {
-      let tsSourceFile = ts.createSourceFile(
-        __filename,
-        source,
-        ts.ScriptTarget.Latest
-      );
-      // let tree = [];
+  function getCodeExports(cache:Graph.NodeCache, scope: Langs.ScopeDictionary, source: string): {code: Graph.Node, exports: Graph.ExportNode[]} {
+    let tsSourceFile = ts.createSourceFile(
+      __filename,
+      source,
+      ts.ScriptTarget.Latest
+    );
+    // let tree = [];
 
-      let dependencies:Graph.JsExportNode[] = [];
-      let node:Graph.JsCodeNode = {
-        language:"javascript", 
-        antecedents:[],
-        exportedVariables:[],
-        kind: 'code',
-        value: null,
-        source: source,
-        errors: []
-      }
+    let dependencies:Graph.JsExportNode[] = [];
+    let initialNode:Graph.JsCodeNode = {
+      language:"javascript", 
+      antecedents:[],
+      exportedVariables:[],
+      kind: 'code',
+      hash: <string>Md5.hashStr(source),
+      value: null,
+      source: source,
+      errors: []
+    }
 
-      let walk = function (expr) {
-        ts.forEachChild(expr, function(child) 
-        { 
-          switch(child.kind) {
-            case ts.SyntaxKind.VariableStatement:
-              let decl = (<ts.VariableStatement>child).declarationList.declarations[0].name
-              // REVIEW: This could fail if 'decl' is 'BindingPattern' and not 'Identifier'
-              // REVIEW: Also, TypeScript uses some strange '__String' that might not be valid 'string'
-              let name = <string>(<ts.Identifier>decl).escapedText 
-              let exportNode:Graph.JsExportNode = {
-                variableName: name,
-                value: null,
-                language:"javascript",
-                code: node, 
-                kind: 'export',
-                antecedents:[node],
-                errors:[]
-                };
-              dependencies.push(exportNode);
-              node.exportedVariables.push(exportNode.variableName);
-              break;
-          
-            case ts.SyntaxKind.Identifier:
-              // REVIEW: As above, 'escapedText' is actually '__String' which might cause problems 
-              let argumentName = <string>(<ts.Identifier>child).escapedText;
-              if (argumentName in scopeDictionary) {
-                let antecedentNode = scopeDictionary[argumentName]
-                if (node.antecedents.indexOf(antecedentNode) == -1)
-                  node.antecedents.push(antecedentNode);
-              }
-              break;
-          }
-          walk(child)
-        })
-      }
+    function addAntedents(expr:ts.Node) {
+      ts.forEachChild(expr, function(child) { 
+        switch(child.kind) {
+          case ts.SyntaxKind.Identifier:
+            // REVIEW: As above, 'escapedText' is actually '__String' which might cause problems 
+            let argumentName = <string>(<ts.Identifier>child).escapedText;
+            if (argumentName in scope) {
+              let antecedentNode = scope[argumentName]
+              if (initialNode.antecedents.indexOf(antecedentNode) == -1)
+                initialNode.antecedents.push(antecedentNode);
+            }
+            break;
+        }
+        addAntedents(child)
+      })
+    }
 
-      walk(tsSourceFile);
-      resolve({code: node, exports: dependencies});
-    });
+    addAntedents(tsSourceFile)
+    let cachedNode = <Graph.JsCodeNode>cache.tryFindNode(initialNode)
+
+    function addExports(expr:ts.Node) {
+      ts.forEachChild(expr, function(child) { 
+        switch(child.kind) {
+          case ts.SyntaxKind.VariableStatement:
+            let decl = (<ts.VariableStatement>child).declarationList.declarations[0].name
+            // REVIEW: This could fail if 'decl' is 'BindingPattern' and not 'Identifier'
+            // REVIEW: Also, TypeScript uses some strange '__String' that might not be valid 'string'
+            let name = <string>(<ts.Identifier>decl).escapedText 
+            let exportNode:Graph.JsExportNode = {
+              variableName: name,
+              value: null,
+              hash: <string>Md5.hashStr(name),
+              language:"javascript",
+              code: cachedNode, 
+              kind: 'export',
+              antecedents:[cachedNode],
+              errors:[]
+              };
+            let cachedExportNode = <Graph.JsExportNode>cache.tryFindNode(exportNode)
+            dependencies.push(cachedExportNode);
+            cachedNode.exportedVariables.push(cachedExportNode.variableName);
+            break;
+        }
+        addExports(child)
+      })
+    }
+    addExports(tsSourceFile)
+    return {code: cachedNode, exports: dependencies};
   }
   
   const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
@@ -205,9 +214,9 @@ class JavascriptBlockKind implements Langs.Block {
     parse: (code:string) => {
       return new JavascriptBlockKind(code);
     },
-    bind: (scopeDictionary: {}, block: Langs.Block) => {
+    bind: async (cache, scope, block: Langs.Block) => {
       let jsBlock = <JavascriptBlockKind>block
-      return getCodeExports(scopeDictionary, jsBlock.source);
+      return getCodeExports(cache, scope, jsBlock.source);
     },
     save: (block:Langs.Block) : string => {
       let jsBlock:JavascriptBlockKind = <JavascriptBlockKind> block
