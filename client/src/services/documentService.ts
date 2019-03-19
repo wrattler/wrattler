@@ -69,7 +69,7 @@ async function getNamedDocument(): Promise<DocumentElement[]> {
       return response.data
     }
 
-    let sourceFile = ""
+    let sourceFile = "index"
     if (window.location.search.slice(1).length > 0){
       sourceFile = window.location.search.slice(1)
     }
