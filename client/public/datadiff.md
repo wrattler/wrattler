@@ -8,6 +8,7 @@ First, we do a small amount of preliminary data formatting, so that numeric colu
 
 ```r
 library(tibble)
+library(datadiff)
 
 bb2013 <- broadband2013
 bb2014 <- broadband2014
@@ -16,15 +17,15 @@ stripnn <- function(x) { gsub("[^0-9\\.]", "", x) }
 
 bb2013[["ID"]][bb2013[["ID"]] == "FTTC"] <- NA
 bb2013$ID <- as.integer(bb2013$ID)
-bb2013[["Headline.speed"]] <- 
+bb2013[["Headline.speed"]] <-
   as.integer(stripnn(bb2013[["Headline.speed"]]))
-bb2013[["Packet.loss....24.hour"]] <- 
+bb2013[["Packet.loss....24.hour"]] <-
   as.numeric(stripnn(bb2013[["Packet.loss....24.hour"]]))
-bb2013[["Packet.loss....8.10pm.weekday"]] <- 
+bb2013[["Packet.loss....8.10pm.weekday"]] <-
   as.numeric(stripnn(bb2013[["Packet.loss....8.10pm.weekday"]]))
 ```
 
-Now we can invoke datadiff! Calling `ddiff(bb2014, bb2013)` gives you a patch that describes how to turn data in 
+Now we can invoke datadiff! Calling `ddiff(bb2014, bb2013)` gives you a patch that describes how to turn data in
 `bb2014` into the same format as the one used by `bb2013`. We can print the patch to see what datadiff inferred
 and apply the patch to get a reformatted dataframe:
 
