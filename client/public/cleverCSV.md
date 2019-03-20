@@ -1,35 +1,52 @@
-# Welcome to the Wrattler CleverCSV demo
-Demonstrating the use of the CleverCSV tool, in particular in cases where the sniffer from the
-standard python csv module doesn't work well.
+# Better CSV parsing with CleverCSV
 
+This notebook shows the use of the CleverCSV tool, which is a replacement for the standard
+Python `csv` module. In this notebook, we look at one sample case where the sniffer from the
+standard python csv module doesn't work well but CleverCSV can correclty infer the structure
+of the CSV file.
+
+First, we load a sample CSV file that uses semicolon as a deliminter:
 
 ```python
-
-import csv # standard python csv module
-import ccsv # CleverCSV
 import requests
 
-## get a csv file that uses semicolon as a delimiter
+demo = requests.get("https://raw.githubusercontent.com/grezesf/" + 
+  "Research/17b1e829d1d4b8954661270bd8b099e74bb45ce7/Reservoirs/" + 
+  "Task0_Replication/code/preprocessing/factors.csv")
 
-r = requests.get("https://raw.githubusercontent.com/grezesf/Research/17b1e829d1d4b8954661270bd8b099e74bb45ce7/Reservoirs/Task0_Replication/code/preprocessing/factors.csv")
-content = r.content.decode("utf-8")
+print(demo.content.decode("utf-8"))
+```
 
-## try the python sniffer
-print("\n =============== \n Running Python CSV sniffer \n")
+Now, we try parsing the CSV file using the standard Python CSV parser from the `csv` module.
+This fails with the `csv.Error` exception:
+
+```python
+import csv
+
+content1 = demo.values[0][0]
+dialect1 = ""
+
 try:
-    dialect = csv.Sniffer().sniff(content)
-    print("CSV sniffer detected: delimiter = %r, quotechar = %r" % (dialect.delimiter,
-    	       	       		 	     	 	            dialect.quotechar))
+  dialect1 = csv.Sniffer().sniff(content1)
+  print("CSV sniffer detected: delimiter = %r, quotechar = %r" 
+    % (dialect1.delimiter, dialect1.quotechar))
 except csv.Error:
-    print("No result from Python CSV sniffer")
+  print("No result from Python CSV sniffer")
+```
 
-## now try the CleverCSV sniffer
-print("\n =============== \n Running CleverCSV sniffer \n")
+Next, we try parsing the CSV file using the CleverCSV parser. Note that the code is exactly the
+same - we just need to replace `csv` with `ccsv`!
+
+```python
+import ccsv
+
+content2 = demo.values[0][0]
+dialect2 = ""
+
 try:
-    dialect = ccsv.Sniffer().sniff(content, verbose=True)
-    print("CleverCSV detected: delimiter = %r, quotechar = %r" % (dialect.delimiter,
-    		                                                  dialect.quotechar))
+  dialect2 = ccsv.Sniffer().sniff(content2, verbose=True)
+  print("CleverCSV detected: delimiter = %r, quotechar = %r" 
+    % (dialect2.delimiter, dialect2.quotechar))
 except ccsv.Error:
-    print("No result from CleverCSV sniffer")
-
+  print("No result from CleverCSV sniffer")
 ```
