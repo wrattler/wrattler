@@ -45,7 +45,7 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
   while(res = regex.exec(paragraph)) {
     let start = res.index;
     let end = res.index+res[0].length;
-    if (currentPos < start) {
+    if (currentPos < start && paragraph.substring(currentPos, start).trim() != "") {
       documents.push({language: "markdown", source: paragraph.substring(currentPos, start)})
     }
     let cell = paragraph.substring(start, end);
@@ -55,7 +55,7 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
     currentPos = end
   }
 
-  if (currentPos < paragraph.length-1) {
+  if (currentPos < paragraph.length-1 && paragraph.substring(currentPos).trim() != "") {
     documents.push({language: "markdown", source: paragraph.substring(currentPos)})
   }
   return documents;

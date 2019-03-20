@@ -150,7 +150,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         }
         let src = externalNode.source
         let hash = Md5.hashStr(src)
-        let body = {"code": src,
+        let body = {"code": src.replace(/\r/g,'\n'),
           "hash": hash,
           "frames": importedFrames}
         return await getEval(body, this.serviceURI);
@@ -185,7 +185,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     try {
       let url = this.serviceURI.concat("/exports")
       let body = 
-        { "code": exBlock.source,
+        { "code": exBlock.source.replace(/\r/g,'\n'),
           "hash": initialHash,
           "frames": Object.keys(scope) }
       let headers = {'Content-Type': 'application/json'}

@@ -178,13 +178,14 @@ class JavascriptBlockKind implements Langs.Block {
 
       switch(jsnode.kind) {
         case 'code':
-          let returnArgs = "{";
+          let returnArgs = "var __res = {};\n";
           let evalCode = "";
           let jsCodeNode = <Graph.JsCodeNode>node
           for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
-            returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
+            var v = jsCodeNode.exportedVariables[e];
+            returnArgs = returnArgs.concat("if (typeof(VAR)!='undefined') __res.VAR = VAR;\n".replace(/VAR/g, v));
           }
-          returnArgs = returnArgs.concat("}")
+          returnArgs = returnArgs.concat("return __res;")
           let importedVars = "";
           var argDictionary:{[key: string]: string} = {}
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
@@ -196,7 +197,7 @@ class JavascriptBlockKind implements Langs.Block {
           var addOutput = function(f) {
             outputs.push(f)
           }
-          evalCode = "(function f(addOutput, args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n})"
+          evalCode = "(function f(addOutput, args) {\n\t " + importedVars + "\n" + jsCodeNode.source + "\n" + returnArgs + "\n})"
           let values : Values.ExportsValue = eval(evalCode)(addOutput, argDictionary);
           let exports = await putValues(values)
           for(let i = 0; i < outputs.length; i++) {
