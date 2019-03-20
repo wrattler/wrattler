@@ -3,10 +3,15 @@
 The use cases should be ran via docker (see Running_Wrattler_via_Docker.md for instructions about 
 setting up docker for Wrattler).
 
+Some of the samples used in these challenges are confidential. Before attempting to run the challenges you have to
+request access to the data. For more information contact the AIDA team. 
+
 
 ## Run HES challenge on Wrattler
 
-The HES challenge uses the python service. All input datasets used in this challenge should be copied to: `server/python`:
+The HES challenge uses the python service. All input datasets used in this challenge should be copied to: `server/python`.
+
+These are the samples needed to run this challenge:
     
        * "csv/small/appliance_type_codes.csv"
        * "csv/small/appliance_types.csv"
@@ -23,12 +28,14 @@ docker-compose build
 docker-compose up
 ``` 
 
-The client should be visible in your browser by typing ```http://0.0.0.0:8080/?use-cases/HES_challenge``` 
+The client should be visible in your browser by typing ```http://0.0.0.0:8080/?HES_challenge``` 
 in the address bar.
 
 ## Run Tundra challenge on Wrattler
 
 The Tundra challenge uses the R service. All input datasets used in this challenge should be copied to: `server/R`:
+
+This is the sample needed to run this challenge:
     
        * teamtraits_AllTraits_AllObs_WideFormat.RData
        
@@ -42,7 +49,7 @@ docker-compose build
 docker-compose up
 ``` 
 
-The client should be visible in your browser by typing ```http://0.0.0.0:8080/?use-cases/Tundra_challenge``` 
+The client should be visible in your browser by typing ```http://0.0.0.0:8080/?Tundra_challenge``` 
 in the address bar.
 
 ## Run Clean EHR challenge on Wrattler
@@ -52,6 +59,8 @@ service where they are going to be read from.
  
 tn this case the data file is read from in the R code and should be copied to `server/R`:
  
+This is the sample needed to run this challenge:
+ 
     *  "anon_public_d.RData"
   
 After copying the files in the server, just run and build the containers with
@@ -60,5 +69,5 @@ docker-compose build
 docker-compose up
 ``` 
 
-The client should be visible in your browser by typing ```http://0.0.0.0:8080/?use-cases/CleanEHR_challenge``` 
+The client should be visible in your browser by typing ```http://0.0.0.0:8080/?CleanEHR_challenge``` 
 in the address bar.
