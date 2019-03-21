@@ -1,7 +1,43 @@
-FROM nbarlow/wrattler_python_service:latest
+FROM ubuntu:18.04
+
+### get pip git etc
+
+RUN apt-get update; apt-get install -y python3
+RUN apt-get update; apt-get install -y python3-pip
+RUN apt-get update; apt-get install -y locales
+RUN apt-get update; apt-get install -y libcairo2-dev
+RUN apt-get update; apt-get install -y git
+
+# Set the locale
+RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
+    locale-gen
+ENV LANG en_GB.UTF-8
+ENV LANGUAGE en_GB:en
+ENV LC_ALL en_GB.UTF-8
+
+
+RUN pip3 install  flask
+RUN pip3 install flask_restful
+RUN pip3 install  flask_cors
+RUN pip3 install requests
+RUN pip3 install pandas
+RUN pip3 install pytest
+RUN pip3 install scikit-learn
+RUN pip3 install matplotlib
+RUN pip3 install pycairo
+RUN pip3 install sklearn
+RUN pip3 install pandas
+RUN pip3 install numpy
+RUN pip3 install poetry
+RUN apt-get install -y python3-venv
+
+## install the CleverCSV AI helper
+RUN git clone https://github.com/alan-turing-institute/CleverCSV
+RUN cd CleverCSV/python; poetry install; pip3 install .
 
 ADD . /app
 WORKDIR /app
+
 
 ENV FLASK_APP app.py
 EXPOSE 7101
