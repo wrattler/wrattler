@@ -25,6 +25,7 @@ languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
 languagePlugins["python"] = new externalLanguagePlugin("python", PYTHONSERVICE_URI);
 languagePlugins["r"] = new externalLanguagePlugin("r", RSERVICE_URI);
+languagePlugins["racket"] = new externalLanguagePlugin("racket", RACKETSERVICE_URI);
 // languagePlugins["thegamma"] = gammaLangaugePlugin;
 
 interface NotebookAddEvent { kind:'add', id: number, language:string }
@@ -227,11 +228,15 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
           // newDocument.source =  newDocument.source.concat('\n# camilla <- data.frame(name = "camilla", age=17, mood="apprehensive")')
           break
         }
+        case 'racket': {
+          newDocument.source = ";; This is a Racket cell \n";
+          break
+        }
         case 'javascript': {
           newDocument.source = "// This is a javascript cell. \n//var js"+newId+" = [{'id':"+newId+", 'language':'javascript'}]";
           // newDocument.source =  newDocument.source.concat('\n// var may = [{"name":"may", "age":40, "mood":"terrified"}]')
           break
-        } 
+        }
       }
       console.log(newDocument)
       let lang = languagePlugins[newDocument.language];

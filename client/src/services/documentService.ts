@@ -26,7 +26,7 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
   }
 
   function getCellLanguage(codeCell: string) {
-    let listOfLanguages = ["javascript", "python", "r", "thegamma"] 
+    let listOfLanguages = ["javascript", "python", "r", "racket", "thegamma"] 
     for (var l = 0; l < listOfLanguages.length; l++) {
       let languageMarker = "```".concat(listOfLanguages[l])
       let languageMarkerBegin = codeCell.indexOf(languageMarker)
@@ -85,6 +85,7 @@ function saveDocument(state:State.NotebookState):string
   languagePlugins["javascript"] = javascriptLanguagePlugin;
   languagePlugins["python"] = new externalLanguagePlugin("python", "PYTHONSERVICE_URI");
   languagePlugins["r"] = new externalLanguagePlugin("r", "RSERVICE_URI");
+  languagePlugins["racket"] = new externalLanguagePlugin("racket", "RACKETSERVICE_URI");
   for (let c = 0; c < state.cells.length; c++){
     content = content.concat(languagePlugins[state.cells[c].editor.block.language].save(state.cells[c].editor.block))
   }
