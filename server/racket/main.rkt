@@ -5,6 +5,7 @@
 (require json
          data-frame
          syntax/strip-context
+         syntax/to-string
          net/url
          net/url-structs
          web-server/servlet
@@ -12,12 +13,14 @@
 
 ;; Provides an alternative form of #%top that doesn't error on unbound
 ;; identifiers.  Used when identifying the "imports" of a cell.
-(module undef-top racket/base
-  (define undefined 'undef)
-  (define-syntax-rule (#%top . x) '(undefined x))
-  (provide #%top undefined))
+(module undef-top racket
+  (define-for-syntax undefined 'undefined)
+  (define-syntax (#%top stx)
+    (syntax-case stx ()
+      [(_ . x) (with-syntax ([undefined undefined]) #''(undefined x))]))
+  (provide #%top))
 
-(require (only-in 'undef-top undefined))
+(require (only-in 'undef-top [#%top cell-top]))
 
 (module+ test (require rackunit))
 
@@ -43,18 +46,32 @@
 (define ((hash-keys-exactly? . ks) h)
   (equal? (list->set (hash-keys h)) (apply set ks)))
 
-(define (string->syntax str)
-  (read-syntax #f (open-input-string str)))
+(define (string->syntaxes str)
+  (parameterize ([current-input-port (open-input-string str)])
+    (for/list ([stx (in-port read-syntax)])
+      stx)))
 
 (define (id->string id)
   (symbol->string (syntax->datum id)))
 
 (define (response/json js)
-  (response/xexpr (jsexpr->string js)))
+  (response/xexpr (jsexpr->string js)
+                  #:mime-type #"text/javascript"
+                  #:headers
+                  (list (header #"Access-Control-Allow-Origin" #"*"))))
 
 (define (response/404)
   (response 404 #"File not found" (current-seconds)
             TEXT/HTML-MIME-TYPE '() void))
+
+(define (response/cors-preflight)
+  (response 200 #"OK"
+            (current-seconds) TEXT/HTML-MIME-TYPE
+            (list (header #"Access-Control-Allow-Headers" #"content-type")
+                  (header #"Access-Control-Allow-Methods"
+                          #"DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT")
+                  (header #"Access-Control-Allow-Origin" #"*"))
+            void))
 
 ;;; data-frame <-> jsexpr conversions
 ;; Try to convert data (: jsexpr?) to a data-frame, else return data
@@ -96,8 +113,7 @@
          (for/and ([row1 (apply in-data-frame/list df1 (df-series-names df1))]
                    [row2 (apply in-data-frame/list df2 (df-series-names df2))])
            (equal? row1 row2))))
-   
-  
+
   (test-case "data-frame <-> jsexpr"
     (let ([df (make-data-frame)])
       (df-add-series df (make-series "a" #:data #(1 2 3)))
@@ -133,8 +149,10 @@
 ;; See `#%top` and `undefined` from module undef-top.
 (define (unbound-ids stx)
   (define (recurse stx)
+    (define undefined (car (cell-top)))
     (syntax-case stx (undefined)
-      ['(undefined x) (list #'x)]
+      ['(undefined x) ;(eq? (syntax->datum #'maybe-undefined) undefined)
+                            (list #'x)]
       [(x . xs) (append (recurse #'x) (recurse #'xs))]
       [id '()]))
   (remove-duplicates (recurse stx) free-identifier=?))
@@ -150,24 +168,25 @@
       [(begin form ...)
        (apply append (map recurse (syntax-e #'(form ...))))]
       [_ '()]))
-  (remove-duplicates (recurse stx) free-identifier=?))
+  (remove-duplicates (apply append (map recurse stx)) free-identifier=?))
 
 (define (imports/exports payload)
   (define ns (make-base-namespace))
-  (define code-raw (string->syntax (hash-ref payload 'code)))
-
+  (define code-raw (string->syntaxes (hash-ref payload 'code)))
+  
   ;; Expand the code inside a module (so that lifted defines are
   ;; handled as we want them to be), but replace #%top so that it
   ;; doesn't cause an error on unbound identifiers and instead wraps
   ;; the id with a form that can be picked up by `unbound-ids`
   (define code-expanded
-    (with-syntax ([code-raw code-raw])
+    (with-syntax ([(code-raw ...) code-raw])
       (parameterize ([current-namespace ns])
         (expand (strip-context
                  #'(module tmp racket/base
                      (require data-frame)
-                     (require (only-in (submod "main.rkt" undef-top) #%top))
-                     code-raw))))))
+                     (require (only-in (submod wrattler-racket-service
+                                               undef-top) #%top))
+                     code-raw ...))))))
 
   (define explicit-exports (top-level-bindings code-raw ns))
   (define imports (unbound-ids code-expanded))
@@ -206,19 +225,22 @@
   (define-values (imports exports) (imports/exports payload))
   
   (define bindings
-    (for/hash ([(frame-id frame-url) frame-urls])
-      (values frame-id (jsexpr->maybe-df (retrieve-frame frame-url)))))
+    (for/hash ([frame-name-url-hash frame-urls])
+      (let ([frame-id  (hash-ref frame-name-url-hash 'name)]
+            [frame-url (hash-ref frame-name-url-hash 'url)])
+        (values (string->symbol frame-id)
+                (jsexpr->maybe-df (retrieve-frame frame-url))))))
 
   ;; Evaluate the cell, capturing the result (a hash table containing
   ;; the exports) and the console output
   (define-values (result console-output)
     (let ([ns (make-cell-namespace bindings)]
           ;; construct the code to evaluate, returning the output frames
-          [code (with-syntax ([body (string->syntax cell-contents)]
+          [code (with-syntax ([(body ...) (string->syntaxes cell-contents)]
                               [(exports ...) exports])
                   (strip-context
                    #'(begin
-                       body
+                       body ...
                        (make-hash (list (cons 'exports exports) ...)))))])
       
       (define console (open-output-string))
@@ -229,7 +251,7 @@
   
   ;; Write values to the data store
   (define output-frame-urls
-    (for/fold ([acc (hash)])
+    (for/fold ([acc '()])
               ([(k v) result])
       (define val (maybe-df->jsexpr v))
       (if (void? val)
@@ -241,7 +263,7 @@
                 "Error: failed to write a data frame with ~a rows to the "
                 "data-store at ~a")
                (df-row-count v) url-str))
-            (hash-set acc k url-str)))))
+            (cons (hash 'name (symbol->string k) 'url url-str) acc)))))
   
   (hash 'output console-output
         'frames output-frame-urls
@@ -250,7 +272,7 @@
 
 (module+ test
   (define (check-imports-exports expect-imports expect-exports code-stx)
-    (let* ([code-str (~a (syntax->datum code-stx))]
+    (let* ([code-str (syntax->string code-stx)]
            [payload  (hash 'code code-str 'frames '[] 'hash "ignored")]
            [actual   (exports/jsexpr payload)]
            [actual-imports (hash-ref actual 'imports)]
@@ -261,27 +283,29 @@
                     (list->set expect-exports))))
   
   (test-case "exports"
-    (check-imports-exports '[]    '[]    #'1)
-    (check-imports-exports '[]    '["a"] #'(define a 1))
-    (check-imports-exports '["a"] '["a"] #'a)
+    (check-imports-exports '[]    '[]        #'(1))
+    (check-imports-exports '[]    '["a" "b"] #'((define a 1)
+                                                (define b 2)))
+    (check-imports-exports '["a"] '["a"]     #'(a))
     (check-imports-exports '["c" "w"] '["c" "w" "x" "a" "b"]
-                           #'(begin
-                               (define x (make-data-frame))
-                               (define-values (a b) (values 1 2))
-                               (let ([p 0]
-                                     [c c])
-                                 (define y c) w))))
+                           #'((begin
+                                (define x (make-data-frame))
+                                (define-values (a b) (values 1 2))
+                                (let ([p 0]
+                                      [c c])
+                                  (define y c) w)))))
 
   (test-case "eval" (void)) ;; TODO: tests of eval (mocking the datastore)
   )
 
-
 (define (run req)
-  (let ([post-data-json (bytes->jsexpr (request-post-data/raw req))])
-    (match (url->string (request-uri req))
-      ["/exports" (response/json (exports/jsexpr post-data-json))]
-      ["/eval"    (response/json (eval/jsexpr post-data-json))]
-      [_          (response/404)])))
+  (if (equal? (request-method req) #"OPTIONS")
+      (response/cors-preflight)
+      (let ([post-data-json (bytes->jsexpr (request-post-data/raw req))])
+        (match (url->string (request-uri req))
+          ["/exports" (response/json (exports/jsexpr post-data-json))]
+          ["/eval"    (response/json (eval/jsexpr post-data-json))]
+          [_          (response/404)]))))
 
 ;; entry point: start the server on the indicated port, using the
 ;; datastore at datastore-url (: string?)
@@ -292,4 +316,5 @@
                    #:servlet-regexp #rx""
                    #:port port
                    #:launch-browser? #f
-                   #:stateless? #t)))
+                   #:stateless? #t
+                   #:listen-ip #f)))
