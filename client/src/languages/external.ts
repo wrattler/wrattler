@@ -104,6 +104,8 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         var results : Values.ExportsValue = { kind:"exports", exports:{} }
         
         if (response.data.output.toString().length > 0){
+          console.log(response.data.output)
+          console.log(response.data)
           let printouts : Values.Printout = { kind:"printout", data:response.data.output.toString() }
           results.exports['console'] = printouts
         }
@@ -113,7 +115,6 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           if (Array.isArray(exp.data))
             results.exports[df.name] = exp
         }
-        console.log(response.data)
         let figureIndex = 0;
         for(let df of response.data.figures) {
           let raw = await getValue(df.url)
@@ -149,7 +150,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         }
         let src = externalNode.source
         let hash = Md5.hashStr(src)
-        let body = {"code": src,
+        let body = {"code": src.replace(/\r/g,'\n'),
           "hash": hash,
           "frames": importedFrames}
         return await getEval(body, this.serviceURI);
@@ -184,7 +185,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     try {
       let url = this.serviceURI.concat("/exports")
       let body = 
-        { "code": exBlock.source,
+        { "code": exBlock.source.replace(/\r/g,'\n'),
           "hash": initialHash,
           "frames": Object.keys(scope) }
       let headers = {'Content-Type': 'application/json'}

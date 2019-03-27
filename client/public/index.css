@@ -9,7 +9,7 @@ body {
 	background:#f0f0f0;
 }
 #paper {
-	margin: auto;
+	margin:0px auto 800px auto;
 	padding:0px;
 }
 div.cell {
@@ -116,6 +116,20 @@ div.editor {
 	height: 50vh;
 }
 
+button.preview-button {
+	border:solid 3px #e8e8e8;
+	background:#f4f4f4;
+	padding:4px 20px 4px 20px;
+	margin:10px 0px 0px 0px;
+	color:#808080;
+	font-size: 11pt;
+	letter-spacing:0.5px;
+	font-weight: bold;
+}
+div.preview pre {
+	max-height:600px;
+	overflow-y:scroll;
+}
 div.output.rendered {
 	display: block;
 }

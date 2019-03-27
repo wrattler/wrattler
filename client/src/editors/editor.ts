@@ -41,7 +41,7 @@ function createEditor(lang:string, source:string, cell:Langs.BlockState, context
     let lastWidth = 0
     let resizeEditor = () => {
       let lines = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF, false).split('\n').length
-      let height = lines > 4 ? lines * 20.0 : 80;
+      let height = lines * 20.0;
       let width = el.clientWidth
 
       if (height !== lastHeight || width !== lastWidth) {

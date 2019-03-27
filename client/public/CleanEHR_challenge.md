@@ -1,22 +1,45 @@
 # Welcome to Wrattler
-### This is an attempt to load an data file in R, manipulate it a bit, and output multiple (two, really) dataframes that will be used for some analysis in Python.
+## Model "time to patient death" from the Clean EHR dataset
+
+The analytical challenge we set ourselves is the somewhat artificial prediction of
+the amount of time it takes for a patient to die (in minutes), once arrived at the hospital ICU.
+
+The CleanEHR data contains a sample of anonymised medical record data from a
+number of hospitals, including demographic data, drug dosage data, and
+physiological time-series measurements. The sample used in this analysis is very small and the output of the
+analysis is just for purpose of this demo. The full dataset can be requested online. 
+
+### Data preparation on R
+
+The dataset comes as a well-formed R object, and is processed using the cleanEHR toolkit which is an R package that covers
+ the most common processing and cleaning operations for this type of data.
+ 
+For the purposes of the analytical challenge we have to process and convert some variables. More specifically, 
+time-varying and single-value fields need to be used in the same model, thus the former have been distilled into a few time-series descriptive variables 
+such as mean, standard deviation or min and max values.
+
+The pre-processing in R returns two dataframes, one containing only the demographic fields and another including the time-series descriptive fields. 
 
 ```r
-
 library(purrr)
 library(cleanEHR)
-# full dataset
 
-file <- paste(tempdir(), "/ccd.rdata", sep="")
-download.file("https://github.com/ropensci/cleanEHR/raw/master/data/sample_ccd.RData", file)
-load(file)
+# download and read full dataset
+load("anon_public_d.RData")
+dt <- ccd_demographic_table(anon_ccd, dtype=TRUE)
 
-dt <- ccd_demographic_table(ccd, dtype=TRUE)
+mean_tail_diff <- function(vector) {
+  
+  diff <- mean(vector,na.rm=TRUE) - tail(vector,n=1)
+  return (diff)
+}
+
+# get the codes of time series variables
 names_ts_variables <- c()
 counter <- 1
-for (i in 1:length(ccd@episodes)){
-  for (n in names(ccd@episodes[[i]]@data)){
-    if (length(ccd@episodes[[i]]@data[n][[1]]) == 2){ # guarantee time series
+for (i in 1:length(anon_ccd@episodes)){
+  for (n in names(anon_ccd@episodes[[i]]@data)){
+    if (length(anon_ccd@episodes[[i]]@data[n][[1]]) == 2){ # guarantee time series
       names_ts_variables[[counter]] <- n
       counter <- counter+1
     }
@@ -25,10 +48,12 @@ for (i in 1:length(ccd@episodes)){
 names_ts_variables <- sort(unique(names_ts_variables))
 short_names_ts_variables <- lapply(names_ts_variables, FUN = code2stname)
 
+# our index is NIHR_HIC_ICU_0005, corresponding to a unique (per episode/patient) admission number, or ADNO
 index_variable <- "NIHR_HIC_ICU_0005"
 # prepare lists of measurements from time series
-ts_measures <- c("mean","1st_quartile","median","3rd_quartile")
-ts_measures_funcs <- c(partial(mean,na.rm=TRUE),partial(quantile,probs=c(0.25),na.rm=TRUE),partial(quantile,probs=c(0.5),na.rm=TRUE),partial(quantile,probs=c(0.75),na.rm=TRUE))
+ts_measures <- c("mean","std","last","mean_tail_diff")
+ts_measures_funcs <- c(partial(mean,na.rm=TRUE),partial(sd),partial(tail,n=1),partial(mean_tail_diff))
+
 names_for_dts <- c("ADNO")
 for (sn in short_names_ts_variables){
   for (mes in ts_measures){
@@ -38,19 +63,33 @@ for (sn in short_names_ts_variables){
 dts <- data.frame(matrix(NA, nrow=0, ncol=length(names_for_dts)))
 names(dts) <- names_for_dts
 
-for (i in 1:length(ccd@episodes)){
-  adno <- as.numeric(ccd@episodes[[i]]@data[index_variable][[1]])
+## prepare TS dataset
+## length(anon_ccd@episodes)
+for (i in 1:length(anon_ccd@episodes)){
+  adno <- as.numeric(anon_ccd@episodes[[i]]@data[index_variable][[1]])
   measurements <- c(adno)
   for (n in names_ts_variables){
-    if (!is.null(ccd@episodes[[1]]@data[n][[1]])){
+      # Add time limit of 10 hours to measure TS data!
+      dts_episode <- anon_ccd@episodes[[i]]@data[n][[1]]
+
+      dts_episode_sub <- subset(dts_episode, dts_episode$time < 10)
+
+      values <- dts_episode_sub["item2d"][[1]]
+      
+    if (!is_empty(values)){
       for (measure in ts_measures_funcs){
-        measurements <- c(measurements,measure(as.numeric(ccd@episodes[[i]]@data[n][[1]]["item2d"][[1]]))[[1]])
+        
+        measurements <- c(measurements,measure(as.numeric(values))[[1]])
       }
-    } 
+    } else {
+      measurements <- c(measurements,rep(NA,length(ts_measures)))
+    }
   }
   dts <- rbind(dts,measurements)
+  names(dts) <- names_for_dts
 }
 ```
+
 ### Data wrangling on Python
 
 After pre-processing the data in R with the cleanEHR dedicated libraries, we move to python where we

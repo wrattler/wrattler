@@ -1,9 +1,9 @@
 import {h,VNode} from 'maquette';
-import * as Langs from '../definitions/languages'; 
-import * as Graph from '../definitions/graph'; 
-import * as Values from '../definitions/values'; 
+import * as Langs from '../definitions/languages';
+import * as Graph from '../definitions/graph';
+import * as Values from '../definitions/values';
 import {createEditor} from '../editors/editor';
-import {printPreview} from '../editors/preview'; 
+import {printPreview} from '../editors/preview';
 
 // import Plotly from 'Plotly';
 import ts, { createNoSubstitutionTemplateLiteral } from 'typescript';
@@ -17,7 +17,7 @@ declare var DATASTORE_URI: string;
 // Markdown plugin
 // ------------------------------------------------------------------------------------------------
 
-/// A class that represents a Markdown block. All blocks need to have 
+/// A class that represents a Markdown block. All blocks need to have
 /// `language` and Markdown also keeps the Markdown source we edit and render
 
 class JavascriptBlockKind implements Langs.Block {
@@ -33,14 +33,14 @@ class JavascriptBlockKind implements Langs.Block {
     index: number
   }
 
-  type JavascriptEvent = JavascriptSwitchTabEvent 
-  
+  type JavascriptEvent = JavascriptSwitchTabEvent
+
   type JavascriptState = {
     id: number
     block: JavascriptBlockKind
     tabID: number
   }
-  
+
   function getCodeExports(cache:Graph.NodeCache, scope: Langs.ScopeDictionary, source: string): {code: Graph.Node, exports: Graph.ExportNode[]} {
     let tsSourceFile = ts.createSourceFile(
       __filename,
@@ -51,10 +51,10 @@ class JavascriptBlockKind implements Langs.Block {
 
     let antecedents : Graph.Node[] = []
     function addAntedents(expr:ts.Node) {
-      ts.forEachChild(expr, function(child) { 
+      ts.forEachChild(expr, function(child) {
         switch(child.kind) {
           case ts.SyntaxKind.Identifier:
-            // REVIEW: As above, 'escapedText' is actually '__String' which might cause problems 
+            // REVIEW: As above, 'escapedText' is actually '__String' which might cause problems
             let argumentName = <string>(<ts.Identifier>child).escapedText;
             if (argumentName in scope) {
               let antecedentNode = scope[argumentName]
@@ -70,7 +70,7 @@ class JavascriptBlockKind implements Langs.Block {
     addAntedents(tsSourceFile)
     let allHash = Md5.hashStr(antecedents.map(a => a.hash).join("-") + source)
     let initialNode:Graph.JsCodeNode = {
-      language:"javascript", 
+      language:"javascript",
       antecedents:antecedents,
       exportedVariables:[],
       kind: 'code',
@@ -84,19 +84,19 @@ class JavascriptBlockKind implements Langs.Block {
     let dependencies:Graph.JsExportNode[] = [];
 
     function addExports(expr:ts.Node) {
-      ts.forEachChild(expr, function(child) { 
+      ts.forEachChild(expr, function(child) {
         switch(child.kind) {
           case ts.SyntaxKind.VariableStatement:
             let decl = (<ts.VariableStatement>child).declarationList.declarations[0].name
             // REVIEW: This could fail if 'decl' is 'BindingPattern' and not 'Identifier'
             // REVIEW: Also, TypeScript uses some strange '__String' that might not be valid 'string'
-            let name = <string>(<ts.Identifier>decl).escapedText 
+            let name = <string>(<ts.Identifier>decl).escapedText
             let exportNode:Graph.JsExportNode = {
               variableName: name,
               value: null,
               hash: <string>Md5.hashStr(allHash + name),
               language:"javascript",
-              code: cachedNode, 
+              code: cachedNode,
               kind: 'export',
               antecedents:[cachedNode],
               errors:[]
@@ -112,12 +112,12 @@ class JavascriptBlockKind implements Langs.Block {
     addExports(tsSourceFile)
     return {code: cachedNode, exports: dependencies};
   }
-  
+
   const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
-    initialize: (id:number, block:Langs.Block) => {  
+    initialize: (id:number, block:Langs.Block) => {
       return { id: id, block: <JavascriptBlockKind>block, tabID:0}
     },
-  
+
     update: (state:JavascriptState, event:JavascriptEvent) => {
       switch(event.kind) {
         case 'switchtab':
@@ -125,9 +125,9 @@ class JavascriptBlockKind implements Langs.Block {
           return { id: state.id, block: state.block, tabID: event.index }
         }
       }
-      return state  
+      return state
     },
-    
+
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
       let previewButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell) }, ["Evaluate"])
       let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
@@ -140,7 +140,7 @@ class JavascriptBlockKind implements Langs.Block {
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
     editor: javascriptEditor,
- 
+
     evaluate: async (node:Graph.Node) : Promise<Langs.EvaluationResult> => {
       let jsnode = <Graph.JsNode>node
 
@@ -177,14 +177,15 @@ class JavascriptBlockKind implements Langs.Block {
       }
 
       switch(jsnode.kind) {
-        case 'code': 
-          let returnArgs = "{";
+        case 'code':
+          let returnArgs = "var __res = {};\n";
           let evalCode = "";
           let jsCodeNode = <Graph.JsCodeNode>node
           for (var e = 0; e < jsCodeNode.exportedVariables.length; e++) {
-            returnArgs= returnArgs.concat(jsCodeNode.exportedVariables[e]+":"+jsCodeNode.exportedVariables[e]+",");
+            var v = jsCodeNode.exportedVariables[e];
+            returnArgs = returnArgs.concat("if (typeof(VAR)!='undefined') __res.VAR = VAR;\n".replace(/VAR/g, v));
           }
-          returnArgs = returnArgs.concat("}")
+          returnArgs = returnArgs.concat("return __res;")
           let importedVars = "";
           var argDictionary:{[key: string]: string} = {}
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
@@ -193,10 +194,10 @@ class JavascriptBlockKind implements Langs.Block {
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
           var outputs : ((id:string) => void)[] = [];
-          var addOutput = function(f) { 
+          var addOutput = function(f) {
             outputs.push(f)
           }
-          evalCode = "(function f(addOutput, args) {\n\t "+ importedVars + "\n"+jsCodeNode.source +"\n\t return "+returnArgs+"\n})"
+          evalCode = "(function f(addOutput, args) {\n\t " + importedVars + "\n" + jsCodeNode.source + "\n" + returnArgs + "\n})"
           let values : Values.ExportsValue = eval(evalCode)(addOutput, argDictionary);
           let exports = await putValues(values)
           for(let i = 0; i < outputs.length; i++) {
@@ -204,13 +205,13 @@ class JavascriptBlockKind implements Langs.Block {
             exports.exports["output" + i] = exp
           }
           // return exports
-          return {kind: 'success', value: exports} 
+          return {kind: 'success', value: exports}
         case 'export':
           let jsExportNode = <Graph.JsExportNode>node
           let exportNodeName= jsExportNode.variableName
           let exportsValue = <Values.ExportsValue>jsExportNode.code.value
           // return exportsValue.exports[exportNodeName]
-          return {kind: 'success', value: exportsValue.exports[exportNodeName]} 
+          return {kind: 'success', value: exportsValue.exports[exportNodeName]}
       }
     },
     parse: (code:string) => {
@@ -229,8 +230,6 @@ class JavascriptBlockKind implements Langs.Block {
         .concat("\n")
         .concat("```\n")
       return content
-      
+
     }
   }
-
-  

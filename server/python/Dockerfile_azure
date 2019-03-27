@@ -1,0 +1,6 @@
+FROM nbarlow/wrattler_python_service:latest
+
+ENV FLASK_APP app.py
+ENV DATASTORE_URI http://wrattler-datastore.azurewebsites.net:80
+EXPOSE 7101
+CMD ["python3","app.py"]
