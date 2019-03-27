@@ -50,7 +50,7 @@ RUN cd arrow/cpp && mkdir release && cd release && cmake .. cmake .. -DARROW_PAR
 RUN Rscript -e "devtools::install_github('apache/arrow/r')"
 
 RUN Rscript -e "install.packages('devtools')"
-RUN Rscript -e "devtools::install_github('alan-turing-institute/datadiff', build_vignettes=TRUE)"
+RUN Rscript -e "devtools::install_github('alan-turing-institute/datadiff')"
 
 # copy current working directory
 ADD . R_service
