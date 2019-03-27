@@ -15,19 +15,9 @@ ENV LANG en_GB.UTF-8
 ENV LANGUAGE en_GB:en
 ENV LC_ALL en_GB.UTF-8
 
-
 RUN pip3 install flask
 RUN pip3 install flask_restful
 RUN pip3 install flask_cors
 RUN pip3 install pyarrow
 RUN pip3 install azure
 RUN pip3 install tempdir
-
-
-
-ADD . /app
-WORKDIR /app
-
-ENV FLASK_APP app.py
-EXPOSE 7102
-CMD ["python3","app.py"]

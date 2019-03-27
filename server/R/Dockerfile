@@ -1,4 +1,5 @@
 FROM ubuntu:16.04
+
 RUN apt-get update; apt-get install -y libssl-dev
 # install R, and setup CRAN mirror
 RUN apt-get update; apt-get install -y software-properties-common
@@ -13,7 +14,6 @@ RUN echo "r <- getOption('repos'); r['CRAN'] <- 'http://cran.us.r-project.org'; 
 
 RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/'; apt-get update; apt-get -y install r-base; apt-get -y install r-base-dev
 
-
 # install needed R packages
 
 RUN Rscript -e "install.packages('ggplot2')"
@@ -23,13 +23,11 @@ RUN Rscript -e "install.packages('httr')"
 RUN Rscript -e "install.packages('purrr')"
 RUN Rscript -e "install.packages('testthat')"
 RUN Rscript -e "install.packages('httptest')"
-#RUN Rscript -e "install.packages('rworldmap')"
-RUN Rscript -e "install.packages('devtools')"
+
 RUN Rscript -e "install.packages('cleanEHR')"
 RUN Rscript -e "install.packages('reshape2')"
 RUN Rscript -e "install.packages('plyr')"
 RUN Rscript -e "install.packages('tidyverse')"
-RUN Rscript -e "install.packages('rworldmap')"
 RUN Rscript -e "install.packages('lattice')"
 RUN Rscript -e "install.packages('gridExtra')"
 RUN Rscript -e "install.packages('dplyr')"
@@ -49,15 +47,16 @@ RUN apt-get update; apt-get install -y flex bison
 RUN apt-get install -y libboost-all-dev
 RUN git clone https://github.com/apache/arrow.git
 RUN cd arrow/cpp && mkdir release && cd release && cmake .. cmake .. -DARROW_PARQUET=ON -DCMAKE_BUILD_TYPE=Release -DARROW_BOOST_USE_SHARED:BOOL=On && make install
-#
 RUN Rscript -e "devtools::install_github('apache/arrow/r')"
-#
-## copy current working directory
-## copy this package into the image and create directories for input and output
+
+RUN Rscript -e "install.packages('devtools')"
+RUN Rscript -e "devtools::install_github('alan-turing-institute/datadiff', build_vignettes=TRUE)"
+
+# copy current working directory
 ADD . R_service
 WORKDIR R_service
-#
-#
+
+# expose the port and start running the Jug http server.
 EXPOSE 7103
-#
+
 CMD ["Rscript", "app.R"]

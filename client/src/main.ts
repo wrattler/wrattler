@@ -1,15 +1,17 @@
 /** @hidden */
 
 /** This comment is needed so that TypeDoc parses the above one correctly */
-import {h,createProjector,VNode} from 'maquette'
+import {h,createProjector} from 'maquette'
 import { Log } from "./common/log"
+import * as State from './definitions/state'
 import * as Langs from './definitions/languages'
 import * as Graph from './definitions/graph'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
 import { externalLanguagePlugin } from './languages/external'
 // import { gammaLangaugePlugin } from "./languages/gamma/plugin"
-import { getNamedDocument, getDocument, DocumentElement } from './services/documentService'
+import { getNamedDocument, getDocument, DocumentElement, saveDocument } from './services/documentService'
+import { stat } from 'fs';
 
 declare var PYTHONSERVICE_URI: string;
 declare var RSERVICE_URI: string;
@@ -18,88 +20,58 @@ declare var RSERVICE_URI: string;
 // Main notebook rendering code
 // ------------------------------------------------------------------------------------------------
 
-
-
 var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
 languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
 languagePlugins["python"] = new externalLanguagePlugin("python", PYTHONSERVICE_URI);
 languagePlugins["r"] = new externalLanguagePlugin("r", RSERVICE_URI);
 // languagePlugins["thegamma"] = gammaLangaugePlugin;
-var scopeDictionary : { [variableName: string]: Graph.ExportNode} = { };
 
-interface NotebookAddEvent { kind:'add', id: number }
+interface NotebookAddEvent { kind:'add', id: number, language:string }
+interface NotebookToggleAddEvent { kind:'toggleadd', id: number }
 interface NotebookRemoveEvent { kind:'remove', id: number }
 interface NotebookBlockEvent { kind:'block', id:number, event:any }
 interface NotebookRefreshEvent { kind:'refresh' }
-// interface NotebookSourceChange { kind:'sourceChange' }
 interface NotebookSourceChange { kind:'rebind', block: Langs.BlockState, newSource: string}
-type NotebookEvent = NotebookAddEvent | NotebookRemoveEvent | NotebookBlockEvent | NotebookRefreshEvent | NotebookSourceChange
+type NotebookEvent = NotebookAddEvent | NotebookToggleAddEvent | NotebookRemoveEvent | NotebookBlockEvent | NotebookRefreshEvent | NotebookSourceChange
+let documentContent:string;
 
-type NotebookState = {
-  cells: Langs.BlockState[]
-  counter: number
-}
-
-
-function bindCell (editor:Langs.EditorState): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>{
+function bindCell (cache:Graph.NodeCache, scope:Langs.ScopeDictionary, editor:Langs.EditorState): Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>{
   let languagePlugin = languagePlugins[editor.block.language]
-  return languagePlugin.bind(scopeDictionary, editor.block);
+  return languagePlugin.bind(cache, scope, editor.block);
 }
 
-async function bindAllCells(editors:Langs.EditorState[]) {
+
+async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[]) {
+  var scope : Langs.ScopeDictionary = { };
   var newCells : Langs.BlockState[] = []
   for (var c = 0; c < editors.length; c++) {
     let editor = editors[c]
-    let {code, exports} = await bindCell(editor);
+    let {code, exports} = await bindCell(cache, scope, editor);
     var newCell = { editor:editor, code:code, exports:exports }
     for (var e = 0; e < exports.length; e++ ) {
       let exportNode = exports[e];
-      scopeDictionary[exportNode.variableName] = exportNode;
+      scope[exportNode.variableName] = exportNode;
     }
     newCells.push(newCell)
   }
   return newCells;
 }
 
-async function rebindSubsequentCells(state:NotebookState, cell:Langs.BlockState, newSource: string) {
-  console.log("Rebinding")
-  for (var b=0; b < state.cells.length; b++) {
-    // if (state.cells[b].editor.id >= cell.editor.id) {
-      let languagePlugin = languagePlugins[state.cells[b].editor.block.language]
-      let block = state.cells[b].editor.block;
-      if (state.cells[b].editor.id == cell.editor.id) {
-        block = languagePlugin.parse(newSource);
-      }
-      let id = state.cells[b].editor.id;
-      let editor:Langs.EditorState = languagePlugin.editor.initialize(id, block);
-      var index = state.cells.indexOf(state.cells[b]);
-      for (var e = 0; e < state.cells[b].exports.length; e++) {
-        let oldExport:Graph.ExportNode = <Graph.ExportNode>state.cells[b].exports[e];
-        delete scopeDictionary[oldExport.variableName];
-      }
-      if (index !== -1) {
-        let newBlock:Langs.BlockState = {editor: editor, code: state.cells[b].code, exports: state.cells[b].exports};
-        state.cells[index] = newBlock;
-      }
-    // }
-  }
-  for (var b=0; b < state.cells.length; b++) {
-    // if (state.cells[b].editor.id >= cell.editor.id) {
-      let aCell = state.cells[b]
-      let {code, exports} = await bindCell(aCell.editor);
-      aCell.code = code
-      aCell.exports = exports
-      console.log(aCell)
-      for (var e = 0; e < exports.length; e++ ) {
-        let exportNode = exports[e];
-        scopeDictionary[exportNode.variableName] = exportNode;
-      }
-      
-    // }
-  }
-  
-  return state;
+async function updateAndBindAllCells(state:State.NotebookState, cell:Langs.BlockState, newSource: string) : Promise<State.NotebookState> {
+  Log.trace("Binding", "Begin rebinding subsequent cells %O %s", cell, newSource)
+  var index = state.counter;
+  let editors = state.cells.map(c => {
+    let lang = languagePlugins[c.editor.block.language]
+    if (c.editor.id == cell.editor.id) {
+      let block = lang.parse(newSource);
+      let editor:Langs.EditorState = lang.editor.initialize(index++, block);
+      return editor;
+    }
+    else return c.editor; 
+  });
+  let newCells = await bindAllCells(state.cache, editors);
+  return { cache:state.cache, cells:newCells, counter:index, expandedMenu:state.expandedMenu };
 }
 
 async function evaluate(node:Graph.Node) {
@@ -123,8 +95,7 @@ async function evaluate(node:Graph.Node) {
 
 }
 
-function render(trigger:(NotebookEvent) => void, state:NotebookState) {
-
+function render(trigger:(evt:NotebookEvent) => void, state:State.NotebookState) {
   let nodes = state.cells.map(cell => {
     // The `context` object is passed to the render function. The `trigger` method
     // of the object can be used to trigger events that cause a state update.
@@ -139,22 +110,63 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
 
       },
 
-      // sourceChange
-      // rebind all blocks after this one
       rebindSubsequent: (block:Langs.BlockState, newSource: string) => {
         trigger({kind: 'rebind', block: block, newSource: newSource})
       }
     }
 
     let plugin = languagePlugins[cell.editor.block.language]
-    // let vnode = plugin.editor.render(state.editor, context)
-    let vnode = plugin.editor.render(cell, cell.editor, context)
-    let c_language = h('p', {style: 'float:left'}, [cell.editor.block.language] )
-    let c_add = h('i', {id:'add_'+cell.editor.id, class: 'fas fa-plus control', onclick:()=>trigger({kind:'add', id:cell.editor.id})});
-    let c_delete = h('i', {id:'remove_'+cell.editor.id, class: 'far fa-trash-alt control', onclick:()=>trigger({kind:'remove', id:cell.editor.id})});
-    let controls = h('div', {class:'controls'}, [c_language, c_add, c_delete])
-    return h('div', {class:'cell', key:cell.editor.id}, [
-        h('div', [controls]),vnode
+    let content = plugin.editor.render(cell, cell.editor, context)
+    let icon = ""
+    
+    switch (cell.editor.block.language) {
+      case 'python':
+        icon = 'fab fa-python'
+        break
+      case 'javascript':
+        icon = 'fab fa-js-square'
+        break
+      case 'r':
+        icon = 'fab fa-r-project'
+        break
+      case 'markdown':
+        icon = 'fa fa-arrow-down'
+        break
+      default:
+        icon = 'fa fa-question-circle'
+        break
+    }
+
+    let icons = h('div', {class:'icons'}, [
+      h('i', {id:'cellIcon_'+cell.editor.id, class: icon }, []),
+      h('span', {}, [cell.editor.block.language] )
+    ])
+
+    let langs = Object.keys(languagePlugins).map(lang =>
+        h('a', {
+            key:"add-" + lang, 
+            onclick:()=>trigger({kind:'add', id:cell.editor.id, language:lang})},
+          [ h('i', {'class':'fa fa-plus'}), lang ]))
+      .concat(
+        h('a', {
+            key:"cancel",
+            onclick:()=>trigger({kind:'toggleadd', id:-1})},
+          [h('i', {'class':'fa fa-times'}), "cancel"]))
+
+    let cmds = [
+      h('a', {key:"add", onclick:()=>trigger({kind:'toggleadd', id:cell.editor.id})},[h('i', {'class':'fa fa-plus'}), "add below"]),
+      h('a', {key:"remove", onclick:()=>trigger({kind:'remove', id:cell.editor.id})},[h('i', {'class':'fa fa-times'}), "remove this"])      
+    ]
+
+    let tools = state.expandedMenu == cell.editor.id ? langs : cmds;
+    let controls = h('div', {class:'controls'}, tools)
+
+    let controlsBar = h('div', {class:'controls-bar'}, [controls])
+    let iconsBar = h('div', {class:'icons-bar'}, [icons])
+    let contentBar = h('div', {class:'content-bar'}, [content])
+    let langIndex = Object.keys(languagePlugins).indexOf(cell.editor.block.language) % 5;
+    return h('div', {class:'cell cell-c' + langIndex, key:cell.editor.id}, [
+        iconsBar, contentBar, controlsBar
       ]
     );
   });
@@ -162,15 +174,15 @@ function render(trigger:(NotebookEvent) => void, state:NotebookState) {
   return h('div', {class:'container-fluid', id:'paper'}, [nodes])
 }
 
-async function update(state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
-  function spliceCell (cells:Langs.BlockState[], newCell: Langs.BlockState, idOfAboveBlock: number) {
-    return cells.map (cell =>
+async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<State.NotebookState> {
+  function spliceEditor (editors:Langs.EditorState[], newEditor: Langs.EditorState, idOfAboveBlock: number) {
+    return editors.map (editor =>
       {
-        if (cell.editor.id === idOfAboveBlock) {
-          return [cell, newCell];
+        if (editor.id === idOfAboveBlock) {
+          return [editor, newEditor];
         }
         else {
-          return [cell]
+          return [editor]
         }
       }).reduce ((a,b)=> a.concat(b));
   }
@@ -185,50 +197,58 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
         }
       }).reduce ((a,b)=> a.concat(b));
   }
-
-  // console.log(state);
   switch(evt.kind) {
-
     case 'block': {
-      let newCells = state.cells.map(state => {
-        if (state.editor.id != evt.id)
-          return state
-        else
-        {
-          return {
-            editor: languagePlugins[state.editor.block.language].editor.update(state.editor, evt.event) ,
-            code: state.code,
-            exports: state.exports
-          };
-        }
-      })
-      return { counter: state.counter, cells: newCells };
+      let newCells = state.cells.map(state => 
+        (state.editor.id != evt.id) ? state :
+          { editor: languagePlugins[state.editor.block.language].editor.update(state.editor, evt.event) ,
+            code: state.code, exports: state.exports })
+      return { cache:state.cache, counter: state.counter, cells: newCells, expandedMenu: state.expandedMenu };
     }
-    case 'add': {
 
+    case 'toggleadd':
+      return { cache: state.cache, counter: state.counter, cells: state.cells, expandedMenu: evt.id };
+
+    case 'add': {
       let newId = state.counter + 1;
-      let newDocument = { "language": "python",
-                          "source": "var z = "+newId};
-      let newPlugin = languagePlugins[newDocument.language];
-      let newBlock = newPlugin.parse(newDocument.source);
-      let editor:Langs.EditorState = newPlugin.editor.initialize(newId, newBlock);
-      let {code, exports} = await bindCell(editor);
-      let cell:Langs.BlockState = {editor: editor, code: code, exports: exports}
-      return {counter: state.counter+1, cells: spliceCell(state.cells, cell, evt.id)};
+      let newDocument = { "language": evt.language, "source": ""};
+      switch (evt.language) {
+        case 'python': {
+          newDocument.source = "# This is a python cell \n# py"+newId+" = pd.DataFrame({\"id\":[\""+newId+"\"], \"language\":[\"python\"]})";
+          break;
+        } 
+        case 'markdown': {
+          newDocument.source = "Md"+newId+": This is a markdown cell.";
+          break
+        } 
+        case 'r': {
+          newDocument.source = "# This is an R cell \n r"+newId+" <- data.frame(id = "+newId+", language =\"r\")";
+          break
+        }
+        case 'javascript': {
+          newDocument.source = "// This is a javascript cell. \n//var js"+newId+" = [{'id':"+newId+", 'language':'javascript'}]";
+          break
+        } 
+      }
+      let lang = languagePlugins[newDocument.language];
+      let newBlock = lang.parse(newDocument.source);
+      let editor = lang.editor.initialize(newId, newBlock);
+      let newEditors = spliceEditor(state.cells.map(c => c.editor), editor, evt.id)
+      let newCells = await bindAllCells(state.cache, newEditors)
+      return {cache:state.cache, counter: state.counter+1, expandedMenu:-1, cells: newCells};
     }
 
     case 'refresh':
       return state;
 
     case 'remove':
+      return {cache:state.cache, counter: state.counter,  expandedMenu:state.expandedMenu, cells: removeCell(state.cells, evt.id)};
 
-      return {counter: state.counter, cells: removeCell(state.cells, evt.id)};
-
-    case 'rebind': {
-      // console.log("Rebind in update: "+JSON.stringify(evt))
-      return await rebindSubsequentCells(state, evt.block, evt.newSource);
-    }
-
+    case 'rebind': 
+      let newState = await updateAndBindAllCells(state, evt.block, evt.newSource);
+      if ((<any>window).documentContentChanged)
+        (<any>window).documentContentChanged(saveDocument(newState))
+      return newState
   }
 }
 
@@ -254,7 +274,7 @@ function loadNotebook(documents:DocumentElement[]) {
 }
 
 export async function initializeNotebook(elementID:string) {
-  console.log("wtf")
+  Log.trace('main',"Init notebook with ID: %s", elementID)
   var {counter, editors} = await loadNotebookState();
   initializeCells(elementID, counter, editors)
 };
@@ -264,13 +284,25 @@ export async function initializeNotebookJupyterLab(elementID:string, content:str
   initializeCells(elementID, counter, editors)
 };
 
+
+let nodeCache = { }
+
+let cache : Graph.NodeCache = {
+  tryFindNode : (node:Graph.Node) => {
+    let key = [ node.language, node.hash ].concat(node.antecedents.map(a => a.hash)).join(",")
+    if (typeof(nodeCache[key]) == "undefined")
+      nodeCache[key] = node;
+    return nodeCache[key];
+  }
+}
+
 async function initializeCells(elementID:string, counter: number, editors:Langs.EditorState[] ) {
   let maquetteProjector = createProjector();
   let paperElement = document.getElementById(elementID);
   if (!paperElement) throw "Missing paper element!"
 
-  var cells = await bindAllCells(editors);
-  var state = {counter:counter, cells:cells}
+  var cells = await bindAllCells(cache, editors);
+  var state = {cache:cache, counter:counter, cells:cells, expandedMenu:-1}
 
   function updateAndRender(event:NotebookEvent) {
     update(state, event).then(newState => {
@@ -283,6 +315,12 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
     render(updateAndRender, state))
 }
 
+export function exportDocumentContent():string {
+  // console.log("Exporting document content")
+  return documentContent
+}
+
+(<any>window).exportDocumentContent = exportDocumentContent;
 (<any>window).initializeNotebook = initializeNotebook;
 (<any>window).initializeNotebookJupyterLab = initializeNotebookJupyterLab;
 

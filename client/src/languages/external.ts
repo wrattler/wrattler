@@ -104,6 +104,8 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         var results : Values.ExportsValue = { kind:"exports", exports:{} }
         
         if (response.data.output.toString().length > 0){
+          console.log(response.data.output)
+          console.log(response.data)
           let printouts : Values.Printout = { kind:"printout", data:response.data.output.toString() }
           results.exports['console'] = printouts
         }
@@ -113,7 +115,6 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           if (Array.isArray(exp.data))
             results.exports[df.name] = exp
         }
-        console.log(response.data)
         let figureIndex = 0;
         for(let df of response.data.figures) {
           let raw = await getValue(df.url)
@@ -149,7 +150,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         }
         let src = externalNode.source
         let hash = Md5.hashStr(src)
-        let body = {"code": src,
+        let body = {"code": src.replace(/\r/g,'\n'),
           "hash": hash,
           "frames": importedFrames}
         return await getEval(body, this.serviceURI);
@@ -177,64 +178,92 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     return new ExternalBlockKind(code, this.language);
   }
 
-  bind (scopeDictionary: Langs.ScopeDictionary, block: Langs.Block) : Promise<Langs.BindingResult> {
+  async bind (cache:Graph.NodeCache, scope:Langs.ScopeDictionary, block: Langs.Block) : Promise<Langs.BindingResult> {
     let exBlock = <ExternalBlockKind>block
-    let dependencies:Graph.ExternalExportNode[] = [];
-    let node:Graph.ExternalCodeNode = {language:this.language, 
-      antecedents:[],
-      exportedVariables:[],
-      kind: 'code',
-      value: null,
-      source: exBlock.source,
-      errors: []}
-    let url = this.serviceURI.concat("/exports")
-    let hash = Md5.hashStr(exBlock.source)
-    let body = {"code": exBlock.source,
-      "hash": hash,
-      "frames": Object.keys(scopeDictionary)
-    }
-    let headers = {'Content-Type': 'application/json'}
-    async function getExports(language:string) {
-      try {
-        let response = await axios.post(url, body, {headers: headers});
-        let namesOfExports:Array<string> = []
-        for (var n = 0 ; n < response.data.exports.length; n++) {
-          if (namesOfExports.indexOf(response.data.exports[n]) < 0) {
-            namesOfExports.push(response.data.exports[n])
-            let exportNode:Graph.ExternalExportNode = {
-                variableName: response.data.exports[n],
-                value: null,
-                language:language,
-                code: node, 
-                kind: 'export',
-                antecedents:[node],
-                errors: []
-                };
-            dependencies.push(exportNode) 
-            node.exportedVariables.push(exportNode.variableName)
+    let initialHash = Md5.hashStr(exBlock.source)
+    let antecedents : Graph.Node[] = []
+    try {
+      let url = this.serviceURI.concat("/exports")
+      let body = 
+        { "code": exBlock.source.replace(/\r/g,'\n'),
+          "hash": initialHash,
+          "frames": Object.keys(scope) }
+      let headers = {'Content-Type': 'application/json'}
+      let response = await axios.post(url, body, {headers: headers});
+
+      let namesOfImports:Array<string> = []
+      for (var n = 0 ; n < response.data.imports.length; n++) {
+        if (namesOfImports.indexOf(response.data.imports[n]) < 0) {
+          namesOfImports.push(response.data.imports[n])
+          if (response.data.imports[n] in scope) {
+            let antecedentNode = scope[response.data.imports[n]]
+            antecedents.push(antecedentNode);
           }
         }
-        // console.log("Imp: "+JSON.stringify(response.data.imports))
-        let namesOfImports:Array<string> = []
-        for (var n = 0 ; n < response.data.imports.length; n++) {
-          if (namesOfImports.indexOf(response.data.imports[n]) < 0) {
-            namesOfImports.push(response.data.imports[n])
-            if (response.data.imports[n] in scopeDictionary) {
-              let antecedentNode = scopeDictionary[response.data.imports[n]]
-              node.antecedents.push(antecedentNode);
-            }
-          }
+      }
+
+      let allHash = Md5.hashStr(antecedents.map(a => a.hash).join("-") + exBlock.source)
+      let initialNode:Graph.ExternalCodeNode = 
+        { language:this.language, 
+          antecedents:antecedents,
+          exportedVariables:[],
+          kind: 'code',
+          value: null,
+          hash: <string>allHash,
+          source: exBlock.source,
+          errors: []}
+      let cachedNode = <Graph.ExternalCodeNode>cache.tryFindNode(initialNode)
+
+      let namesOfExports:Array<string> = []
+      let dependencies:Graph.ExternalExportNode[] = [];
+      for (var n = 0 ; n < response.data.exports.length; n++) {
+        if (namesOfExports.indexOf(response.data.exports[n]) < 0) {
+          namesOfExports.push(response.data.exports[n])
+          let exportNode:Graph.ExternalExportNode = {
+              variableName: response.data.exports[n],
+              value: null,
+              language:this.language,
+              code: cachedNode, 
+              hash: <string>Md5.hashStr(allHash + response.data.exports[n]),
+              kind: 'export',
+              antecedents:[cachedNode],
+              errors: []
+              };
+          let cachedExportNode = <Graph.ExternalExportNode>cache.tryFindNode(exportNode)
+          dependencies.push(cachedExportNode) 
+          cachedNode.exportedVariables.push(cachedExportNode.variableName)
         }
-        // console.log(node)
-        return {code: node, exports: dependencies};
       }
-      catch (error) {
-        console.error(error);
-        node.errors.push(error)
-        return {code: node, exports: []};
-        // throw error
-      }
+
+
+      Log.trace("binding", "Binding external - hash: %s, dependencies: %s", allHash, cachedNode.antecedents.map(n => n.hash))
+      return {code: cachedNode, exports: dependencies};
     }
-    return getExports(this.language)
+    catch (error) {
+      console.error(error);
+      let code = 
+        { language:this.language, 
+          antecedents:antecedents,
+          exportedVariables:[],
+          kind: 'code',
+          value: null,
+          hash: <string>Md5.hashStr(exBlock.source),
+          source: exBlock.source,
+          errors: [error]}
+      return {code: code, exports: []};
+    }
+  }
+
+  save (block:Langs.Block) : string {
+    let exBlock:ExternalBlockKind = <ExternalBlockKind> block
+    let content:string = ""
+    content = content
+      .concat("```")
+      .concat(exBlock.language)
+      .concat("\n")
+      .concat(exBlock.source)
+      .concat("\n")
+      .concat("```\n")
+    return content
   }
 }

@@ -51,12 +51,25 @@ makeURL <- function(name, hash) {
     return(paste0(Sys.getenv("DATASTORE_URI"),"/",hash,"/",name))
 }
 
+getNameAndHashFromURL <- function(url) {
+    ## split the URL by "/" and take the last two substrings to be hash and name
+    charVec <- unlist(strsplit(url, split="/", fixed=TRUE))
+    frameName <- charVec[[length(charVec)]]
+    frameHash <- charVec[[length(charVec)-1]]
+    return(c(frameName, frameHash))
+}
+
 
 readFrame <- function(url) {
     ## Read a dataframe from the datastore.
     ## use jsonlite to deserialize json into a data.frame
 
-    r<-GET(url)
+    r <- tryCatch({ GET(url) },
+        error=function(cond) {
+            frameNameAndHash <- getNameAndHashFromURL(url)
+            return(GET(makeURL(frameNameAndHash[[1]], frameNameAndHash[[2]])))
+        }
+    )
     if ( r$status != 200) {
         print("Unable to access datastore")
         return(NULL)

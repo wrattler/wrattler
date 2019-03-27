@@ -12,7 +12,7 @@ function createMonaco(el, lang, source, rebind) {
     overviewRulerLanes: 0,
     lineDecorationsWidth: "0ch",
     fontSize: 14,
-    fontFamily: 'Monaco',
+    fontFamily: 'Roboto Mono',
     lineNumbersMinChars: 2,
     lineHeight: 20,
     lineNumbers: "on",
@@ -34,14 +34,14 @@ function createMonaco(el, lang, source, rebind) {
 
 function createEditor(lang:string, source:string, cell:Langs.BlockState, context:Langs.EditorContext<any>) {
   let afterCreateHandler = (el) => { 
-    let rebind = (code) => context.rebindSubsequent(cell, code)
+    let rebind = (code:string) => context.rebindSubsequent(cell, code)
     let ed = createMonaco(el, lang, source, rebind)
 
     let lastHeight = 100;
     let lastWidth = 0
     let resizeEditor = () => {
       let lines = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF, false).split('\n').length
-      let height = lines > 4 ? lines * 20.0 : 80;
+      let height = lines * 20.0;
       let width = el.clientWidth
 
       if (height !== lastHeight || width !== lastWidth) {
@@ -55,7 +55,7 @@ function createEditor(lang:string, source:string, cell:Langs.BlockState, context
     window.addEventListener("resize", resizeEditor)
     setTimeout(resizeEditor, 100)
   }
-  return h('div', { style: "height:100px; margin:20px 0px 10px 0px;", id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
+  return h('div', { id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
 }
 
 export {

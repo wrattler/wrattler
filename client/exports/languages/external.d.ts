@@ -24,4 +24,5 @@ export declare class externalLanguagePlugin implements Langs.LanguagePlugin {
     evaluate(node: Graph.Node): Promise<Langs.EvaluationResult>;
     parse(code: string): ExternalBlockKind;
     bind(scopeDictionary: Langs.ScopeDictionary, block: Langs.Block): Promise<Langs.BindingResult>;
+    save(block: Langs.Block): string;
 }

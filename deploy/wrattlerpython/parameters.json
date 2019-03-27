@@ -1,0 +1,106 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "domainNameLabel": {
+            "value": "wrattlerpython"
+        },
+        "location": {
+            "value": "westeurope"
+        },
+        "networkInterfaceName": {
+            "value": "wrattlerpython806"
+        },
+        "networkSecurityGroupName": {
+            "value": "wrattlerpython-nsg"
+        },
+        "networkSecurityGroupRules": {
+            "value": [
+                {
+                    "name": "HTTP",
+                    "properties": {
+                        "priority": 300,
+                        "protocol": "TCP",
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "sourceAddressPrefix": "*",
+                        "sourcePortRange": "*",
+                        "destinationAddressPrefix": "*",
+                        "destinationPortRange": "80"
+                    }
+                },
+                {
+                    "name": "Rule8080",
+                    "properties": {
+                        "priority": 310,
+                        "protocol": "TCP",
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "sourceAddressPrefix": "*",
+                        "sourcePortRange": "*",
+                        "destinationAddressPrefix": "*",
+                        "destinationPortRange": "8080"
+                    }
+                },
+                {
+                    "name": "SSH",
+                    "properties": {
+                        "priority": 320,
+                        "protocol": "TCP",
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "sourceAddressPrefix": "*",
+                        "sourcePortRange": "*",
+                        "destinationAddressPrefix": "*",
+                        "destinationPortRange": "22"
+                    }
+                }
+            ]
+        },
+        "subnetName": {
+            "value": "wrattlerDemo1Subnet"
+        },
+        "virtualNetworkId": {
+            "value": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/wrattlerDemoTest/providers/Microsoft.Network/virtualNetworks/wrattlerDemo1VNET"
+        },
+        "publicIpAddressName": {
+            "value": "wrattlerpython-ip"
+        },
+        "publicIpAddressType": {
+            "value": "Dynamic"
+        },
+        "publicIpAddressSku": {
+            "value": "Basic"
+        },
+        "virtualMachineName": {
+            "value": "wrattlerpython"
+        },
+        "virtualMachineRG": {
+            "value": "wrattlerDemoTest"
+        },
+        "osDiskType": {
+            "value": "Premium_LRS"
+        },
+        "virtualMachineSize": {
+            "value": "Standard_D2s_v3"
+        },
+        "adminUsername": {
+            "value": "vm-admin"
+        },
+        "adminPublicKey": {
+            "value": "<SSH_PUBLIC_KEY>"
+        },
+        "diagnosticsStorageAccountName": {
+            "value": "wrattlerdemotestdiag995"
+        },
+        "diagnosticsStorageAccountId": {
+            "value": "Microsoft.Storage/storageAccounts/wrattlerdemotestdiag995"
+        },
+        "diagnosticsStorageAccountType": {
+            "value": "Standard_LRS"
+        },
+        "diagnosticsStorageAccountKind": {
+            "value": "Storage"
+        }
+    }
+}
