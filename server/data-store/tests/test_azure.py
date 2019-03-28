@@ -13,7 +13,8 @@ import pyarrow as pa
 
 from storage import *
 
-
+@pytest.mark.skipif("LOCAL_STORAGE" in os.environ.keys(),
+                    reason="Relies on Azure backend")
 def test_json_round_trip():
     """
     Write a simple json string and read it back
@@ -27,7 +28,8 @@ def test_json_round_trip():
     assert(result == j)
 
 
-
+@pytest.mark.skipif("LOCAL_STORAGE" in os.environ.keys(),
+                    reason="Relies on Azure backend")
 def test_arrow_round_trip():
     """
     Read an arrow file.  First create one from a pandas df

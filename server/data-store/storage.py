@@ -6,6 +6,8 @@ import os
 import json
 import pyarrow as pa
 
+from utils import filter_data
+
 if "LOCAL_STORAGE" in os.environ.keys():
     BACKEND = "Local"
 else:
@@ -30,12 +32,13 @@ class LocalStore(object):
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         if isinstance(data, pa.lib.Buffer):
             outfile = open(filename,"wb")
-        elif isinstance(data, str):
+        elif isinstance(data, str) or isinstance(data, bytes):
             outfile = open(filename,"w")
         elif isinstance(data, list) or isinstance(data, dict):
             data = json.dumps(data)
             outfile = open(filename,"w")
         else:
+
             raise RuntimeError("Unknown data type")
         outfile.write(data)
         outfile.close()
@@ -97,6 +100,11 @@ class AzureStore(object):
 
 
 class Store(object):
+    """
+    This is the class of which the app has an instance, and in turn this owns a concrete 'store' which is either
+    a backend for local storage, or one for cloud storage.
+    """
+
     def __init__(self, backend=BACKEND):
         if backend == "Local":
             self.store = LocalStore()
@@ -105,9 +113,19 @@ class Store(object):
         else:
             raise RuntimeError("Unknown storage backend requested")
 
+
     def write(self, data, frame_hash, frame_name):
+        """
+        Tell the selected backend to write the provided data as-is, to <something>/frame_hash/frame_name
+        """
         return self.store.write(data,frame_hash, frame_name)
 
-    def read(self, frame_hash, frame_name, data_format=None, rows=None):
+
+    def read(self, frame_hash, frame_name, data_format=None, nrow=None):
+        """
+        Tell the selected backend to read the file, and filter if required.
+        """
         data = self.store.read(frame_hash, frame_name, data_format)
+        if nrow:
+            data = filter_data(data, nrow)
         return data
