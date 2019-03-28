@@ -58,5 +58,4 @@ WORKDIR R_service
 
 # expose the port and start running the Jug http server.
 EXPOSE 7103
-
 CMD ["Rscript", "app.R"]
