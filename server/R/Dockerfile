@@ -47,9 +47,10 @@ RUN apt-get update; apt-get install -y flex bison
 RUN apt-get install -y libboost-all-dev
 RUN git clone https://github.com/apache/arrow.git
 RUN cd arrow/cpp && mkdir release && cd release && cmake .. cmake .. -DARROW_PARQUET=ON -DCMAKE_BUILD_TYPE=Release -DARROW_BOOST_USE_SHARED:BOOL=On && make install
+RUN Rscript -e "install.packages('devtools')"
 RUN Rscript -e "devtools::install_github('apache/arrow/r')"
 
-RUN Rscript -e "install.packages('devtools')"
+## install the datadiff package
 RUN Rscript -e "devtools::install_github('alan-turing-institute/datadiff')"
 
 # copy current working directory
