@@ -66,7 +66,7 @@ def convert_to_pandas(input_data):
     elif isinstance(input_data, list):
         return json_to_pandas(input_data)
     else:
-        raise RuntimeError("Unknown data type")
+        raise ApiException("Unknown data type - cannot convert to pandas")
 
 
 def arrow_to_pandas(arrow_buffer):
@@ -146,6 +146,11 @@ def pandas_to_json(dataframe):
     converts pandas dataframe into wrattler format, i.e. list of rows.
     If input is not a pandas dataframe, try to convert it, and return None if we can't
     """
+    if not (isinstance(dataframe, pd.DataFrame)):
+        try:
+            dataframe = pd.DataFrame(dataframe)
+        except:
+            raise ApiException("Unable to convert to pandas dataframe")
     return dataframe.to_json(orient='records')
 
 
@@ -339,7 +344,7 @@ def evaluate_code(data):
     if wrote_ok:
         return return_dict
     else:
-        raise RuntimeError("Could not write result to datastore")
+        raise ApiException("Could not write result to datastore")
 
 
 def construct_func_string(code, input_val_dict, return_vars, output_hash):
