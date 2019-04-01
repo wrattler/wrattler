@@ -1,0 +1,122 @@
+"""
+Test that we get sensible responses back when we hit the API endpoints
+"""
+
+import os
+import flask
+import pytest
+import json
+import uuid
+import pyarrow as pa
+
+from app import create_app, storage_backend
+from utils import json_to_arrow, arrow_to_json
+
+## create a test flask app
+
+@pytest.fixture(scope='module')
+def test_client():
+    flask_app = create_app("test")
+    testing_client = flask_app.test_client()
+
+    # Establish an application context before running the tests.
+    ctx = flask_app.app_context()
+    ctx.push()
+
+    yield testing_client  # this is where the testing happens!
+
+    ctx.pop()
+
+
+def test_put_json_string(test_client):
+    """
+    Test that we can put a JSON string onto the datastore
+    """
+    cell_hash = "test1"
+    frame_name = str(uuid.uuid4())
+    json_data = '[{"a":1}]'
+    response = test_client.put('/{}/{}'.format(cell_hash, frame_name),data=json_data)
+    assert response.status_code == 200
+    res = storage_backend.read(cell_hash, frame_name)
+    assert(res==json_data)
+
+
+def test_get_simple_text(test_client):
+    """
+    Write a text string by hand onto the storage backend,
+    then retrieve it with a GET request
+    """
+    cell_hash = "test2"
+    frame_name = str(uuid.uuid4())
+    test_str = "this is a test"
+    storage_backend.write(test_str, cell_hash, frame_name)
+    response = test_client.get('/{}/{}'.format(cell_hash,frame_name))
+    assert(response.status_code == 200)
+    assert(response.data.decode('utf-8') == "this is a test")
+
+
+
+def test_write_arrow(test_client):
+    """
+    Convert a simple json object to arrow, and write it to the datastore.
+    """
+    jdf = [{"a":1,"b":10},{"a":2,"b":20}]
+    buf = json_to_arrow(jdf)
+    assert(isinstance(buf, pa.lib.Buffer))
+    cell_hash = "test3"
+    frame_name = str(uuid.uuid4())
+    ## Need to call pyarrow buffer's 'to_pybytes' to get it to work with
+    ## Flask test client - don't need to do this when using requests.
+    response = test_client.put('/{}/{}'.format(cell_hash, frame_name),data=buf.to_pybytes(),
+                               content_type='application/octet-stream')
+    assert(response.status_code == 200)
+    assert(os.path.exists('{}/{}/{}'.format(storage_backend.store.dirname,
+                                            cell_hash,
+                                            frame_name)))
+    f = pa.OSFile('{}/{}/{}'.format(storage_backend.store.dirname,
+                                    cell_hash,
+                                    frame_name))
+    buf = f.read_buffer(10000)
+    new_jdf = json.loads(arrow_to_json(buf))
+    assert(new_jdf == jdf)
+
+
+
+def test_write_arrow_read_json(test_client):
+    """
+    test that we can write an arrow file and read it back as
+    JSON by specifying content-type=application/json
+    """
+    jdf = [{"a":1,"b":10},{"a":2,"b":20}]
+    buf = json_to_arrow(jdf)
+    assert(isinstance(buf, pa.lib.Buffer))
+    cell_hash = "test3"
+    frame_name = str(uuid.uuid4())
+    ## Need to call pyarrow buffer's 'to_pybytes' to get it to work with
+    ## Flask test client - don't need to do this when using requests.
+    response = test_client.put('/{}/{}'.format(cell_hash, frame_name),data=buf.to_pybytes(),
+                               content_type='application/octet-stream')
+    assert(response.status_code == 200)
+    response = test_client.get('/{}/{}'.format(cell_hash, frame_name),
+                               content_type='application/json')
+    assert(response.status_code == 200)
+    assert(response.headers['Content-Type'] == "application/json")
+    new_jdf = json.loads(response.data.decode("utf-8"))
+    assert(new_jdf == jdf)
+
+
+def test_throws_exception_requesting_json(test_client):
+    """
+    If data is a random string, and content-type application/json
+    is requested, should get a DataStoreException
+    """
+    cell_hash = "test4"
+    frame_name = str(uuid.uuid4())
+    test_str = "this is a not-very-random string"
+    storage_backend.write(test_str, cell_hash, frame_name)
+    response = test_client.get('{}/{}'.format(cell_hash, frame_name),
+                               content_type='application/json')
+    assert(response.status_code==500)
+    content = json.loads(response.data.decode("utf-8"))
+    assert(content["status"]=="error")
+    assert(content["error"]=="Received string, but not json format")
