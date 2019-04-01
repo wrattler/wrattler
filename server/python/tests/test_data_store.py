@@ -7,7 +7,7 @@ import pytest
 
 from python_service import read_frame, write_frame, retrieve_frames
 
-frame_hash = 'abc123def'
+cell_hash = 'abc123def'
 frame_name = 'testframe'
 if "DATASTORE_URI" in os.environ.keys():
     datastore_base_url = os.environ["DATASTORE_URI"]
@@ -26,7 +26,7 @@ def test_write_frame():
     ]
     wrote_ok = write_frame(test_data,
                            frame_name,
-                           frame_hash)
+                           cell_hash)
     assert(wrote_ok==True)
 
 @pytest.mark.skipif("WRATTLER_LOCAL_TEST" in os.environ.keys(),
@@ -35,7 +35,7 @@ def test_read_frame():
     """
     Read back the same frame
     """
-    data = read_frame(frame_name, frame_hash)
+    data = read_frame(frame_name, cell_hash)
     assert(len(data)==2)
     assert(data[0]["var_1"]=="123")
     assert(data[0]["var_2"]=="abc")
@@ -51,7 +51,7 @@ def test_retrieve_frames():
     """
     frame_list = [{"name": "test_frame",
                    "url":  '{}/{}/{}'.format(datastore_base_url,
-                                             frame_hash,
+                                             cell_hash,
                                              frame_name)}]
     data = retrieve_frames(frame_list)
     print(data)

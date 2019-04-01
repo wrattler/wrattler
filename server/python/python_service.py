@@ -154,11 +154,11 @@ def pandas_to_json(dataframe):
     return dataframe.to_json(orient='records')
 
 
-def read_frame(frame_name, frame_hash):
+def read_frame(frame_name, cell_hash):
     """
     read a frame from the data store
     """
-    url = '{}/{}/{}'.format(DATASTORE_URI, frame_hash, frame_name)
+    url = '{}/{}/{}'.format(DATASTORE_URI, cell_hash, frame_name)
     try:
         r=requests.get(url)
         if r.status_code is not 200:
@@ -169,11 +169,11 @@ def read_frame(frame_name, frame_hash):
         raise ApiException("Unable to connect to datastore {}".format(DATASTORE_URI),status_code=500)
 
 
-def write_frame(data, frame_name, frame_hash):
+def write_frame(data, frame_name, cell_hash):
     """
     write a frame to the data store
     """
-    url = '{}/{}/{}'.format(DATASTORE_URI, frame_hash, frame_name)
+    url = '{}/{}/{}'.format(DATASTORE_URI, cell_hash, frame_name)
     try:
         r=requests.put(url,data=data)
         tokenized_response = r.content.decode("utf-8").split()
@@ -185,16 +185,16 @@ def write_frame(data, frame_name, frame_hash):
     return False
 
 
-def write_image(frame_hash):
+def write_image(cell_hash):
     """
     See if there is an image on TMPDIR and send it to the datastore if so.
     Return True if an image is written to the datastore, False if there is nothing to write,
     and raise an ApiException if there is a problem writing it.
     """
-    file_path = os.path.join(TMPDIR,frame_hash)
+    file_path = os.path.join(TMPDIR,cell_hash)
     if not os.path.exists(file_path):
         return False
-    url = '{}/{}/figures'.format(DATASTORE_URI, frame_hash)
+    url = '{}/{}/figures'.format(DATASTORE_URI, cell_hash)
     file_data = open(os.path.join(file_path,'fig.png'),'rb')
     try:
         img_b64 = base64.b64encode(file_data.read())
@@ -282,8 +282,8 @@ def retrieve_frames(input_frames):
         except(requests.exceptions.ConnectionError):
             ## try falling back on read_frame method (using env var DATASTORE_URI)
             try:
-                frame_hash, frame_name = frame["url"].split("/")[-2:]
-                frame_data = read_frame(frame_name, frame_hash)
+                cell_hash, frame_name = frame["url"].split("/")[-2:]
+                frame_data = read_frame(frame_name, cell_hash)
                 frame_dict[frame["name"]] = frame_data
             except(requests.exceptions.ConnectionError):
                 raise ApiException("Unable to connect to {}".format(frame["url"]))
