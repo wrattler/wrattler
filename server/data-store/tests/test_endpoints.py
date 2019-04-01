@@ -120,3 +120,21 @@ def test_throws_exception_requesting_json(test_client):
     content = json.loads(response.data.decode("utf-8"))
     assert(content["status"]=="error")
     assert(content["error"]=="Received string, but not json format")
+
+
+def return_filtered_json(test_client):
+    """
+    Check that we can use the nrow option to get just the first few rows
+    of a json dataframe
+    """
+    orig_df = [{"a":i,"b":i*10} for i in range(10)]
+    assert(len(orig_df)==10)
+    cell_hash = "test5"
+    frame_name = str(uuid.uuid4())
+    storage_backend.write(json.dumps(orig_df), cell_hash, frame_name)
+    response = test_client.get('/{}/{}?nrow=5'.format(cell_hash, frame_name),
+                               content_type='application/json')
+    assert(response.status_code==200)
+    new_df = json.loads(response.data.decode("utf-8"))
+    assert(isinstance(new_df, list))
+    assert(len(new_df)==5)

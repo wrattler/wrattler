@@ -45,7 +45,6 @@ def store_or_retrieve(frame_hash, frame_name):
     write or read data.
     """
     if request.method == "PUT":
-        print("HEADERS {}".format(request.headers))
         if 'Content-Type' in request.headers.keys() \
            and 'application/json' in request.headers['Content-Type']:
             data = json.loads(request.data.decode("utf-8"))
@@ -64,15 +63,11 @@ def store_or_retrieve(frame_hash, frame_name):
             return jsonify({"status_code": 500})
 
     elif request.method == "GET":
-        print("ARGS {}".format(request.args))
         ## if GET request specifies a number of rows, pass that on to the store
         if "nrow" in request.args.keys():
             nrow = int(request.args.get('nrow'))
         else:
             nrow = None
-        print("NROW = {}".format(nrow))
-        print("HEADERS {}".format(request.headers))
-
         data = storage_backend.read(frame_hash, frame_name, nrow=nrow)
         ## if the GET request has Content-Type=application/json in its header, return json
         if 'Content-Type' in request.headers.keys() \
