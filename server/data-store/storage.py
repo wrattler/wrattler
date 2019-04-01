@@ -8,14 +8,6 @@ import pyarrow as pa
 
 from utils import filter_data
 
-if "LOCAL_STORAGE" in os.environ.keys():
-    BACKEND = "Local"
-else:
-    BACKEND = "Azure"
-    from config import AzureConfig
-    from azure.storage.blob import BlockBlobService, PublicAccess
-
-
 class LocalStore(object):
     def __init__(self):
         if os.name == "posix":
@@ -30,9 +22,9 @@ class LocalStore(object):
         """
         filename = os.path.join(self.dirname, frame_hash, frame_name)
         os.makedirs(os.path.dirname(filename), exist_ok=True)
-        if isinstance(data, pa.lib.Buffer):
+        if isinstance(data, pa.lib.Buffer) or isinstance(data, bytes):
             outfile = open(filename,"wb")
-        elif isinstance(data, str) or isinstance(data, bytes):
+        elif isinstance(data, str):
             outfile = open(filename,"w")
         elif isinstance(data, list) or isinstance(data, dict):
             data = json.dumps(data)
@@ -105,13 +97,13 @@ class Store(object):
     a backend for local storage, or one for cloud storage.
     """
 
-    def __init__(self, backend=BACKEND):
+    def __init__(self, backend):
         if backend == "Local":
             self.store = LocalStore()
         elif backend == "Azure":
             self.store = AzureStore()
         else:
-            raise RuntimeError("Unknown storage backend requested")
+            raise RuntimeError("Missing or Unknown storage backend requested")
 
 
     def write(self, data, frame_hash, frame_name):

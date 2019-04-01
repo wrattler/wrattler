@@ -5,6 +5,8 @@ Utility functions for data-store flask app
 import json
 import pyarrow as pa
 import pandas as pd
+from exceptions import DataStoreException
+
 
 def filter_json(data, nrow):
     """
@@ -60,8 +62,11 @@ def arrow_to_json(data):
     Go via pandas (To be revisited!!)
     """
     reader = pa.ipc.open_file(data)
-    frame = reader.read_pandas()
-    return frame.to_json(orient='records')
+    try:
+        frame = reader.read_pandas()
+        return frame.to_json(orient='records')
+    except:
+        raise DataStoreException("Unable to convert to JSON")
 
 
 def json_to_arrow(data):
@@ -82,3 +87,31 @@ def json_to_arrow(data):
     writer.close()
     arrow_buffer = sink.getvalue()
     return arrow_buffer
+
+
+def convert_to_json(data):
+    """
+    Try to convert a few different formats (bytes, str, arrow)
+    into a JSON object
+    """
+    if (isinstance(data, list) or isinstance(data,dict)):
+        return data
+    elif (isinstance(data,str)):
+        try:
+            data = json.loads(data)
+        except:
+            raise DataStoreException("Received string, but not json format")
+    elif (isinstance(data, bytes)):
+        ## see if it is a json string in bytes format
+        try:
+            data = json.loads(data.decode('utf-8'))
+        except(UnicodeDecodeError):
+            try:
+                data = arrow_to_json(data)
+            except(DataStoreException):
+                raise DataStoreException("Receieved 'bytes' data but not Apache Arrow format")
+    elif (isinstance(data, pa.lib.Buffer)):
+        data = arrow_to_json(data)
+    else:
+        raise DataStoreException("Unknown data format - cannot convert to JSON")
+    return data
