@@ -55,8 +55,7 @@ def test_get_simple_text(test_client):
     assert(response.data.decode('utf-8') == "this is a test")
 
 
-
-def test_write_arrow(test_client):
+def test_put_arrow(test_client):
     """
     Convert a simple json object to arrow, and write it to the datastore.
     """

@@ -38,8 +38,8 @@ def handle_exception(error):
     return response
 
 
-@datastore_blueprint.route("/<frame_hash>/<frame_name>", methods=['PUT','GET'])
-def store_or_retrieve(frame_hash, frame_name):
+@datastore_blueprint.route("/<cell_hash>/<frame_name>", methods=['PUT','GET'])
+def store_or_retrieve(cell_hash, frame_name):
     """
     deal with PUT or GET requests, using the storage backend to
     write or read data.
@@ -56,7 +56,7 @@ def store_or_retrieve(frame_hash, frame_name):
                 data = request.data.decode("utf-8")
             except(UnicodeDecodeError):
                 data = request.data
-        wrote_ok = storage_backend.write(data, frame_hash, frame_name)
+        wrote_ok = storage_backend.write(data, cell_hash, frame_name)
         if wrote_ok:
             return jsonify({"status_code": 200})
         else:
@@ -68,7 +68,7 @@ def store_or_retrieve(frame_hash, frame_name):
             nrow = int(request.args.get('nrow'))
         else:
             nrow = None
-        data = storage_backend.read(frame_hash, frame_name, nrow=nrow)
+        data = storage_backend.read(cell_hash, frame_name, nrow=nrow)
         ## if the GET request has Content-Type=application/json in its header, return json
         if 'Content-Type' in request.headers.keys() \
            and 'application/json' in request.headers['Content-Type']:
