@@ -123,7 +123,7 @@ def convert_from_pandas(dataframe, max_size_json=0):
             return  pandas_to_arrow(dataframe)
         except(pa.lib.ArrowTypeError):
             print("Unable to convert to pyarrow table - inconsistent types in column?")
-            return pandas_to_json(frame)
+            return pandas_to_json(dataframe)
     else:
         return pandas_to_json(dataframe)
 
@@ -408,7 +408,6 @@ def execute_code(code, input_val_dict, return_vars, output_hash, verbose=False):
             elif not func_output:
                 return_dict["results"] = []
             else:
-                print("Converting single output to arrow")
                 result = convert_from_pandas(func_output)
                 return_dict["results"] = [result]
     except Exception as e:
