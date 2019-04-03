@@ -20,7 +20,7 @@ def test_pandas_to_arrow():
     """
     df = pd.DataFrame({"a":[1,2,3],"b":[4,5,6]})
     arr = pandas_to_arrow(df)
-    assert(isinstance(arr,pa.lib.Buffer))
+    assert(isinstance(arr,bytes))
 
 
 def test_pandas_to_arrow_to_pandas():
@@ -82,7 +82,7 @@ def test_json_size_limit():
     """
     df = pd.DataFrame({"col1": ["blah", "blah"], "col2": ["BLAH","BLAH"]})
     output_1 = convert_from_pandas(df, max_size_json=0)
-    assert(isinstance(output_1, pa.lib.Buffer))
+    assert(isinstance(output_1, bytes))
     output_2 = convert_from_pandas(df, max_size_json=1024)
     assert(isinstance(output_2, str))
 

@@ -59,22 +59,24 @@ def cleanup(i):
 
 def convert_to_pandas(input_data):
     """
-    convert an unknown input type (either Apache Arrow or JSON) to a pandas dataframe.
+    convert an unknown input type (either Apache Arrow or JSON)
+    to a pandas dataframe.
     """
-    if isinstance(input_data, pa.lib.Buffer):
-        return arrow_to_pandas(input_data)
-    elif isinstance(input_data, list):
-        return json_to_pandas(input_data)
-    else:
-        raise ApiException("Unknown data type - cannot convert to pandas")
+    try:
+        dataframe =  arrow_to_pandas(input_data)
+        return dataframe
+    except(ApiException):
+        try:
+            dataframe = json_to_pandas(input_data)
+            return dataframe
+        except(ApiException):
+            raise ApiException("Unknown data type - cannot convert to pandas")
 
 
 def arrow_to_pandas(arrow_buffer):
     """
     Convert from an Apache Arrow buffer into a pandas dataframe
     """
-    if not isinstance(arrow_buffer, pa.lib.Buffer):
-        return False
     try:
         reader = pa.ipc.open_file(arrow_buffer)
         frame = reader.read_pandas()
@@ -89,12 +91,19 @@ def json_to_pandas(json_data):
     to pandas dataframe.  If it doesn't fit this format, just return
     the input, unchanged.
     """
-    if isinstance(json_data,str):
+    ## convert to string if in bytes format
+    if isinstance(json_data, bytes):
+        try:
+            json_data = json_data.decode("utf-8")
+        except(UnicodeDecodeError):
+            raise(ApiException("Data not unicode encoded"))
+    ## convert to list if in str format
+    if isinstance(json_data, str):
         try:
             json_data = json.loads(json_data)
         except(json.decoder.JSONDecodeError):
             raise(ApiException("Unable to read as JSON: {}".format(json_data)))
-
+    ## assume we now have a list of records
     try:
         frame_dict = {}
         for row in json_data:
@@ -111,7 +120,7 @@ def json_to_pandas(json_data):
 def convert_from_pandas(dataframe, max_size_json=0):
     """
     convert from pandas dataframe to either Apache Arrow format or JSON,
-    depending on size
+    depending on size (by default always go to Arrow).
     """
     if not isinstance(dataframe, pd.DataFrame):
         try:
@@ -138,7 +147,7 @@ def pandas_to_arrow(frame):
     writer.write_batch(batch)
     writer.close()
     arrow_buffer = sink.getvalue()
-    return arrow_buffer
+    return arrow_buffer.to_pybytes()
 
 
 def pandas_to_json(dataframe):

@@ -14,6 +14,7 @@ if "DATASTORE_URI" in os.environ.keys():
 else:
     datastore_base_url = 'http://localhost:7102'
 
+
 @pytest.mark.skipif("WRATTLER_LOCAL_TEST" in os.environ.keys(),
                     reason="Needs data-store to be running")
 def test_write_frame():
@@ -29,6 +30,7 @@ def test_write_frame():
                            cell_hash)
     assert(wrote_ok==True)
 
+
 @pytest.mark.skipif("WRATTLER_LOCAL_TEST" in os.environ.keys(),
                     reason="Needs data-store to be running")
 def test_read_frame():
@@ -41,6 +43,7 @@ def test_read_frame():
     assert(data[0]["var_2"]=="abc")
     assert(data[1]["var_1"]=="456")
     assert(data[1]["var_2"]=="def")
+
 
 @pytest.mark.skipif("WRATTLER_LOCAL_TEST" in os.environ.keys(),
                     reason="Needs data-store to be running")
