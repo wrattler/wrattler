@@ -14,7 +14,7 @@ def test_execute_pd_concat():
     given an input dict of value assignments and a code snippet,
     substitute the values in, and evaluate.
     """
-    input_code = "z = pd.concat([x,y],join='outer', ignore_index=True)"
+    input_code = "z = pd.concat([x,y],join='outer', ignore_index=True, sort=True)"
     input_vals = {"x" : [{"a":1, "b":2},{"a":2,"b":3}],
                   "y": [{"b":4,"c": 2},{"b": 5,"c": 7}]}
     output_hash = "somehash"
