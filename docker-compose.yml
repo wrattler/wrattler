@@ -21,6 +21,7 @@ services:
     entrypoint: /bin/bash
     command: "./entrypoint.sh"
     environment:
+     - RACKETSERVICE_URI=http://localhost:7104
      - PYTHONSERVICE_URI=http://localhost:7101
      - RSERVICE_URI=http://localhost:7103
      - DATASTORE_URI=http://localhost:7102
@@ -48,6 +49,18 @@ services:
     environment:
       - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
 #      - R_SERVICE_DEBUG=True
+    networks:
+    - wrattler_nw
+
+  wrattler_racket_service:
+    container_name: wrattler_wrattler_racket_service_1
+    build:
+      context: server/racket
+      dockerfile: Dockerfile
+    ports:
+    - "7104:7104"
+    environment:
+      - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
     networks:
     - wrattler_nw
 

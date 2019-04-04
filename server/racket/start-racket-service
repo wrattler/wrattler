@@ -1,0 +1,9 @@
+#!/usr/bin/env racket
+#lang racket
+(require "main.rkt")
+(define env (current-environment-variables))
+(define datastore (environment-variables-ref env #"DATASTORE_URI"))
+
+(if datastore
+    (start-racket-service (bytes->string/locale datastore))
+    (start-racket-service))
