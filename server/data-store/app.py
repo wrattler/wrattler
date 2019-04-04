@@ -14,7 +14,6 @@ import requests
 import json
 
 from storage import Store
-from utils import convert_to_json
 from exceptions import DataStoreException
 
 
@@ -38,6 +37,57 @@ def handle_exception(error):
     return response
 
 
+def handle_get(request, cell_hash, frame_name):
+    """
+    GET requests should retrieve frame from the storage backend,
+    filter the first nrow rows if requested, and return in
+    either json or Arrow format, depending on the 'Accept' header
+    in the request.
+    """
+    ## if GET request specifies a number of rows, pass that on to the store
+    if "nrow" in request.args.keys():
+        nrow = int(request.args.get('nrow'))
+    else:
+        nrow = None
+
+    ## Return json or arrow based on content types in 'Accept' header
+    content_type = "text/html" ## default if we don't know what it is
+    if 'Accept' in request.headers.keys():
+        if 'application/json' in request.headers['Accept'] \
+           and not 'application/octet-stream' in request.headers["Accept"]:
+            content_type = "application/json" ## return a json string
+        elif 'application/octet-stream' in request.headers["Accept"] \
+             and not 'application/json' in request.headers["Accept"]:
+            content_type = "application/octet-stream"  ## return an Apache Arrow buffer
+
+    data = storage_backend.read(cell_hash, frame_name, data_format=content_type, nrow=nrow)
+
+    return Response(data, mimetype=content_type)
+
+
+def handle_put(request, cell_hash, frame_name):
+    """
+    PUT requests store data on the storage backend.  If the body of the request can be
+    decoded as utf-8, it is stored as a string, otherwise just as bytes.
+    """
+    if 'Content-Type' in request.headers.keys() \
+       and 'application/json' in request.headers['Content-Type']:
+        data = json.loads(request.data.decode("utf-8"))
+    elif 'Content-Type' in request.headers.keys() \
+         and 'text/html' in request.headers['Content-Type']:
+        data = request.data.decode("utf-8")
+    else: ## try and decode as text, otherwise assume it's binary data
+        try:
+            data = request.data.decode("utf-8")
+        except(UnicodeDecodeError):
+            data = request.data
+    wrote_ok = storage_backend.write(data, cell_hash, frame_name)
+    if wrote_ok:
+        return jsonify({"status_code": 200})
+    else:
+        return jsonify({"status_code": 500})
+
+
 @datastore_blueprint.route("/<cell_hash>/<frame_name>", methods=['PUT','GET'])
 def store_or_retrieve(cell_hash, frame_name):
     """
@@ -45,37 +95,10 @@ def store_or_retrieve(cell_hash, frame_name):
     write or read data.
     """
     if request.method == "PUT":
-        if 'Content-Type' in request.headers.keys() \
-           and 'application/json' in request.headers['Content-Type']:
-            data = json.loads(request.data.decode("utf-8"))
-        elif 'Content-Type' in request.headers.keys() \
-             and 'text/html' in request.headers['Content-Type']:
-            data = request.data.decode("utf-8")
-        else: ## try and decode as text, otherwise assume it's binary data
-            try:
-                data = request.data.decode("utf-8")
-            except(UnicodeDecodeError):
-                data = request.data
-        wrote_ok = storage_backend.write(data, cell_hash, frame_name)
-        if wrote_ok:
-            return jsonify({"status_code": 200})
-        else:
-            return jsonify({"status_code": 500})
+        return handle_put(request, cell_hash, frame_name)
 
     elif request.method == "GET":
-        ## if GET request specifies a number of rows, pass that on to the store
-        if "nrow" in request.args.keys():
-            nrow = int(request.args.get('nrow'))
-        else:
-            nrow = None
-        data = storage_backend.read(cell_hash, frame_name, nrow=nrow)
-        ## if the GET request has Content-Type=application/json in its header, return json
-        if 'Content-Type' in request.headers.keys() \
-           and 'application/json' in request.headers['Content-Type']:
-            data = convert_to_json(data)
-            return Response(data, mimetype='application/json')
-        else: ## return the data as is
-            return Response(data, mimetype='application/octet-stream')
+        return handle_get(request, cell_hash, frame_name)
 
 
 def create_app(name = __name__):

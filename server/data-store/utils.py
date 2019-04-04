@@ -16,12 +16,12 @@ def filter_json(data, nrow):
     {"col":[val1,val2,...], ...}
     """
     if isinstance(data, list):
-        return data[:nrow]
+        return json.dumps(data[:nrow])
     elif isinstance(data, dict):
         new_dict = {}
         for k, v in data.items():
             new_dict[k] = v[:nrow]
-        return new_dict
+        return json.dumps(new_dict)
     else:  ## unknown format - just return data as-is
         return data
 
@@ -41,13 +41,28 @@ def filter_arrow(data, nrow):
     writer.write_batch(sliced_batch)
     writer.close()
     arrow_buffer = sink.getvalue()
-    return arrow_buffer
+    return arrow_buffer.to_pybytes()
 
 
 def filter_data(data, nrow):
     """
     return the first nrow rows of data.
     """
+    if isinstance(data, bytes):
+        try:
+            filtered_arrow = filter_arrow(data, nrow)
+            return filtered_arrow
+        except:
+            try:
+                data = data.decode("utf-8")
+            except(UnicodeDecodeError):
+                raise DataStoreError("Bytes data doesn't seem to be arrow or unicode")
+    ## see if we can decode as JSON
+    if isinstance(data, str):
+        try:
+            data = json.loads(data)
+        except(JSONDecodeError):
+            raise DataStoreException("String does not seem to be JSON")
     if isinstance(data, list) or isinstance(data, dict):
         return filter_json(data, nrow)
     elif isinstance(data, pa.lib.Buffer):
@@ -77,7 +92,7 @@ def json_to_arrow(data):
     frame = None
     try:
         frame = pd.DataFrame.from_records(data)
-    except():
+    except:
         return data
 
     batch = pa.RecordBatch.from_pandas(frame, preserve_index=False)
@@ -86,19 +101,21 @@ def json_to_arrow(data):
     writer.write_batch(batch)
     writer.close()
     arrow_buffer = sink.getvalue()
-    return arrow_buffer
+    return arrow_buffer.to_pybytes()
 
 
 def convert_to_json(data):
     """
     Try to convert a few different formats (bytes, str, arrow)
-    into a JSON object
+    into a JSON string
     """
     if (isinstance(data, list) or isinstance(data,dict)):
-        return data
+        return json.dumps(data)
     elif (isinstance(data,str)):
         try:
-            data = json.loads(data)
+            json_obj = json.loads(data)
+            ## if that worked, it was already a json string
+            return data
         except:
             raise DataStoreException("Received string, but not json format")
     elif (isinstance(data, bytes)):
@@ -115,3 +132,33 @@ def convert_to_json(data):
     else:
         raise DataStoreException("Unknown data format - cannot convert to JSON")
     return data
+
+
+def convert_to_arrow(data):
+    """
+    Try to convert into arrow format if it wasn't already
+    """
+    if isinstance(data, pa.lib.Buffer):
+        return data.to_pybytes()
+    elif isinstance(data, bytes):
+        try:
+            reader = pa.ipc.open_file(data)
+            ## if that line worked, must be arrow buffer
+            return data
+        except(pa.lib.ArrowInvalid):
+            try:
+                strdata = data.decode("utf-8")
+                jsondata = json.loads(strdata)
+                return json_to_arrow(jsondata)
+            except:
+                raise DataStoreException("Unknown bytes data format - cannot convert to Arrow")
+    elif (isinstance(data, list) or isinstance(data,dict)):
+        return json_to_arrow(data)
+    elif (isinstance(data, str)):
+        try:
+            data = json.loads(data)
+            return json_to_arrow(data)
+        except:
+            raise DataStoreException("Cannot convert string to Arrow")
+    else:
+        raise DataStoreException("Unknown data format - cannot convert to Arrow")

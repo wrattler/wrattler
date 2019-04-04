@@ -6,7 +6,9 @@ import os
 import json
 import pyarrow as pa
 
-from utils import filter_data
+from utils import filter_data, convert_to_json, convert_to_arrow
+from exceptions import DataStoreException
+
 
 class LocalStore(object):
     def __init__(self):
@@ -30,8 +32,7 @@ class LocalStore(object):
             data = json.dumps(data)
             outfile = open(filename,"w")
         else:
-
-            raise RuntimeError("Unknown data type")
+            raise DataStoreException("Trying to write unknown data type")
         outfile.write(data)
         outfile.close()
         return True
@@ -43,7 +44,7 @@ class LocalStore(object):
         """
         filename = os.path.join(self.dirname, cell_hash, frame_name)
         if not os.path.exists(filename):
-            raise RuntimeError("Non-existent file")
+            raise DataStoreException("Trying to read non-existent file")
         try:
             f = open(filename)
             data = f.read()
@@ -57,6 +58,10 @@ class LocalStore(object):
 
 
 class AzureStore(object):
+    """
+    Interface to Azure blob storage.
+    Needs a file config.py containing credentials for Azure storage account.
+    """
     def __init__(self):
         self.bbs = BlockBlobService(account_name = AzureConfig.account_name,
                                     account_key = AzureConfig.account_key)
@@ -69,22 +74,22 @@ class AzureStore(object):
         """
         if isinstance(data, str):
             self.bbs.create_blob_from_text(self.container_name, "{}/{}".format(cell_hash, frame_name), data)
-        elif isinstance(data, list) or isinstance(data, dict):  ## JSON object - convert to a string
+        elif isinstance(data, list) or isinstance(data, dict):  # JSON object - convert to a string
             data = json.dumps(data)
             self.bbs.create_blob_from_text(self.container_name, "{}/{}".format(cell_hash, frame_name), data)
-        else:  ## assume it's binary data
+        else:  # assume it's binary data
             self.bbs.create_blob_from_bytes(self.container_name, "{}/{}".format(cell_hash, frame_name), data)
         return True
 
 
     def read(self, cell_hash, frame_name, data_format):
         """
-        Read a blob from blob storage
+        Read a blob from blob storage <container_name>/<cell_hash>/<frame_name>
         """
-        if data_format == "JSON":
+        if data_format == "application/json":
             blob_data = self.bbs.get_blob_to_text(self.container_name,"{}/{}".format(cell_hash, frame_name))
         else:
-            # assume bytes
+            ## assume bytes
             blob_data = self.bbs.get_blob_to_bytes(self.container_name,"{}/{}".format(cell_hash, frame_name))
         return blob_data.content
 
@@ -103,7 +108,7 @@ class Store(object):
         elif backend == "Azure":
             self.store = AzureStore()
         else:
-            raise RuntimeError("Missing or Unknown storage backend requested")
+            raise DataStoreException("Missing or Unknown storage backend requested")
 
 
     def write(self, data, cell_hash, frame_name):
@@ -118,6 +123,10 @@ class Store(object):
         Tell the selected backend to read the file, and filter if required.
         """
         data = self.store.read(cell_hash, frame_name, data_format)
+        if data_format == "application/json":
+            data = convert_to_json(data)
+        elif data_format == "application/octet-stream":
+            data = convert_to_arrow(data)
         if nrow:
             data = filter_data(data, nrow)
         return data
