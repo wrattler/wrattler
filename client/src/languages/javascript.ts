@@ -192,7 +192,7 @@ class JavascriptBlockKind implements Langs.Block {
           var argDictionary:{[key: string]: string} = {}
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
             let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-            argDictionary[imported.variableName] = (<Values.DataFrame>imported.value).data;
+            argDictionary[imported.variableName] = await (<Values.DataFrame>imported.value).data.getValue();
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
           var outputs : ((id:string) => void)[] = [];

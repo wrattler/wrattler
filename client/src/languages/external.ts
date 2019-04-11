@@ -7,6 +7,7 @@ import {printPreview} from '../editors/preview';
 import {createEditor} from '../editors/editor';
 import {Md5} from 'ts-md5';
 import axios from 'axios';
+import {AsyncLazy} from '../common/lazy';
 
 declare var DATASTORE_URI: string;
 
@@ -88,7 +89,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
   async evaluate(node:Graph.Node) : Promise<Langs.EvaluationResult> {
     let externalNode = <Graph.ExternalNode>node
 
-    async function getValue(blob) : Promise<Values.Value> {
+    async function getValue(blob) : Promise<any> {
       var pathname = new URL(blob).pathname;
       let headers = {'Content-Type': 'application/json'}
       let url = DATASTORE_URI.concat(pathname)
@@ -119,7 +120,11 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         }
         
         for(let df of response.data.frames) {
-          let exp : Values.DataFrame = {kind:"dataframe", url:<string>df.url, data: await getValue(df.url)};
+          let exp : Values.DataFrame = 
+            { kind:"dataframe", url:<string>df.url, 
+              preview: await getValue(df.url), // TODO: Just first X rows
+              data: new AsyncLazy<any>(() => getValue(df.url)) // TODO: This function is called later when JS calls data.getValue()
+            };
           if (Array.isArray(exp.data))
             results.exports[df.name] = exp
         }
