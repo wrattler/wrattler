@@ -25,6 +25,7 @@ languagePlugins["markdown"] = markdownLanguagePlugin;
 languagePlugins["javascript"] = javascriptLanguagePlugin;
 languagePlugins["python"] = new externalLanguagePlugin("python", PYTHONSERVICE_URI);
 languagePlugins["r"] = new externalLanguagePlugin("r", RSERVICE_URI);
+languagePlugins["racket"] = new externalLanguagePlugin("racket", RACKETSERVICE_URI);
 // languagePlugins["thegamma"] = gammaLangaugePlugin;
 
 interface NotebookAddEvent { kind:'add', id: number, language:string }
@@ -225,10 +226,14 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
           newDocument.source = "# This is an R cell \n r"+newId+" <- data.frame(id = "+newId+", language =\"r\")";
           break
         }
+        case 'racket': {
+          newDocument.source = ";; This is a Racket cell \n";
+          break
+        }
         case 'javascript': {
           newDocument.source = "// This is a javascript cell. \n//var js"+newId+" = [{'id':"+newId+", 'language':'javascript'}]";
           break
-        } 
+        }
       }
       let lang = languagePlugins[newDocument.language];
       let newBlock = lang.parse(newDocument.source);

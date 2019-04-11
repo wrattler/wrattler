@@ -11,6 +11,7 @@ before_install:
 script:
   - docker run wrattler_wrattler_r_service /bin/bash -c "Rscript run-tests.r"
   - docker run wrattler_wrattler_python_service /bin/bash -c "export WRATTLER_LOCAL_TEST=True;pytest -s"
+  - docker run wrattler_wrattler_racket_service /bin/bash -c "raco test ."
   - docker run wrattler_wrattler_data_store /bin/bash -c "export WRATTLER_LOCAL_STORAGE=True;pytest -s"
 
 after_success:
