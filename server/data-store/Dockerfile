@@ -1,20 +1,32 @@
-FROM codedevote/dotnet-mono
-MAINTAINER codedevote@gmail.com
+FROM ubuntu:16.04
 
-RUN apt-get -y install nano
+### get pip git etc
 
-RUN curl -sS http://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-RUN echo "deb http://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-RUN apt-get update; apt-get -y remove cmdtest
+RUN apt-get update; apt-get install -y python3
+RUN apt-get update; apt-get install -y python3-pip
+RUN apt-get update; apt-get install -y locales
+RUN apt-get update; apt-get install -y openssl
+RUN apt-get update; apt-get install -y libssl-dev
 
-RUN apt-get update; apt-get -y install yarn
-RUN curl -sL http://deb.nodesource.com/setup_8.x | bash -
-RUN apt-get update; apt-get -y install nodejs
+# Set the locale
+RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
+    locale-gen
+ENV LANG en_GB.UTF-8
+ENV LANGUAGE en_GB:en
+ENV LC_ALL en_GB.UTF-8
+
+RUN pip3 install --upgrade pip
+RUN pip3 install flask
+RUN pip3 install flask_restful
+RUN pip3 install flask_cors
+RUN pip3 install pyarrow
+RUN pip3 install azure
+RUN pip3 install tempdir
+RUN pip3 install pandas
 
 RUN mkdir /app
 ADD . /app
-#RUN cd /app; yarn;
 WORKDIR /app
 EXPOSE 7102
-RUN chmod u+x build.sh
-CMD ["./build.sh", "sleep"]
+
+CMD ["python3","app.py"]
