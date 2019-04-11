@@ -68,15 +68,23 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
 
 export class externalLanguagePlugin implements Langs.LanguagePlugin {
   readonly language: string;
+  readonly iconClassName: string;
   readonly editor: Langs.Editor<ExternalState, ExternalEvent>;
   readonly serviceURI: string;
+  readonly defaultCode : string;
 
-  constructor(l: string, uri: string) {
+  constructor(l: string, icon:string, uri: string, code:string) {
     this.language = l;
+    this.iconClassName = icon;
     this.serviceURI = uri;
     this.editor = ExternalEditor;
+    this.defaultCode = code;
   }
 
+  getDefaultCode(id:number) {
+    return this.defaultCode.replace(/\[ID\]/g, id.toString());
+  }
+  
   async evaluate(node:Graph.Node) : Promise<Langs.EvaluationResult> {
     let externalNode = <Graph.ExternalNode>node
 
