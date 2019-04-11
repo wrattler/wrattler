@@ -4,6 +4,7 @@ library(jsonlite)
 library(httr)
 library(base64enc)
 library(rlang)
+library(arrow)
 
 source("codeAnalysis.R")
 
@@ -47,6 +48,9 @@ handle_eval <- function(code, frames, hash) {
 }
 
 makeURL <- function(name, hash) {
+    if (is.na(Sys.getenv("DATASTORE_URI", unset=NA))) {
+        return(paste0("http://localhost:7102/",hash,"/",name))
+    }
     return(paste0(Sys.getenv("DATASTORE_URI"),"/",hash,"/",name))
 }
 
@@ -54,14 +58,15 @@ getNameAndHashFromURL <- function(url) {
     ## split the URL by "/" and take the last two substrings to be hash and name
     charVec <- unlist(strsplit(url, split="/", fixed=TRUE))
     frameName <- charVec[[length(charVec)]]
-    frameHash <- charVec[[length(charVec)-1]]
-    return(c(frameName, frameHash))
+    cellHash <- charVec[[length(charVec)-1]]
+    return(c(frameName, cellHash))
 }
 
 
 readFrame <- function(url) {
     ## Read a dataframe from the datastore.
-    ## use jsonlite to deserialize json into a data.frame
+    ## first, try to decode as apache arrow.
+    ## if this fails,  use jsonlite to deserialize json into a data.frame
 
     r <- tryCatch({ GET(url) },
         error=function(cond) {
@@ -73,10 +78,25 @@ readFrame <- function(url) {
         print("Unable to access datastore")
         return(NULL)
     }
-    json_data <- content(r,"text")
-    frame <- jsonToDataFrame(json_data)
+    frame <- tryCatch({
+        rawData <-content(r, "raw")
+        arrowToDataFrame(rawData)
+    }, error = function(cond) {
+        jsonData <- content(r,"text")
+        jsonToDataFrame(jsonData)
+    })
+
     return(frame)
 }
+
+
+arrowToDataFrame <- function(arrowBuffer) {
+    temp <- tempfile()
+    writeBin(arrowBuffer, temp)
+    frame <- as.data.frame(read_arrow(temp))
+    return(frame)
+}
+
 
 jsonToDataFrame <- function(json_obj) {
     frame <- jsonlite::fromJSON(json_obj)
@@ -93,14 +113,17 @@ writeFrame <- function(frameData, frameName, cellHash) {
     } else if (typeof(frameData)=="closure") {
         return(FALSE) # probably a function definition - we don't want to store this
     } else {
-        # hopefully a dataframe that can be converted into JSON
-        frameJSON <- jsonFromDataFrame(frameData)
+        # hopefully a dataframe that can be converted into Arrow or JSON
+        response <- tryCatch({
+            frameRaw <- arrowFromDataFrame(frameData)
+            PUT(url, body=frameRaw, encode="raw")
+        }, error=function(cond) {
+            frameJSON <- jsonFromDataFrame(frameData)
+            PUT(url, body=frameJSON, encode="json")
+        })
+        return(status_code(response) == 200)
     }
-    ## put it into the datastore if it is not NULL, i.e. was convertable to json
-    if (!is.null(frameJSON)) {
-        r <- PUT(url, body=frameJSON, encode="json")
-        return(status_code(r) == 200)
-    }
+    ## If we got to here, didn't manage to put frame on the datastore
     return(FALSE)
 }
 
@@ -120,9 +143,9 @@ writeFigure <- function(figureData, figureName, cellHash) {
 }
 
 
-jsonFromImageFile <- function(frameName, frameHash) {
-    ## see if there is a png file at /tmp/frameHash/frameName.png
-    filename <- file.path(TMPDIR,frameHash,paste0(frameName,".png"))
+jsonFromImageFile <- function(frameName, cellHash) {
+    ## see if there is a png file at /tmp/cellHash/frameName.png
+    filename <- file.path(TMPDIR,cellHash,paste0(frameName,".png"))
     if (! file.exists(filename)) return(NULL)
     IMAGE <- base64enc::base64encode(filename)
     frameJSON <- jsonlite::toJSON(as.data.frame(IMAGE))
@@ -142,6 +165,23 @@ jsonFromDataFrame <- function(frameData) {
     ## convert to JSON
     frameJSON <- jsonlite::toJSON(frameData, na="null")
     return(frameJSON)
+}
+
+arrowFromDataFrame <- function(frameData) {
+    ## ensure everything is a character
+    if (is.numeric(frameData)) frameData <- as.character(frameData)
+    ## explicitly convert into a dataframe if we can
+    frameData <- tryCatch({ as.data.frame(frameData) },
+                          error=function(cond) {
+                              return(NULL)
+                          })
+    if (is.null(frameData)) return(NULL)
+    ## convert to Arrow, via writing to a tempfile
+    temp <- tempfile()
+    write_arrow(frameData, temp)
+    nBytes <- file.size(temp)
+    rawData <- readBin(temp, what="raw", n=nBytes)
+    return(rawData)
 }
 
 

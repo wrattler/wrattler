@@ -36,16 +36,16 @@ def mock_datastore(scope='module'):
 
 
 
-def mock_write_frame(mock_datastore,data, frame_name,frame_hash):
-    mock_datastore.store(data,frame_name, frame_hash)
+def mock_write_frame(mock_datastore,data, frame_name,cell_hash):
+    mock_datastore.store(data,frame_name, cell_hash)
     return True
 
-def mock_write_image(mock_datastore,data, frame_hash):
+def mock_write_image(mock_datastore,data, cell_hash):
     return True
 
 
 
-def mock_read_frame(mock_datastore, frame_name, frame_hash):
-    data = mock_datastore.retrieve(frame_name, frame_hash)
+def mock_read_frame(mock_datastore, frame_name, cell_hash):
+    data = mock_datastore.retrieve(frame_name, cell_hash)
     print(data)
     return data
