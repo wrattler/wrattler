@@ -18,6 +18,7 @@ dfSame <- function(df1, df2) {
     return(TRUE)
 }
 
+
 test_that("We can convert from JSON to a dataframe", {
     expect_that(is.data.frame(jsonToDataFrame('[{"name":"Bob","age":32},{"name":"Bob","age":32}]')),equals(TRUE))
 
@@ -43,14 +44,6 @@ test_that("We can convert from dataframe to JSON to dataframe", {
     newDf <- jsonToDataFrame(jsonString)
     expect_that(dfSame(df,newDf), equals(TRUE))
 })
-
-test_that("We can convert a dataframe to Apache Arrow and back", {
-    df <- data.frame(name=c("Alice","Bob"), age=c(22,33))
-    arrowBuffer <- arrowFromDataFrame(df)
-    newDf <- arrowToDataFrame(arrowBuffer)
-    expect_that(dfSame(df,newDf), equals(TRUE))
-})
-
 
 test_that("We get null in the json when we have missing values", {
     df <- data.frame(name=c("Alice","Bob"), age=c(NA,33))

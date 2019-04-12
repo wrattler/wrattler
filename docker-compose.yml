@@ -71,8 +71,6 @@ services:
       dockerfile: Dockerfile
     ports:
     - "7102:7102"
-    environment:
-    - WRATTLER_LOCAL_STORAGE=True
     networks:
     - wrattler_nw
 

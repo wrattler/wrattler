@@ -4,9 +4,8 @@ Test that we can execute a variety of simple python commands and get the expecte
 import pytest
 import json
 import pandas as pd
-import pyarrow as pa
 
-from python_service import execute_code, find_assignments, convert_to_pandas
+from python_service import execute_code, find_assignments
 from exceptions import ApiException
 
 def test_execute_pd_concat():
@@ -14,17 +13,17 @@ def test_execute_pd_concat():
     given an input dict of value assignments and a code snippet,
     substitute the values in, and evaluate.
     """
-    input_code = "z = pd.concat([x,y],join='outer', ignore_index=True, sort=True)"
+    input_code = "z = pd.concat([x,y],join='outer', ignore_index=True)"
     input_vals = {"x" : [{"a":1, "b":2},{"a":2,"b":3}],
                   "y": [{"b":4,"c": 2},{"b": 5,"c": 7}]}
     output_hash = "somehash"
     return_targets = find_assignments(input_code)["targets"]
     result_dict = execute_code(input_code, input_vals, return_targets, output_hash)
     result = result_dict["results"]
+    print(result)  # result will be a list of lists of dicts
     assert(len(result) == 1) # only one output of function
-    assert(isinstance(result[0], bytes))
-    result_df = convert_to_pandas(result[0])
-    assert(result_df.size == 12) ## 4 rows * 3 columns
+    assert(len(json.loads(result[0])) == 4) # four 'rows' of dataframe
+    assert(len(json.loads(result[0])[0]) == 3) # three 'columns'
 
 
 def test_execute_simple_func():
@@ -81,6 +80,7 @@ def test_get_two_normal_outputs():
     output_hash = "somehash"
     result_dict = execute_code(input_code, input_vals, return_targets, output_hash)
     output = result_dict["output"]
+    print(output)
     assert(output)
     assert(isinstance(output,str))
     assert("hello world" in output)
