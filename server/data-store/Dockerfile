@@ -23,6 +23,7 @@ RUN pip3 install pyarrow
 RUN pip3 install azure
 RUN pip3 install tempdir
 RUN pip3 install pandas
+RUN pip3 install pytest
 
 RUN mkdir /app
 ADD . /app
