@@ -15,6 +15,7 @@ import { stat } from 'fs';
 
 declare var PYTHONSERVICE_URI: string;
 declare var RSERVICE_URI: string;
+declare var RACKETSERVICE_URI: string;
 
 // ------------------------------------------------------------------------------------------------
 // Main notebook rendering code
@@ -69,7 +70,7 @@ async function updateAndBindAllCells(state:State.NotebookState, cell:Langs.Block
       let editor:Langs.EditorState = lang.editor.initialize(index++, block);
       return editor;
     }
-    else return c.editor; 
+    else return c.editor;
   });
   let newCells = await bindAllCells(state.cache, editors);
   return { cache:state.cache, cells:newCells, counter:index, expandedMenu:state.expandedMenu };
@@ -85,7 +86,7 @@ async function evaluate(node:Graph.Node) {
   let evalResult = await languagePlugin.evaluate(node);
   Log.trace("evaluation","Evaluated %s node. Result: %O", node.language, node.value)
   switch(evalResult.kind) {
-    case "success": 
+    case "success":
       node.value = evalResult.value;
       break;
     case "error":
@@ -119,7 +120,7 @@ function render(trigger:(evt:NotebookEvent) => void, state:State.NotebookState) 
     let plugin = languagePlugins[cell.editor.block.language]
     let content = plugin.editor.render(cell, cell.editor, context)
     let icon = ""
-    
+
     switch (cell.editor.block.language) {
       case 'python':
         icon = 'fab fa-python'
@@ -145,7 +146,7 @@ function render(trigger:(evt:NotebookEvent) => void, state:State.NotebookState) 
 
     let langs = Object.keys(languagePlugins).map(lang =>
         h('a', {
-            key:"add-" + lang, 
+            key:"add-" + lang,
             onclick:()=>trigger({kind:'add', id:cell.editor.id, language:lang})},
           [ h('i', {'class':'fa fa-plus'}), lang ]))
       .concat(
@@ -156,7 +157,7 @@ function render(trigger:(evt:NotebookEvent) => void, state:State.NotebookState) 
 
     let cmds = [
       h('a', {key:"add", onclick:()=>trigger({kind:'toggleadd', id:cell.editor.id})},[h('i', {'class':'fa fa-plus'}), "add below"]),
-      h('a', {key:"remove", onclick:()=>trigger({kind:'remove', id:cell.editor.id})},[h('i', {'class':'fa fa-times'}), "remove this"])      
+      h('a', {key:"remove", onclick:()=>trigger({kind:'remove', id:cell.editor.id})},[h('i', {'class':'fa fa-times'}), "remove this"])
     ]
 
     let tools = state.expandedMenu == cell.editor.id ? langs : cmds;
@@ -200,7 +201,7 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
   }
   switch(evt.kind) {
     case 'block': {
-      let newCells = state.cells.map(state => 
+      let newCells = state.cells.map(state =>
         (state.editor.id != evt.id) ? state :
           { editor: languagePlugins[state.editor.block.language].editor.update(state.editor, evt.event) ,
             code: state.code, exports: state.exports })
@@ -217,11 +218,11 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
         case 'python': {
           newDocument.source = "# This is a python cell \n# py"+newId+" = pd.DataFrame({\"id\":[\""+newId+"\"], \"language\":[\"python\"]})";
           break;
-        } 
+        }
         case 'markdown': {
           newDocument.source = "Md"+newId+": This is a markdown cell.";
           break
-        } 
+        }
         case 'r': {
           newDocument.source = "# This is an R cell \n r"+newId+" <- data.frame(id = "+newId+", language =\"r\")";
           break
@@ -249,7 +250,7 @@ async function update(state:State.NotebookState, evt:NotebookEvent) : Promise<St
     case 'remove':
       return {cache:state.cache, counter: state.counter,  expandedMenu:state.expandedMenu, cells: removeCell(state.cells, evt.id)};
 
-    case 'rebind': 
+    case 'rebind':
       let newState = await updateAndBindAllCells(state, evt.block, evt.newSource);
       if ((<any>window).documentContentChanged)
         (<any>window).documentContentChanged(saveDocument(newState))
@@ -328,4 +329,3 @@ export function exportDocumentContent():string {
 (<any>window).exportDocumentContent = exportDocumentContent;
 (<any>window).initializeNotebook = initializeNotebook;
 (<any>window).initializeNotebookJupyterLab = initializeNotebookJupyterLab;
-
