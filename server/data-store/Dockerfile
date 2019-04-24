@@ -30,4 +30,6 @@ ADD . /app
 WORKDIR /app
 EXPOSE 7102
 
+ENV WRATTLER_LOCAL_DATASTORE True
+
 CMD ["python3","app.py"]
