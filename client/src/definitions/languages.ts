@@ -36,6 +36,10 @@ interface LanguagePlugin {
   /** Identifier of the language that this plugin implements */
   language : string
 
+  iconClassName : string
+
+  getDefaultCode(id:number) : string
+
   /** Returns a language-specific editor that handles the UI in a notebook  */
   editor : Editor<EditorState, any>
 

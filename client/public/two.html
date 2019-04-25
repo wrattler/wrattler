@@ -20,15 +20,27 @@
   <style>g path { fill:transparent; }</style>
   <script type="text/javascript">
     window.onload = function() {
-      //  "# Welcome to Wrattler"
+      var code1 = "# First notebook\n```javascript\nvar df = [{'test':123}]\n```";
+      var code2 = "# Second notebook\n```javascript\nvar df = [{'test':456}]\n```";
       var langs = wrattler.getDefaultLanguages();
-      wrattler.createNamedNotebook("paper", langs).then(function(notebook) {
-
+      wrattler.createNotebook("paper1", code1, langs).then(function(notebook) {
+        notebook.addDocumentContentChanged(function (newContent) {
+          console.log("NOTEBOOK #1 CHANGED:\n%O", newContent)
+        })
+      });
+      wrattler.createNotebook("paper2", code2, langs).then(function(notebook) {
+        notebook.addDocumentContentChanged(function (newContent) {
+          console.log("NOTEBOOK #2 CHANGED:\n%O", newContent)
+        })
       });
     }
   </script>
 </head>
 <body>
-  <div class="container-fluid" id="paper"></div>
+  <table style="width:100%"><tr>
+    <td style="width:50%;"><div id="paper1"></div></td>
+    <td style="width:50%;"><div id="paper2"></div></td>
+  </tr></table>
+  <script src="app.js"></script>
 </body>
 </html>

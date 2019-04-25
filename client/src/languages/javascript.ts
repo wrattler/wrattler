@@ -139,7 +139,9 @@ class JavascriptBlockKind implements Langs.Block {
 
   export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
     language: "javascript",
+    iconClassName: "fab fa-js-square",
     editor: javascriptEditor,
+    getDefaultCode: (id:number) => "// This is a javascript cell. \n//var js" + id + " = [{'id':" + id + ", 'language':'javascript'}]",
 
     evaluate: async (node:Graph.Node) : Promise<Langs.EvaluationResult> => {
       let jsnode = <Graph.JsNode>node
