@@ -9,6 +9,7 @@ import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
 import { externalLanguagePlugin } from './languages/external'
 // import { gammaLangaugePlugin } from "./languages/gamma/plugin"
+
 import * as Docs from './services/documentService'
 
 // ------------------------------------------------------------------------------------------------
@@ -75,7 +76,7 @@ async function updateAndBindAllCells
       let editor:Langs.EditorState = lang.editor.initialize(index++, block);
       return editor;
     }
-    else return c.editor; 
+    else return c.editor;
   });
   let newCells = await bindAllCells(state.cache, editors, state.languagePlugins);
   return { cache:state.cache, cells:newCells, counter:index, contentChanged:state.contentChanged,
@@ -92,7 +93,7 @@ async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins) {
   let evalResult = await languagePlugin.evaluate(node);
   Log.trace("evaluation","Evaluated %s node. Result: %O", node.language, node.value)
   switch(evalResult.kind) {
-    case "success": 
+    case "success":
       node.value = evalResult.value;
       break;
     case "error":
@@ -135,7 +136,7 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
 
     let langs = Object.keys(state.languagePlugins).map(lang =>
         h('a', {
-            key:"add-" + lang, 
+            key:"add-" + lang,
             onclick:()=>trigger({kind:'add', id:cell.editor.id, language:lang})},
           [ h('i', {'class':'fa fa-plus'}), lang ]))
       .concat(
@@ -146,7 +147,7 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
 
     let cmds = [
       h('a', {key:"add", onclick:()=>trigger({kind:'toggleadd', id:cell.editor.id})},[h('i', {'class':'fa fa-plus'}), "add below"]),
-      h('a', {key:"remove", onclick:()=>trigger({kind:'remove', id:cell.editor.id})},[h('i', {'class':'fa fa-times'}), "remove this"])      
+      h('a', {key:"remove", onclick:()=>trigger({kind:'remove', id:cell.editor.id})},[h('i', {'class':'fa fa-times'}), "remove this"])
     ]
 
     let tools = state.expandedMenu == cell.editor.id ? langs : cmds;
@@ -215,7 +216,7 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
         languagePlugins: state.languagePlugins, contentChanged: state.contentChanged,
         expandedMenu:state.expandedMenu, cells: removeCell(state.cells, evt.id)};
 
-    case 'rebind': 
+    case 'rebind':
       let newState = await updateAndBindAllCells(state, evt.block, evt.newSource);
       state.contentChanged(saveDocument(newState))
       return newState
