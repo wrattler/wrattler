@@ -1,0 +1,2 @@
+module Config
+let WrattlerDataStore = "DefaultEndpointsProtocol=https;AccountName=(...);AccountKey=(...);EndpointSuffix=core.windows.net"

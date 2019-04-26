@@ -1,0 +1,9 @@
+framework: >= net40
+source https://nuget.org/api/v2
+
+nuget FAKE 4.63.2
+nuget Suave
+nuget FSharp.Compiler.Tools
+nuget FSharp.Compiler.Service
+nuget FSharp.Data
+nuget WindowsAzure.Storage
