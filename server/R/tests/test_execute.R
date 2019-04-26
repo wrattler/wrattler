@@ -78,11 +78,20 @@ test_that("We can execute code containing a function with assignments inside", {
     expect_that(result$returnVars[[4]]==14,equals(TRUE))
 })
 
-
+### new version of purrr broke a line of code using 'partial' - test the behavior here
 test_that("The 'partial' function works as expected", {
     hash <- "testhash"
     code <- "library(purrr)\n pmean <- partial(mean, na.rm=TRUE)\n x <- pmean(3,4,5)\n"
     importsList <- c()
     result <- executeCode(code, importsList, hash)
     expect_that(result$returnVars[[2]]==3, equals(TRUE))
+})
+
+## early versions had a problem evaluating cells with a comment on the last line
+test_that("We can evaluate code fragments with comments", {
+    hash <- "testhash"
+    code <- "df <- data.frame(var1=c(1,2,3),var2=c(4,5,6))\n#this is a comment"
+    importsList <- c()
+    result <- executeCode(code, importsList, hash)
+    expect_that(is.data.frame(result$returnVars[[1]]), equals(TRUE))
 })
