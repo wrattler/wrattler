@@ -1,10 +1,4 @@
 import axios from 'axios';
-import * as State from '../definitions/state'
-import * as Langs from '../definitions/languages'
-import { markdownLanguagePlugin } from '../languages/markdown'
-import { externalLanguagePlugin } from '../languages/external'
-import { javascriptLanguagePlugin } from '../languages/javascript'
-import { connect } from 'tls';
 
 interface DocumentElement {
   language: string
@@ -61,40 +55,18 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
   return documents;
 }
 
-async function getNamedDocument(): Promise<DocumentElement[]> {
-    async function getDocumentMd(sourceFile: string) : Promise<string> {
-      let sourceURL = "/".concat(sourceFile).concat(".md")
-      let response = await axios.get(sourceURL)
-      // let response = await axios.get("http://localhost:8080/sample.md")
-      return response.data
-    }
-
-    let sourceFile = "index"
-    if (window.location.search.slice(1).length > 0){
-      sourceFile = window.location.search.slice(1)
-    }
-    let paragraph = await getDocumentMd(sourceFile) 
-    return getDocument(paragraph)
-}
-
-function saveDocument(state:State.NotebookState):string
-{
-  let content:string = ""
-  var languagePlugins : { [language: string]: Langs.LanguagePlugin; } = { };
-  languagePlugins["markdown"] = markdownLanguagePlugin;
-  languagePlugins["javascript"] = javascriptLanguagePlugin;
-  languagePlugins["python"] = new externalLanguagePlugin("python", "PYTHONSERVICE_URI");
-  languagePlugins["r"] = new externalLanguagePlugin("r", "RSERVICE_URI");
-  languagePlugins["racket"] = new externalLanguagePlugin("racket", "RACKETSERVICE_URI");
-  for (let c = 0; c < state.cells.length; c++){
-    content = content.concat(languagePlugins[state.cells[c].editor.block.language].save(state.cells[c].editor.block))
+async function getNamedDocumentContent(): Promise<string> {
+  let sourceFile = "index"
+  if (window.location.search.slice(1).length > 0){
+    sourceFile = window.location.search.slice(1)
   }
-  return content
+  let sourceURL = "/".concat(sourceFile).concat(".md")
+  let response = await axios.get(sourceURL)
+  return response.data;
 }
   
 export {
   getDocument,
-  getNamedDocument,
-  DocumentElement,
-  saveDocument
+  getNamedDocumentContent,
+  DocumentElement
 }

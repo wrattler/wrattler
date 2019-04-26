@@ -18,51 +18,28 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
   /**
    * Construct a new xkcd widget.
    */
-
   constructor(options: IRenderMime.IRendererOptions) {
-    super({node:Private.createNode()});
+    
+    function getRandomInt(max:number) {
+      return Math.floor(Math.random() * Math.floor(max));
+    }
 
-    this.id = 'wrattler-jupyterlab';
+    let index = getRandomInt(1000)
+    let wrattler = new PrivateWrattler(index)
+    super({node:wrattler.createNode()});
+    this.wrattlerClass = wrattler
+    this.id = 'paper'.concat(index.toString());
     this.title.label = 'Wrattler';
     this.title.closable = true;       
-    this.addClass('jp-xkcdWidget');
-    
-    // Private.createNode()
-    
-    this.img = document.createElement('img');
-    this.img.className = 'jp-xkcdCartoon';
-    this.node.appendChild(this.img);
-
-    // let saveButton = document.createElement('button')
-    // saveButton.innerHTML = "Save me"
-    // saveButton.addEventListener ("click", () => {
-    //   let documentContent:string = Private.wrattlerToMd();
-    //   let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
-    //   newOptions.data={"text/plain": documentContent}
-    //   this.wrattlerDocumentModel.setData(newOptions)
-    // });
-    // this.node.appendChild(saveButton);
-    
-
-    this.img.insertAdjacentHTML('afterend',
-      `<div class="jp-xkcdAttribution">
-        <a href="https://creativecommons.org/licenses/by-nc/2.5/" class="jp-xkcdAttribution" target="_blank">
-          <img src="https://licensebuttons.net/l/by-nc/2.5/80x15.png" />
-        </a>
-      </div>`
-    );
-    
-    this._mimeType = options.mimeType;
+    this._mimeType = options.mimeType; 
   }
 
   /**
    * The image element associated with the widget.
    */
   readonly img: HTMLImageElement;
-  // readonly wrattlerDiv: HTMLDivElement;
-  // readony wrattlerScript: HTMLScriptElement;
   private _mimeType: string;
-  // private wrattlerDocumentModel: IRenderMime.IMimeModel
+  private wrattlerClass:PrivateWrattler;
   
   /**
    * Dispose of the widget.
@@ -75,26 +52,15 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    * Render Wrattler into this widget's node.
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    console.log("Rendering notebook")
-    // this.wrattlerDocumentModel = model
     let content = model.data[this._mimeType] as string ; 
-    Private.setWrattlerChangeHandler(model)
     
-    // let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
-    // newOptions.data={"text/plain": "Why doesn't this work still?"}
-    // model.setData(newOptions)
-    return new Promise<void> ((resolve)=>{
-      fetch('https://egszlpbmle.execute-api.us-east-1.amazonaws.com/prod').then(response => {
-        return response.json();
-      }).then(data => {
-        this.img.src = data.img;
-        this.img.alt = data.title;
-        this.img.title = data.alt;
-
-        Private.mdToWrattler(content);
+    return new Promise<void> ((resolve)=>
+    {
+      setTimeout(()=>{
+        this.wrattlerClass.initNotebook(content, model)
         this.update();
         resolve()
-      });
+      },1*1000)
     })
   }
 }
@@ -107,7 +73,7 @@ export const rendererFactory: IRenderMime.IRendererFactory = {
   safe: true,
   mimeTypes: [MIME_TYPE],
   defaultRank: 75,
-  createRenderer: options => new RenderedWrattler(options)
+  createRenderer: (options: IRenderMime.IRendererOptions) => new RenderedWrattler(options)
 };
 
 const extensions: IRenderMime.IExtension | IRenderMime.IExtension[] = [
@@ -135,43 +101,35 @@ const extensions: IRenderMime.IExtension | IRenderMime.IExtension[] = [
 
 export default extensions;
 
-namespace Private {
-  export function createNode(): HTMLElement {
+class PrivateWrattler {
+  
+  elementID: string
+
+  constructor(index:number) {
+    this.elementID = "paper".concat(index.toString())
+    console.log("Wrattler created: "+JSON.stringify((<any>window).wrattler))
+  }
+
+  createNode(): HTMLElement { 
     let wrattlerDiv: HTMLDivElement;
     let wrattlerScript: HTMLScriptElement;
     wrattlerScript = document.createElement("script");
-    // this.wrattlerScript.setAttribute("src","https://wrattlerdatastore.blob.core.windows.net/lib/wrattler-app.js");
     wrattlerScript.setAttribute("src","http://localhost:8080/wrattler-app.js");
     wrattlerScript.setAttribute("type","text/javascript");
     document.head.appendChild(wrattlerScript)
-
     wrattlerDiv = document.createElement('div');
-    wrattlerDiv.setAttribute("id","paper");
-    
-
-    let node = document.createElement('div');
-    node.appendChild(wrattlerDiv);
-    return node;
+    wrattlerDiv.setAttribute("id",this.elementID);
+    return wrattlerDiv;
   }
 
-  export function mdToWrattler(content:string) {
-    (<any>window).initializeNotebookJupyterLab('paper', content)
-    console.log("Init Notebook")
-  }
-
-  export function wrattlerToMd():string {
-    let content = (<any>window).exportDocumentContent()
-    // console.log("Exported content: "+content)
-    return content
-  }
-
-  export function setWrattlerChangeHandler(model: IRenderMime.IMimeModel):void {
-    console.log("Setting Document Content to load from JP");
-    (<any>window).documentContentChanged = function(newContent:string) {
-      console.log("Document content changed from JP")
-      let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
-      newOptions.data={"text/plain": newContent}
-      model.setData(newOptions)
-    }
+  initNotebook (content:string, model:IRenderMime.IMimeModel) {
+    var langs = (<any>window).wrattler.getDefaultLanguages();
+    (<any>window).wrattler.createNotebook(this.elementID, content, langs).then(function(notebook:any) {
+      notebook.addDocumentContentChanged(function (newContent:string) {
+        let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
+        newOptions.data={"text/plain": newContent}
+        model.setData(newOptions)
+      })
+    });
   }
 }

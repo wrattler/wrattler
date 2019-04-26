@@ -11,15 +11,16 @@ RUN apt-get update; apt-get -y install yarn
 RUN curl -sL http://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get update; apt-get -y install nodejs
 
-ENV PYTHONSERVICE_URI http://wrattler-pythonservice.azurewebsites.net:80
-ENV RSERVICE_URI http://wrattler-rservice.azurewebsites.net:80
-ENV DATASTORE_URI http://wrattler-datastore.azurewebsites.net:80
+ENV PYTHONSERVICE_URI http://localhost:7101
+ENV RSERVICE_URI http://localhost:7103
+ENV DATASTORE_URI http://localhost:7102
+ENV RACKETSERVICE_URI http://localhost:7104
 
 RUN mkdir app
 ADD . /app
+
 WORKDIR /app
 RUN yarn; yarn build;
 RUN npm install http-server -g
 
 EXPOSE 8080
-CMD ["http-server","./build"]

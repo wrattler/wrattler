@@ -32,7 +32,8 @@
 ;; Retrieve a frame (: jsexpr?) from the url as a string (url-str)
 ;; Used for querying the data-store
 (define (retrieve-frame url-str)
-  (bytes->jsexpr (port->bytes (get-pure-port (string->url url-str)))))
+  (bytes->jsexpr (port->bytes (get-pure-port (string->url url-str)
+					     '("Accept: application/json")))))
 
 ;; store-frame : url? jsexpr? -> boolean?
 (define (store-frame url val)
@@ -127,7 +128,7 @@
 
       (define df* (jsexpr->maybe-df (maybe-df->jsexpr df)))
       (check df-equal? df df*))
-     
+
       (check-equal? (maybe-df->jsexpr 1) (void))
       (check-equal? (maybe-df->jsexpr 'a) (void))
       (check-equal? (maybe-df->jsexpr '(1 2 3)) (void))
@@ -173,7 +174,7 @@
 (define (imports/exports payload)
   (define ns (make-base-namespace))
   (define code-raw (string->syntaxes (hash-ref payload 'code)))
-  
+
   ;; Expand the code inside a module (so that lifted defines are
   ;; handled as we want them to be), but replace #%top so that it
   ;; doesn't cause an error on unbound identifiers and instead wraps
@@ -223,7 +224,7 @@
   (define frame-urls    (hash-ref payload 'frames))
 
   (define-values (imports exports) (imports/exports payload))
-  
+
   (define bindings
     (for/hash ([frame-name-url-hash frame-urls])
       (let ([frame-id  (hash-ref frame-name-url-hash 'name)]
@@ -242,13 +243,13 @@
                    #'(begin
                        body ...
                        (make-hash (list (cons 'exports exports) ...)))))])
-      
+
       (define console (open-output-string))
       (define/contract result (hash/c symbol? any/c)
         (parameterize ([current-output-port console])
           (eval code ns)))
       (values result (get-output-string console))))
-  
+
   ;; Write values to the data store
   (define output-frame-urls
     (for/fold ([acc '()])
@@ -264,7 +265,7 @@
                 "data-store at ~a")
                (df-row-count v) url-str))
             (cons (hash 'name (symbol->string k) 'url url-str) acc)))))
-  
+
   (hash 'output console-output
         'frames output-frame-urls
         'figures '()))
@@ -281,7 +282,7 @@
                     (list->set expect-imports))
       (check-equal? (list->set actual-exports)
                     (list->set expect-exports))))
-  
+
   (test-case "exports"
     (check-imports-exports '[]    '[]        #'(1))
     (check-imports-exports '[]    '["a" "b"] #'((define a 1)
