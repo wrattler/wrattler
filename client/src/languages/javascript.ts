@@ -167,7 +167,7 @@ class JavascriptBlockKind implements Langs.Block {
           for (let value in values) {
             let dfString = JSON.stringify(values[value])
             let hash = Md5.hashStr(dfString)
-            var exp : Values.DataFrame = {kind:"dataframe", url: await putValue(value, hash, dfString), data: values[value]}
+            var exp : Values.DataFrame = {kind:"dataframe", url: await putValue(value, hash, dfString), data: values[value], preview:values[value]}
             results.exports[value] = exp
           }
           return results;
