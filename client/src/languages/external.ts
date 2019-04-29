@@ -122,10 +122,12 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         for(let df of response.data.frames) {
           let exp : Values.DataFrame = 
             { kind:"dataframe", url:<string>df.url, 
-              preview: await getValue(df.url), // TODO: Just first X rows
-              data: new AsyncLazy<any>(() => getValue(df.url)) // TODO: This function is called later when JS calls data.getValue()
+              preview: await getValue(df.url.concat("?nrow=3")), // TODO: Just first X rows
+              // data: new AsyncLazy<any>(() => getValue(df.url)) // TODO: This function is called later when JS calls data.getValue()
+              // data: await getValue(df.url.concat("?nrow=3"))
+              data: new (()=> console.log("hello"))
             };
-          if (Array.isArray(exp.data))
+          if (Array.isArray(exp.preview))
             results.exports[df.name] = exp
         }
         let figureIndex = 0;
