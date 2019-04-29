@@ -59,7 +59,7 @@ impexpLeaf <- function(e, w) {
 
 prepCodeString <- function(inputString) {
     ## target of 'quote' needs to be a unique name..
-    codeToParse <- paste("wrattlerParsedCode <- quote({",inputString,"})")
+    codeToParse <- paste("wrattlerParsedCode <- quote({",inputString,"\n })")
     tmpExpression <- parse(text=codeToParse)
     eval(tmpExpression)
     return(wrattlerParsedCode)
