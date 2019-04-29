@@ -29,7 +29,7 @@ test_that("We can parse code that takes subset of a DF using subset method", {
 test_that("Imports only appear once", {
     code <- "x <- a+b\ny <- a + d"
     impExpEnv <- analyzeCode(code)
-    expect_that(table(impExpEnv$imports)[["a"]],equals(1))
+    expect_that(base::table(impExpEnv$imports)[["a"]],equals(1))
 
 })
 
@@ -37,7 +37,7 @@ test_that("Imports only appear once", {
 test_that("Exports only appear once", {
     code <- "x <- a+b\nx <- c + d"
     impExpEnv <- analyzeCode(code)
-    expect_that(table(impExpEnv$exports)[["x"]],equals(1))
+    expect_that(base::table(impExpEnv$exports)[["x"]],equals(1))
 
 })
 

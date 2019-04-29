@@ -8,8 +8,15 @@ context("testing endpoints")
 
 source("../R_service.R", chdir=T)
 
+if (is.na(Sys.getenv("DATASTORE_URI", unset=NA))) {
+    DATASTORE_URI <- "http://localhost:7102"
+} else {
+    DATASTORE_URI <- Sys.getenv("DATASTORE_URI")
+}
+
+
 set_requester(function (request) {
-    gsub_request(request, "https\\://localhost:7102", "tests/samples")
+    gsub_request(request, DATASTORE_URI, "tests/samples")
 })
 
 
@@ -29,7 +36,7 @@ with_mock_api({
         hash <- "testhash"
         expect_PUT(
             output <- handle_eval(code,frames,hash),body='[{"frameData":"5"}]',
-            paste0(Sys.getenv("DATASTORE_URI"),"/",hash,"/x")
+            paste0(DATASTORE_URI,"/",hash,"/x")
         )
     })
     test_that("We can PUT a plot onto the datastore", {
@@ -38,7 +45,7 @@ with_mock_api({
         hash <- "testhashplot"
         expect_PUT(
             output <- handle_eval(code,frames,hash),
-            url=paste0(Sys.getenv("DATASTORE_URI"),"/",hash,"/plt")
+            url=paste0(DATASTORE_URI,"/",hash,"/plt")
         )
     })
 
