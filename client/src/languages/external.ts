@@ -89,12 +89,14 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
   async evaluate(node:Graph.Node) : Promise<Langs.EvaluationResult> {
     let externalNode = <Graph.ExternalNode>node
 
-    async function getValue(blob) : Promise<any> {
+    async function getValue(blob, preview:boolean) : Promise<any> {
       var pathname = new URL(blob).pathname;
-      let headers = {'Content-Type': 'application/json'}
+      let headers = {'Accept': 'application/json'}
       let url = DATASTORE_URI.concat(pathname)
+      if (preview)
+        url = url.concat("?nrow=10")
       try {
-        Log.trace("data-store", "Fetching data frame: %s", pathname)
+        Log.trace("data-store", "Fetching data frame: %s", url)
         let response = await axios.get(url, {headers: headers});
       
         Log.trace("data-store", "Got data frame (%s rows): %s", response.data.length, pathname)
@@ -107,14 +109,14 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
   
     async function getEval(body, serviceURI ) : Promise<Langs.EvaluationResult> {
       let url = serviceURI.concat("/eval")
-      let headers = {'Content-Type': 'application/json'}
+      let headers = {'Accept': 'application/json'}
       try {
         let response = await axios.post(url, body, {headers: headers});        
         var results : Values.ExportsValue = { kind:"exports", exports:{} }
         
         if (response.data.output.toString().length > 0){
-          console.log(response.data.output)
-          console.log(response.data)
+          // console.log(response.data.output)
+          // console.log(response.data)
           let printouts : Values.Printout = { kind:"printout", data:response.data.output.toString() }
           results.exports['console'] = printouts
         }
@@ -122,17 +124,15 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         for(let df of response.data.frames) {
           let exp : Values.DataFrame = 
             { kind:"dataframe", url:<string>df.url, 
-              preview: await getValue(df.url.concat("?nrow=3")), // TODO: Just first X rows
-              // data: new AsyncLazy<any>(() => getValue(df.url)) // TODO: This function is called later when JS calls data.getValue()
-              // data: await getValue(df.url.concat("?nrow=3"))
-              data: new (()=> console.log("hello"))
+              preview: await getValue(df.url, true), // TODO: Just first X rows
+              data: new AsyncLazy<any>(() => getValue(df.url,false)) // TODO: This function is called later when JS calls data.getValue()
             };
           if (Array.isArray(exp.preview))
             results.exports[df.name] = exp
         }
         let figureIndex = 0;
         for(let df of response.data.figures) {
-          let raw = await getValue(df.url)
+          let raw = await getValue(df.url,false)
           let exp : Values.Figure = {kind:"figure", data: raw[0]['IMAGE']};
           results.exports['figure'+figureIndex.toString()] = exp
           figureIndex++;

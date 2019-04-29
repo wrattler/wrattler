@@ -36,8 +36,12 @@ two <- data.frame(name=c("Jane"), age=c(54))
 ```
 
 ```javascript
+let three = one.concat(two)
+```
+
+```javascript
 addOutput(function(id) {
-  var items = one.concat(two).map(function(row) { 
+  var items = one.concat(three).map(function(row) { 
     return "<li><b>" + row.name + "</b> (" + row.age + ")</li>" });
   var html = "<ul style='margin:20px'>" + items.join("") + "</ul>";
   document.getElementById(id).innerHTML = html;
