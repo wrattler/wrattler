@@ -9,6 +9,7 @@ import {printPreview} from '../editors/preview';
 import ts, { createNoSubstitutionTemplateLiteral } from 'typescript';
 import axios from 'axios';
 import {Md5} from 'ts-md5';
+import {AsyncLazy} from '../common/lazy';
 
 declare var PYTHONSERVICE_URI: string;
 declare var DATASTORE_URI: string;
@@ -161,13 +162,37 @@ class JavascriptBlockKind implements Langs.Block {
         }
       }
 
+      async function getValue(blob, preview:boolean) : Promise<any> {
+        var pathname = new URL(blob).pathname;
+        let headers = {'Accept': 'application/json'}
+        let url = DATASTORE_URI.concat(pathname)
+        if (preview)
+          url = url.concat("?nrow=2")
+        try {
+          // Log.trace("data-store", "Fetching data frame: %s", url)
+          let response = await axios.get(url, {headers: headers});
+        
+          // Log.trace("data-store", "Got data frame (%s rows): %s", response.data.length, pathname)
+          return response.data
+        }
+        catch (error) {
+          throw error;
+        }
+      }
+
       async function putValues(values) : Promise<Values.ExportsValue> {
         try {
           var results : Values.ExportsValue = { kind:"exports", exports:{} }
           for (let value in values) {
             let dfString = JSON.stringify(values[value])
             let hash = Md5.hashStr(dfString)
-            var exp : Values.DataFrame = {kind:"dataframe", url: await putValue(value, hash, dfString), data: values[value]}
+            let df_url = await putValue(value, hash, dfString)
+            var exp : Values.DataFrame = {
+              kind:"dataframe", 
+              url: df_url, 
+              data: new AsyncLazy<any>(() => getValue(df_url,false)), 
+              preview:values[value].slice(0, 10)
+            }
             results.exports[value] = exp
           }
           return results;
@@ -192,7 +217,7 @@ class JavascriptBlockKind implements Langs.Block {
           var argDictionary:{[key: string]: string} = {}
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
             let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-            argDictionary[imported.variableName] = (<Values.DataFrame>imported.value).data;
+            argDictionary[imported.variableName] = await (<Values.DataFrame>imported.value).data.getValue();
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
           }
           var outputs : ((id:string) => void)[] = [];

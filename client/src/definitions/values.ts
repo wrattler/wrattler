@@ -5,6 +5,7 @@
  */
 
 /** This comment is needed so that TypeDoc parses the above one correctly */
+import {AsyncLazy} from '../common/lazy';
 
 /**
 * TODO
@@ -35,7 +36,8 @@ interface ExportsValue extends Value {
 interface DataFrame extends Value {
   kind : "dataframe"
   url : string
-  data : any
+  data : AsyncLazy<any>
+  preview : any
 }
 
 interface Printout extends Value {

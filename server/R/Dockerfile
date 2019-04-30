@@ -1,5 +1,6 @@
 FROM wrattler/wrattler_r_service_base:latest
 
+
 ## install the datadiff package
 RUN git clone https://github.com/alan-turing-institute/datadiff
 RUN Rscript -e "devtools::install_local('datadiff')"

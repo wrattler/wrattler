@@ -19,7 +19,8 @@ function printCurrentValue(cellId:number, value:Values.Value, tableName:string) 
   {
     case "dataframe":
       let df = <Values.DataFrame>value
-      return h('div', {key: "dataframe"+componentRootId, class:'table-container'}, [printCurrentTable(df.data, tableName)]);
+      console.log(df)
+      return h('div', {key: "dataframe"+componentRootId, class:'table-container'}, [printCurrentTable(df.preview, tableName)]);
     case "printout":
       let printoutValue = <Values.Printout>value
       return h('div', {key: "printout"+componentRootId}, [h('pre', {}, [printoutValue.data])])
@@ -47,6 +48,7 @@ function printTabs(triggerSelect:(number) => void, selectedTable:number, tableNa
 }
 
 function printCurrentTable(aTable: any, tableName:string) {
+  console.log(aTable)
   if (aTable.length > 0) {
     let tableHeaders:Array<string> = getCurrentHeaders(aTable[0]);
     let rowsComponents:Array<any> = []
