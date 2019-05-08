@@ -29,11 +29,7 @@ RUN pip3 install pandas
 RUN pip3 install numpy
 RUN pip3 install pyarrow
 RUN pip3 install poetry
-RUN apt-get install -y python3-venv
-
-## install the CleverCSV AI helper
-RUN git clone https://github.com/alan-turing-institute/CleverCSV
-RUN cd CleverCSV/python; poetry install; pip3 install .
+RUN pip3 install clevercsv
 
 ADD . /app
 WORKDIR /app
