@@ -14,12 +14,12 @@ services:
     - wrattler_data_store
     networks:
     - wrattler_nw
-    volumes:
-      - ./client:/app
-      - ./client/src:/app/src
-      - ./client/src/languagePlugins:/app/src/languagePlugins
-    entrypoint: /bin/bash
-    command: "./entrypoint.sh"
+#    volumes:
+#      - ./client:/app
+#      - ./client/src:/app/src
+#      - ./client/src/languagePlugins:/app/src/languagePlugins
+#    entrypoint: /bin/bash
+#    command: "./entrypoint.sh"
     environment:
      - RACKETSERVICE_URI=http://localhost:7104
      - PYTHONSERVICE_URI=http://localhost:7101
@@ -71,8 +71,8 @@ services:
       dockerfile: Dockerfile
     ports:
     - "7102:7102"
-    environment:
-    - WRATTLER_LOCAL_STORAGE=True
+#    environment:
+#    - WRATTLER_LOCAL_STORAGE=True
     networks:
     - wrattler_nw
 

@@ -14,10 +14,35 @@ RUN apt-get update; apt-get -y install nodejs
 # RUN mkdir app
 # ADD . /app
 # RUN cd /app; yarn;
-WORKDIR /app
+#WORKDIR /app
 
 EXPOSE 8080
 # RUN ["chmod", "+x", "/app/entrypoint.sh"]
 # RUN ["/usr/bin/yarn"]
 # RUN ["/usr/bin/yarn","start"]
 # CMD [ "npm", "start" ]
+
+
+
+RUN apt-get update; apt-get install -y python3
+RUN apt-get update; apt-get install -y python3-pip
+
+RUN pip3 install jupyterlab
+
+
+RUN mkdir app
+ADD . /app
+
+WORKDIR /app
+RUN yarn; yarn build;
+RUN npm install http-server -g
+RUN yarn add typescript
+WORKDIR /app/jupyterlab_wrattler
+RUN yarn install
+RUN jupyter labextension link . ;  jlpm run build
+
+EXPOSE 8889
+
+CMD ["jupyter","lab","--ip","0.0.0.0","--port","8889","--allow-root"]
+
+##CMD ["http-server","build","-c-1"]
