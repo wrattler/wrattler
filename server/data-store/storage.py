@@ -12,7 +12,7 @@ from utils import filter_data, convert_to_json, convert_to_arrow
 from exceptions import DataStoreException
 try:
     from config import AzureConfig
-except(ModuleNotFoundError):
+except:
     print("File config.py not found.  Copy config.py.template and fill in your Azure storage account credentials in order to use Azure blob storage backend.")
 
 
@@ -44,7 +44,7 @@ class LocalStore(object):
         return True
 
 
-    def read(self, cell_hash, frame_name, data_format=None):
+    def read(self, cell_hash, frame_name):
         """
         retrieve data from local disk
         """
@@ -88,14 +88,15 @@ class AzureStore(object):
         return True
 
 
-    def read(self, cell_hash, frame_name, data_format):
+    def read(self, cell_hash, frame_name):
         """
         Read a blob from blob storage <container_name>/<cell_hash>/<frame_name>
+        We don't know if it is json string or binary arrow format, so try getting it as text, and if it doesn't work,
+        assume bytes.
         """
-        if data_format == "application/json":
+        try:
             blob_data = self.bbs.get_blob_to_text(self.container_name,"{}/{}".format(cell_hash, frame_name))
-        else:
-            ## assume bytes
+        except(UnicodeDecodeError):
             blob_data = self.bbs.get_blob_to_bytes(self.container_name,"{}/{}".format(cell_hash, frame_name))
         return blob_data.content
 
@@ -128,7 +129,7 @@ class Store(object):
         """
         Tell the selected backend to read the file, and filter if required.
         """
-        data = self.store.read(cell_hash, frame_name, data_format)
+        data = self.store.read(cell_hash, frame_name)
         if data_format == "application/json":
             data = convert_to_json(data)
         elif data_format == "application/octet-stream":
