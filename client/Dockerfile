@@ -23,28 +23,13 @@ EXPOSE 8080
 # CMD [ "npm", "start" ]
 
 
-
-RUN apt-get update; apt-get install -y python3
-RUN apt-get update; apt-get install -y python3-pip
-
-RUN pip3 install jupyterlab
-
-
 RUN mkdir app
 ADD . /app
 
 WORKDIR /app
 
-RUN yarn add typescript
-#WORKDIR /app/jupyterlab_wrattler
-RUN cd /app/jupyterlab_wrattler; yarn install; jupyter labextension link . ;  jlpm run build
-
 RUN yarn; yarn build;
 RUN npm install http-server -g
 
-EXPOSE 8889
-
-CMD ["jupyter","lab","--ip","0.0.0.0","--port","8889","--allow-root"]
-
-#CMD ["/bin/bash"]
-##CMD ["http-server","build","-c-1"]
+#CMD ["http-server","build","-c-1"]
+CMD ["/bin/bash"]
