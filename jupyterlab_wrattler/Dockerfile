@@ -24,13 +24,10 @@ ADD . /app
 WORKDIR /app
 
 RUN yarn add typescript
-
-RUN cd yarn install; jupyter labextension link . ;  jlpm run build
-
-RUN yarn; yarn build;
+RUN yarn install; jupyter labextension link . ;  jlpm run build
 
 EXPOSE 8889
 
-#CMD ["jupyter","lab","--ip","0.0.0.0","--port","8889","--allow-root"]
+WORKDIR /public
 
-CMD ["/bin/bash"]
+CMD ["jupyter","lab","--ip","0.0.0.0","--port","8889","--allow-root"]

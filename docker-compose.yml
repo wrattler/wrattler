@@ -7,7 +7,6 @@ services:
       dockerfile: Dockerfile
     ports:
      - "8080:8080"
-     - "8889:8889"
     # stdin_open: true
     # tty: true
     depends_on:
@@ -72,10 +71,22 @@ services:
       dockerfile: Dockerfile
     ports:
     - "7102:7102"
-#    environment:
-#    - WRATTLER_LOCAL_STORAGE=True
+    environment:
+    - WRATTLER_LOCAL_STORAGE=True
     networks:
     - wrattler_nw
+
+  wrattler_jupyterlab:
+    container_name: wrattler_wrattler_jupyterlab_1
+    build:
+      context: jupyterlab_wrattler
+      dockerfile: Dockerfile
+    ports:
+    - "8889:8889"
+    networks:
+    - wrattler_nw
+    volumes:
+      - ./jupyterlab_wrattler/public:/public
 
 networks:
   wrattler_nw:
