@@ -14,8 +14,8 @@ services:
     - wrattler_data_store
     networks:
     - wrattler_nw
-#    volumes:
-#      - ./client:/app
+    volumes:
+      - ./public:/app/public
 #      - ./client/src:/app/src
 #      - ./client/src/languagePlugins:/app/src/languagePlugins
 #    entrypoint: /bin/bash
@@ -86,7 +86,7 @@ services:
     networks:
     - wrattler_nw
     volumes:
-      - ./jupyterlab_wrattler/public:/public
+      - ./public:/public
 
 networks:
   wrattler_nw:
