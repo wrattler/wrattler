@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 from .fixtures import *
 from python_service import *
+import python_service
 
 
 def test_exports(mock_datastore):

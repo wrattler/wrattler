@@ -12,9 +12,10 @@ import pytest
 import pandas as pd
 from unittest.mock import patch
 
-from python_service import evaluate_code, read_frame
+from python_service import handle_eval, read_frame, DATASTORE_URI
 from exceptions import ApiException
-from .fixtures import mock_datastore, mock_read_frame, mock_write_frame, mock_write_image
+from .fixtures import mock_datastore, mock_read_frame, mock_write_frame, mock_write_image, \
+    mock_get_file_content
 
 
 def test_hello_world(mock_datastore):
@@ -25,9 +26,9 @@ def test_hello_world(mock_datastore):
     input_code = 'print("hello world")'
     with patch('python_service.write_frame') as mock_write_frame:
 
-        return_dict = evaluate_code({"code":input_code,
-                                     "frames": [],
-                                     "hash": "irrelevant"})
+        return_dict = handle_eval({"code":input_code,
+                                   "frames": [],
+                                   "hash": "irrelevant"})
         assert(return_dict["output"]=="hello world")
         assert(len(return_dict["frames"])==0)
 
@@ -38,9 +39,9 @@ def test_assignment(mock_datastore):
     """
     input_code = 'df = pd.DataFrame({"x":[1,2,3]})'
     with patch('python_service.write_frame') as mock_write_frame:
-        return_dict = evaluate_code({"code":input_code,
-                                     "frames": [],
-                                     "hash": "irrelevant"})
+        return_dict = handle_eval({"code":input_code,
+                                   "frames": [],
+                                   "hash": "irrelevant"})
         assert(return_dict["output"]=="")
         assert(len(return_dict["frames"])==1)
         assert(return_dict["frames"][0]["name"]=="df")
@@ -55,9 +56,9 @@ def test_concat(mock_datastore):
     input_code += 'df2 = pd.DataFrame({"name":["Carol"],"occupation":["copper"]})\n'
     input_code += 'df3 = df1.append(df2)\n'
     with patch('python_service.write_frame') as mock_write_frame:
-        return_dict = evaluate_code({"code":input_code,
-                                     "frames": [],
-                                     "hash": "testhash1"})
+        return_dict = handle_eval({"code":input_code,
+                                "frames": [],
+                                "hash": "testhash1"})
         assert(len(return_dict["frames"])==3)
         assert(return_dict["frames"][2]["url"].endswith("df3"))
 
@@ -70,7 +71,30 @@ def test_create_plot(mock_datastore):
     input_code = "import matplotlib.pyplot as plt\nplt.plot([1,2,3])\n"
     with patch('python_service.write_frame') as mock_write_frame:
         with patch('python_service.write_image') as mock_write_image:
-            return_dict = evaluate_code({"code": input_code,
-                                         "frames": [],
-                                         "hash": "testhash2"})
-            assert(os.path.exists("/tmp/testhash2/fig.png"))
+            return_dict = handle_eval({"code": input_code,
+                                       "frames": [],
+                                       "hash": "testhash32"})
+            assert(os.path.exists("/tmp/testhash32/fig.png"))
+
+
+#def test_use_func_from_file(mock_datastore):
+#    """
+#    test that we can read a file from the datastore containing a function
+#    definition and use that function in a code fragment.
+#    """
+#    shutil.rmtree("/tmp/testhash3",ignore_errors=True)
+#    file_content = "import numpy\ndef testfunc(input_val):\n return numpy.sqrt(input_val)\n"
+#    os.makedirs("/tmp/testhash3")
+#    with open("/tmp/testhash3/testfile.py","w") as f:
+#        f.write(file_content)
+#    input_code = 'print("Result is {}".format(testfunc(9))) \n'
+#    cell_hash = "testhash3"
+#    filename = "testfile.py"
+#    file_url = "{}/{}/{}".format(DATASTORE_URI, cell_hash, file_content)
+#    with patch('python_service.get_file_content') as mock_get_file_content:
+#        return_dict = handle_eval({"code": input_code,
+#                                   "frames": [],
+#                                   "hash": "testhash3",
+#                                   "files": [file_url]
+#                                   })
+#        assert("Result is 3" in return_dict["output"])

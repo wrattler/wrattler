@@ -13,7 +13,7 @@ from flask_cors import CORS
 import json
 import requests
 
-from python_service import analyze_code, evaluate_code
+from python_service import handle_exports, handle_eval
 from exceptions import ApiException
 
 
@@ -31,14 +31,14 @@ def handle_api_exception(error):
 @app.route("/exports", methods=['POST'])
 def exports():
     data = json.loads(request.data.decode("utf-8"))
-    imports_exports = analyze_code(data)
+    imports_exports = handle_exports(data)
     return jsonify(imports_exports)
 
 
 @app.route("/eval", methods=['POST'])
 def eval():
     data = json.loads(request.data.decode("utf-8"))
-    eval_result = evaluate_code(data)
+    eval_result = handle_eval(data)
     return jsonify(eval_result)
 
 
