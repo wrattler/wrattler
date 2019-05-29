@@ -142,7 +142,6 @@ class MarkdownBlockKind implements Langs.Block {
     },
     bind: async (cache, scope, block: Langs.Block) : Promise<Langs.BindingResult> => {
       let mdBlock:MarkdownBlockKind = <MarkdownBlockKind> block
-      console.log(block)
       let node:Graph.Node = {
         language:"markdown", 
         antecedents:[],
