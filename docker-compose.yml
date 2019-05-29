@@ -18,7 +18,7 @@ services:
      - ./client:/app
      - ./client/src:/app/src
      - ./client/src/languagePlugins:/app/src/languagePlugins
-     - ./public:/app/public
+     - ./resources:/app/public/resources
     entrypoint: /bin/bash
     command: "./entrypoint.sh"
     environment:
