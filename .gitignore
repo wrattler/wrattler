@@ -17,3 +17,5 @@ anon_public_d.RData
 server/R/.Rhistory
 # emacs autosave files
 *~
+*.ipynb
+public/.ipynb_checkpoints/*
