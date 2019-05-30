@@ -332,14 +332,14 @@ def handle_eval(data):
     output_hash = data["hash"]
     assign_dict = find_assignments(code_string)
     files = data["files"] if "files" in data.keys() else []
-    print("Number of files {}".format(len(files)))
+ #   print("Number of files {}".format(len(files)))
     ## first deal with any files that could contain function def'ns and/or import statements
     file_content = ""
     for file_url in files:
         file_content += get_file_content(file_url)
         file_content += "\n"
 
-    print("File content is {}".format(file_content))
+#    print("File content is {}".format(file_content))
     input_frames = data["frames"]
     frame_dict = retrieve_frames(input_frames)
     ## execute the code, get back a dict {"output": <string_output>, "results":<list_of_vals>}
@@ -348,7 +348,7 @@ def handle_eval(data):
                                 frame_dict,
                                 assign_dict['targets'],
                                 output_hash,
-                                verbose=True)
+                                verbose=False)
 
     results = results_dict["results"]
     ## prepare a return dictionary

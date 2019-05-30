@@ -50,9 +50,11 @@ def test_eval_simple_assignment(test_client):
     testframes = []
     testhash = "abcdef"
     with patch('python_service.write_frame', return_value=True) as mock_write_frame:
-        response = test_client.post("/eval",data=json.dumps({"code": testcode,
-                                                             "frames": testframes,
-                                                             "hash": testhash}))
+        response = test_client.post("/eval",data=json.dumps({
+            "files": [],
+            "code": testcode,
+            "frames": testframes,
+            "hash": testhash}))
         assert response.status_code == 200
         response_data = json.loads(response.data.decode('utf-8'))
         assert "output" in response_data.keys()
