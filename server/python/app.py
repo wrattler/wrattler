@@ -8,7 +8,7 @@ A POST request to 'eval' will evaluate the code fragment and write the output fr
 then return the names and URLs of these frames.
 """
 
-from flask import Flask, request, jsonify
+from flask import Blueprint, Flask, request, jsonify
 from flask_cors import CORS
 import json
 import requests
@@ -17,36 +17,42 @@ from python_service import handle_exports, handle_eval
 from exceptions import ApiException
 
 
-app = Flask(__name__)
-CORS(app)
+python_service_blueprint = Blueprint("python_service", __name__)
 
 
-@app.errorhandler(ApiException)
+@python_service_blueprint.errorhandler(ApiException)
 def handle_api_exception(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
 
 
-@app.route("/exports", methods=['POST'])
+@python_service_blueprint.route("/exports", methods=['POST'])
 def exports():
     data = json.loads(request.data.decode("utf-8"))
     imports_exports = handle_exports(data)
     return jsonify(imports_exports)
 
 
-@app.route("/eval", methods=['POST'])
+@python_service_blueprint.route("/eval", methods=['POST'])
 def eval():
     data = json.loads(request.data.decode("utf-8"))
     eval_result = handle_eval(data)
     return jsonify(eval_result)
 
 
-@app.route("/test", methods=["GET"])
+@python_service_blueprint.route("/test", methods=["GET"])
 def test():
     return "Python service is alive!"
 
 
+def create_app(name = __name__):
+    app = Flask(name)
+    CORS(app)
+    app.register_blueprint(python_service_blueprint)
+    return app
+
 
 if __name__ == "__main__":
+    app = create_app()
     app.run(host='0.0.0.0',port=7101, debug=True)

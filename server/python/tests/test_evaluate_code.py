@@ -14,15 +14,20 @@ from unittest.mock import patch
 
 from python_service import handle_eval, read_frame, DATASTORE_URI
 from exceptions import ApiException
-from .fixtures import mock_datastore, mock_read_frame, mock_write_frame, mock_write_image, \
-    mock_get_file_content
+
+from flask import Flask
+from flask_restful import Api
+
+import pytest
 
 
-def test_hello_world(mock_datastore):
+
+def test_hello_world():
     """
     test that a simple print statement gives text output but no
     output frames.
     """
+    shutil.rmtree("/tmp/testhash3", ignore_errors=True)
     input_code = 'print("hello world")'
     with patch('python_service.write_frame') as mock_write_frame:
 
@@ -33,7 +38,7 @@ def test_hello_world(mock_datastore):
         assert(len(return_dict["frames"])==0)
 
 
-def test_assignment(mock_datastore):
+def test_assignment():
     """
     test that a simple assignment outputs the url for a dataframe
     """
@@ -48,22 +53,22 @@ def test_assignment(mock_datastore):
         assert(return_dict["frames"][0]["url"].endswith("/df"))
 
 
-def test_concat(mock_datastore):
+def test_concat():
     """
     test that we can concatenate two dataframes
     """
     input_code = 'df1 = pd.DataFrame({"name":["Alice","Bob"],"occupation":["cryptographer","crook"]})\n'
     input_code += 'df2 = pd.DataFrame({"name":["Carol"],"occupation":["copper"]})\n'
     input_code += 'df3 = df1.append(df2)\n'
-    with patch('python_service.write_frame') as mock_write_frame:
+    with patch('python_service.write_frame', return_value=True) as mock_write_frame:
         return_dict = handle_eval({"code":input_code,
-                                "frames": [],
-                                "hash": "testhash1"})
+                                   "frames": [],
+                                   "hash": "testhash1"})
         assert(len(return_dict["frames"])==3)
         assert(return_dict["frames"][2]["url"].endswith("df3"))
 
 
-def test_create_plot(mock_datastore):
+def test_create_plot():
     """
     test that if we make a pyplot, it creates a file fig.png in /tmp/<cell_hash>/
     """
@@ -77,24 +82,21 @@ def test_create_plot(mock_datastore):
             assert(os.path.exists("/tmp/testhash32/fig.png"))
 
 
-#def test_use_func_from_file(mock_datastore):
-#    """
-#    test that we can read a file from the datastore containing a function
-#    definition and use that function in a code fragment.
-#    """
-#    shutil.rmtree("/tmp/testhash3",ignore_errors=True)
-#    file_content = "import numpy\ndef testfunc(input_val):\n return numpy.sqrt(input_val)\n"
-#    os.makedirs("/tmp/testhash3")
-#    with open("/tmp/testhash3/testfile.py","w") as f:
-#        f.write(file_content)
-#    input_code = 'print("Result is {}".format(testfunc(9))) \n'
-#    cell_hash = "testhash3"
-#    filename = "testfile.py"
-#    file_url = "{}/{}/{}".format(DATASTORE_URI, cell_hash, file_content)
-#    with patch('python_service.get_file_content') as mock_get_file_content:
-#        return_dict = handle_eval({"code": input_code,
-#                                   "frames": [],
-#                                   "hash": "testhash3",
-#                                   "files": [file_url]
-#                                   })
-#        assert("Result is 3" in return_dict["output"])
+def test_use_func_from_file():
+    """
+    test that we can read a file from the datastore containing a function
+    definition and use that function in a code fragment.
+    """
+
+    file_content = "import numpy\ndef testfunc(input_val):\n return numpy.sqrt(input_val)\n"
+    input_code = 'print("Result is {}".format(testfunc(9))) \n'
+    cell_hash = "testhash3"
+    filename = "testfile.py"
+    with patch('python_service.get_file_content', return_value=file_content) as mock_get_file_content:
+        with patch('python_service.write_frame') as mock_write_frame:
+            return_dict = handle_eval({"code": input_code,
+                                       "frames": [],
+                                       "hash": "testhash3",
+                                       "files": ["http://dummy_datastore:7102/some/file"]
+            })
+            assert("Result is 3" in return_dict["output"])
