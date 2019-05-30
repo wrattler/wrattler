@@ -157,7 +157,6 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
   
     switch(externalNode.kind) {
       case 'code': 
-      console.log(externalNode)
         let importedFrames : { name:string, url:string }[] = [];
         for (var ant of externalNode.antecedents) {
           let imported = <Graph.ExportNode>ant

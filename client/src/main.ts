@@ -37,6 +37,8 @@ type NotebookState = {
   expandedMenu : number
   cache: Graph.NodeCache
 }
+
+let paperElementID:string='paper'
  
 // ------------------------------------------------------------------------------------------------
 // Helper functions for binding nodes
@@ -162,8 +164,8 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
       ]
     );
   });
-
-  return h('div', {class:'container-fluid', id:'paper'}, [nodes])
+  Log.trace('main', "Re-Creating notebook for id '%s'", paperElementID)
+  return h('div', {class:'container-fluid', id:paperElementID}, [nodes])
 }
 
 async function update(state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
@@ -231,7 +233,10 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
     languagePlugins:LanguagePlugins, contentChanged:(newContent:string) => void) {
   let maquetteProjector = createProjector();
   let paperElement = document.getElementById(elementID);
-  if (!paperElement) throw "Missing paper element!"
+  paperElementID = elementID;
+  Log.trace('main', "Looking for element %s", paperElementID)
+  let elementNotFoundError:string = "Missing paper element: "+elementID
+  if (!paperElement) throw elementNotFoundError
   
   var cache = createNodeCache()
   var cells = await bindAllCells(cache, editors, languagePlugins);

@@ -3,10 +3,12 @@
 /* ----------------------------------------------------------------------------
 	General notebook and cells styles	
 -----------------------------------------------------------------------------*/
+.jp-Wrattler {
+	overflow: scroll;
+}
 
 body { 
 	font-family:Roboto;
-	background:#f0f0f0;
 }
 #paper {
 	margin:0px auto 800px auto;
@@ -246,4 +248,5 @@ button.delete {
 		max-width: 70%;
 	}
  }
+
 

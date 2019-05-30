@@ -7,6 +7,7 @@ import '../style/index.css';
  * The CSS class for a Wrattler icon.
  */
 const CSS_ICON_CLASS = 'WrattlerIcon';
+const CSS_CLASS = 'jp-Wrattler';
 
 /**
  * The MIME type for Wrattler.
@@ -28,9 +29,12 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
     let wrattler = new PrivateWrattler(index)
     super({node:wrattler.createNode()});
     this.wrattlerClass = wrattler
-    this.id = 'paper'.concat(index.toString());
+    this.id = 'paperparent'.concat(index.toString());
     this.title.label = 'Wrattler';
-    this.title.closable = true;       
+    this.title.closable = true;      
+    this.addClass(CSS_CLASS); 
+    // console.log(this)
+    // console.log(this.hasClass(CSS_CLASS))
     this._mimeType = options.mimeType; 
   }
 
@@ -107,24 +111,25 @@ class PrivateWrattler {
 
   constructor(index:number) {
     this.elementID = "paper".concat(index.toString())
-    console.log("Wrattler created: "+JSON.stringify((<any>window).wrattler))
   }
 
   createNode(): HTMLElement { 
-    let wrattlerDiv: HTMLDivElement;
     let wrattlerScript: HTMLScriptElement;
     wrattlerScript = document.createElement("script");
     wrattlerScript.setAttribute("src","http://localhost:8080/wrattler-app.js");
     wrattlerScript.setAttribute("type","text/javascript");
     document.head.appendChild(wrattlerScript)
-    wrattlerDiv = document.createElement('div');
+    let wrattlerParentDiv: HTMLDivElement = document.createElement('div');
+    let wrattlerDiv: HTMLDivElement = document.createElement('div');
     wrattlerDiv.setAttribute("id",this.elementID);
-    return wrattlerDiv;
+    wrattlerParentDiv.appendChild(wrattlerDiv)
+    return wrattlerParentDiv;
   }
 
   initNotebook (content:string, model:IRenderMime.IMimeModel) {
     var langs = (<any>window).wrattler.getDefaultLanguages();
     (<any>window).wrattler.createNotebook(this.elementID, content, langs).then(function(notebook:any) {
+      console.log("Wrattler created: "+JSON.stringify((<any>window).wrattler))
       notebook.addDocumentContentChanged(function (newContent:string) {
         let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
         newOptions.data={"text/plain": newContent}
