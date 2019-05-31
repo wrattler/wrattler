@@ -162,9 +162,24 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           let imported = <Graph.ExportNode>ant
           importedFrames.push({ name: imported.variableName, url: (<Values.DataFrame>imported.value).url })
         }
-        let src = externalNode.source
+        let src = externalNode.source.replace(/\r/g,'\n')
         let hash = Md5.hashStr(src)
-        let body = {"code": src.replace(/\r/g,'\n'),
+        
+        let srcArray = src.split('\n')
+        let strippedSrc = ''
+        var regex = /^%load/;
+        for (let l = 0; l < srcArray.length; l++) {
+          if (srcArray[l].match(regex)) {
+            console.log(srcArray[l])
+          }
+          else {
+            strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')
+          }
+        }
+        // let body = {"code": src.replace(/\r/g,'\n'),
+        //   "hash": hash,
+        //   "frames": importedFrames}
+        let body = {"code": strippedSrc,
           "hash": hash,
           "frames": importedFrames}
         return await getEval(body, this.serviceURI);
@@ -189,6 +204,10 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
   }
 
   parse (code:string) {
+    /*
+      %load myfunc.py
+      %load myfunc.R
+    */
     return new ExternalBlockKind(code, this.language);
   }
 
@@ -198,8 +217,25 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     let antecedents : Graph.Node[] = []
     try {
       let url = this.serviceURI.concat("/exports")
+      let src = exBlock.source.replace(/\r/g,'\n')
+      let srcArray = src.split('\n')
+      let strippedSrc = ''
+      var regex = /^%load/;
+      for (let l = 0; l < srcArray.length; l++) {
+        if (srcArray[l].match(regex)) {
+          console.log(srcArray[l])
+        }
+        else {
+          strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')
+        }
+      }
+
+      // let body = 
+      //   { "code": exBlock.source.replace(/\r/g,'\n'),
+      //     "hash": initialHash,
+      //     "frames": Object.keys(scope) }
       let body = 
-        { "code": exBlock.source.replace(/\r/g,'\n'),
+        { "code": strippedSrc,
           "hash": initialHash,
           "frames": Object.keys(scope) }
       let headers = {'Content-Type': 'application/json'}

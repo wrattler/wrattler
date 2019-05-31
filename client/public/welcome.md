@@ -28,7 +28,9 @@ The following three cells illustrate the idea. We export two dataframes from R a
 and then use both of them in JavaScript to render a simple HTML output:
 
 ```python
+%load welcome.py
 one = pd.DataFrame({"name":["Jim"], "age":[51]})
+twotest = pd.DataFrame({"name":["Jim"], "age":[51]})
 ```
 
 ```r
