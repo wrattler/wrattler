@@ -1,3 +1,2 @@
-def printHello():
-    print ("Hello Nick")
-    print ("Hello Tomas")
+def printHello(name):
+    print ("Hello {}".format(name))

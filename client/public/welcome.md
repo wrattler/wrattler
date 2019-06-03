@@ -26,7 +26,8 @@ two steps:
 
 ```python
 %load hello.py
-printHello()
+printHello("Tomas")
+printHello("Nick")
 ```
 
 The following three cells illustrate the idea. We export two dataframes from R and Python
