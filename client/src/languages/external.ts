@@ -8,6 +8,7 @@ import {createEditor} from '../editors/editor';
 import {Md5} from 'ts-md5';
 import axios from 'axios';
 import {AsyncLazy} from '../common/lazy';
+import * as Doc from '../services/documentService';
 
 declare var DATASTORE_URI: string;
 
@@ -170,7 +171,9 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         var regex = /^%load/;
         for (let l = 0; l < srcArray.length; l++) {
           if (srcArray[l].match(regex)) {
-            console.log(srcArray[l])
+            let response = await axios.get(srcArray[l].split(' ')[1])
+            Log.trace("Eval", "Function content %s", response.data)
+            strippedSrc = strippedSrc.concat(response.data).concat('\n')
           }
           else {
             strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')
@@ -223,7 +226,9 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       var regex = /^%load/;
       for (let l = 0; l < srcArray.length; l++) {
         if (srcArray[l].match(regex)) {
-          console.log(srcArray[l])
+          // let response = await axios.get(srcArray[l].split(' ')[1])
+          // console.log(response.data);
+          // strippedSrc = strippedSrc.concat(response.data).concat('\n')
         }
         else {
           strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')
