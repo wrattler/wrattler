@@ -236,7 +236,10 @@ def find_assignments(code_string):
     output_dict = {"targets": [],
                    "input_vals": []
                    }
-    node = ast.parse(code_string)
+    try:
+        node = ast.parse(code_string)
+    except SyntaxError as e:
+        raise ApiException("Syntax error in code string: {}".format(e.msg))
     ## recursive function to navigate the tree and find assignment targets and input values
     def _find_elements(node, output_dict, parent=None, global_scope=True):
         if isinstance(node, ast.AST):
@@ -332,14 +335,12 @@ def handle_eval(data):
     output_hash = data["hash"]
     assign_dict = find_assignments(code_string)
     files = data["files"] if "files" in data.keys() else []
- #   print("Number of files {}".format(len(files)))
     ## first deal with any files that could contain function def'ns and/or import statements
     file_content = ""
     for file_url in files:
         file_content += get_file_content(file_url)
         file_content += "\n"
 
-#    print("File content is {}".format(file_content))
     input_frames = data["frames"]
     frame_dict = retrieve_frames(input_frames)
     ## execute the code, get back a dict {"output": <string_output>, "results":<list_of_vals>}
