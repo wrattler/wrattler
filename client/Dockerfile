@@ -1,7 +1,7 @@
 FROM node:6
 MAINTAINER na@gmail.com
 
-RUN apt-get -y install nano
+RUN apt-get update; apt-get -y install nano
 
 RUN curl -sS http://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
 RUN echo "deb http://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
@@ -15,6 +15,8 @@ RUN apt-get update; apt-get -y install nodejs
 # ADD . /app
 # RUN cd /app; yarn;
 WORKDIR /app
+#RUN yarn; yarn build;
+RUN npm install http-server -g
 
 EXPOSE 8080
 # RUN ["chmod", "+x", "/app/entrypoint.sh"]
