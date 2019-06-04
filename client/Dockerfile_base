@@ -1,5 +1,5 @@
-FROM codedevote/dotnet-mono
-MAINTAINER codedevote@gmail.com
+FROM node:6
+MAINTAINER na@gmail.com
 
 RUN apt-get -y install nano
 

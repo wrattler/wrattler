@@ -1,12 +1,8 @@
 {
   "private": true,
-  "fable": {
-    "entry": "src/wrattler.fsproj"
-  },
   "scripts": {
-    "postinstall": "dotnet restore",
-    "build": "cd tools && dotnet fable webpack -- -p --config webpack.config.prod.js",
-    "start": "cd tools && dotnet fable webpack-dev-server -- --config webpack.config.dev.js",
+    "build": "cd tools && webpack -p --config webpack.config.prod.js",
+    "start": "cd tools && webpack-dev-server --config webpack.config.dev.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "doc": "node node_modules/typedoc/bin/typedoc --readme src/api.md --out docs/api --exclude \"**/+(demos|languagePlugins)/**/*\" --module \"commonjs\" --excludeExternals src"
   },
@@ -17,7 +13,6 @@
     "babel-preset-env": "^1.6.1",
     "copy-webpack-plugin": "^4.6.0",
     "css-loader": "^0.28.11",
-    "fable-loader": "1.1.6",
     "html-webpack-plugin": "^3.0.6",
     "source-map-support": "0.4.3",
     "style-loader": "^0.21.0",
