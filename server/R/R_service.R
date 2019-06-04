@@ -8,8 +8,11 @@ library(arrow)
 
 source("codeAnalysis.R")
 
-TMPDIR <- "/tmp"
-
+if (.Platform$OS.type == "unix") {
+    TMPDIR <- "/tmp"
+} else {
+    TMPDIR <- "%TEMP%"
+}
 
 
 handle_exports <- function(code, frames, hash) {
@@ -22,12 +25,16 @@ handle_exports <- function(code, frames, hash) {
 }
 
 
-handle_eval <- function(code, frames, hash) {
+handle_eval <- function(code, frames, hash, files=NULL) {
     ## top-level function to evaluate a code block and return any outputs
     ## as json in the following format:
     ##  {"output": <text_output>,
     ##   "frames": [{"name":<name>,"url":<url>},...],
     ##   "figures": [{"name":<name>,"url":<url>},...]}
+
+    ## The 'files' input argument will be a list of URLs for datastore locations
+    ## of files containing function definitions.  The content of these files will
+    ## be pre-pended to the code fragment for the cell.
 
     ## The 'frames' input argument, parsed from json structure like
     ##    [{"name":<name>,"url":<url>},{...}, ...]
@@ -37,7 +44,7 @@ handle_eval <- function(code, frames, hash) {
     exportsList <- analyzeCode(code)$exports
     ## executeCode will return a named list of all the evaluated outputs
     debug = ! is.na(Sys.getenv("R_SERVICE_DEBUG", unset=NA))
-    outputs <- executeCode(code, frames, hash, debug)
+    outputs <- executeCode(code, frames, hash, files, debug)
     outputsList <- outputs$returnVars
     ## uploadOutputs will put results onto datastore, and return a dataframe of names and urls
     results <- uploadOutputs(outputsList, exportsList, hash)
@@ -62,6 +69,26 @@ getNameAndHashFromURL <- function(url) {
     return(c(frameName, cellHash))
 }
 
+getFileContent <- function(url) {
+    ## retrieve contents of a file (e.g. containing function definitions) from the datastore
+    r <- tryCatch({ GET(url) },
+       error=function(cond) {
+           filenameAndHash <- getNameAndHashFromURL(url)
+           return(GET(makeURL(filenameAndHash[[1]], filenameAndHash[[2]])))
+       }
+    )
+    if ( r$status != 200) {
+        print("Unable to access datastore")
+        return(NULL)
+    }
+    fileContent <- tryCatch({
+        content(r, "text")
+    }, error = function(cond) {
+        print("Unable to read file content from URL as text")
+    })
+
+    return(fileContent)
+}
 
 readFrame <- function(url) {
     ## Read a dataframe from the datastore.
@@ -303,7 +330,18 @@ writePlotToFile <- function(plot, hash, plotName) {
 }
 
 
-executeCode <- function(code, importsList, hash, debug=FALSE) {
+executeCode <- function(code, importsList, hash, files=NULL, debug=FALSE) {
+    ## Retrieve any file contents (will be a list of URLs)
+    allFileContent <- ""
+    if (! is.null(files) ) {
+        for (url in files) {
+            fileContent <- getFileContent(url)
+            if (! is.null(fileContent)) {
+                allFileContent <- paste0(allFileContent,"\n",fileContent)
+            }
+        }
+    }
+
     ## Call the function to create stringFunc, then parse and execute it.
     if (debug) {
         print(paste("Executing code block \n",code))
