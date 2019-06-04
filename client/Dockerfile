@@ -1,4 +1,4 @@
-FROM node:6
+FROM node:10.16-jessie
 MAINTAINER na@gmail.com
 
 RUN apt-get update; apt-get -y install nano
@@ -11,11 +11,13 @@ RUN apt-get update; apt-get -y install yarn
 RUN curl -sL http://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get update; apt-get -y install nodejs
 
-# RUN mkdir app
-# ADD . /app
-# RUN cd /app; yarn;
+RUN mkdir app
+ADD . /app
+RUN cd /app; yarn;
 WORKDIR /app
-#RUN yarn; yarn build;
+RUN ls
+RUN node --version
+RUN yarn; yarn build;
 RUN npm install http-server -g
 
 EXPOSE 8080
