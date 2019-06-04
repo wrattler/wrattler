@@ -17,10 +17,12 @@ First, we create one frame in JavaScript: agai
 
 
 
+
 ```javascript
 var one = [{'name':'Joel', 'age':53}]
 var anotherWonton = [{'name':'May'}]
 ```
+
 
 
 
@@ -54,8 +56,10 @@ Second, we create one frame in Python:
 
 
 
+
 ```python
-two = pd.DataFrame({"name":["Jim"], "age":[51]})
+%load hello.py
+printHello("May")
 ```
 
 
@@ -73,7 +77,9 @@ two = pd.DataFrame({"name":["Jim"], "age":[51]})
 
 
 
+
 Finally, we create one more frame in R:
+
 
 
 
@@ -109,7 +115,9 @@ three <- data.frame(name=c("John"), age=c(54))
 
 
 
+
 Now, test if we can access all from JavaScript:
+
 
 
 
@@ -145,7 +153,9 @@ var joinJs = one.concat(two).concat(three)
 
 
 
+
 Similarly, test if we can access all from Python:
+
 
 
 
@@ -182,7 +192,9 @@ joinPyFlip = three.append(two).append(one)
 
 
 
+
 Finally, test if we can access all from R:
+
 
 
 

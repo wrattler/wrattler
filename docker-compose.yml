@@ -21,7 +21,8 @@ services:
      - ./resources:/app/public/resources
     entrypoint: /bin/bash
     command: "./entrypoint.sh"
-    environment:
+    environment: 
+     - CLIENT_URI=http://localhost:8080
      - RACKETSERVICE_URI=http://localhost:7104
      - PYTHONSERVICE_URI=http://localhost:7101
      - RSERVICE_URI=http://localhost:7103
@@ -77,17 +78,18 @@ services:
     networks:
     - wrattler_nw
 
-  # wrattler_jupyterlab:
-  #   container_name: wrattler_wrattler_jupyterlab_1
-  #   build:
-  #     context: jupyterlab_wrattler
-  #     dockerfile: Dockerfile
-  #   ports:
-  #   - "8889:8889"
-  #   networks:
-  #   - wrattler_nw
-  #   volumes:
-  #     - ./jupyterlab_wrattler/public:/public
+  wrattler_jupyterlab:
+    container_name: wrattler_wrattler_jupyterlab_1
+    build:
+      context: jupyterlab_wrattler
+      dockerfile: Dockerfile
+    ports:
+    - "8889:8889"
+    networks:
+    - wrattler_nw
+    volumes:
+      - ./jupyterlab_wrattler:/src
+      - ./resources:/public
 
 networks:
   wrattler_nw:

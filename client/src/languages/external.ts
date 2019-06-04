@@ -12,6 +12,7 @@ import * as Doc from '../services/documentService';
 
 declare var DATASTORE_URI: string;
 
+
 // ------------------------------------------------------------------------------------------------
 // External language (eg. Python, R) plugin
 // ------------------------------------------------------------------------------------------------
@@ -171,9 +172,10 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         var regex = /^%load/;
         for (let l = 0; l < srcArray.length; l++) {
           if (srcArray[l].match(regex)) {
-            let response = await axios.get(srcArray[l].split(' ')[1])
-            Log.trace("Eval", "Function content %s", response.data)
-            strippedSrc = strippedSrc.concat(response.data).concat('\n')
+            console.log(DATASTORE_URI)
+            let response = await Doc.getResourceContent(srcArray[l].split(' ')[1])
+            Log.trace("Eval", "Function content %s", response)
+            strippedSrc = strippedSrc.concat(response).concat('\n')
           }
           else {
             strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')

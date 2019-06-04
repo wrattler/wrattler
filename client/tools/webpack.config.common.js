@@ -90,7 +90,8 @@ function getPlugins(isProduction) {
       PYTHONSERVICE_URI: JSON.stringify(typeof(process.env.PYTHONSERVICE_URI)=="undefined"?"http://localhost:7101":process.env.PYTHONSERVICE_URI),
       RSERVICE_URI: JSON.stringify(typeof(process.env.RSERVICE_URI)=="undefined"?"http://localhost:7103":process.env.RSERVICE_URI),
       RACKETSERVICE_URI: JSON.stringify(typeof(process.env.RACKETSERVICE_URI)=="undefined"?"http://localhost:7104":process.env.RACKETSERVICE_URI),
-      DATASTORE_URI: JSON.stringify(typeof(process.env.DATASTORE_URI)=="undefined"?"http://localhost:7102":process.env.DATASTORE_URI)
+      DATASTORE_URI: JSON.stringify(typeof(process.env.DATASTORE_URI)=="undefined"?"http://localhost:7102":process.env.DATASTORE_URI),
+      CLIENT_URI: JSON.stringify(typeof(process.env.CLIENT_URI)=="undefined"?"http://localhost:8080":process.env.CLIENT_URI)
     })
   ];
 }
