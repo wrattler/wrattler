@@ -15,8 +15,9 @@ RUN mkdir app
 ADD . /app
 RUN cd /app; yarn;
 WORKDIR /app
-RUN ls
-RUN node --version
+# increase memory limit for node - avoid running out in travis
+ENV NODE_OPTIONS=--max_old_space_size=1024
+
 RUN yarn; yarn build;
 RUN npm install http-server -g
 
