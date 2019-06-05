@@ -61,7 +61,8 @@ Second, we create one frame in Python:
 
 
 ```python
-two = pd.DataFrame({"name":["Jim"], "age":[51]})
+%load hello.py
+printHello("May")
 ```
 
 
@@ -80,7 +81,10 @@ two = pd.DataFrame({"name":["Jim"], "age":[51]})
 
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/feature/jupyterlab_docker
 Finally, we create one more frame in R:
 
 

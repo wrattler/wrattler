@@ -30,6 +30,8 @@ declare type EvaluationResult = EvaluationSuccess | EvaluationFailure;
 interface LanguagePlugin {
     /** Identifier of the language that this plugin implements */
     language: string;
+    iconClassName: string;
+    getDefaultCode(id: number): string;
     /** Returns a language-specific editor that handles the UI in a notebook  */
     editor: Editor<EditorState, any>;
     /**
@@ -43,7 +45,7 @@ interface LanguagePlugin {
      * construct a dependency graph for the given block. Returns a node representing the
      * code block and a list of exported variables (to be added to the scope)
      */
-    bind(scopeDictionary: {}, block: Block): Promise<BindingResult>;
+    bind(cache: Graph.NodeCache, scope: ScopeDictionary, block: Block): Promise<BindingResult>;
     /**
      * Given cell:Block, return string of source to be used for saving document in markdown
      */
