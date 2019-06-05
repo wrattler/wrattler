@@ -16,7 +16,7 @@ ADD . /app
 RUN cd /app; yarn;
 WORKDIR /app
 # increase memory limit for node - avoid running out in travis
-ENV NODE_OPTIONS=--max_old_space_size=1024
+ENV NODE_OPTIONS=--max_old_space_size=2048
 
 RUN yarn; yarn build;
 RUN npm install http-server -g
