@@ -9,6 +9,8 @@ import {Md5} from 'ts-md5';
 import axios from 'axios';
 import {AsyncLazy} from '../common/lazy';
 import * as Doc from '../services/documentService';
+import { WSAETOOMANYREFS } from 'constants';
+import { LanguageService } from 'typescript';
 
 declare var DATASTORE_URI: string;
 
@@ -75,6 +77,8 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
   readonly editor: Langs.Editor<ExternalState, ExternalEvent>;
   readonly serviceURI: string;
   readonly defaultCode : string;
+  readonly regex_global:RegExp = /^%global/;
+  readonly regex_local:RegExp = /^%local/;
 
   constructor(l: string, icon:string, uri: string, code:string) {
     this.language = l;
@@ -88,7 +92,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     return this.defaultCode.replace(/\[ID\]/g, id.toString());
   }
   
-  async evaluate(node:Graph.Node) : Promise<Langs.EvaluationResult> {
+  async evaluate(node:Graph.Node, resources: Array<Langs.Resource>) : Promise<Langs.EvaluationResult> {
     let externalNode = <Graph.ExternalNode>node
 
     async function getValue(blob, preview:boolean) : Promise<any> {
@@ -157,9 +161,19 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       }
     }
   
+    function findResourceURL(fileName): string {
+      for (let f = 0; f < resources.length; f++) {
+        if (resources[f].fileName==fileName) {
+          return  resources[f].url
+        }
+      }
+      return ''
+    }
+
     switch(externalNode.kind) {
       case 'code': 
         let importedFrames : { name:string, url:string }[] = [];
+        let importedFiles : Array<string> = [];
         for (var ant of externalNode.antecedents) {
           let imported = <Graph.ExportNode>ant
           importedFrames.push({ name: imported.variableName, url: (<Values.DataFrame>imported.value).url })
@@ -169,23 +183,23 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         
         let srcArray = src.split('\n')
         let strippedSrc = ''
-        var regex = /^%load/;
         for (let l = 0; l < srcArray.length; l++) {
-          if (srcArray[l].match(regex)) {
-            console.log(DATASTORE_URI)
-            let response = await Doc.getResourceContent(srcArray[l].split(' ')[1])
-            Log.trace("Eval", "Function content %s", response)
-            strippedSrc = strippedSrc.concat(response).concat('\n')
+          if (srcArray[l].match(this.regex_local)) {
+            let resourceName = srcArray[l].split(' ')[1]
+            let resourceURL = findResourceURL(resourceName)
+            if (resourceURL.length > 0){
+              resourceURL = resourceURL.replace("http://localhost:7102","http://wrattler_wrattler_data_store_1:7102")
+              console.log(resourceURL)
+              importedFiles.push(resourceURL)
+            }  
           }
           else {
             strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')
           }
         }
-        // let body = {"code": src.replace(/\r/g,'\n'),
-        //   "hash": hash,
-        //   "frames": importedFrames}
         let body = {"code": strippedSrc,
           "hash": hash,
+          "files" : importedFiles,
           "frames": importedFrames}
         return await getEval(body, this.serviceURI);
       case 'export':
@@ -216,31 +230,65 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     return new ExternalBlockKind(code, this.language);
   }
 
-  async bind (cache:Graph.NodeCache, scope:Langs.ScopeDictionary, block: Langs.Block) : Promise<Langs.BindingResult> {
+  async bind (cache:Graph.NodeCache, scope:Langs.ScopeDictionary, resources: Array<Langs.Resource>, block: Langs.Block) : Promise<Langs.BindingResult> {
     let exBlock = <ExternalBlockKind>block
     let initialHash = Md5.hashStr(exBlock.source)
     let antecedents : Graph.Node[] = []
+    let newResources = resources.splice(0)
+
+    function resourceExists(fileName):boolean{
+      for (let r = 0; r < newResources.length; r++) {
+        if (newResources[r].fileName == fileName)
+          return true
+      }
+      return false
+    }
+
+    async function putResource(fileName:string, code: string) : Promise<string> {
+      let hash = Md5.hashStr(fileName)
+      try {
+        let url = DATASTORE_URI.concat("/"+hash).concat("/"+fileName)
+        // let url = "http://wrattler_wrattler_data_store_1:7102"
+        let headers = {'Content-Type': 'text/html'}
+        var response = await axios.put(url, code, {headers: headers});
+        return url
+          // return "http://wrattler_wrattler_data_store_1:7102".concat("/"+hash).concat("/"+variableName)
+      }
+      catch (error) {
+        throw error;
+      }
+    }
+    
     try {
       let url = this.serviceURI.concat("/exports")
       let src = exBlock.source.replace(/\r/g,'\n')
       let srcArray = src.split('\n')
       let strippedSrc = ''
-      var regex = /^%load/;
+      var regex_global = /^%global/;
+      var regex_local = /^%local/;
       for (let l = 0; l < srcArray.length; l++) {
-        if (srcArray[l].match(regex)) {
-          // let response = await axios.get(srcArray[l].split(' ')[1])
-          // console.log(response.data);
-          // strippedSrc = strippedSrc.concat(response.data).concat('\n')
+        if (srcArray[l].match(regex_global)){
+          let resourceName = srcArray[l].split(' ')[1]
+          if (!resourceExists(resourceName)) {
+            let response = await Doc.getResourceContent(resourceName)
+            let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'global', url:await putResource(resourceName, response)}
+            newResources.push(newResource)
+          }
+        }
+        else if (srcArray[l].match(regex_local)) {
+          let resourceName = srcArray[l].split(' ')[1]
+          console.log(resourceName)
+          if (!resourceExists(resourceName)) {
+            let response = await Doc.getResourceContent(resourceName)
+            let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'local', url:await putResource(resourceName, response)}
+            newResources.push(newResource)
+          }
         }
         else {
           strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')
         }
       }
 
-      // let body = 
-      //   { "code": exBlock.source.replace(/\r/g,'\n'),
-      //     "hash": initialHash,
-      //     "frames": Object.keys(scope) }
       let body = 
         { "code": strippedSrc,
           "hash": initialHash,
@@ -291,10 +339,8 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           cachedNode.exportedVariables.push(cachedExportNode.variableName)
         }
       }
-
-
       Log.trace("binding", "Binding external - hash: %s, dependencies: %s", allHash, cachedNode.antecedents.map(n => n.hash))
-      return {code: cachedNode, exports: dependencies};
+      return {code: cachedNode, exports: dependencies, resources:newResources};
     }
     catch (error) {
       console.error(error);
@@ -307,7 +353,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           hash: <string>Md5.hashStr(exBlock.source),
           source: exBlock.source,
           errors: [error]}
-      return {code: code, exports: []};
+      return {code: code, exports: [], resources:[]};
     }
   }
 

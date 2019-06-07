@@ -8,10 +8,20 @@
 import {VNode} from 'maquette';
 import * as Graph from './graph';
 import * as Values from './values';
+import * as AsyncLazy from '../common/lazy'
 
 interface BindingResult {
   code: Graph.Node
   exports: Graph.ExportNode[]
+  resources: Array<Resource>
+}
+
+interface Resource {
+  language:string
+  fileName: string
+  scope: string 
+  // url: AsyncLazy.AsyncLazy<string>
+  url: string
 }
 
 interface ScopeDictionary {
@@ -26,6 +36,7 @@ interface EvaluationFailure {
   kind: 'error'
   errors: Graph.Error[]
 }
+
 type EvaluationResult = EvaluationSuccess | EvaluationFailure
 
 /**
@@ -50,14 +61,14 @@ interface LanguagePlugin {
   parse(code:string) : Block
 
   
-  evaluate(node:Graph.Node): Promise<EvaluationResult>
+  evaluate(node:Graph.Node, resources:Array<Resource>): Promise<EvaluationResult>
 
   /**
    * Given a parsed block and a dictionary that tracks variables that are in scope, 
    * construct a dependency graph for the given block. Returns a node representing the
    * code block and a list of exported variables (to be added to the scope)
    */
-  bind(cache:Graph.NodeCache, scope:ScopeDictionary, block: Block) : Promise<BindingResult>
+  bind(cache:Graph.NodeCache, scope:ScopeDictionary, resources: Array<Resource>, block: Block) : Promise<BindingResult>
 
   /**
    * Given cell:Block, return string of source to be used for saving document in markdown
@@ -152,6 +163,7 @@ export {
   LanguagePlugin,
   BlockState,
   BindingResult,
+  Resource,
   ScopeDictionary,
   EvaluationResult,
   EvaluationSuccess,

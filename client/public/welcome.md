@@ -25,7 +25,7 @@ two steps:
  2. Click the `Evaluate` button to see new results!
 
 ```python
-%load hello.py
+%local hello.py
 printHello("Tomas")
 printHello("Nick")
 ```

@@ -36,6 +36,7 @@ type NotebookState = {
   counter: number
   expandedMenu : number
   cache: Graph.NodeCache
+  resources:Array<Langs.Resource>
 }
 
 let paperElementID:string='paper'
@@ -44,19 +45,23 @@ let paperElementID:string='paper'
 // Helper functions for binding nodes
 // ------------------------------------------------------------------------------------------------
 
-function bindCell (cache:Graph.NodeCache, scope:Langs.ScopeDictionary, 
-    editor:Langs.EditorState, languagePlugins:LanguagePlugins): 
-    Promise<{code: Graph.Node, exports: Graph.ExportNode[]}>{
+function bindCell (cache:Graph.NodeCache, 
+  scope:Langs.ScopeDictionary, 
+  editor:Langs.EditorState, 
+  languagePlugins:LanguagePlugins,
+  resources:Array<Langs.Resource>): Promise<{code: Graph.Node, exports: Graph.ExportNode[], resources: Array<Langs.Resource>}>{
   let languagePlugin = languagePlugins[editor.block.language]
-  return languagePlugin.bind(cache, scope, editor.block);
+  return languagePlugin.bind(cache, scope, resources, editor.block);
 }
 
-async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], languagePlugins:LanguagePlugins) {
+async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], languagePlugins:LanguagePlugins, stateresources: Array<Langs.Resource>) {
   var scope : Langs.ScopeDictionary = { };
   var newCells : Langs.BlockState[] = []
+  let updatedResources: Array<Langs.Resource> = []
   for (var c = 0; c < editors.length; c++) {
     let editor = editors[c]
-    let {code, exports} = await bindCell(cache, scope, editor, languagePlugins);
+    let {code, exports, resources} = await bindCell(cache, scope, editor, languagePlugins, stateresources);
+    updatedResources = resources.splice(0)
     var newCell = { editor:editor, code:code, exports:exports }
     for (var e = 0; e < exports.length; e++ ) {
       let exportNode = exports[e];
@@ -64,7 +69,7 @@ async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], 
     }
     newCells.push(newCell)
   }
-  return newCells;
+  return {newCells: newCells, updatedResources: updatedResources};
 }
 
 async function updateAndBindAllCells
@@ -80,19 +85,22 @@ async function updateAndBindAllCells
     }
     else return c.editor;
   });
-  let newCells = await bindAllCells(state.cache, editors, state.languagePlugins);
+  let {newCells, updatedResources} = await bindAllCells(state.cache, editors, state.languagePlugins, state.resources);
+  state.resources = updatedResources.splice(0)
+  console.log(state.resources)
   return { cache:state.cache, cells:newCells, counter:index, contentChanged:state.contentChanged,
-    expandedMenu:state.expandedMenu, languagePlugins: state.languagePlugins };
+    expandedMenu:state.expandedMenu, languagePlugins: state.languagePlugins, resources:state.resources };
 }
 
-async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins) {
+async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resources:Array<Langs.Resource>) {
   if (node.value && (Object.keys(node.value).length > 0)) return;
-  for(var ant of node.antecedents) await evaluate(ant, languagePlugins);
+  console.log(resources)
+  for(var ant of node.antecedents) await evaluate(ant, languagePlugins, resources);
 
   let languagePlugin = languagePlugins[node.language]
   let source = (<any>node).source ? (<any>node).source.substr(0, 100) + "..." : "(no source)"
   Log.trace("evaluation","Evaluating %s node: %s", node.language, source)
-  let evalResult = await languagePlugin.evaluate(node);
+  let evalResult = await languagePlugin.evaluate(node, resources);
   Log.trace("evaluation","Evaluated %s node. Result: %O", node.language, node.value)
   switch(evalResult.kind) {
     case "success":
@@ -117,8 +125,8 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
         trigger({ kind:'block', id:cell.editor.id, event:event }),
 
       evaluate: async (block:Langs.BlockState) => {
-        await evaluate(block.code, state.languagePlugins)
-        for(var exp of block.exports) await evaluate(exp, state.languagePlugins)
+        await evaluate(block.code, state.languagePlugins, state.resources)
+        for(var exp of block.exports) await evaluate(exp, state.languagePlugins, state.resources)
         trigger({ kind:'refresh' })
       },
 
@@ -191,12 +199,12 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
           { editor: state.languagePlugins[cellState.editor.block.language].editor.update(cellState.editor, evt.event),
             code: cellState.code, exports: cellState.exports })
       return { cache:state.cache, counter: state.counter, cells: newCells, contentChanged:state.contentChanged,
-        expandedMenu: state.expandedMenu, languagePlugins: state.languagePlugins };
+        expandedMenu: state.expandedMenu, languagePlugins: state.languagePlugins, resources: state.resources };
     }
 
     case 'toggleadd':
       return { cache: state.cache, counter: state.counter, cells: state.cells, 
-        expandedMenu: evt.id, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged };
+        expandedMenu: evt.id, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged, resources: state.resources };
 
     case 'add': {
       let newId = state.counter + 1;
@@ -205,9 +213,10 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       let newBlock = lang.parse(newDocument.source);
       let editor = lang.editor.initialize(newId, newBlock);
       let newEditors = spliceEditor(state.cells.map(c => c.editor), editor, evt.id)
-      let newCells = await bindAllCells(state.cache, newEditors, state.languagePlugins)
+      let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resources)
+      state.resources = updatedResources.splice(0)
       return {cache:state.cache, counter: state.counter+1, expandedMenu:-1, 
-        cells: newCells, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged };
+        cells: newCells, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged, resources: state.resources };
     }
 
     case 'refresh':
@@ -216,7 +225,7 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
     case 'remove':
       return {cache:state.cache, counter: state.counter, 
         languagePlugins: state.languagePlugins, contentChanged: state.contentChanged,
-        expandedMenu:state.expandedMenu, cells: removeCell(state.cells, evt.id)};
+        expandedMenu:state.expandedMenu, cells: removeCell(state.cells, evt.id), resources: state.resources};
 
     case 'rebind':
       let newState = await updateAndBindAllCells(state, evt.block, evt.newSource);
@@ -239,9 +248,11 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
   if (!paperElement) throw elementNotFoundError
   
   var cache = createNodeCache()
-  var cells = await bindAllCells(cache, editors, languagePlugins);
-  var state : NotebookState = {cache:cache, counter:counter, cells:cells, 
-    contentChanged: contentChanged, expandedMenu:-1, languagePlugins:languagePlugins}
+  var resources:Array<Langs.Resource> = []
+  var {newCells, updatedResources} = await bindAllCells(cache, editors, languagePlugins, resources);
+  resources = updatedResources.splice(0)
+  var state : NotebookState = {cache:cache, counter:counter, cells:newCells, 
+    contentChanged: contentChanged, expandedMenu:-1, languagePlugins:languagePlugins, resources: resources}
 
   function updateAndRender(event:NotebookEvent) {
     update(state, event).then(newState => {
