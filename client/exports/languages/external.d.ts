@@ -22,10 +22,12 @@ export declare class externalLanguagePlugin implements Langs.LanguagePlugin {
     readonly editor: Langs.Editor<ExternalState, ExternalEvent>;
     readonly serviceURI: string;
     readonly defaultCode: string;
+    readonly regex_global: RegExp;
+    readonly regex_local: RegExp;
     constructor(l: string, icon: string, uri: string, code: string);
     getDefaultCode(id: number): string;
-    evaluate(node: Graph.Node): Promise<Langs.EvaluationResult>;
+    evaluate(node: Graph.Node, resources: Array<Langs.Resource>): Promise<Langs.EvaluationResult>;
     parse(code: string): ExternalBlockKind;
-    bind(cache: Graph.NodeCache, scope: Langs.ScopeDictionary, block: Langs.Block): Promise<Langs.BindingResult>;
+    bind(cache: Graph.NodeCache, scope: Langs.ScopeDictionary, resources: Array<Langs.Resource>, block: Langs.Block): Promise<Langs.BindingResult>;
     save(block: Langs.Block): string;
 }

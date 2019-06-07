@@ -188,7 +188,6 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
             let resourceName = srcArray[l].split(' ')[1]
             let resourceURL = findResourceURL(resourceName)
             if (resourceURL.length > 0){
-              resourceURL = resourceURL.replace("http://localhost:7102","http://wrattler_wrattler_data_store_1:7102")
               importedFiles.push(resourceURL)
             }  
           } else if (srcArray[l].match(this.regex_global)){
@@ -199,10 +198,9 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         }
 
         for (let r = 0; r < resources.length; r++) {
-          if (resources[r].scope == 'global') {
+          if ((resources[r].scope == 'global')&&(resources[r].language == externalNode.language)) {
             let resourceURL = findResourceURL(resources[r].fileName)
             if (resourceURL.length > 0){
-              resourceURL = resourceURL.replace("http://localhost:7102","http://wrattler_wrattler_data_store_1:7102")
               importedFiles.push(resourceURL)
             }  
           }

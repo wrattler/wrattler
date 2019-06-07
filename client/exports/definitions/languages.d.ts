@@ -10,6 +10,13 @@ import * as Values from './values';
 interface BindingResult {
     code: Graph.Node;
     exports: Graph.ExportNode[];
+    resources: Array<Resource>;
+}
+interface Resource {
+    language: string;
+    fileName: string;
+    scope: string;
+    url: string;
 }
 interface ScopeDictionary {
     [variable: string]: Graph.Node;
@@ -39,13 +46,13 @@ interface LanguagePlugin {
      * of the parsing (this can just store the source, but it could build an AST too)
      */
     parse(code: string): Block;
-    evaluate(node: Graph.Node): Promise<EvaluationResult>;
+    evaluate(node: Graph.Node, resources: Array<Resource>): Promise<EvaluationResult>;
     /**
      * Given a parsed block and a dictionary that tracks variables that are in scope,
      * construct a dependency graph for the given block. Returns a node representing the
      * code block and a list of exported variables (to be added to the scope)
      */
-    bind(cache: Graph.NodeCache, scope: ScopeDictionary, block: Block): Promise<BindingResult>;
+    bind(cache: Graph.NodeCache, scope: ScopeDictionary, resources: Array<Resource>, block: Block): Promise<BindingResult>;
     /**
      * Given cell:Block, return string of source to be used for saving document in markdown
      */
@@ -121,4 +128,4 @@ declare type BlockState = {
     /** The dependency graph nodes representing data frames exported from the code block */
     exports: Graph.Node[];
 };
-export { Block, Editor, EditorState, EditorContext, LanguagePlugin, BlockState, BindingResult, ScopeDictionary, EvaluationResult, EvaluationSuccess, EvaluationFailure };
+export { Block, Editor, EditorState, EditorContext, LanguagePlugin, BlockState, BindingResult, Resource, ScopeDictionary, EvaluationResult, EvaluationSuccess, EvaluationFailure };
