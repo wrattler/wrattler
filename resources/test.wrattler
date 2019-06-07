@@ -18,6 +18,7 @@ First, we create one frame in JavaScript: agai
 
 
 
+
 ```javascript
 var one = [{'name':'Joel', 'age':53}]
 var anotherWonton = [{'name':'May'}]
@@ -39,7 +40,9 @@ var anotherWonton = [{'name':'May'}]
 
 
 
+
 Second, we create one frame in Python:
+
 
 
 
@@ -78,7 +81,12 @@ printHello("May")
 
 
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/feature/jupyterlab_docker
 Finally, we create one more frame in R:
+
 
 
 
@@ -116,7 +124,9 @@ three <- data.frame(name=c("John"), age=c(54))
 
 
 
+
 Now, test if we can access all from JavaScript:
+
 
 
 
@@ -154,7 +164,9 @@ var joinJs = one.concat(two).concat(three)
 
 
 
+
 Similarly, test if we can access all from Python:
+
 
 
 
@@ -193,7 +205,9 @@ joinPyFlip = three.append(two).append(one)
 
 
 
+
 Finally, test if we can access all from R:
+
 
 
 
@@ -213,4 +227,10 @@ Finally, test if we can access all from R:
 
 ```r
 joinR <- rbind(rbind(one,two),three)
+```
+```python
+%load testfunc.py
+
+print(this_is_a_test(3))
+# py13 = pd.DataFrame({"id":["13"], "language":["python"]})
 ```

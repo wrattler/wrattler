@@ -4,6 +4,7 @@ Check we can read and write to the data store.
 
 import os
 import pytest
+import json
 
 from python_service import read_frame, write_frame, retrieve_frames
 
@@ -25,7 +26,8 @@ def test_write_frame():
         {"var_1": "123", "var_2": "abc"},
         {"var_1": "456", "var_2": "def"}
     ]
-    wrote_ok = write_frame(test_data,
+    test_data_str = json.dumps(test_data)
+    wrote_ok = write_frame(test_data_str,
                            frame_name,
                            cell_hash)
     assert(wrote_ok==True)
@@ -37,7 +39,8 @@ def test_read_frame():
     """
     Read back the same frame
     """
-    data = read_frame(frame_name, cell_hash)
+    data_str = read_frame(frame_name, cell_hash)
+    data = json.loads(data_str)
     assert(len(data)==2)
     assert(data[0]["var_1"]=="123")
     assert(data[0]["var_2"]=="abc")

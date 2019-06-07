@@ -42,19 +42,32 @@ def stdoutIO(stdout=None):
     sys.stdout = old
 
 
-def cleanup(i):
+def get_file_content(url):
     """
-    Function to ensure we can json-ify our values.  For example,
-    pandas returns numpy.int64 rather than int, which are not json-serializable,
-    so we convert them to regular ints here.
-    Similarly, convert any NaN to None
+    Given the URL of a file on the datastore, return the contents
+    (likely some function definitions and/or import statements).
     """
-    if isinstance(i, np.integer): return int(i)
     try:
-        if np.isnan(i): return None
-    except(TypeError):
-        pass
-    return i
+        r=requests.get(url)
+        if r.status_code is not 200:
+            raise ApiException("Could not retrieve dataframe", status_code=r.status_code)
+        file_content = r.content.decode("utf-8")
+        return file_content
+    except(requests.exceptions.ConnectionError):
+        raise ApiException("Unable to get file content from {}".format(url),status_code=500)
+
+
+
+def execute_file_content(file_content):
+    """
+    Given the string file content of a file (likely containing function defns and import
+    statements), call 'exec' on it
+    """
+    try:
+        exec(file_content)
+        print("Executed file content!")
+    except SyntaxError as e:
+        raise ApiException("Error processing file: {}".format(e.msg))
 
 
 def convert_to_pandas(input_data):
@@ -223,7 +236,10 @@ def find_assignments(code_string):
     output_dict = {"targets": [],
                    "input_vals": []
                    }
-    node = ast.parse(code_string)
+    try:
+        node = ast.parse(code_string)
+    except SyntaxError as e:
+        raise ApiException("Syntax error in code string: {}".format(e.msg))
     ## recursive function to navigate the tree and find assignment targets and input values
     def _find_elements(node, output_dict, parent=None, global_scope=True):
         if isinstance(node, ast.AST):
@@ -252,7 +268,7 @@ def find_assignments(code_string):
     return final_dict
 
 
-def analyze_code(data):
+def handle_exports(data):
     """
     scan the code, and see if any of the input frames are used,
     and what is the name of the output frame(s).
@@ -299,12 +315,13 @@ def retrieve_frames(input_frames):
     return frame_dict
 
 
-def evaluate_code(data):
+def handle_eval(data):
     """
     recieves data posted to eval endpoint, in format:
     { "code": <code_string>,
       "hash": <cell_hash>,
-      "frames" [<frame_name>, ... ]
+      "frames": [<frame_name>, ... ],
+      "files": [<file_url>, ...]
     }
     This function will analyze and execute code, including retrieving input frames,
     and will return output as a dict:
@@ -317,11 +334,22 @@ def evaluate_code(data):
     code_string = data["code"]
     output_hash = data["hash"]
     assign_dict = find_assignments(code_string)
+    files = data["files"] if "files" in data.keys() else []
+    ## first deal with any files that could contain function def'ns and/or import statements
+    file_content = ""
+    for file_url in files:
+        file_content += get_file_content(file_url)
+        file_content += "\n"
 
     input_frames = data["frames"]
     frame_dict = retrieve_frames(input_frames)
     ## execute the code, get back a dict {"output": <string_output>, "results":<list_of_vals>}
-    results_dict = execute_code(code_string, frame_dict, assign_dict['targets'], output_hash)
+    results_dict = execute_code(file_content,
+                                code_string,
+                                frame_dict,
+                                assign_dict['targets'],
+                                output_hash,
+                                verbose=False)
 
     results = results_dict["results"]
     ## prepare a return dictionary
@@ -356,7 +384,20 @@ def evaluate_code(data):
         raise ApiException("Could not write result to datastore")
 
 
-def construct_func_string(code, input_val_dict, return_vars, output_hash):
+def indent_code(input_string):
+    """
+    Split code by newline character, and prepend 4 spaces to each line.
+    """
+    lines = input_string.strip().split("\n")
+    output_string = ""
+    for line in lines:
+        output_string += "    {}\n".format(line)
+    ## one last newline for luck
+    output_string += "\n"
+    return output_string
+
+
+def construct_func_string(file_contents, code, input_val_dict, return_vars, output_hash):
     """
     Construct a string func_string that defines a function wrattler_f()
     using the input and output variables defined from the code
@@ -367,12 +408,12 @@ def construct_func_string(code, input_val_dict, return_vars, output_hash):
     func_string += "    import contextlib\n"
     func_string += "    import matplotlib\n"
     func_string += "    matplotlib.use('Cairo')\n\n"
+    ## add the contents of any files, ensuring correct indentation
+    func_string += indent_code(file_contents)
     for k,v in input_val_dict.items():
         func_string += "    {} = convert_to_pandas({})\n".format(k,v)
-    ## need to worry about indentation for multi-line code fragments.
-    ## split the code string by newline character, and prepend 4 spaces to each line.
-    for line in code.strip().split("\n"):
-        func_string += "    {}\n".format(line)
+    ## Also need to worry about indentation for multi-line code fragments.
+    func_string += indent_code(code)
     ## save any plot output to a file in /tmp/<hash>/
     func_string += "    try:\n"
     func_string += "        os.makedirs(os.path.join('{}','{}'),exist_ok=True)\n".format(TMPDIR,output_hash)
@@ -389,14 +430,15 @@ def construct_func_string(code, input_val_dict, return_vars, output_hash):
     return func_string
 
 
-def execute_code(code, input_val_dict, return_vars, output_hash, verbose=False):
+def execute_code(file_contents, code, input_val_dict, return_vars, output_hash, verbose=False):
     """
     Call a function that constructs a string containing a function definition,
     then do exec(func_string), then define another string call_string
     that calls this function,
     and then finally do eval(call_string)
     """
-    func_string = construct_func_string(code,
+    func_string = construct_func_string(file_contents,
+                                        code,
                                         input_val_dict,
                                         return_vars,
                                         output_hash)

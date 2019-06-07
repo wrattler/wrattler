@@ -21,7 +21,7 @@ services:
      - ./resources:/app/public/resources
     entrypoint: /bin/bash
     command: "./entrypoint.sh"
-    environment: 
+    environment:
      - CLIENT_URI=http://localhost:8080
      - RACKETSERVICE_URI=http://localhost:7104
      - PYTHONSERVICE_URI=http://localhost:7101
