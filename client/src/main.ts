@@ -60,8 +60,8 @@ async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], 
   let updatedResources: Array<Langs.Resource> = []
   for (var c = 0; c < editors.length; c++) {
     let editor = editors[c]
-    let {code, exports, resources} = await bindCell(cache, scope, editor, languagePlugins, stateresources);
-    updatedResources = resources.splice(0)
+    let {code, exports, resources} = await bindCell(cache, scope, editor, languagePlugins, updatedResources);
+    updatedResources = resources.slice(0)
     var newCell = { editor:editor, code:code, exports:exports }
     for (var e = 0; e < exports.length; e++ ) {
       let exportNode = exports[e];
@@ -69,6 +69,7 @@ async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], 
     }
     newCells.push(newCell)
   }
+  console.log(updatedResources)
   return {newCells: newCells, updatedResources: updatedResources};
 }
 
@@ -86,15 +87,13 @@ async function updateAndBindAllCells
     else return c.editor;
   });
   let {newCells, updatedResources} = await bindAllCells(state.cache, editors, state.languagePlugins, state.resources);
-  state.resources = updatedResources.splice(0)
-  console.log(state.resources)
+  state.resources = updatedResources.slice(0)
   return { cache:state.cache, cells:newCells, counter:index, contentChanged:state.contentChanged,
     expandedMenu:state.expandedMenu, languagePlugins: state.languagePlugins, resources:state.resources };
 }
 
 async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resources:Array<Langs.Resource>) {
   if (node.value && (Object.keys(node.value).length > 0)) return;
-  console.log(resources)
   for(var ant of node.antecedents) await evaluate(ant, languagePlugins, resources);
 
   let languagePlugin = languagePlugins[node.language]
@@ -214,7 +213,7 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       let editor = lang.editor.initialize(newId, newBlock);
       let newEditors = spliceEditor(state.cells.map(c => c.editor), editor, evt.id)
       let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resources)
-      state.resources = updatedResources.splice(0)
+      state.resources = updatedResources.slice(0)
       return {cache:state.cache, counter: state.counter+1, expandedMenu:-1, 
         cells: newCells, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged, resources: state.resources };
     }
@@ -250,7 +249,7 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
   var cache = createNodeCache()
   var resources:Array<Langs.Resource> = []
   var {newCells, updatedResources} = await bindAllCells(cache, editors, languagePlugins, resources);
-  resources = updatedResources.splice(0)
+  resources = updatedResources.slice(0)
   var state : NotebookState = {cache:cache, counter:counter, cells:newCells, 
     contentChanged: contentChanged, expandedMenu:-1, languagePlugins:languagePlugins, resources: resources}
 

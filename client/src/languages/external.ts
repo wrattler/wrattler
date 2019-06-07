@@ -189,14 +189,26 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
             let resourceURL = findResourceURL(resourceName)
             if (resourceURL.length > 0){
               resourceURL = resourceURL.replace("http://localhost:7102","http://wrattler_wrattler_data_store_1:7102")
-              console.log(resourceURL)
               importedFiles.push(resourceURL)
             }  
+          } else if (srcArray[l].match(this.regex_global)){
+
           }
           else {
             strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')
           }
         }
+
+        for (let r = 0; r < resources.length; r++) {
+          if (resources[r].scope == 'global') {
+            let resourceURL = findResourceURL(resources[r].fileName)
+            if (resourceURL.length > 0){
+              resourceURL = resourceURL.replace("http://localhost:7102","http://wrattler_wrattler_data_store_1:7102")
+              importedFiles.push(resourceURL)
+            }  
+          }
+        }
+
         let body = {"code": strippedSrc,
           "hash": hash,
           "files" : importedFiles,
@@ -234,8 +246,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     let exBlock = <ExternalBlockKind>block
     let initialHash = Md5.hashStr(exBlock.source)
     let antecedents : Graph.Node[] = []
-    let newResources = resources.splice(0)
-
+    let newResources = resources.slice(0)
     function resourceExists(fileName):boolean{
       for (let r = 0; r < newResources.length; r++) {
         if (newResources[r].fileName == fileName)
@@ -277,7 +288,6 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         }
         else if (srcArray[l].match(regex_local)) {
           let resourceName = srcArray[l].split(' ')[1]
-          console.log(resourceName)
           if (!resourceExists(resourceName)) {
             let response = await Doc.getResourceContent(resourceName)
             let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'local', url:await putResource(resourceName, response)}
@@ -288,6 +298,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')
         }
       }
+
 
       let body = 
         { "code": strippedSrc,
