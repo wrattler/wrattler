@@ -54,7 +54,17 @@ def get_file_content(url):
         file_content = r.content.decode("utf-8")
         return file_content
     except(requests.exceptions.ConnectionError):
-        raise ApiException("Unable to get file content from {}".format(url),status_code=500)
+        try:
+            ## Try falling back on the datastore environment variable
+            cell_hash, file_name = url.split("/")[-2:]
+            url = '{}/{}/{}'.format(DATASTORE_URI, cell_hash, file_name)
+            r = requests.get(url)
+            if r.status_code is not 200:
+                raise ApiException("Could not retrieve dataframe", status_code=r.status_code)
+            file_content = r.content.decode("utf-8")
+            return file_content
+        except:
+            raise ApiException("Unable to get file content from {}".format(url),status_code=500)
 
 
 
