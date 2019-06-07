@@ -1,6 +1,5 @@
 var fs = require("fs");
 var path = require("path");
-var fableUtils = require("fable-utils");
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var webpack = require("webpack");
 var MonacoWebpackPlugin = require('../node_modules/monaco-editor-webpack-plugin');
@@ -11,7 +10,6 @@ var errorMsg = "{0} missing in package.json";
 var config = {
   entry: { 
     "app": "../src/main.ts",
-    "fs": resolve(path.join("..", forceGet(packageJson, "fable.entry", errorMsg))),
     // "editor.worker": 'monaco-editor/esm/vs/editor/editor.worker.js',
   },
   publicDir: resolve("../public"),
@@ -37,23 +35,13 @@ function forceGet(obj, path, errorMsg) {
 }
 
 function getModuleRules(isProduction) {
-  var babelOptions = fableUtils.resolveBabelOptions({
+  var babelOptions = {
     presets: [
       ["env", { "targets": { "browsers": "> 1%" }, "modules": false }]
     ],
-  });
+  };
 
   return [
-    {
-      test: /\.fs(x|proj)?$/,
-      use: {
-        loader: "fable-loader",
-        options: {
-          babel: babelOptions,
-          define: isProduction ? [] : ["DEBUG"]
-        }
-      }
-    },
     { 
       test: /\.ts|\.tsx?$/, 
       loader: "ts-loader" 
