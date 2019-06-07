@@ -192,7 +192,6 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
               importedFiles.push(resourceURL)
             }  
           } else if (srcArray[l].match(this.regex_global)){
-
           }
           else {
             strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')
@@ -275,10 +274,8 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       let src = exBlock.source.replace(/\r/g,'\n')
       let srcArray = src.split('\n')
       let strippedSrc = ''
-      var regex_global = /^%global/;
-      var regex_local = /^%local/;
       for (let l = 0; l < srcArray.length; l++) {
-        if (srcArray[l].match(regex_global)){
+        if (srcArray[l].match(this.regex_global)){
           let resourceName = srcArray[l].split(' ')[1]
           if (!resourceExists(resourceName)) {
             let response = await Doc.getResourceContent(resourceName)
@@ -286,7 +283,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
             newResources.push(newResource)
           }
         }
-        else if (srcArray[l].match(regex_local)) {
+        else if (srcArray[l].match(this.regex_local)) {
           let resourceName = srcArray[l].split(' ')[1]
           if (!resourceExists(resourceName)) {
             let response = await Doc.getResourceContent(resourceName)
@@ -298,8 +295,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')
         }
       }
-
-
+      
       let body = 
         { "code": strippedSrc,
           "hash": initialHash,
