@@ -136,21 +136,19 @@ class MarkdownBlockKind implements Langs.Block {
     iconClassName: "fa fa-arrow-down",
     editor: markdownEditor,
     getDefaultCode: (id:number) => "Md" + id + ": This is a markdown cell.",
-    
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
     },
-    bind: async (cache, scope, block: Langs.Block) : Promise<Langs.BindingResult> => {
+    bind: async (cache, scope, resources: Array<Langs.Resource>, block: Langs.Block) : Promise<Langs.BindingResult> => {
       let mdBlock:MarkdownBlockKind = <MarkdownBlockKind> block
-      console.log(block)
       let node:Graph.Node = {
-        language:"markdown", 
+        language:this.language, 
         antecedents:[],
         hash:<string>Md5.hashStr(mdBlock.source),
         value: null,
         errors: []
       }
-      return {code: node, exports: []};
+      return {code: node, exports: [], resources:[]};
     },
     evaluate: async (node:Graph.Node) : Promise<Langs.EvaluationResult> => {
       return { kind: "success", value: { kind: "nothing" } };

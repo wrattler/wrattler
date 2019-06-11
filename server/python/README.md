@@ -18,15 +18,22 @@ and adds them to the 'exports' list.  Names found in the code fragment that matc
 the 'imports' list.
 
 
-### POST to /eval with payload {"code": <code-snippet>, "hash": <output-hash>, "frames": <input-frame-list>}
+### POST to /eval with payload {"files": [<list-of-file-urls>], "code": <code-snippet>, "hash": <output-hash>, "frames": [<input-frame-list>]}
 
 This will call the ```evaluate_code``` function in ```python_service.py``` to:
 
+* Retrieve contents of any files from URLs in the "files" field.
 * Retrieve the input frames from the data store, and store them in a
 dictionary, keyed by the frame name.
-* Do some stuff (see below), and return a list of dictionaries ```{"name": <output-frame-name>, "url": <output-frame-url>}```
+* Do some stuff (see below), and return the following json object:
+```{
+    "output": <console_text_output>,
+    "frames": [{"name": <output-frame-name>, "url": <output-frame-url>}, ... ]
+    "figures": [{"name": <fig_name>, "url": <output-fig-url>}, ... ]
+   }
+```
 
-The code fragment is inserted into a string representing a function definition, preceded by some lines of code that retrieve the
+The code fragment (prepended by the file-content if there is any) is inserted into a string representing a function definition, preceded by some lines of code that retrieve the
 'imports' dataframes from the data-store.
 Python's ```exec``` function is then used to parse this function definition, and ```eval``` is used to call the function and obtain
 the outputs.

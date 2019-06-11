@@ -21,6 +21,7 @@ interface Node {
     antecedents: Node[];
     /**  The evaluated value associated with this node */
     value: Values.Value | null;
+    hash: string;
     errors: Error[];
 }
 /**
@@ -69,4 +70,7 @@ interface ExternalExportNode extends ExportNode {
     kind: 'export';
 }
 declare type ExternalNode = ExternalCodeNode | ExternalExportNode;
-export { Node, ExportNode, JsNode, JsExportNode, JsCodeNode, ExternalNode, ExternalExportNode, ExternalCodeNode, Error };
+interface NodeCache {
+    tryFindNode(node: Node): Node;
+}
+export { Node, ExportNode, JsNode, JsExportNode, JsCodeNode, ExternalNode, ExternalExportNode, ExternalCodeNode, Error, NodeCache };

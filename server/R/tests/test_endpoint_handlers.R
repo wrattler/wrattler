@@ -34,6 +34,7 @@ with_mock_api({
         code <- "x  <- 2 + 3"
         frames <- c()
         hash <- "testhash"
+#        files <- c()
         expect_PUT(
             output <- handle_eval(code,frames,hash),body='[{"frameData":"5"}]',
             paste0(DATASTORE_URI,"/",hash,"/x")

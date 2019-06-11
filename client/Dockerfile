@@ -21,8 +21,4 @@ ENV NODE_OPTIONS=--max_old_space_size=2048
 RUN yarn; yarn build;
 RUN npm install http-server -g
 
-EXPOSE 8080
-# RUN ["chmod", "+x", "/app/entrypoint.sh"]
-# RUN ["/usr/bin/yarn"]
-# RUN ["/usr/bin/yarn","start"]
-# CMD [ "npm", "start" ]
+CMD ["http-server","build","-c-1"]

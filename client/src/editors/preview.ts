@@ -13,13 +13,11 @@ function printPreview(cellId:number, triggerSelect:(number) => void, selectedTab
 }
 
 function printCurrentValue(cellId:number, value:Values.Value, tableName:string) {
-  // console.log(tableName)
   let componentRootId = "_"+cellId.toString() + "_" + tableName
   switch(value.kind)
   {
     case "dataframe":
       let df = <Values.DataFrame>value
-      console.log(df)
       return h('div', {key: "dataframe"+componentRootId, class:'table-container'}, [printCurrentTable(df.preview, tableName)]);
     case "printout":
       let printoutValue = <Values.Printout>value
@@ -48,7 +46,6 @@ function printTabs(triggerSelect:(number) => void, selectedTable:number, tableNa
 }
 
 function printCurrentTable(aTable: any, tableName:string) {
-  console.log(aTable)
   if (aTable.length > 0) {
     let tableHeaders:Array<string> = getCurrentHeaders(aTable[0]);
     let rowsComponents:Array<any> = []

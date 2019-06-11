@@ -1,0 +1,31 @@
+Why doesn't this work? sa
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```python
+# This is a python cell 
+py2 = pd.DataFrame({"id":["2211ds"], "language":["python"]})
+```

@@ -18,11 +18,16 @@ export declare type ExternalState = {
 export declare const ExternalEditor: Langs.Editor<ExternalState, ExternalEvent>;
 export declare class externalLanguagePlugin implements Langs.LanguagePlugin {
     readonly language: string;
+    readonly iconClassName: string;
     readonly editor: Langs.Editor<ExternalState, ExternalEvent>;
     readonly serviceURI: string;
-    constructor(l: string, uri: string);
-    evaluate(node: Graph.Node): Promise<Langs.EvaluationResult>;
+    readonly defaultCode: string;
+    readonly regex_global: RegExp;
+    readonly regex_local: RegExp;
+    constructor(l: string, icon: string, uri: string, code: string);
+    getDefaultCode(id: number): string;
+    evaluate(node: Graph.Node, resources: Array<Langs.Resource>): Promise<Langs.EvaluationResult>;
     parse(code: string): ExternalBlockKind;
-    bind(scopeDictionary: Langs.ScopeDictionary, block: Langs.Block): Promise<Langs.BindingResult>;
+    bind(cache: Graph.NodeCache, scope: Langs.ScopeDictionary, resources: Array<Langs.Resource>, block: Langs.Block): Promise<Langs.BindingResult>;
     save(block: Langs.Block): string;
 }
