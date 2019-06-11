@@ -18,4 +18,4 @@ server/R/.Rhistory
 # emacs autosave files
 *~
 *.ipynb
-public/.ipynb_checkpoints/*
+resources/.ipynb_checkpoints/*
