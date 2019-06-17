@@ -5,7 +5,7 @@ printHello("Nick")
 ```
 ```r
 %local hello.r
-printHello("May")
+printHello("May ")
 ```
 ```python
 printHello("Tim")

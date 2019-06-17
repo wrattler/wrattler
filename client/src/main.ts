@@ -190,6 +190,7 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
         else return [cell]
       }).reduce ((a,b)=> a.concat(b));
   }
+  console.log(evt.kind)
   
   switch(evt.kind) {
     case 'block': {

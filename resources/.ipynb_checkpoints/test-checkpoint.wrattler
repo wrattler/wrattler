@@ -1,43 +1,13 @@
 # Welcome to Wrattler
 This is a sample notebook showing no data science at all. Nope not at all
 
-WTF??
-First, we create one frame in JavaScript: agai
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
 
 ```javascript
-var one = [{'name':'Joel', 'age':53}]
-var anotherWonton = [{'name':'May'}]
+var one = [{'name':'Joel', 'age':5}]
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -46,56 +16,14 @@ Second, we create one frame in Python:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ```python
-%load hello.py
-printHello("May")
+two = pd.DataFrame({"name":["Jim"], "age":[53]})
 ```
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 Finally, we create one more frame in R:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -107,35 +35,7 @@ three <- data.frame(name=c("John"), age=c(54))
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Now, test if we can access all from JavaScript:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -147,35 +47,7 @@ var joinJs = one.concat(two).concat(three)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Similarly, test if we can access all from Python:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -187,37 +59,7 @@ joinPyFlip = three.append(two).append(one)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Finally, test if we can access all from R:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -225,8 +67,7 @@ Finally, test if we can access all from R:
 joinR <- rbind(rbind(one,two),three)
 ```
 ```python
-%load testfunc.py
+%local hello.py
 
-print(this_is_a_test(3))
-# py13 = pd.DataFrame({"id":["13"], "language":["python"]})
+printHello("May")
 ```
