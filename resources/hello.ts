@@ -1,3 +1,3 @@
 function printHello(name){
-    console.log("Hello "+name)
+    console.log("JS says: Hello "+name)
 }

@@ -96,8 +96,6 @@ class MarkdownBlockKind implements Langs.Block {
       // re-render the editor (we do not need to do any extra work here!)
       state = <MarkdownState>state;
 
-      Log.trace("main", "In Editing State: %s", JSON.stringify(state.editing) )
-
       if (!state.editing) {
         // If we are not in edit mode, we just render a VNode and return no-op handler
         return h('div', {}, [

@@ -162,8 +162,6 @@ class JavascriptBlockKind implements Langs.Block {
     }
 
     addExports(tsSourceFile)
-    Log.trace("main", "js code: %s", strippedSrc )
-    Log.trace("main", "js resources: %s", JSON.stringify(newResources) )
     return {code: cachedNode, exports: dependencies, resources: newResources};
   }
 

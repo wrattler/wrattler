@@ -1,14 +1,14 @@
 ```python
 %global hello.py
 printHello("Tomas")
-printHello("Nick")
 ```
-Test markdown
+
+```r
+%local hello.r
+printHello("May1")
+```
 
 ```javascript
 %global hello.ts
 printHello("May")
-```
-```javascript
-var js4 = [{'id':4, 'language':'javascript'}]
 ```
