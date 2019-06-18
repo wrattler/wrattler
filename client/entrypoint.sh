@@ -1,3 +1,3 @@
-/usr/bin/yarn
-/usr/bin/yarn start
+yarn
+yarn start
 echo "Yarn started"

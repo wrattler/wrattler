@@ -23,8 +23,8 @@ interface NotebookBlockEvent { kind:'block', id:number, event:any }
 interface NotebookRefreshEvent { kind:'refresh' }
 interface NotebookSourceChange { kind:'rebind', block: Langs.BlockState, newSource: string}
 
-type NotebookEvent = 
-  NotebookAddEvent | NotebookToggleAddEvent | NotebookRemoveEvent | 
+type NotebookEvent =
+  NotebookAddEvent | NotebookToggleAddEvent | NotebookRemoveEvent |
   NotebookBlockEvent | NotebookRefreshEvent | NotebookSourceChange
 
 type LanguagePlugins = { [lang:string] : Langs.LanguagePlugin }
@@ -32,7 +32,7 @@ type LanguagePlugins = { [lang:string] : Langs.LanguagePlugin }
 type NotebookState = {
   contentChanged: (newContent:string) => void,
   languagePlugins: LanguagePlugins
-  cells: Langs.BlockState[]  
+  cells: Langs.BlockState[]
   counter: number
   expandedMenu : number
   cache: Graph.NodeCache
@@ -40,14 +40,14 @@ type NotebookState = {
 }
 
 let paperElementID:string='paper'
- 
+
 // ------------------------------------------------------------------------------------------------
 // Helper functions for binding nodes
 // ------------------------------------------------------------------------------------------------
 
-function bindCell (cache:Graph.NodeCache, 
-  scope:Langs.ScopeDictionary, 
-  editor:Langs.EditorState, 
+function bindCell (cache:Graph.NodeCache,
+  scope:Langs.ScopeDictionary,
+  editor:Langs.EditorState,
   languagePlugins:LanguagePlugins,
   resources:Array<Langs.Resource>): Promise<{code: Graph.Node, exports: Graph.ExportNode[], resources: Array<Langs.Resource>}>{
   let languagePlugin = languagePlugins[editor.block.language]
@@ -137,7 +137,7 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
     let plugin = state.languagePlugins[cell.editor.block.language]
     let content = plugin.editor.render(cell, cell.editor, context)
     let icon = plugin.iconClassName;
-    
+
     let icons = h('div', {class:'icons'}, [
       h('i', {id:'cellIcon_'+cell.editor.id, class: icon }, []),
       h('span', {}, [cell.editor.block.language] )
@@ -191,10 +191,10 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       }).reduce ((a,b)=> a.concat(b));
   }
   console.log(evt.kind)
-  
+
   switch(evt.kind) {
     case 'block': {
-      let newCells = state.cells.map(cellState => 
+      let newCells = state.cells.map(cellState =>
         (cellState.editor.id != evt.id) ? cellState :
           { editor: state.languagePlugins[cellState.editor.block.language].editor.update(cellState.editor, evt.event),
             code: cellState.code, exports: cellState.exports })
@@ -203,7 +203,7 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
     }
 
     case 'toggleadd':
-      return { cache: state.cache, counter: state.counter, cells: state.cells, 
+      return { cache: state.cache, counter: state.counter, cells: state.cells,
         expandedMenu: evt.id, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged, resources: state.resources };
 
     case 'add': {
@@ -215,7 +215,7 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       let newEditors = spliceEditor(state.cells.map(c => c.editor), editor, evt.id)
       let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resources)
       state.resources = updatedResources.slice(0)
-      return {cache:state.cache, counter: state.counter+1, expandedMenu:-1, 
+      return {cache:state.cache, counter: state.counter+1, expandedMenu:-1,
         cells: newCells, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged, resources: state.resources };
     }
 
@@ -223,7 +223,7 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       return state;
 
     case 'remove':
-      return {cache:state.cache, counter: state.counter, 
+      return {cache:state.cache, counter: state.counter,
         languagePlugins: state.languagePlugins, contentChanged: state.contentChanged,
         expandedMenu:state.expandedMenu, cells: removeCell(state.cells, evt.id), resources: state.resources};
 
@@ -238,7 +238,7 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
 // Helper functions for creating notebooks
 // ------------------------------------------------------------------------------------------------
 
-async function initializeCells(elementID:string, counter: number, editors:Langs.EditorState[], 
+async function initializeCells(elementID:string, counter: number, editors:Langs.EditorState[],
     languagePlugins:LanguagePlugins, contentChanged:(newContent:string) => void) {
   let maquetteProjector = createProjector();
   let paperElement = document.getElementById(elementID);
@@ -246,12 +246,12 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
   Log.trace('main', "Looking for element %s", paperElementID)
   let elementNotFoundError:string = "Missing paper element: "+elementID
   if (!paperElement) throw elementNotFoundError
-  
+
   var cache = createNodeCache()
   var resources:Array<Langs.Resource> = []
   var {newCells, updatedResources} = await bindAllCells(cache, editors, languagePlugins, resources);
   resources = updatedResources.slice(0)
-  var state : NotebookState = {cache:cache, counter:counter, cells:newCells, 
+  var state : NotebookState = {cache:cache, counter:counter, cells:newCells,
     contentChanged: contentChanged, expandedMenu:-1, languagePlugins:languagePlugins, resources: resources}
 
   function updateAndRender(event:NotebookEvent) {
@@ -318,19 +318,19 @@ class Wrattler {
     let pyCode =  "# This is a python cell \n# py[ID] = pd.DataFrame({\"id\":[\"[ID]\"], \"language\":[\"python\"]})";
     let rCode = "# This is an R cell \n r[ID] <- data.frame(id = [ID], language =\"r\")";
     let rcCode = ";; This is a Racket cell [ID]\n";
-    
+
     languagePlugins["markdown"] = markdownLanguagePlugin;
-    languagePlugins["javascript"] = javascriptLanguagePlugin;    
+    languagePlugins["javascript"] = javascriptLanguagePlugin;
     languagePlugins["python"] = new externalLanguagePlugin("python", "fab fa-python", PYTHONSERVICE_URI, pyCode);
     languagePlugins["r"] = new externalLanguagePlugin("r", "fab fa-r-project", RSERVICE_URI, rCode);
-    languagePlugins["racket"] = new externalLanguagePlugin("racket", "fa fa-question-circle", RACKETSERVICE_URI, rcCode);    
+    languagePlugins["racket"] = new externalLanguagePlugin("racket", "fa fa-question-circle", RACKETSERVICE_URI, rcCode);
     return languagePlugins;
   }
 
   async createNamedNotebook(elementID:string, languagePlugins:LanguagePlugins) : Promise<WrattlerNotebook> {
     return this.createNotebook(elementID, await Docs.getNamedDocumentContent(), languagePlugins);
   }
-  
+
   async createNotebook(elementID:string, content:string, languagePlugins:LanguagePlugins) : Promise<WrattlerNotebook> {
     Log.trace("main", "Creating notebook for id '%s'", elementID)
     let documents = await Docs.getDocument(content);
@@ -338,8 +338,8 @@ class Wrattler {
 
     var currentContent = content;
     var handlers : ((newContent:string) => void)[] = [];
-    function contentChanged(newContent:string) { 
-      currentContent = newContent; 
+    function contentChanged(newContent:string) {
+      currentContent = newContent;
       for(var h of handlers) h(currentContent);
     }
 
