@@ -2,7 +2,7 @@ FROM node:10.16-jessie
 MAINTAINER na@gmail.com
 
 RUN apt-get update; apt-get -y install nano
-RUN apt-get update; apt-get -y install yarn
+RUN npm install -g yarn
 
 RUN mkdir app
 ADD . /app
