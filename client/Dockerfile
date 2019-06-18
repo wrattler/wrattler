@@ -19,6 +19,8 @@ WORKDIR /app
 ENV NODE_OPTIONS=--max_old_space_size=2048
 
 RUN yarn; yarn build;
+## copy the built javascript to public/ so it can be served to jupyterlab
+RUN cp build/wrattler-app.js public/
 RUN npm install http-server -g
 
-CMD ["http-server","build","-c-1"]
+CMD ["http-server","public","-c-1"]
