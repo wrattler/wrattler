@@ -10,6 +10,8 @@ import ts, { createNoSubstitutionTemplateLiteral } from 'typescript';
 import axios from 'axios';
 import {Md5} from 'ts-md5';
 import {AsyncLazy} from '../common/lazy';
+import * as Doc from '../services/documentService';
+import { Log } from '../common/log';
 
 declare var PYTHONSERVICE_URI: string;
 declare var DATASTORE_URI: string;
@@ -24,11 +26,14 @@ declare var DATASTORE_URI: string;
 class JavascriptBlockKind implements Langs.Block {
     language : string;
     source : string;
+    
+    
     constructor(source:string) {
       this.language = "javascript";
       this.source = source;
     }
   }
+
   interface JavascriptSwitchTabEvent {
     kind: "switchtab"
     index: number
@@ -42,14 +47,59 @@ class JavascriptBlockKind implements Langs.Block {
     tabID: number
   }
 
-  function getCodeExports(cache:Graph.NodeCache, scope: Langs.ScopeDictionary, source: string): {code: Graph.Node, exports: Graph.ExportNode[]} {
+  async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.ScopeDictionary, source: string, resources:Array<Langs.Resource>): Promise<Langs.BindingResult> {
+    let language = "javascript"
+    let regex_global:RegExp = /^%global/;
+    let regex_local:RegExp = /^%local/;
+
+    let newResources : Array<Langs.Resource> = []
+    function resourceExists(fileName):boolean{
+      for (let r = 0; r < resources.length; r++) {
+        if (resources[r].fileName == fileName)
+          return true
+      }
+      return false
+    }
+    
+    async function putResource(fileName:string, code: string) : Promise<string> {
+      let hash = Md5.hashStr(fileName)
+      try {
+        let url = DATASTORE_URI.concat("/"+hash).concat("/"+fileName)
+        // let url = "http://wrattler_wrattler_data_store_1:7102"
+        let headers = {'Content-Type': 'text/html'}
+        var response = await axios.put(url, code, {headers: headers});
+        return url
+          // return "http://wrattler_wrattler_data_store_1:7102".concat("/"+hash).concat("/"+variableName)
+      }
+      catch (error) {
+        throw error;
+      }
+    }
+
+    let src = source.replace(/\r/g,'\n')
+    let srcArray = src.split('\n')
+    let strippedSrc = ''
+    for (let l = 0; l < srcArray.length; l++) {
+      
+      if ((srcArray[l].match(regex_global))||(srcArray[l].match(regex_local))){
+        let scope = srcArray[l].match(regex_global)?'global':'local'
+        let resourceName = srcArray[l].split(' ')[1]
+        if (!resourceExists(resourceName)) {
+          let newResource:Langs.Resource = {fileName:resourceName, language:language, scope: scope, url:''}
+          newResources.push(newResource)
+        }
+      }
+      else {
+        strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')
+      }  
+    }
+
     let tsSourceFile = ts.createSourceFile(
       __filename,
-      source,
+      strippedSrc,
       ts.ScriptTarget.Latest
     );
-    // let tree = [];
-
+    
     let antecedents : Graph.Node[] = []
     function addAntedents(expr:ts.Node) {
       ts.forEachChild(expr, function(child) {
@@ -67,8 +117,8 @@ class JavascriptBlockKind implements Langs.Block {
         addAntedents(child)
       })
     }
-
     addAntedents(tsSourceFile)
+    
     let allHash = Md5.hashStr(antecedents.map(a => a.hash).join("-") + source)
     let initialNode:Graph.JsCodeNode = {
       language:"javascript",
@@ -112,7 +162,9 @@ class JavascriptBlockKind implements Langs.Block {
     }
 
     addExports(tsSourceFile)
-    return {code: cachedNode, exports: dependencies};
+    Log.trace("main", "js code: %s", strippedSrc )
+    Log.trace("main", "js resources: %s", JSON.stringify(newResources) )
+    return {code: cachedNode, exports: dependencies, resources: newResources};
   }
 
   const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
@@ -145,8 +197,10 @@ class JavascriptBlockKind implements Langs.Block {
     editor: javascriptEditor,
     getDefaultCode: (id:number) => "// This is a javascript cell. \n//var js" + id + " = [{'id':" + id + ", 'language':'javascript'}]",
 
-    evaluate: async (node:Graph.Node) : Promise<Langs.EvaluationResult> => {
+    evaluate: async (node:Graph.Node, resources: Array<Langs.Resource>) : Promise<Langs.EvaluationResult> => {
       let jsnode = <Graph.JsNode>node
+      let regex_global:RegExp = /^%global/;
+      let regex_local:RegExp = /^%local/;
 
       async function putValue(variableName, hash, value) : Promise<string> {
         let url = DATASTORE_URI.concat("/"+hash).concat("/"+variableName)
@@ -185,6 +239,15 @@ class JavascriptBlockKind implements Langs.Block {
         }
       }
 
+      function findResourceURL(fileName): string {
+        for (let f = 0; f < resources.length; f++) {
+          if (resources[f].fileName==fileName) {
+            return  resources[f].url
+          }
+        }
+        return ''
+      }
+
       switch(jsnode.kind) {
         case 'code':
           let returnArgs = "var __res = {};\n";
@@ -206,7 +269,33 @@ class JavascriptBlockKind implements Langs.Block {
           var addOutput = function(f) {
             outputs.push(f)
           }
-          evalCode = "(function f(addOutput, args) {\n\t " + importedVars + "\n" + jsCodeNode.source + "\n" + returnArgs + "\n})"
+
+          let srcArray = jsCodeNode.source.split('\n')
+          let strippedSrc = ''
+          let importedFiles : Array<string> = [];
+          for (let l = 0; l < srcArray.length; l++) {
+            if (srcArray[l].match(regex_local)) {
+              let resourceName = srcArray[l].split(' ')[1]
+              importedFiles.push(resourceName)
+            } else if (srcArray[l].match(regex_global)){
+            }
+            else {
+              strippedSrc = strippedSrc.concat(srcArray[l]).concat('\n')
+            }
+          }
+          
+          for (let r = 0; r < resources.length; r++) {
+            if ((resources[r].scope == 'global')&&(resources[r].language == 'javascript')) {
+              importedFiles.push(resources[r].fileName)
+            }
+          }
+
+          let importedResourceContent:string = ''
+          for (let f = 0; f < importedFiles.length; f++) {
+            importedResourceContent=importedResourceContent.concat(await Doc.getResourceContent(importedFiles[f])).concat("\n")
+          }
+
+          evalCode = "(function f(addOutput, args) {\n\t " + importedVars + "\n" + importedResourceContent + "\n" +strippedSrc + "\n" + returnArgs + "\n})"
           let values : Values.ExportsValue = eval(evalCode)(addOutput, argDictionary);
           let exports = await putValues(values)
           for(let i = 0; i < outputs.length; i++) {
@@ -226,10 +315,9 @@ class JavascriptBlockKind implements Langs.Block {
     parse: (code:string) => {
       return new JavascriptBlockKind(code);
     },
-    bind: async (cache, scope, resources:Array<Langs.Resource>, block: Langs.Block) => {
+    bind: async (cache, scope, resources:Array<Langs.Resource>, block: Langs.Block):Promise<Langs.BindingResult> => {
       let jsBlock = <JavascriptBlockKind>block
-      let {code, exports} = getCodeExports(cache, scope, jsBlock.source);
-      return {code: code, exports: exports, resources:[]}
+      return getCodeResourcesAndExports(cache, scope, jsBlock.source, resources);
     },
     save: (block:Langs.Block) : string => {
       let jsBlock:JavascriptBlockKind = <JavascriptBlockKind> block

@@ -89,7 +89,7 @@ class MarkdownBlockKind implements Langs.Block {
   
     render: (cell: Langs.BlockState, state:MarkdownState, context:Langs.EditorContext<MarkdownEvent>) => {
       
-      Log.trace("main", "Rendering markdown content: %s", JSON.stringify(cell.code) )
+      // Log.trace("main", "Rendering markdown content: %s", JSON.stringify(cell.code) )
       // The `context` parameter defines `context.trigger` function. We can call this to 
       // trigger events (i.e. `MarkdownEvent` values). When we trigger an event, the main 
       // loop will call our `update` function to get new state of the editor and it will then
