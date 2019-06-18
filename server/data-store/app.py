@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 PUT requests store data.
 GET requests retrieve it.
