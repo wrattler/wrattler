@@ -1,0 +1,3 @@
+server/racket/start-racket-service eol=lf
+server/data-store/app.py
+server/python/app.py
