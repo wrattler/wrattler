@@ -3,12 +3,4 @@
 printHello("Tomas")
 printHello("Nick")
 ```
-
-```r
-%local hello.r
-printHello("May")
-```
-
-```python
-printHello("Radka")
-```
+Test markdown

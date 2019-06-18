@@ -42,7 +42,7 @@ class JavascriptBlockKind implements Langs.Block {
     tabID: number
   }
 
-  function getCodeExports(cache:Graph.NodeCache, scope: Langs.ScopeDictionary, source: string): {code: Graph.Node, exports: Graph.ExportNode[], resources:Array<Langs.Resource>} {
+  function getCodeExports(cache:Graph.NodeCache, scope: Langs.ScopeDictionary, source: string): {code: Graph.Node, exports: Graph.ExportNode[]} {
     let tsSourceFile = ts.createSourceFile(
       __filename,
       source,
@@ -110,8 +110,9 @@ class JavascriptBlockKind implements Langs.Block {
         addExports(child)
       })
     }
+
     addExports(tsSourceFile)
-    return {code: cachedNode, exports: dependencies, resources: []};
+    return {code: cachedNode, exports: dependencies};
   }
 
   const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> = {
@@ -227,7 +228,8 @@ class JavascriptBlockKind implements Langs.Block {
     },
     bind: async (cache, scope, resources:Array<Langs.Resource>, block: Langs.Block) => {
       let jsBlock = <JavascriptBlockKind>block
-      return getCodeExports(cache, scope, jsBlock.source);
+      let {code, exports} = getCodeExports(cache, scope, jsBlock.source);
+      return {code: code, exports: exports, resources:[]}
     },
     save: (block:Langs.Block) : string => {
       let jsBlock:JavascriptBlockKind = <JavascriptBlockKind> block

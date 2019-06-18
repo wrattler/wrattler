@@ -1,12 +1,13 @@
 ```python
 %global hello.py
 printHello("Tomas")
-printHello("Nick")
+printHello("Nick1")
 ```
 ```r
 %local hello.r
-printHello("May123 ")
+printHello("May1")
 ```
 ```python
 printHello("Tim")
 ```
+End of function
