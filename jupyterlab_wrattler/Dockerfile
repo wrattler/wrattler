@@ -1,7 +1,7 @@
 FROM node:10.16-jessie
 MAINTAINER na@gmail.com
 
-RUN apt-get -y install nano
+RUN apt-get update; apt-get -y install nano
 
 RUN apt-get update; apt-get install -y python3
 RUN apt-get update; apt-get install -y python3-pip
