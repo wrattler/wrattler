@@ -121,8 +121,6 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
         var results : Values.ExportsValue = { kind:"exports", exports:{} }
         
         if (response.data.output.toString().length > 0){
-          // console.log(response.data.output)
-          // console.log(response.data)
           let printouts : Values.Printout = { kind:"printout", data:response.data.output.toString() }
           results.exports['console'] = printouts
         }
@@ -232,10 +230,6 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
   }
 
   parse (code:string) {
-    /*
-      %load myfunc.py
-      %load myfunc.R
-    */
     return new ExternalBlockKind(code, this.language);
   }
 
@@ -243,10 +237,10 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     let exBlock = <ExternalBlockKind>block
     let initialHash = Md5.hashStr(exBlock.source)
     let antecedents : Graph.Node[] = []
-    let newResources = resources.slice(0)
+    let newResources : Array<Langs.Resource> = []
     function resourceExists(fileName):boolean{
-      for (let r = 0; r < newResources.length; r++) {
-        if (newResources[r].fileName == fileName)
+      for (let r = 0; r < resources.length; r++) {
+        if (resources[r].fileName == fileName)
           return true
       }
       return false

@@ -29,16 +29,7 @@ function createMonaco(el, lang, source, rebind) {
     let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
     rebind(code);
   }, 'alwaysTrue');
-  // ed.onKeyDown((e) => {
-  //   if (e.shiftKey === true && e.code === 'Enter') {
-  //     console.log('Rebind ! ');
-  //     let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
-  //     rebind(code);
-  //   }
-  //   else {
-      
-  //   }
-  // })
+
   return ed;
 }
 

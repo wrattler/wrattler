@@ -1,2 +1,2 @@
 def printHello(name):
-    print ("Hello again 3 {}".format(name))
+    print ("Python says: Hello {}".format(name))
