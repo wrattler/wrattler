@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Two API endpoints 'eval' and 'exports' representing the wrattler python service.
 
