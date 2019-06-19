@@ -1,0 +1,17 @@
+title: Wrattler
+baseurl: ""
+url: "https://tbd"
+
+# Build settings
+markdown: kramdown
+theme: minima
+gems:
+  - jekyll-feed
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - .git/
+
+# Serve settings
+port: 8081
+host: localhost
