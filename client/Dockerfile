@@ -2,6 +2,7 @@ FROM node:10.16-jessie
 MAINTAINER na@gmail.com
 
 RUN apt-get update; apt-get -y install nano
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --import
 RUN curl -o- -L https://yarnpkg.com/install.sh | bash
 
 RUN mkdir app
