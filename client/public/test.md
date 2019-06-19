@@ -1,14 +1,14 @@
 ```python
 %global hello.py
 printHello("Tomas")
-printHello("Nick")
 ```
 
 ```r
 %local hello.r
-printHello("May")
+printHello("May1")
 ```
 
-```python
-printHello("Radka")
+```javascript
+%global hello.ts
+printHello("May")
 ```
