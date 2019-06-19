@@ -23,4 +23,4 @@ RUN yarn; yarn build;
 RUN cp build/wrattler-app.js public/
 RUN npm install http-server -g
 
-CMD ["http-server","public","-c-1"]
+CMD ["http-server","public","-c-1","--cors=http://localhost:8889"]
