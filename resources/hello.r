@@ -1,4 +1,4 @@
 printHello <- function(name) {
-    print(paste("Hello",name))
+    print(paste("R says: Hello",name))
 }
 

@@ -24,19 +24,20 @@ two steps:
     see that some outputs will disappear.
  2. Click the `Evaluate` button to see new results!
 
-```python
-%local hello.py
-printHello("Tomas")
-printHello("Nick")
-```
-
 The following three cells illustrate the idea. We export two dataframes from R and Python
 and then use both of them in JavaScript to render a simple HTML output:
 
 ```python
-one = pd.DataFrame({"name":["Jim"], "age":[51]})
-twotest = pd.DataFrame({"name":["Jim"], "age":[51]})
+%global hello.py
+printHello("Tomas")
+printHello("Nick")
 ```
+
+```python
+one = pd.DataFrame({"name":["Jim"], "age":[51]})
+```
+
+There is a markdown here
 
 ```r
 two <- data.frame(name=c("Jane"), age=c(54))
