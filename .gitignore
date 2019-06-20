@@ -19,3 +19,7 @@ server/R/.Rhistory
 *~
 *.ipynb
 resources/.ipynb_checkpoints/
+.cache
+server/python/.cache
+.#*
+#*#
