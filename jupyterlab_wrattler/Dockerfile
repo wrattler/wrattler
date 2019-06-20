@@ -1,5 +1,5 @@
 FROM codedevote/dotnet-mono
-MAINTAINER codedevote@gmail.com
+MAINTAINER na@gmail.com
 
 RUN apt-get -y install nano
 
@@ -10,7 +10,6 @@ RUN apt-get update; apt-get -y remove cmdtest
 RUN apt-get update; apt-get -y install yarn
 RUN curl -sL http://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get update; apt-get -y install nodejs
-
 
 RUN apt-get update; apt-get install -y python3
 RUN apt-get update; apt-get install -y python3-pip
