@@ -1,0 +1,8 @@
+ @import url('https://fonts.googleapis.com/css?family=Heebo:100,300,400,500,700,800,900&display=swap');
+
+ body { font-family:Heebo; }
+
+header { background:black; padding:10px 0px 10px 0px; }
+article { padding:20px 0px 20px 0px; min-height:200px; }
+header h1 { font-weight:100; }
+header a, header a:hover { color:white; text-decoration:none; }
