@@ -11,8 +11,9 @@ import {AsyncLazy} from '../common/lazy';
 * TODO
 */
 interface Value {
-  kind : "jsoutput" | "dataframe" | "exports" | "nothing" | "printout" | "figure"
+  kind : string
 }
+type KnownValue = JavaScriptOutputValue | DataFrame | ExportsValue | Printout | Figure
 
 /**
 * TODO
@@ -27,7 +28,7 @@ interface JavaScriptOutputValue extends Value {
 */
 interface ExportsValue extends Value {
   kind : "exports"
-  exports : { [key:string]: Value }
+  exports : { [key:string]: KnownValue }
 }
 
 /**
@@ -55,6 +56,7 @@ interface Figure extends Value {
 
 export {
   Value, 
+  KnownValue,
   ExportsValue,
   JavaScriptOutputValue,
   Printout,
