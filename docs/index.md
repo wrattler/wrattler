@@ -3,6 +3,6 @@ layout: default
 title: Welcome
 ---
 
-# Hi there
+# Welcome to Wrattler
 
-this is web
+- See [API documentation](api)

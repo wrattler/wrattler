@@ -14,5 +14,8 @@ server/data-store/src/config.fs
 server/R/*.RData
 anon_public_d.RData
 server/R/.Rhistory
+# Jekyll
+docs/.sass-cache
+docs/_site
 # emacs autosave files
 *~

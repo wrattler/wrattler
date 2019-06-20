@@ -1,0 +1,294 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Graph | Wrattler API documentation</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.js" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../index.html" class="title">Wrattler API documentation</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../globals.html">Globals</a>
+				</li>
+				<li>
+					<a href="graph.html">Graph</a>
+				</li>
+			</ul>
+			<h1>External module Graph</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Wrattler maintains a dependency graph that is used for evaluating code.
+							The dependency graph is constructed by calling the <code>bind</code> operation of
+							<a href="../interfaces/languages.languageplugin.html"><code>LanguagePlugin</code></a>
+							for individual langauges supported in Wrattler. The graph is created once
+							Wrattler loads a notebook and it is then updated each time a cell is
+							modified. The dependency graph is static, meaning that it is created
+						by analysing source code, rather than by tracking dependencies at runtime.</p>
+					</div>
+					<p>A node in the graph is represented by the <a href="../interfaces/graph.node.html"><code>Node</code></a> type.
+						It is identified by the <code>hash</code> property. A <code>Node</code> also keeps the <code>value</code>
+						of the part of code that the node represents. See the
+						<a href="../modules/values.html"><code>Values</code></a> module for the types representing values. When
+						code in a cell is modified, a new node with a new hash is created. Its
+						<code>value</code> is initially set to <code>null</code> until the user forces evaluation of
+					the node or any node that depends on it.</p>
+					<ul>
+						<li><p><a href="../interfaces/graph.node.html"><code>Node</code></a> is the main type exported by this module.
+								It represents a graph node, tracks <code>antecedents</code> (nodes that this one depends on)
+							and, importantly, stores <code>value</code> and also <code>errors</code> associated with the node.</p>
+						</li>
+						<li><p><a href="../interfaces/graph.exportnode.html"><code>ExportNode</code></a> is a special type of node that
+								should be used for nodes that represent exported variables from a cell. If code in
+								your cell produces a data frame, you should create this node for each of the
+								exported data frames. This type has an extra attribute <code>variableName</code> which
+							Wrattler uses to pass variables to cells below in the notebook.</p>
+						</li>
+						<li><p><a href="../interfaces/graph.error.html"><code>Error</code></a> represents error messages and
+								<a href="../interfaces/graph.nodecache.html"><code>NodeCache</code></a> is used when constructing
+								dependency graph to cache nodes so that, when you undo a change, Wrattler reuses
+							the same graph node as before which remembers the previously evaluated results.</p>
+						</li>
+						<li><p>The remaining types are internal to Wrattler. JavaScript language plugin uses <a href="../interfaces/graph.jsnode.html"><code>JsNode</code></a>, which
+								can be either <a href="../interfaces/graph.jsexportnode.html"><code>JsExportNode</code></a> or <a href="../interfaces/graph.jscodenode.html"><code>JsCodeNode</code></a>.
+								External language plugins uses <a href="../interfaces/graph.externalnode.html"><code>ExternalNode</code></a>, which
+							can be either <a href="../interfaces/graph.externalexportnode.html"><code>ExternalExportNode</code></a> or <a href="../interfaces/graph.externalcodenode.html"><code>ExternalCodeNode</code></a>.</p>
+						</li>
+					</ul>
+				</div>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Interfaces</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/graph.error.html" class="tsd-kind-icon">Error</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/graph.exportnode.html" class="tsd-kind-icon">Export<wbr>Node</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/graph.externalcodenode.html" class="tsd-kind-icon">External<wbr>Code<wbr>Node</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/graph.externalexportnode.html" class="tsd-kind-icon">External<wbr>Export<wbr>Node</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/graph.jscodenode.html" class="tsd-kind-icon">Js<wbr>Code<wbr>Node</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/graph.jsexportnode.html" class="tsd-kind-icon">Js<wbr>Export<wbr>Node</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/graph.node.html" class="tsd-kind-icon">Node</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/graph.nodecache.html" class="tsd-kind-icon">Node<wbr>Cache</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Type aliases</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported"><a href="graph.html#externalnode" class="tsd-kind-icon">External<wbr>Node</a></li>
+								<li class="tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported"><a href="graph.html#jsnode" class="tsd-kind-icon">Js<wbr>Node</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Type aliases</h2>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="externalnode" class="tsd-anchor"></a>
+					<h3>External<wbr>Node</h3>
+					<div class="tsd-signature tsd-kind-icon">External<wbr>Node<span class="tsd-signature-symbol">:</span> <a href="../interfaces/graph.externalcodenode.html" class="tsd-signature-type">ExternalCodeNode</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/graph.externalexportnode.html" class="tsd-signature-type">ExternalExportNode</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/graph.ts#L149">definitions/graph.ts:149</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>This type represents all possible types of nodes created by External language
+								plugin. The plugin gets only nodes of this type and can pattern match on them using
+							the <code>kind</code> tag.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="jsnode" class="tsd-anchor"></a>
+					<h3>Js<wbr>Node</h3>
+					<div class="tsd-signature tsd-kind-icon">Js<wbr>Node<span class="tsd-signature-symbol">:</span> <a href="../interfaces/graph.jscodenode.html" class="tsd-signature-type">JsCodeNode</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/graph.jsexportnode.html" class="tsd-signature-type">JsExportNode</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/graph.ts#L142">definitions/graph.ts:142</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>This type represents all possible types of nodes created by JavaScript language
+								plugin. The plugin gets only nodes of this type and can pattern match on them using
+							the <code>kind</code> tag.</p>
+						</div>
+					</div>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class="current tsd-kind-external-module">
+						<a href="graph.html">Graph</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="languages.html">Languages</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="values.html">Values</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/graph.error.html" class="tsd-kind-icon">Error</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/graph.exportnode.html" class="tsd-kind-icon">Export<wbr>Node</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/graph.externalcodenode.html" class="tsd-kind-icon">External<wbr>Code<wbr>Node</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/graph.externalexportnode.html" class="tsd-kind-icon">External<wbr>Export<wbr>Node</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/graph.jscodenode.html" class="tsd-kind-icon">Js<wbr>Code<wbr>Node</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/graph.jsexportnode.html" class="tsd-kind-icon">Js<wbr>Export<wbr>Node</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/graph.node.html" class="tsd-kind-icon">Node</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/graph.nodecache.html" class="tsd-kind-icon">Node<wbr>Cache</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="graph.html#externalnode" class="tsd-kind-icon">External<wbr>Node</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="graph.html#jsnode" class="tsd-kind-icon">Js<wbr>Node</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
