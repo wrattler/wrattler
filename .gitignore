@@ -11,6 +11,7 @@ __pycache__/
 .RData
 .Rhistory
 server/data-store/src/config.fs
+server/data-store/config.py
 server/R/*.RData
 anon_public_d.RData
 server/R/.Rhistory
@@ -19,3 +20,5 @@ docs/.sass-cache
 docs/_site
 # emacs autosave files
 *~
+*.ipynb
+resources/.ipynb_checkpoints/

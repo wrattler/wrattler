@@ -15,12 +15,14 @@ services:
     networks:
     - wrattler_nw
     volumes:
-      - ./client:/app
-      - ./client/src:/app/src
-      - ./client/src/languagePlugins:/app/src/languagePlugins
+     - ./client:/app
+     - ./client/src:/app/src
+     - ./client/src/languagePlugins:/app/src/languagePlugins
+     - ./resources:/app/public/resources
     entrypoint: /bin/bash
     command: "./entrypoint.sh"
     environment:
+     - CLIENT_URI=http://localhost:8080
      - RACKETSERVICE_URI=http://localhost:7104
      - PYTHONSERVICE_URI=http://localhost:7101
      - RSERVICE_URI=http://localhost:7103
@@ -71,8 +73,23 @@ services:
       dockerfile: Dockerfile
     ports:
     - "7102:7102"
+    environment:
+    - WRATTLER_LOCAL_STORAGE=True
     networks:
     - wrattler_nw
+
+  wrattler_jupyterlab:
+    container_name: wrattler_wrattler_jupyterlab_1
+    build:
+      context: jupyterlab_wrattler
+      dockerfile: Dockerfile
+    ports:
+    - "8889:8889"
+    networks:
+    - wrattler_nw
+    volumes:
+      - ./jupyterlab_wrattler:/src
+      - ./resources:/public
 
 networks:
   wrattler_nw:

@@ -15,7 +15,6 @@ ENV LANG en_GB.UTF-8
 ENV LANGUAGE en_GB:en
 ENV LC_ALL en_GB.UTF-8
 
-
 RUN pip3 install  flask
 RUN pip3 install flask_restful
 RUN pip3 install  flask_cors
@@ -28,12 +27,9 @@ RUN pip3 install pycairo
 RUN pip3 install sklearn
 RUN pip3 install pandas
 RUN pip3 install numpy
+RUN pip3 install pyarrow
 RUN pip3 install poetry
-RUN apt-get install -y python3-venv
-
-## install the CleverCSV AI helper
-RUN git clone https://github.com/alan-turing-institute/CleverCSV
-RUN cd CleverCSV/python; poetry install; pip3 install .
+RUN pip3 install clevercsv
 
 ADD . /app
 WORKDIR /app

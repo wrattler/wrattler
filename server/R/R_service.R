@@ -4,11 +4,15 @@ library(jsonlite)
 library(httr)
 library(base64enc)
 library(rlang)
+library(arrow)
 
 source("codeAnalysis.R")
 
-TMPDIR <- "/tmp"
-
+if (.Platform$OS.type == "unix") {
+    TMPDIR <- "/tmp"
+} else {
+    TMPDIR <- "%TEMP%"
+}
 
 
 handle_exports <- function(code, frames, hash) {
@@ -21,22 +25,36 @@ handle_exports <- function(code, frames, hash) {
 }
 
 
-handle_eval <- function(code, frames, hash) {
+handle_eval <- function(code, frames, hash, files=NULL) {
     ## top-level function to evaluate a code block and return any outputs
     ## as json in the following format:
     ##  {"output": <text_output>,
     ##   "frames": [{"name":<name>,"url":<url>},...],
     ##   "figures": [{"name":<name>,"url":<url>},...]}
 
+    ## The 'files' input argument will be a list of URLs for datastore locations
+    ## of files containing function definitions.  The content of these files will
+    ## be pre-pended to the code fragment for the cell.
+
     ## The 'frames' input argument, parsed from json structure like
     ##    [{"name":<name>,"url":<url>},{...}, ...]
     ## will be a list of named-lists.
 
+    ## Retrieve any file contents (will be a list of URLs) and concatenate into string
+    allFileContent <- ""
+    if (! is.null(files) ) {
+        for (url in files) {
+            fileContent <- getFileContent(url)
+            if (! is.null(fileContent)) {
+                allFileContent <- paste0(allFileContent,"\n",fileContent)
+            }
+        }
+    }
     ## get a list of the expected output names from the code
     exportsList <- analyzeCode(code)$exports
     ## executeCode will return a named list of all the evaluated outputs
     debug = ! is.na(Sys.getenv("R_SERVICE_DEBUG", unset=NA))
-    outputs <- executeCode(code, frames, hash, debug)
+    outputs <- executeCode(code, frames, hash, allFileContent, debug)
     outputsList <- outputs$returnVars
     ## uploadOutputs will put results onto datastore, and return a dataframe of names and urls
     results <- uploadOutputs(outputsList, exportsList, hash)
@@ -47,6 +65,9 @@ handle_eval <- function(code, frames, hash) {
 }
 
 makeURL <- function(name, hash) {
+    if (is.na(Sys.getenv("DATASTORE_URI", unset=NA))) {
+        return(paste0("http://localhost:7102/",hash,"/",name))
+    }
     return(paste0(Sys.getenv("DATASTORE_URI"),"/",hash,"/",name))
 }
 
@@ -54,14 +75,36 @@ getNameAndHashFromURL <- function(url) {
     ## split the URL by "/" and take the last two substrings to be hash and name
     charVec <- unlist(strsplit(url, split="/", fixed=TRUE))
     frameName <- charVec[[length(charVec)]]
-    frameHash <- charVec[[length(charVec)-1]]
-    return(c(frameName, frameHash))
+    cellHash <- charVec[[length(charVec)-1]]
+    return(c(frameName, cellHash))
 }
 
+getFileContent <- function(url) {
+    ## retrieve contents of a file (e.g. containing function definitions) from the datastore
+    r <- tryCatch({ GET(url, add_headers(Accept="text/html")) },
+       error=function(cond) {
+           filenameAndHash <- getNameAndHashFromURL(url)
+           return(GET(makeURL(filenameAndHash[[1]], filenameAndHash[[2]]),
+                      add_headers(Accept="text/html")))
+       }
+    )
+    if ( r$status != 200) {
+        print("Unable to access datastore")
+        return(NULL)
+    }
+    fileContent <- tryCatch({
+        content(r, "text")
+    }, error = function(cond) {
+        print("Unable to read file content from URL as text")
+    })
+
+    return(fileContent)
+}
 
 readFrame <- function(url) {
     ## Read a dataframe from the datastore.
-    ## use jsonlite to deserialize json into a data.frame
+    ## first, try to decode as apache arrow.
+    ## if this fails,  use jsonlite to deserialize json into a data.frame
 
     r <- tryCatch({ GET(url) },
         error=function(cond) {
@@ -73,10 +116,25 @@ readFrame <- function(url) {
         print("Unable to access datastore")
         return(NULL)
     }
-    json_data <- content(r,"text")
-    frame <- jsonToDataFrame(json_data)
+    frame <- tryCatch({
+        rawData <-content(r, "raw")
+        arrowToDataFrame(rawData)
+    }, error = function(cond) {
+        jsonData <- content(r,"text")
+        jsonToDataFrame(jsonData)
+    })
+
     return(frame)
 }
+
+
+arrowToDataFrame <- function(arrowBuffer) {
+    temp <- tempfile()
+    writeBin(arrowBuffer, temp)
+    frame <- as.data.frame(read_arrow(temp))
+    return(frame)
+}
+
 
 jsonToDataFrame <- function(json_obj) {
     frame <- jsonlite::fromJSON(json_obj)
@@ -93,14 +151,17 @@ writeFrame <- function(frameData, frameName, cellHash) {
     } else if (typeof(frameData)=="closure") {
         return(FALSE) # probably a function definition - we don't want to store this
     } else {
-        # hopefully a dataframe that can be converted into JSON
-        frameJSON <- jsonFromDataFrame(frameData)
+        # hopefully a dataframe that can be converted into Arrow or JSON
+        response <- tryCatch({
+            frameRaw <- arrowFromDataFrame(frameData)
+            PUT(url, body=frameRaw, encode="raw")
+        }, error=function(cond) {
+            frameJSON <- jsonFromDataFrame(frameData)
+            PUT(url, body=frameJSON, encode="json")
+        })
+        return(status_code(response) == 200)
     }
-    ## put it into the datastore if it is not NULL, i.e. was convertable to json
-    if (!is.null(frameJSON)) {
-        r <- PUT(url, body=frameJSON, encode="json")
-        return(status_code(r) == 200)
-    }
+    ## If we got to here, didn't manage to put frame on the datastore
     return(FALSE)
 }
 
@@ -120,9 +181,9 @@ writeFigure <- function(figureData, figureName, cellHash) {
 }
 
 
-jsonFromImageFile <- function(frameName, frameHash) {
-    ## see if there is a png file at /tmp/frameHash/frameName.png
-    filename <- file.path(TMPDIR,frameHash,paste0(frameName,".png"))
+jsonFromImageFile <- function(frameName, cellHash) {
+    ## see if there is a png file at /tmp/cellHash/frameName.png
+    filename <- file.path(TMPDIR,cellHash,paste0(frameName,".png"))
     if (! file.exists(filename)) return(NULL)
     IMAGE <- base64enc::base64encode(filename)
     frameJSON <- jsonlite::toJSON(as.data.frame(IMAGE))
@@ -142,6 +203,23 @@ jsonFromDataFrame <- function(frameData) {
     ## convert to JSON
     frameJSON <- jsonlite::toJSON(frameData, na="null")
     return(frameJSON)
+}
+
+arrowFromDataFrame <- function(frameData) {
+    ## ensure everything is a character
+    if (is.numeric(frameData)) frameData <- as.character(frameData)
+    ## explicitly convert into a dataframe if we can
+    frameData <- tryCatch({ as.data.frame(frameData) },
+                          error=function(cond) {
+                              return(NULL)
+                          })
+    if (is.null(frameData)) return(NULL)
+    ## convert to Arrow, via writing to a tempfile
+    temp <- tempfile()
+    write_arrow(frameData, temp)
+    nBytes <- file.size(temp)
+    rawData <- readBin(temp, what="raw", n=nBytes)
+    return(rawData)
 }
 
 
@@ -203,16 +281,21 @@ cleanString <- function(inputString) {
 }
 
 
-constructFuncString <- function(code, importsList, hash, debug=FALSE) {
+constructFuncString <- function(code, importsList, hash, fileContent,
+                                debug=FALSE) {
     ## construct a string containing a function definition wrapping our code.
     ## analyze the code to get imports and exports (only need exports here)
     impexp <- analyzeCode(code)
     ## construct a function that assigns retrieved frames to the imported variables,
     ## then contains the code block.
     stringFunc <- "wrattler_f <- function() {\n"
+    ## first paste in the content of any files (e.g. containing func def'ns)
+    stringFunc <- paste0(stringFunc,"    ",fileContent,"\n")
+    ## Some debugging printout if requested:
     if (debug) {
         stringFunc <- paste0(stringFunc,"    print(paste(Sys.time(), 'Starting to execute code'))\n")
     }
+    ## Now read the input frames from the datastore
     if (length(importsList) > 0) {
         for (i in seq_along(importsList)) {
 
@@ -263,13 +346,14 @@ writePlotToFile <- function(plot, hash, plotName) {
 }
 
 
-executeCode <- function(code, importsList, hash, debug=FALSE) {
+executeCode <- function(code, importsList, hash, allFileContent="", debug=FALSE) {
+
     ## Call the function to create stringFunc, then parse and execute it.
     if (debug) {
         print(paste("Executing code block \n",code))
     }
-    stringFunc <- constructFuncString(code, importsList, hash, debug)
-    #parsedFunc <- parse(text=stringFunc)
+    stringFunc <- constructFuncString(code, importsList, hash,
+                                      allFileContent, debug)
 
     parsedFunc <- rlang::parse_expr(stringFunc)
 
