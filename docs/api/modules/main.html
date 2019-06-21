@@ -67,8 +67,26 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Is da best</p>
+						<p>Wrattler can run as a stand-alone system or as a JupyterLab extension.
+							It is also possible to create new instance of Wrattler inside any web page
+							(provided that you give it URLs for all the services it needs). This
+							module is the main entry point if you want to manage Wrattler notebook
+						instances on your own.</p>
 					</div>
+					<ul>
+						<li><p>This module exports the <a href="../classes/main.wrattler.html">Wrattler</a> class.
+								When loaded, it also sets <code>window.wrattler</code> to a new instance of the class
+								so that it is easier to use it inside web projects as a stand-alone JS file.
+								The class provides methods for configuring language plugins
+								(<a href="../modules/main.html#languageplugins"><code>LanguagePlugins</code></a> type) and
+							creating notebooks.</p>
+						</li>
+						<li><p><a href="../interfaces/main.wrattlernotebook.html">WrattlerNotebook</a> interface
+								represents a created notebook. It provides methods for accessing document
+								contents and lets you register handler that is triggered whenever the user
+							makes a change in a notebook.</p>
+						</li>
+					</ul>
 				</div>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -87,6 +105,38 @@
 								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/main.wrattlernotebook.html" class="tsd-kind-icon">Wrattler<wbr>Notebook</a></li>
 							</ul>
 						</section>
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Type aliases</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported"><a href="main.html#languageplugins" class="tsd-kind-icon">Language<wbr>Plugins</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Type aliases</h2>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="languageplugins" class="tsd-anchor"></a>
+					<h3>Language<wbr>Plugins</h3>
+					<div class="tsd-signature tsd-kind-icon">Language<wbr>Plugins<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d24a9df/client/src/wrattler.ts#L53">wrattler.ts:53</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>A dictionary that associates a language plugin with a language name.</p>
+						</div>
+					</div>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-index-signature">
+								<h5><span class="tsd-signature-symbol">[</span>lang: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><a href="../interfaces/languages.languageplugin.html" class="tsd-signature-type">LanguagePlugin</a></h5>
+							</li>
+						</ul>
 					</div>
 				</section>
 			</section>
@@ -118,6 +168,9 @@
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../interfaces/main.wrattlernotebook.html" class="tsd-kind-icon">Wrattler<wbr>Notebook</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="main.html#languageplugins" class="tsd-kind-icon">Language<wbr>Plugins</a>
 					</li>
 				</ul>
 			</nav>

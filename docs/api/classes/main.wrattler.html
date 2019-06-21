@@ -67,6 +67,15 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Main entry point that can be used for creating new Wrattler notebook instances.
+							You can use <code>getDefaultLanguages</code> to get default language plugins implemented
+						in core Wrattler and <code>createNotebook</code> to create a new notebook instance.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -96,22 +105,28 @@
 					<a name="createnamednotebook" class="tsd-anchor"></a>
 					<h3>create<wbr>Named<wbr>Notebook</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Named<wbr>Notebook<span class="tsd-signature-symbol">(</span>elementID<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, languagePlugins<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">LanguagePlugins</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/main.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Named<wbr>Notebook<span class="tsd-signature-symbol">(</span>elementID<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, languagePlugins<span class="tsd-signature-symbol">: </span><a href="../modules/main.html#languageplugins" class="tsd-signature-type">LanguagePlugins</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/main.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in wrattler.ts:41</li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d24a9df/client/src/wrattler.ts#L80">wrattler.ts:80</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Creates a Wrattler notebook that loads notebooks automatically by requesting the <code>index.md</code>
+									URL from the domain where it is hosted (or <code>another.md</code> when the current URl contains <code>?another</code> in the query string).</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>elementID: <span class="tsd-signature-type">string</span></h5>
 								</li>
 								<li>
-									<h5>languagePlugins: <span class="tsd-signature-type">LanguagePlugins</span></h5>
+									<h5>languagePlugins: <a href="../modules/main.html#languageplugins" class="tsd-signature-type">LanguagePlugins</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/main.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -122,25 +137,40 @@
 					<a name="createnotebook" class="tsd-anchor"></a>
 					<h3>create<wbr>Notebook</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Notebook<span class="tsd-signature-symbol">(</span>elementID<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, content<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, languagePlugins<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">LanguagePlugins</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/main.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Notebook<span class="tsd-signature-symbol">(</span>elementID<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, content<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, languagePlugins<span class="tsd-signature-symbol">: </span><a href="../modules/main.html#languageplugins" class="tsd-signature-type">LanguagePlugins</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/main.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in wrattler.ts:45</li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d24a9df/client/src/wrattler.ts#L92">wrattler.ts:92</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Given initial Markdown source code and a dictionary with langauge plugins,
+									create a new instance of Wrattler and render it in a given HTML document element.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>elementID: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>HTML document element to be used for rendering the notebook.</p>
+									</div>
 								</li>
 								<li>
 									<h5>content: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Initial source code for the notebook in Markdown.</p>
+									</div>
 								</li>
 								<li>
-									<h5>languagePlugins: <span class="tsd-signature-type">LanguagePlugins</span></h5>
+									<h5>languagePlugins: <a href="../modules/main.html#languageplugins" class="tsd-signature-type">LanguagePlugins</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Language plugins to be used, typically the result of <code>getDefaultLanguages</code></p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/main.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -151,16 +181,21 @@
 					<a name="getdefaultlanguages" class="tsd-anchor"></a>
 					<h3>get<wbr>Default<wbr>Languages</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Default<wbr>Languages<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">LanguagePlugins</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Default<wbr>Languages<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../modules/main.html#languageplugins" class="tsd-signature-type">LanguagePlugins</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in wrattler.ts:27</li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d24a9df/client/src/wrattler.ts#L62">wrattler.ts:62</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">LanguagePlugins</span></h4>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Returns default language plugins for Markdown, JavaScript, R, Python and Racket</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <a href="../modules/main.html#languageplugins" class="tsd-signature-type">LanguagePlugins</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -208,6 +243,9 @@
 				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../interfaces/main.wrattlernotebook.html" class="tsd-kind-icon">Wrattler<wbr>Notebook</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/main.html#languageplugins" class="tsd-kind-icon">Language<wbr>Plugins</a>
 					</li>
 				</ul>
 			</nav>
