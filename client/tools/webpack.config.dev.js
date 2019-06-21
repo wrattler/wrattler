@@ -38,6 +38,6 @@ module.exports = {
   ]),
   resolve: {
     modules: [common.config.nodeModulesDir],
-    extensions: [".ts", ".tsx", ".js", ".fs"]
+    extensions: [".ts", ".tsx", ".js"]
   },
 };

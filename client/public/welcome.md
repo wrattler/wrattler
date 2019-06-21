@@ -28,16 +28,28 @@ The following three cells illustrate the idea. We export two dataframes from R a
 and then use both of them in JavaScript to render a simple HTML output:
 
 ```python
+%global hello.py
+printHello("Tomas")
+printHello("Nick")
+```
+
+```python
 one = pd.DataFrame({"name":["Jim"], "age":[51]})
 ```
+
+There is a markdown here
 
 ```r
 two <- data.frame(name=c("Jane"), age=c(54))
 ```
 
 ```javascript
+let three = one.concat(two)
+```
+
+```javascript
 addOutput(function(id) {
-  var items = one.concat(two).map(function(row) { 
+  var items = one.concat(three).map(function(row) { 
     return "<li><b>" + row.name + "</b> (" + row.age + ")</li>" });
   var html = "<ul style='margin:20px'>" + items.join("") + "</ul>";
   document.getElementById(id).innerHTML = html;

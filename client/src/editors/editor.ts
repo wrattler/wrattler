@@ -29,6 +29,7 @@ function createMonaco(el, lang, source, rebind) {
     let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
     rebind(code);
   }, 'alwaysTrue');
+
   return ed;
 }
 
@@ -51,7 +52,14 @@ function createEditor(lang:string, source:string, cell:Langs.BlockState, context
         el.style.height = height + "px"
       }
     }
+
+    let rebindCells = () => {
+      let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
+      rebind(code);
+    }
+
     ed.getModel().onDidChangeContent(resizeEditor);
+    ed.onDidBlurEditor(rebindCells)
     window.addEventListener("resize", resizeEditor)
     setTimeout(resizeEditor, 100)
   }

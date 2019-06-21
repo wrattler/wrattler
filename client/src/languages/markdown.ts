@@ -6,6 +6,7 @@ import * as Graph from '../definitions/graph';
 import { Value } from '../definitions/values';
 import { Statement } from 'typescript';
 import { Md5 } from 'ts-md5';
+import { Log } from '../common/log';
 
 // ------------------------------------------------------------------------------------------------
 // Markdown plugin
@@ -23,6 +24,36 @@ class MarkdownBlockKind implements Langs.Block {
     }
   }
   
+  function createMonaco(el, source, context) {
+    let ed = monaco.editor.create(el, {
+      value: source,
+      language: 'markdown',
+      scrollBeyondLastLine: false,
+      theme:'vs',
+      minimap: { enabled: false },
+      overviewRulerLanes: 0,
+      lineDecorationsWidth: "0ch",
+      fontSize: 14,
+      fontFamily: 'Roboto Mono',
+      lineNumbersMinChars: 2,
+      lineHeight: 20,
+      lineNumbers: "on",
+      scrollbar: {
+        verticalHasArrows: true,
+        horizontalHasArrows: true,
+        vertical: 'none',
+        horizontal: 'none'
+      }
+    });    
+
+    ed.createContextKey('alwaysTrue', true);
+    ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
+      let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
+      context.trigger({kind: 'update', source: code})
+    }, 'alwaysTrue');
+  
+    return ed;
+  }
   /// The `MarkdownEvent` type is a discriminated union that represents events
   /// that can happen in the Markdown editor. We have two events - one is to switch
   /// to edit mode and the other is to switch to view mode. The latter carries a 
@@ -57,74 +88,40 @@ class MarkdownBlockKind implements Langs.Block {
     
   
     render: (cell: Langs.BlockState, state:MarkdownState, context:Langs.EditorContext<MarkdownEvent>) => {
+      
+      // Log.trace("main", "Rendering markdown content: %s", JSON.stringify(cell.code) )
       // The `context` parameter defines `context.trigger` function. We can call this to 
       // trigger events (i.e. `MarkdownEvent` values). When we trigger an event, the main 
       // loop will call our `update` function to get new state of the editor and it will then
       // re-render the editor (we do not need to do any extra work here!)
       state = <MarkdownState>state;
+
       if (!state.editing) {
         // If we are not in edit mode, we just render a VNode and return no-op handler
         return h('div', {}, [
           h('p', {innerHTML: marked(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
-          // h('button', { onclick: () => context.trigger({kind:'edit'}) }, ["Edit"])
         ] )
-  
       } else {
-        let numLines = 0;
-        let lastHeight = 75;
+        let lastHeight = 100;
+        let lastWidth = 0
         let afterCreateHandler = (el) => { 
-          let ed = monaco.editor.create(el, {
-            value: state.block.source,
-            language: 'markdown',
-            scrollBeyondLastLine: false,
-            theme:'vs',
-            minimap: { enabled: false },
-            overviewRulerLanes: 0,
-            lineDecorationsWidth: "0ch",
-            fontSize: 14,
-            fontFamily: 'Roboto Mono',
-            lineNumbersMinChars: 2,
-            lineHeight: 20,
-            lineNumbers: "on",
-            scrollbar: {
-              verticalHasArrows: true,
-              horizontalHasArrows: true,
-              vertical: 'none',
-              horizontal: 'none'
-            }        
-          });    
-          numLines = ed['viewModel'].lines.lines.length;
-  
-          let alwaysTrue = ed.createContextKey('alwaysTrue', true);
-          let myBinding = ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
-            let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
-            context.trigger({kind: 'update', source: code})
-          }, 'alwaysTrue');
-
+          let ed = createMonaco(el, state.block.source, context)
           let resizeEditor = () => {
-            let lines = ed['viewModel'].lines.lines.length
-            let zoneHeight = 0.0 //match previewService with Some ps -> ps.ZoneHeight | _ -> 0.0
-            let height = lines > 3 ? lines * 20.0 + zoneHeight : 50;
-            // console.log(lines);
-            // console.log(height);
-            if ((height !== lastHeight) && (height > 75)){
+            let lines = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF, false).split('\n').length
+            let height = lines * 20.0;
+            let width = el.clientWidth
+
+            if (height !== lastHeight || width !== lastWidth) {
               lastHeight = height
-              // console.log(el.clientWidth);
-              let width = el.clientWidth
-              // let dim:IDimension = {width: el.style.clientWidth, height: height}
-              ed.layout({width: width, height: height})
-              el.style.height = height+"px";
-              el.style.width = width+"px";
-              // console.log(el.style.height);
-            } 
+              lastWidth = width  
+              ed.layout({width:width, height:height})
+              el.style.height = height + "px"
+            }
           }
           ed.getModel().onDidChangeContent(resizeEditor);
           resizeEditor();
-          
-          // el.setHeight("100px");
         }
         return h('div', {}, [
-          // h('div', { style: "height:"+heightRequired+"px", id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
           h('div', { id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
         ] )      
       }
@@ -136,21 +133,19 @@ class MarkdownBlockKind implements Langs.Block {
     iconClassName: "fa fa-arrow-down",
     editor: markdownEditor,
     getDefaultCode: (id:number) => "Md" + id + ": This is a markdown cell.",
-    
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
     },
-    bind: async (cache, scope, block: Langs.Block) : Promise<Langs.BindingResult> => {
+    bind: async (cache, scope, resources: Array<Langs.Resource>, block: Langs.Block) : Promise<Langs.BindingResult> => {
       let mdBlock:MarkdownBlockKind = <MarkdownBlockKind> block
-      console.log(block)
       let node:Graph.Node = {
-        language:"markdown", 
+        language:this.language, 
         antecedents:[],
         hash:<string>Md5.hashStr(mdBlock.source),
         value: null,
         errors: []
       }
-      return {code: node, exports: []};
+      return {code: node, exports: [], resources:[]};
     },
     evaluate: async (node:Graph.Node) : Promise<Langs.EvaluationResult> => {
       return { kind: "success", value: { kind: "nothing" } };

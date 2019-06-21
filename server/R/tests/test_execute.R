@@ -95,3 +95,15 @@ test_that("We can evaluate code fragments with comments", {
     result <- executeCode(code, importsList, hash)
     expect_that(is.data.frame(result$returnVars[[1]]), equals(TRUE))
 })
+
+
+## test we can execute a function defined in a file, and passed into eval via 'files' field
+test_that("We can evaluate a function defined in filecontent", {
+    hash <- "testhash"
+    code <- "printHello('Bob')\n"
+    importsList <- c()
+    fileContent <- "printHello <- function(name) {\n print(paste('Hello',name))\n}\n"
+    result <- executeCode(code, importsList, hash, fileContent)
+    expect_that(result$outputString, equals("Hello Bob"))
+
+})

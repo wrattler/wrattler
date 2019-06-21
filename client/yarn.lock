@@ -2214,18 +2214,6 @@ extglob@^2.0.4:
     snapdragon "^0.8.1"
     to-regex "^3.0.1"
 
-fable-loader@1.1.6:
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/fable-loader/-/fable-loader-1.1.6.tgz#1392eb2fc78e99770f96df18129d1c447459ee17"
-  integrity sha512-eKddJyVzBX5Tdq1fNcoYgAZ4PsaqaE6gd2KiL86a9fKN9qErqa/uZGhFuu6ndAP3F+x0IeObZlHGnn/wazb/mw==
-  dependencies:
-    fable-utils "^1.0.4"
-
-fable-utils@^1.0.4:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/fable-utils/-/fable-utils-1.2.0.tgz#49e81735f57af4d67af997da3df220c547469215"
-  integrity sha512-xne8Cc2QK2BNZ0RElBZaz+j6pSHgi3i+cEhOzweKmTldvZGt5xqW7LvWWty553HknQKNRJBuyDYUKiiL1CTYlw==
-
 fast-deep-equal@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-1.1.0.tgz#c053477817c86b51daa853c81e059b733d023614"

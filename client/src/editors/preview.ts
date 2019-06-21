@@ -13,13 +13,12 @@ function printPreview(cellId:number, triggerSelect:(number) => void, selectedTab
 }
 
 function printCurrentValue(cellId:number, value:Values.Value, tableName:string) {
-  // console.log(tableName)
   let componentRootId = "_"+cellId.toString() + "_" + tableName
   switch(value.kind)
   {
     case "dataframe":
       let df = <Values.DataFrame>value
-      return h('div', {key: "dataframe"+componentRootId, class:'table-container'}, [printCurrentTable(df.data, tableName)]);
+      return h('div', {key: "dataframe"+componentRootId, class:'table-container'}, [printCurrentTable(df.preview, tableName)]);
     case "printout":
       let printoutValue = <Values.Printout>value
       return h('div', {key: "printout"+componentRootId}, [h('pre', {}, [printoutValue.data])])
