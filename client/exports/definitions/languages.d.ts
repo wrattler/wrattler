@@ -150,9 +150,13 @@ interface EvaluationFailure {
  * stores variables in scope, graph node cache and loaded resources.
  */
 interface BindingContext {
-    /**  */
+    /** A cache can be used for retrieving previously created graph nodes, so that
+     * Wrattler can reuse previously evaluated values. */
     cache: Graph.NodeCache;
+    /** Provides language plugin with access to variables defined in earlier cells
+     * that are now in scope. */
     scope: ScopeDictionary;
+    /** A list of resources loaded by earlier cells. */
     resources: Resource[];
 }
 /**
@@ -162,15 +166,20 @@ interface BindingContext {
 interface LanguagePlugin {
     /** Identifier of the language that this plugin implements */
     language: string;
+    /** CSS class for a Font Awesome icon to be used for this language.
+     * For example, the value `"fab fa-js-square"` is used for JavaScript. */
     iconClassName: string;
+    /** Given a numerical ID of a newly created block, return default source code
+     * that should appear in a newly created cells. This can be empty string or
+     * something to guide the user. */
     getDefaultCode(id: number): string;
     /** Returns a language-specific editor that handles the UI in a notebook  */
     editor: Editor<EditorState, any>;
-    /**
-     * Parse source code and construct a language-specific Block object that keeps the result
-     * of the parsing (this can just store the source, but it could build an AST too)
-     */
+    /** Parse source code and construct a language-specific Block object that keeps the result
+     * of the parsing (this can just store the source, but it could build an AST too) */
     parse(code: string): Block;
+    /** Evaluate the code associated with a graph node. When doing this, the
+     * language plugin can assume that all `antecedent` nodes have already been evaluated. */
     evaluate(context: EvaluationContext, node: Graph.Node): Promise<EvaluationResult>;
     /**
      * Given a parsed block and a dictionary that tracks variables that are in scope,
@@ -178,9 +187,7 @@ interface LanguagePlugin {
      * code block and a list of exported variables (to be added to the scope)
      */
     bind(context: BindingContext, block: Block): Promise<BindingResult>;
-    /**
-     * Given cell:Block, return string of source to be used for saving document in markdown
-     */
+    /** Given a code cell, return string of source to be used for saving document in Markdown file. */
     save(block: Block): string;
 }
 /**
@@ -224,7 +231,10 @@ interface Editor<TState extends EditorState, TEvent> {
 interface EditorContext<TEvent> {
     /** Trigger an editor-specific event to be handled via the `update` function  */
     trigger(event: TEvent): void;
+    /** Trigger the evaluation of a given code block. */
     evaluate(block: BlockState): void;
+    /** Set the source of a given code block to the `newSource` and trigger rebinding
+     * of all subsequent code blocks in a notebook. */
     rebindSubsequent(block: BlockState, newSource: string): any;
 }
 /**
