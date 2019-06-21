@@ -70,7 +70,10 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>TODO</p>
+						<p>Represents exports of code cell. When writing a <a href="../interfaces/languages.languageplugin.html"><code>LanguagePlugin</code></a>,
+							the <code>bind</code> operation returns a graph node named <code>code</code> that represents the result of
+							evaluating the entire code cell. The result of evaluating this graph node should be a
+						value of type <code>ExportsValue</code>.</p>
 					</div>
 				</div>
 			</section>
@@ -109,14 +112,20 @@
 					<div class="tsd-signature tsd-kind-icon">exports<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/values.ts#L30">definitions/values.ts:30</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/values.ts#L81">definitions/values.ts:81</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>A dictionary that stores all values exported by a code cell. Wrattler will display tabs
+							with the keys from this dictionary.</p>
+						</div>
+					</div>
 					<div class="tsd-type-declaration">
 						<h4>Type declaration</h4>
 						<ul class="tsd-parameters">
 							<li class="tsd-parameter-index-signature">
-								<h5><span class="tsd-signature-symbol">[</span>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><a href="values.value.html" class="tsd-signature-type">Value</a></h5>
+								<h5><span class="tsd-signature-symbol">[</span>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><a href="../modules/values.html#knownvalue" class="tsd-signature-type">KnownValue</a></h5>
 							</li>
 						</ul>
 					</div>
@@ -128,9 +137,14 @@
 					<aside class="tsd-sources">
 						<p>Overrides <a href="values.value.html">Value</a>.<a href="values.value.html#kind">kind</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/values.ts#L29">definitions/values.ts:29</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/values.ts#L77">definitions/values.ts:77</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>A tag that is used for pattern matching on <code>KnownValue</code> instances.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 		</div>
@@ -145,6 +159,9 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/languages.html">Languages</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/main.html">Main</a>
 					</li>
 					<li class="current tsd-kind-external-module">
 						<a href="../modules/values.html">Values</a>
@@ -182,6 +199,9 @@
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="values.value.html" class="tsd-kind-icon">Value</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/values.html#knownvalue" class="tsd-kind-icon">Known<wbr>Value</a>
 					</li>
 				</ul>
 			</nav>

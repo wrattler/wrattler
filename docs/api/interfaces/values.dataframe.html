@@ -70,7 +70,9 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>TODO</p>
+						<p>Represents a data frame. A data frame is always stored in the data store and represented
+							by the <code>url</code>. It also includes eagerly evaluated (always available) <code>preview</code> and lazily
+						evaluated full <code>data</code>. Those are represented as arrays of JavaScript records.</p>
 					</div>
 				</div>
 			</section>
@@ -108,12 +110,17 @@
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
 					<a name="data" class="tsd-anchor"></a>
 					<h3>data</h3>
-					<div class="tsd-signature tsd-kind-icon">data<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">AsyncLazy</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
+					<div class="tsd-signature tsd-kind-icon">data<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">AsyncLazy</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/values.ts#L39">definitions/values.ts:39</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/values.ts#L95">definitions/values.ts:95</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Lazy value that can be asynchronously evaluated to obtain the full data frame as array of records</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite tsd-is-not-exported">
 					<a name="kind" class="tsd-anchor"></a>
@@ -122,19 +129,29 @@
 					<aside class="tsd-sources">
 						<p>Overrides <a href="values.value.html">Value</a>.<a href="values.value.html#kind">kind</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/values.ts#L37">definitions/values.ts:37</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/values.ts#L91">definitions/values.ts:91</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>A tag that is used for pattern matching on <code>KnownValue</code> instances.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
 					<a name="preview" class="tsd-anchor"></a>
 					<h3>preview</h3>
-					<div class="tsd-signature tsd-kind-icon">preview<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+					<div class="tsd-signature tsd-kind-icon">preview<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/values.ts#L40">definitions/values.ts:40</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/values.ts#L97">definitions/values.ts:97</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>A smaller preview of the data (e.g. first 100 rows), stored as array of records</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
 					<a name="url" class="tsd-anchor"></a>
@@ -142,9 +159,14 @@
 					<div class="tsd-signature tsd-kind-icon">url<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/values.ts#L38">definitions/values.ts:38</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/values.ts#L93">definitions/values.ts:93</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>URL of the data frame as stored in a data store</p>
+						</div>
+					</div>
 				</section>
 			</section>
 		</div>
@@ -159,6 +181,9 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/languages.html">Languages</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/main.html">Main</a>
 					</li>
 					<li class="current tsd-kind-external-module">
 						<a href="../modules/values.html">Values</a>
@@ -202,6 +227,9 @@
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="values.value.html" class="tsd-kind-icon">Value</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/values.html#knownvalue" class="tsd-kind-icon">Known<wbr>Value</a>
 					</li>
 				</ul>
 			</nav>

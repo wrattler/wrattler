@@ -67,8 +67,37 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Types representing values</p>
+						<p>In a Wrattler notebook, each cell is associated with one or more nodes in a
+							<a href="../modules/graph.html">depedency graph</a>. Nodes in the dependency graph represent
+							parts of code. These can be coarse grained such as the enitre Python cell or more
+							fine grained (if a language plugin can parse source code and analyse dependencies fully
+							in the browser). When evaluating cell in a notebook, Wrattler does that by recursively
+							evaluating code associated with nodes (via a corresponding language plugin) in the
+							dependnecy graph. This module defines types and interfaces that represent values which
+						can be attached to nodes in the graph.</p>
 					</div>
+					<ul>
+						<li><p><a href="../interfaces/values.value.html"><code>Value</code></a> is an interface representing any value.
+								Language plugins can use their own types of values, but there are also a couple of
+							standard types that are understood and used by Wrattler.</p>
+						</li>
+						<li><p><a href="../interfaces/values.exportsvalue.html"><code>ExportsValue</code></a> is a value that should be attached
+								to a node that represents the result of evaluating the whole code cell. It provides
+								access to <code>exports</code> which is a dictionary with all things exported from a cell
+							(such as data frames and image or console outputs).</p>
+						</li>
+						<li><p>The special types of values understood by Wrattler are:
+								<a href="../interfaces/values.dataframe.html"><code>DataFrame</code></a> representing a data frame,
+								<a href="../interfaces/values.printout.html"><code>Printout</code></a> representing console output,
+								<a href="../interfaces/values.figure.html"><code>Figure</code></a> representing an image and
+								<a href="../interfaces/values.javascriptoutputvalue.html"><code>JavaScriptOutputValue</code></a> representing
+							arbitrary JavaScript code that manipulates the DOM of a given DOM element.</p>
+						</li>
+						<li><p><a href="#knownvalue"><code>KnownValue</code></a> is a sum type that represents
+								one of the known types above. The <code>exports</code> returned by <code>ExportsValue</code> should only
+							be instances of this type.</p>
+						</li>
+					</ul>
 				</div>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -86,6 +115,32 @@
 								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/values.value.html" class="tsd-kind-icon">Value</a></li>
 							</ul>
 						</section>
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Type aliases</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported"><a href="values.html#knownvalue" class="tsd-kind-icon">Known<wbr>Value</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Type aliases</h2>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="knownvalue" class="tsd-anchor"></a>
+					<h3>Known<wbr>Value</h3>
+					<div class="tsd-signature tsd-kind-icon">Known<wbr>Value<span class="tsd-signature-symbol">:</span> <a href="../interfaces/values.javascriptoutputvalue.html" class="tsd-signature-type">JavaScriptOutputValue</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/values.dataframe.html" class="tsd-signature-type">DataFrame</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/values.exportsvalue.html" class="tsd-signature-type">ExportsValue</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/values.printout.html" class="tsd-signature-type">Printout</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/values.figure.html" class="tsd-signature-type">Figure</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/values.ts#L54">definitions/values.ts:54</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Known value is a sum type that represents all the standard types of values that Wrattler
+								understands. Those are values that should be exported by the <code>exports</code> property of
+							<code>ExportsValue</code> and represent images, console outputs, data frames, etc.</p>
+						</div>
 					</div>
 				</section>
 			</section>
@@ -101,6 +156,9 @@
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="languages.html">Languages</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="main.html">Main</a>
 					</li>
 					<li class="current tsd-kind-external-module">
 						<a href="values.html">Values</a>
@@ -126,6 +184,9 @@
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../interfaces/values.value.html" class="tsd-kind-icon">Value</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="values.html#knownvalue" class="tsd-kind-icon">Known<wbr>Value</a>
 					</li>
 				</ul>
 			</nav>

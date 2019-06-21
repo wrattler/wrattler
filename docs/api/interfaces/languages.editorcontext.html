@@ -113,19 +113,24 @@
 					<a name="evaluate" class="tsd-anchor"></a>
 					<h3>evaluate</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">evaluate<span class="tsd-signature-symbol">(</span>block<span class="tsd-signature-symbol">: </span><a href="../modules/languages.html#blockstate" class="tsd-signature-type">BlockState</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">evaluate<span class="tsd-signature-symbol">(</span>block<span class="tsd-signature-symbol">: </span><a href="languages.blockstate.html" class="tsd-signature-type">BlockState</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L125">definitions/languages.ts:125</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L259">definitions/languages.ts:259</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Trigger the evaluation of a given code block.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>block: <a href="../modules/languages.html#blockstate" class="tsd-signature-type">BlockState</a></h5>
+									<h5>block: <a href="languages.blockstate.html" class="tsd-signature-type">BlockState</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -136,19 +141,25 @@
 					<a name="rebindsubsequent" class="tsd-anchor"></a>
 					<h3>rebind<wbr>Subsequent</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">rebind<wbr>Subsequent<span class="tsd-signature-symbol">(</span>block<span class="tsd-signature-symbol">: </span><a href="../modules/languages.html#blockstate" class="tsd-signature-type">BlockState</a>, newSource<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span></li>
+						<li class="tsd-signature tsd-kind-icon">rebind<wbr>Subsequent<span class="tsd-signature-symbol">(</span>block<span class="tsd-signature-symbol">: </span><a href="languages.blockstate.html" class="tsd-signature-type">BlockState</a>, newSource<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L126">definitions/languages.ts:126</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L263">definitions/languages.ts:263</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Set the source of a given code block to the <code>newSource</code> and trigger rebinding
+									of all subsequent code blocks in a notebook.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>block: <a href="../modules/languages.html#blockstate" class="tsd-signature-type">BlockState</a></h5>
+									<h5>block: <a href="languages.blockstate.html" class="tsd-signature-type">BlockState</a></h5>
 								</li>
 								<li>
 									<h5>newSource: <span class="tsd-signature-type">string</span></h5>
@@ -168,7 +179,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L124">definitions/languages.ts:124</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L256">definitions/languages.ts:256</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -201,6 +212,9 @@
 						<a href="../modules/languages.html">Languages</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/main.html">Main</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/values.html">Values</a>
 					</li>
 				</ul>
@@ -208,10 +222,16 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.bindingcontext.html" class="tsd-kind-icon">Binding<wbr>Context</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.bindingresult.html" class="tsd-kind-icon">Binding<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.block.html" class="tsd-kind-icon">Block</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.blockstate.html" class="tsd-kind-icon">Block<wbr>State</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 						<a href="languages.editor.html" class="tsd-kind-icon">Editor</a>
@@ -238,6 +258,9 @@
 						<a href="languages.editorstate.html" class="tsd-kind-icon">Editor<wbr>State</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.evaluationcontext.html" class="tsd-kind-icon">Evaluation<wbr>Context</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.evaluationfailure.html" class="tsd-kind-icon">Evaluation<wbr>Failure</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
@@ -251,9 +274,6 @@
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.scopedictionary.html" class="tsd-kind-icon">Scope<wbr>Dictionary</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/languages.html#blockstate" class="tsd-kind-icon">Block<wbr>State</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/languages.html#evaluationresult" class="tsd-kind-icon">Evaluation<wbr>Result</a>

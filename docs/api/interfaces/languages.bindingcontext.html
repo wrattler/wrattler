@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Node | Wrattler API documentation</title>
+	<title>BindingContext | Wrattler API documentation</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -54,13 +54,13 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/graph.html">Graph</a>
+					<a href="../modules/languages.html">Languages</a>
 				</li>
 				<li>
-					<a href="graph.node.html">Node</a>
+					<a href="languages.bindingcontext.html">BindingContext</a>
 				</li>
 			</ul>
-			<h1>Interface Node</h1>
+			<h1>Interface BindingContext</h1>
 		</div>
 	</div>
 </header>
@@ -70,10 +70,8 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>A node in the dependency graph that Wrattler maintains while the user edits a
-							notebook. The graph is used to avoid re-computing previously computed parts
-							of the notebook and for maintaining unique hashes that are used as keys when
-						storing results in the data store.</p>
+						<p>A context that is passed to the <code>bind</code> operation of a <code>LanguagePlugin</code>. This
+						stores variables in scope, graph node cache and loaded resources.</p>
 					</div>
 				</div>
 			</section>
@@ -81,18 +79,7 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Node</span>
-						<ul class="tsd-hierarchy">
-							<li>
-								<a href="graph.exportnode.html" class="tsd-signature-type">ExportNode</a>
-							</li>
-							<li>
-								<a href="graph.jscodenode.html" class="tsd-signature-type">JsCodeNode</a>
-							</li>
-							<li>
-								<a href="graph.externalcodenode.html" class="tsd-signature-type">ExternalCodeNode</a>
-							</li>
-						</ul>
+						<span class="target">BindingContext</span>
 					</li>
 				</ul>
 			</section>
@@ -103,11 +90,9 @@
 						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="graph.node.html#antecedents" class="tsd-kind-icon">antecedents</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="graph.node.html#errors" class="tsd-kind-icon">errors</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="graph.node.html#hash" class="tsd-kind-icon">hash</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="graph.node.html#language" class="tsd-kind-icon">language</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="graph.node.html#value" class="tsd-kind-icon">value</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="languages.bindingcontext.html#cache" class="tsd-kind-icon">cache</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="languages.bindingcontext.html#resources" class="tsd-kind-icon">resources</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="languages.bindingcontext.html#scope" class="tsd-kind-icon">scope</a></li>
 							</ul>
 						</section>
 					</div>
@@ -116,79 +101,49 @@
 			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="antecedents" class="tsd-anchor"></a>
-					<h3>antecedents</h3>
-					<div class="tsd-signature tsd-kind-icon">antecedents<span class="tsd-signature-symbol">:</span> <a href="graph.node.html" class="tsd-signature-type">Node</a><span class="tsd-signature-symbol">[]</span></div>
+					<a name="cache" class="tsd-anchor"></a>
+					<h3>cache</h3>
+					<div class="tsd-signature tsd-kind-icon">cache<span class="tsd-signature-symbol">:</span> <a href="graph.nodecache.html" class="tsd-signature-type">NodeCache</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/graph.ts#L64">definitions/graph.ts:64</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L165">definitions/languages.ts:165</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Returns all nodes that this node depends on.</p>
+							<p>A cache can be used for retrieving previously created graph nodes, so that
+							Wrattler can reuse previously evaluated values.</p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="errors" class="tsd-anchor"></a>
-					<h3>errors</h3>
-					<div class="tsd-signature tsd-kind-icon">errors<span class="tsd-signature-symbol">:</span> <a href="graph.error.html" class="tsd-signature-type">Error</a><span class="tsd-signature-symbol">[]</span></div>
+					<a name="resources" class="tsd-anchor"></a>
+					<h3>resources</h3>
+					<div class="tsd-signature tsd-kind-icon">resources<span class="tsd-signature-symbol">:</span> <a href="languages.resource.html" class="tsd-signature-type">Resource</a><span class="tsd-signature-symbol">[]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/graph.ts#L75">definitions/graph.ts:75</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L170">definitions/languages.ts:170</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Collection of errors associated with this node. This is set, for example, when
-							evaluating code represented by this node fails.</p>
+							<p>A list of resources loaded by earlier cells.</p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="hash" class="tsd-anchor"></a>
-					<h3>hash</h3>
-					<div class="tsd-signature tsd-kind-icon">hash<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="scope" class="tsd-anchor"></a>
+					<h3>scope</h3>
+					<div class="tsd-signature tsd-kind-icon">scope<span class="tsd-signature-symbol">:</span> <a href="languages.scopedictionary.html" class="tsd-signature-type">ScopeDictionary</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/graph.ts#L71">definitions/graph.ts:71</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L168">definitions/languages.ts:168</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Hash that identifies the node. When code or dependencies change, new node will be
-							created and it will have a different hash.</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="language" class="tsd-anchor"></a>
-					<h3>language</h3>
-					<div class="tsd-signature tsd-kind-icon">language<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/graph.ts#L61">definitions/graph.ts:61</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Language of the plugin that created and owns this node.</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="value" class="tsd-anchor"></a>
-					<h3>value</h3>
-					<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <a href="values.value.html" class="tsd-signature-type">Value</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/graph.ts#L67">definitions/graph.ts:67</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>The evaluated value associated with this node. This is <code>null</code> when the node is created.</p>
+							<p>Provides language plugin with access to variables defined in earlier cells
+							that are now in scope.</p>
 						</div>
 					</div>
 				</section>
@@ -200,10 +155,10 @@
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
-					<li class="current tsd-kind-external-module">
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/graph.html">Graph</a>
 					</li>
-					<li class=" tsd-kind-external-module">
+					<li class="current tsd-kind-external-module">
 						<a href="../modules/languages.html">Languages</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -216,56 +171,62 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="graph.error.html" class="tsd-kind-icon">Error</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="graph.exportnode.html" class="tsd-kind-icon">Export<wbr>Node</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="graph.externalcodenode.html" class="tsd-kind-icon">External<wbr>Code<wbr>Node</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="graph.externalexportnode.html" class="tsd-kind-icon">External<wbr>Export<wbr>Node</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="graph.jscodenode.html" class="tsd-kind-icon">Js<wbr>Code<wbr>Node</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="graph.jsexportnode.html" class="tsd-kind-icon">Js<wbr>Export<wbr>Node</a>
-					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="graph.node.html" class="tsd-kind-icon">Node</a>
+						<a href="languages.bindingcontext.html" class="tsd-kind-icon">Binding<wbr>Context</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="graph.node.html#antecedents" class="tsd-kind-icon">antecedents</a>
+								<a href="languages.bindingcontext.html#cache" class="tsd-kind-icon">cache</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="graph.node.html#errors" class="tsd-kind-icon">errors</a>
+								<a href="languages.bindingcontext.html#resources" class="tsd-kind-icon">resources</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="graph.node.html#hash" class="tsd-kind-icon">hash</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="graph.node.html#language" class="tsd-kind-icon">language</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="graph.node.html#value" class="tsd-kind-icon">value</a>
+								<a href="languages.bindingcontext.html#scope" class="tsd-kind-icon">scope</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="graph.nodecache.html" class="tsd-kind-icon">Node<wbr>Cache</a>
+						<a href="languages.bindingresult.html" class="tsd-kind-icon">Binding<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.block.html" class="tsd-kind-icon">Block</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.blockstate.html" class="tsd-kind-icon">Block<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
+						<a href="languages.editor.html" class="tsd-kind-icon">Editor</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
+						<a href="languages.editorcontext.html" class="tsd-kind-icon">Editor<wbr>Context</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.editorstate.html" class="tsd-kind-icon">Editor<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.evaluationcontext.html" class="tsd-kind-icon">Evaluation<wbr>Context</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.evaluationfailure.html" class="tsd-kind-icon">Evaluation<wbr>Failure</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.evaluationsuccess.html" class="tsd-kind-icon">Evaluation<wbr>Success</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.languageplugin.html" class="tsd-kind-icon">Language<wbr>Plugin</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.resource.html" class="tsd-kind-icon">Resource</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.scopedictionary.html" class="tsd-kind-icon">Scope<wbr>Dictionary</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/graph.html#externalnode" class="tsd-kind-icon">External<wbr>Node</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/graph.html#jsnode" class="tsd-kind-icon">Js<wbr>Node</a>
+						<a href="../modules/languages.html#evaluationresult" class="tsd-kind-icon">Evaluation<wbr>Result</a>
 					</li>
 				</ul>
 			</nav>

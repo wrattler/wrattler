@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Editor | Wrattler API documentation</title>
+	<title>Wrattler | Wrattler API documentation</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -54,45 +54,24 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/languages.html">Languages</a>
+					<a href="../modules/_main_.html">&quot;main&quot;</a>
 				</li>
 				<li>
-					<a href="languages.editor.html">Editor</a>
+					<a href="_main_.wrattler.html">Wrattler</a>
 				</li>
 			</ul>
-			<h1>Interface Editor&lt;TState, TEvent&gt;</h1>
+			<h1>Class Wrattler</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>An editor for blocks of a specific language. Editors follow the Elm architecture -
-							it defines a state together with events that can be triggered by actions in the
-							user interface. The render function renders the current state as a Virtual DOM node
-						and the update function calculates a new state when given an old state and an event.</p>
-					</div>
-				</div>
-			</section>
-			<section class="tsd-panel tsd-type-parameters">
-				<h3>Type parameters</h3>
-				<ul class="tsd-type-parameters">
-					<li>
-						<h4>TState<span class="tsd-signature-symbol">: </span><a href="languages.editorstate.html" class="tsd-signature-type">EditorState</a></h4>
-					</li>
-					<li>
-						<h4>TEvent</h4>
-					</li>
-				</ul>
-			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Editor</span>
+						<span class="target">Wrattler</span>
 					</li>
 				</ul>
 			</section>
@@ -103,9 +82,9 @@
 						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported"><a href="languages.editor.html#initialize" class="tsd-kind-icon">initialize</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported"><a href="languages.editor.html#render" class="tsd-kind-icon">render</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported"><a href="languages.editor.html#update" class="tsd-kind-icon">update</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_main_.wrattler.html#createnamednotebook" class="tsd-kind-icon">create<wbr>Named<wbr>Notebook</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_main_.wrattler.html#createnotebook" class="tsd-kind-icon">create<wbr>Notebook</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_main_.wrattler.html#getdefaultlanguages" class="tsd-kind-icon">get<wbr>Default<wbr>Languages</a></li>
 							</ul>
 						</section>
 					</div>
@@ -113,103 +92,75 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
 				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="initialize" class="tsd-anchor"></a>
-					<h3>initialize</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">initialize<span class="tsd-signature-symbol">(</span>id<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, block<span class="tsd-signature-symbol">: </span><a href="languages.block.html" class="tsd-signature-type">Block</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TState</span></li>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+					<a name="createnamednotebook" class="tsd-anchor"></a>
+					<h3>create<wbr>Named<wbr>Notebook</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Named<wbr>Notebook<span class="tsd-signature-symbol">(</span>elementID<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, languagePlugins<span class="tsd-signature-symbol">: </span><a href="../modules/_main_.html#languageplugins" class="tsd-signature-type">LanguagePlugins</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_main_.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L232">definitions/languages.ts:232</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/main.ts#L326">main.ts:326</a></li>
 								</ul>
 							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Initialize the editor state for a given block with a given (unique) block ID</p>
-								</div>
-							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>id: <span class="tsd-signature-type">number</span></h5>
+									<h5>elementID: <span class="tsd-signature-type">string</span></h5>
 								</li>
 								<li>
-									<h5>block: <a href="languages.block.html" class="tsd-signature-type">Block</a></h5>
+									<h5>languagePlugins: <a href="../modules/_main_.html#languageplugins" class="tsd-signature-type">LanguagePlugins</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">TState</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_main_.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="render" class="tsd-anchor"></a>
-					<h3>render</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">render<span class="tsd-signature-symbol">(</span>block<span class="tsd-signature-symbol">: </span><a href="languages.blockstate.html" class="tsd-signature-type">BlockState</a>, state<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TState</span>, context<span class="tsd-signature-symbol">: </span><a href="languages.editorcontext.html" class="tsd-signature-type">EditorContext</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">TEvent</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">VNode</span></li>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+					<a name="createnotebook" class="tsd-anchor"></a>
+					<h3>create<wbr>Notebook</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Notebook<span class="tsd-signature-symbol">(</span>elementID<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, content<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, languagePlugins<span class="tsd-signature-symbol">: </span><a href="../modules/_main_.html#languageplugins" class="tsd-signature-type">LanguagePlugins</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_main_.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L239">definitions/languages.ts:239</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/main.ts#L330">main.ts:330</a></li>
 								</ul>
 							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Render the block using the current editor state. The editor context that
-										is also passed to the render function can be used to trigger events when
-									the user performs some action (this triggers re-render of the page)</p>
-								</div>
-							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>block: <a href="languages.blockstate.html" class="tsd-signature-type">BlockState</a></h5>
+									<h5>elementID: <span class="tsd-signature-type">string</span></h5>
 								</li>
 								<li>
-									<h5>state: <span class="tsd-signature-type">TState</span></h5>
+									<h5>content: <span class="tsd-signature-type">string</span></h5>
 								</li>
 								<li>
-									<h5>context: <a href="languages.editorcontext.html" class="tsd-signature-type">EditorContext</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">TEvent</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>languagePlugins: <a href="../modules/_main_.html#languageplugins" class="tsd-signature-type">LanguagePlugins</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">VNode</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_main_.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="update" class="tsd-anchor"></a>
-					<h3>update</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">update<span class="tsd-signature-symbol">(</span>state<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TState</span>, event<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TEvent</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TState</span></li>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+					<a name="getdefaultlanguages" class="tsd-anchor"></a>
+					<h3>get<wbr>Default<wbr>Languages</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Default<wbr>Languages<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../modules/_main_.html#languageplugins" class="tsd-signature-type">LanguagePlugins</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L246">definitions/languages.ts:246</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/main.ts#L312">main.ts:312</a></li>
 								</ul>
 							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>The update function takes an event (trggered by the event handlers returned
-										in the rendered Virutal DOM nodes) together with the current state of the
-									editor and produces a new state.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>state: <span class="tsd-signature-type">TState</span></h5>
-								</li>
-								<li>
-									<h5>event: <span class="tsd-signature-type">TEvent</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">TState</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="../modules/_main_.html#languageplugins" class="tsd-signature-type">LanguagePlugins</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -221,14 +172,14 @@
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
+					<li class="current tsd-kind-external-module">
+						<a href="../modules/_main_.html">"main"</a>
+					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/graph.html">Graph</a>
 					</li>
-					<li class="current tsd-kind-external-module">
-						<a href="../modules/languages.html">Languages</a>
-					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/main.html">Main</a>
+						<a href="../modules/languages.html">Languages</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/values.html">Values</a>
@@ -237,62 +188,95 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.bindingcontext.html" class="tsd-kind-icon">Binding<wbr>Context</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.bindingresult.html" class="tsd-kind-icon">Binding<wbr>Result</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.block.html" class="tsd-kind-icon">Block</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.blockstate.html" class="tsd-kind-icon">Block<wbr>State</a>
-					</li>
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-						<a href="languages.editor.html" class="tsd-kind-icon">Editor</a>
+					<li class="current tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="_main_.wrattler.html" class="tsd-kind-icon">Wrattler</a>
 						<ul>
-							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="languages.editor.html#initialize" class="tsd-kind-icon">initialize</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+								<a href="_main_.wrattler.html#createnamednotebook" class="tsd-kind-icon">create<wbr>Named<wbr>Notebook</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="languages.editor.html#render" class="tsd-kind-icon">render</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+								<a href="_main_.wrattler.html#createnotebook" class="tsd-kind-icon">create<wbr>Notebook</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="languages.editor.html#update" class="tsd-kind-icon">update</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+								<a href="_main_.wrattler.html#getdefaultlanguages" class="tsd-kind-icon">get<wbr>Default<wbr>Languages</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-						<a href="languages.editorcontext.html" class="tsd-kind-icon">Editor<wbr>Context</a>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/_main_.notebookaddevent.html" class="tsd-kind-icon">Notebook<wbr>Add<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.editorstate.html" class="tsd-kind-icon">Editor<wbr>State</a>
+						<a href="../interfaces/_main_.notebookblockevent.html" class="tsd-kind-icon">Notebook<wbr>Block<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.evaluationcontext.html" class="tsd-kind-icon">Evaluation<wbr>Context</a>
+						<a href="../interfaces/_main_.notebookrefreshevent.html" class="tsd-kind-icon">Notebook<wbr>Refresh<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.evaluationfailure.html" class="tsd-kind-icon">Evaluation<wbr>Failure</a>
+						<a href="../interfaces/_main_.notebookremoveevent.html" class="tsd-kind-icon">Notebook<wbr>Remove<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.evaluationsuccess.html" class="tsd-kind-icon">Evaluation<wbr>Success</a>
+						<a href="../interfaces/_main_.notebooksourcechange.html" class="tsd-kind-icon">Notebook<wbr>Source<wbr>Change</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.languageplugin.html" class="tsd-kind-icon">Language<wbr>Plugin</a>
+						<a href="../interfaces/_main_.notebooktoggleaddevent.html" class="tsd-kind-icon">Notebook<wbr>Toggle<wbr>Add<wbr>Event</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.resource.html" class="tsd-kind-icon">Resource</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.scopedictionary.html" class="tsd-kind-icon">Scope<wbr>Dictionary</a>
+						<a href="../interfaces/_main_.wrattlernotebook.html" class="tsd-kind-icon">Wrattler<wbr>Notebook</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/languages.html#evaluationresult" class="tsd-kind-icon">Evaluation<wbr>Result</a>
+						<a href="../modules/_main_.html#languageplugins" class="tsd-kind-icon">Language<wbr>Plugins</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#notebookevent" class="tsd-kind-icon">Notebook<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#notebookstate" class="tsd-kind-icon">Notebook<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#pythonservice_uri" class="tsd-kind-icon">PYTHONSERVICE_<wbr>URI</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#racketservice_uri" class="tsd-kind-icon">RACKETSERVICE_<wbr>URI</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#rservice_uri" class="tsd-kind-icon">RSERVICE_<wbr>URI</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#paperelementid" class="tsd-kind-icon">paper<wbr>ElementID</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#bindallcells" class="tsd-kind-icon">bind<wbr>All<wbr>Cells</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#bindcell" class="tsd-kind-icon">bind<wbr>Cell</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#createnodecache" class="tsd-kind-icon">create<wbr>Node<wbr>Cache</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#evaluate" class="tsd-kind-icon">evaluate</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#initializecells" class="tsd-kind-icon">initialize<wbr>Cells</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#loadnotebook" class="tsd-kind-icon">load<wbr>Notebook</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#render" class="tsd-kind-icon">render</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#savedocument" class="tsd-kind-icon">save<wbr>Document</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#update" class="tsd-kind-icon">update</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_main_.html#updateandbindallcells" class="tsd-kind-icon">update<wbr>And<wbr>Bind<wbr>All<wbr>Cells</a>
 					</li>
 				</ul>
 			</nav>
