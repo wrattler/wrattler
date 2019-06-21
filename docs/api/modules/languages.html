@@ -67,8 +67,76 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Interface for implementing language plugins.</p>
+						<p>Wrattler is a polyglot notebook system. It constructs dependency graph
+							and manages evaluation of nodes in the graph in the web browser, although
+							languages like R and Python that cannot run in the web browser delegate much
+						of the work to a server-side execution runtime.</p>
 					</div>
+					<p>When extending Wrattler, you have a range of options from creating (just) a
+						new server-side execution runtime to implementing custom user interface for
+						a cell. The types in this module let you imlement new <em>language plugins</em> that
+					do some interesting work directly in the web browser.</p>
+					<ul>
+						<li><p><a href="../interfaces/languages.languageplugin.html"><code>LanguagePlugin</code></a> is the main
+								type that you need to implement if you want to add new langauge to Wrattler.
+								The type is responsible for parsing, binding (i.e. the construction of a
+							dependnecy graph), evaluation and also user interface.</p>
+						</li>
+						<li><p><a href="../interfaces/languages.block.html"><code>Block</code></a> is produced by parsing source
+								code. Each language can define its own type and store either the code itself
+							or some parsed abstract syntax tree.</p>
+						</li>
+					</ul>
+					<h3 id="constructing-dependency-graph">Constructing dependency graph</h3>
+					<p>The following types are related to the <code>bind</code> operation of a <code>LanguagePlugin</code>:</p>
+					<ul>
+						<li><p><a href="../interfaces/languages.bindingcontext.html"><code>BindingContext</code></a> provides
+								the language plugin with a cache for reusing past graph nodes, variables
+								that are in scope from previous cells (the <a href="../interfaces/languages.scopedictionary.html"><code>ScopeDictionary</code></a>
+								type) and also source files (e.g. <code>*.py</code>) that were imported in previous cells
+							(the <a href="../interfaces/languages.resource.html"><code>Resource</code></a> type).</p>
+						</li>
+						<li><p><a href="../interfaces/languages.bindingresult.html"><code>BindingResult</code></a> is the result of
+								<code>bind</code>. It includes one graph node representing the whole code cell and an
+								array representing exported data frames. It can also return new source files that
+								should be automatically loaded in further cells (as values of the
+							<a href="../interfaces/languages.resource.html"><code>Resource</code></a> type).</p>
+						</li>
+					</ul>
+					<h3 id="evaluating-graph-node-values">Evaluating graph node values</h3>
+					<p>The following types are related to the <code>eval</code> operation of a <code>LanguagePlugin</code>:</p>
+					<ul>
+						<li><p><a href="../interfaces/languages.evaluationcontext.html"><code>EvaluationContext</code></a> provides
+							the evaluator with files that are imported in previous cells.</p>
+						</li>
+						<li><p><a href="#evaluationresult"><code>EvaluationResult</code></a> represents the result of evaluation. This
+								can be either <a href="../interfaces/languages.evaluationfailure.html"><code>EvaluationFailure</code></a>,
+								consisting of an array of errors, or <a href="../interfaces/languages.evaluationsuccess.html"><code>EvaluationSuccess</code></a>
+								consisting of a <a href="../interfaces/values.value.html"><code>Value</code></a> that should be stored
+							with the graph node.</p>
+						</li>
+					</ul>
+					<h3 id="implementing-custom-editors">Implementing custom editors</h3>
+					<p>The following types are needed when implementing custom editor for a new language:</p>
+					<ul>
+						<li><p><a href="../interfaces/languages.editor.html"><code>Editor</code></a> is the main type to implement.
+								Editors in Wrattler follow the Elm architecture. They expose <code>render</code> function, which
+								generates virtual HTML nodes based on the current state and <code>update</code> function, which
+							is used to update the state when an event happens.</p>
+						</li>
+						<li><p>Editor for each language has its own type of events. The type used to represent
+								state needs to implement the <a href="../interfaces/languages.editorstate.html"><code>EditorState</code></a>
+							interface.</p>
+						</li>
+						<li><p><a href="#blockstate"><code>BlockState</code></a> is passed to <code>render</code> when rendering a notebook. It
+								stores the <a href="../interfaces/languages.editorstate.html"><code>EditorState</code></a> of the given
+							editor and information about dependency graph nodes corresponding to the cell.</p>
+						</li>
+						<li><p><a href="../interfaces/languages.editorcontext.html"><code>EditorContext</code></a> is passed as an extra
+								parameter to <code>render</code>. It provides operations for triggering events (to be called from
+							JavaScript event handlers), rebinding and triggering evaluation.</p>
+						</li>
+					</ul>
 				</div>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -78,11 +146,14 @@
 						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Interfaces</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/languages.bindingcontext.html" class="tsd-kind-icon">Binding<wbr>Context</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/languages.bindingresult.html" class="tsd-kind-icon">Binding<wbr>Result</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/languages.block.html" class="tsd-kind-icon">Block</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/languages.blockstate.html" class="tsd-kind-icon">Block<wbr>State</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported"><a href="../interfaces/languages.editor.html" class="tsd-kind-icon">Editor</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported"><a href="../interfaces/languages.editorcontext.html" class="tsd-kind-icon">Editor<wbr>Context</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/languages.editorstate.html" class="tsd-kind-icon">Editor<wbr>State</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/languages.evaluationcontext.html" class="tsd-kind-icon">Evaluation<wbr>Context</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/languages.evaluationfailure.html" class="tsd-kind-icon">Evaluation<wbr>Failure</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/languages.evaluationsuccess.html" class="tsd-kind-icon">Evaluation<wbr>Success</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported"><a href="../interfaces/languages.languageplugin.html" class="tsd-kind-icon">Language<wbr>Plugin</a></li>
@@ -93,7 +164,6 @@
 						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Type aliases</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported"><a href="languages.html#blockstate" class="tsd-kind-icon">Block<wbr>State</a></li>
 								<li class="tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported"><a href="languages.html#evaluationresult" class="tsd-kind-icon">Evaluation<wbr>Result</a></li>
 							</ul>
 						</section>
@@ -103,61 +173,19 @@
 			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
 				<h2>Type aliases</h2>
 				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-					<a name="blockstate" class="tsd-anchor"></a>
-					<h3>Block<wbr>State</h3>
-					<div class="tsd-signature tsd-kind-icon">Block<wbr>State<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L148">definitions/languages.ts:148</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>A block state keeps information about the block in the overall notebook state.
-								In addition to the editor state, it keeps information about the corresponding
-							dependency graph nodes (which are needed to render previews)</p>
-						</div>
-					</div>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter">
-								<h5>code<span class="tsd-signature-symbol">: </span><a href="../interfaces/graph.node.html" class="tsd-signature-type">Node</a></h5>
-								<div class="tsd-comment tsd-typography">
-									<div class="lead">
-										<p>The dependency graph node created for the block as a whole</p>
-									</div>
-								</div>
-							</li>
-							<li class="tsd-parameter">
-								<h5>editor<span class="tsd-signature-symbol">: </span><a href="../interfaces/languages.editorstate.html" class="tsd-signature-type">EditorState</a></h5>
-								<div class="tsd-comment tsd-typography">
-									<div class="lead">
-										<p>The state of the editor associated with this block
-										(also includes a reference to the block itself and its unique ID)</p>
-									</div>
-								</div>
-							</li>
-							<li class="tsd-parameter">
-								<h5>exports<span class="tsd-signature-symbol">: </span><a href="../interfaces/graph.node.html" class="tsd-signature-type">Node</a><span class="tsd-signature-symbol">[]</span></h5>
-								<div class="tsd-comment tsd-typography">
-									<div class="lead">
-										<p>The dependency graph nodes representing data frames exported from the code block</p>
-									</div>
-								</div>
-							</li>
-						</ul>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
 					<a name="evaluationresult" class="tsd-anchor"></a>
 					<h3>Evaluation<wbr>Result</h3>
 					<div class="tsd-signature tsd-kind-icon">Evaluation<wbr>Result<span class="tsd-signature-symbol">:</span> <a href="../interfaces/languages.evaluationsuccess.html" class="tsd-signature-type">EvaluationSuccess</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/languages.evaluationfailure.html" class="tsd-signature-type">EvaluationFailure</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L40">definitions/languages.ts:40</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L134">definitions/languages.ts:134</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Represents the result of the <code>eval</code> operation of a <code>LanguagePlugin</code>.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 		</div>
@@ -174,6 +202,9 @@
 						<a href="languages.html">Languages</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="main.html">Main</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="values.html">Values</a>
 					</li>
 				</ul>
@@ -181,10 +212,16 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/languages.bindingcontext.html" class="tsd-kind-icon">Binding<wbr>Context</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../interfaces/languages.bindingresult.html" class="tsd-kind-icon">Binding<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../interfaces/languages.block.html" class="tsd-kind-icon">Block</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/languages.blockstate.html" class="tsd-kind-icon">Block<wbr>State</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 						<a href="../interfaces/languages.editor.html" class="tsd-kind-icon">Editor</a>
@@ -194,6 +231,9 @@
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../interfaces/languages.editorstate.html" class="tsd-kind-icon">Editor<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../interfaces/languages.evaluationcontext.html" class="tsd-kind-icon">Evaluation<wbr>Context</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../interfaces/languages.evaluationfailure.html" class="tsd-kind-icon">Evaluation<wbr>Failure</a>
@@ -209,9 +249,6 @@
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../interfaces/languages.scopedictionary.html" class="tsd-kind-icon">Scope<wbr>Dictionary</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.html#blockstate" class="tsd-kind-icon">Block<wbr>State</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.html#evaluationresult" class="tsd-kind-icon">Evaluation<wbr>Result</a>

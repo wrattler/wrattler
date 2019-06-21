@@ -116,7 +116,7 @@
 					<div class="tsd-signature tsd-kind-icon">editor<span class="tsd-signature-symbol">:</span> <a href="languages.editor.html" class="tsd-signature-type">Editor</a><span class="tsd-signature-symbol">&lt;</span><a href="languages.editorstate.html" class="tsd-signature-type">EditorState</a><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L55">definitions/languages.ts:55</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L191">definitions/languages.ts:191</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -131,9 +131,15 @@
 					<div class="tsd-signature tsd-kind-icon">icon<wbr>Class<wbr>Name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L50">definitions/languages.ts:50</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L183">definitions/languages.ts:183</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>CSS class for a Font Awesome icon to be used for this language.
+							For example, the value <code>&quot;fab fa-js-square&quot;</code> is used for JavaScript.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
 					<a name="language" class="tsd-anchor"></a>
@@ -141,7 +147,7 @@
 					<div class="tsd-signature tsd-kind-icon">language<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L48">definitions/languages.ts:48</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L179">definitions/languages.ts:179</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -157,13 +163,13 @@
 					<a name="bind" class="tsd-anchor"></a>
 					<h3>bind</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">bind<span class="tsd-signature-symbol">(</span>cache<span class="tsd-signature-symbol">: </span><a href="graph.nodecache.html" class="tsd-signature-type">NodeCache</a>, scope<span class="tsd-signature-symbol">: </span><a href="languages.scopedictionary.html" class="tsd-signature-type">ScopeDictionary</a>, resources<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><a href="languages.resource.html" class="tsd-signature-type">Resource</a><span class="tsd-signature-symbol">&gt;</span>, block<span class="tsd-signature-symbol">: </span><a href="languages.block.html" class="tsd-signature-type">Block</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="languages.bindingresult.html" class="tsd-signature-type">BindingResult</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">bind<span class="tsd-signature-symbol">(</span>context<span class="tsd-signature-symbol">: </span><a href="languages.bindingcontext.html" class="tsd-signature-type">BindingContext</a>, block<span class="tsd-signature-symbol">: </span><a href="languages.block.html" class="tsd-signature-type">Block</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="languages.bindingresult.html" class="tsd-signature-type">BindingResult</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L71">definitions/languages.ts:71</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L206">definitions/languages.ts:206</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -176,13 +182,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>cache: <a href="graph.nodecache.html" class="tsd-signature-type">NodeCache</a></h5>
-								</li>
-								<li>
-									<h5>scope: <a href="languages.scopedictionary.html" class="tsd-signature-type">ScopeDictionary</a></h5>
-								</li>
-								<li>
-									<h5>resources: <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><a href="languages.resource.html" class="tsd-signature-type">Resource</a><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>context: <a href="languages.bindingcontext.html" class="tsd-signature-type">BindingContext</a></h5>
 								</li>
 								<li>
 									<h5>block: <a href="languages.block.html" class="tsd-signature-type">Block</a></h5>
@@ -196,22 +196,28 @@
 					<a name="evaluate" class="tsd-anchor"></a>
 					<h3>evaluate</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">evaluate<span class="tsd-signature-symbol">(</span>node<span class="tsd-signature-symbol">: </span><a href="graph.node.html" class="tsd-signature-type">Node</a>, resources<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><a href="languages.resource.html" class="tsd-signature-type">Resource</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/languages.html#evaluationresult" class="tsd-signature-type">EvaluationResult</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">evaluate<span class="tsd-signature-symbol">(</span>context<span class="tsd-signature-symbol">: </span><a href="languages.evaluationcontext.html" class="tsd-signature-type">EvaluationContext</a>, node<span class="tsd-signature-symbol">: </span><a href="graph.node.html" class="tsd-signature-type">Node</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/languages.html#evaluationresult" class="tsd-signature-type">EvaluationResult</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L64">definitions/languages.ts:64</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L199">definitions/languages.ts:199</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Evaluate the code associated with a graph node. When doing this, the
+									language plugin can assume that all <code>antecedent</code> nodes have already been evaluated.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>node: <a href="graph.node.html" class="tsd-signature-type">Node</a></h5>
+									<h5>context: <a href="languages.evaluationcontext.html" class="tsd-signature-type">EvaluationContext</a></h5>
 								</li>
 								<li>
-									<h5>resources: <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><a href="languages.resource.html" class="tsd-signature-type">Resource</a><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>node: <a href="graph.node.html" class="tsd-signature-type">Node</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/languages.html#evaluationresult" class="tsd-signature-type">EvaluationResult</a><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -228,9 +234,16 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L52">definitions/languages.ts:52</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L188">definitions/languages.ts:188</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Given a numerical ID of a newly created block, return default source code
+										that should appear in a newly created cells. This can be empty string or
+									something to guide the user.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
@@ -251,7 +264,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L61">definitions/languages.ts:61</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L195">definitions/languages.ts:195</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -280,12 +293,12 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L76">definitions/languages.ts:76</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L209">definitions/languages.ts:209</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Given cell:Block, return string of source to be used for saving document in markdown</p>
+									<p>Given a code cell, return string of source to be used for saving document in Markdown file.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -313,6 +326,9 @@
 						<a href="../modules/languages.html">Languages</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/main.html">Main</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/values.html">Values</a>
 					</li>
 				</ul>
@@ -320,10 +336,16 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.bindingcontext.html" class="tsd-kind-icon">Binding<wbr>Context</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.bindingresult.html" class="tsd-kind-icon">Binding<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.block.html" class="tsd-kind-icon">Block</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.blockstate.html" class="tsd-kind-icon">Block<wbr>State</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 						<a href="languages.editor.html" class="tsd-kind-icon">Editor</a>
@@ -333,6 +355,9 @@
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.editorstate.html" class="tsd-kind-icon">Editor<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.evaluationcontext.html" class="tsd-kind-icon">Evaluation<wbr>Context</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.evaluationfailure.html" class="tsd-kind-icon">Evaluation<wbr>Failure</a>
@@ -378,9 +403,6 @@
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.scopedictionary.html" class="tsd-kind-icon">Scope<wbr>Dictionary</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/languages.html#blockstate" class="tsd-kind-icon">Block<wbr>State</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/languages.html#evaluationresult" class="tsd-kind-icon">Evaluation<wbr>Result</a>

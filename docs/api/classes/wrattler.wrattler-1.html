@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>JavaScriptOutputValue | Wrattler API documentation</title>
+	<title>Wrattler | Wrattler API documentation</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -54,38 +54,24 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/values.html">Values</a>
+					<a href="../modules/wrattler.html">Wrattler</a>
 				</li>
 				<li>
-					<a href="values.javascriptoutputvalue.html">JavaScriptOutputValue</a>
+					<a href="wrattler.wrattler-1.html">Wrattler</a>
 				</li>
 			</ul>
-			<h1>Interface JavaScriptOutputValue</h1>
+			<h1>Class Wrattler</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>Represents a bit of exported JavaScript functionality that creates custom DOM output.
-							The <code>render</code> function is called by Wrattler after it creates a tab below a code editor.
-						It is called with an <code>id</code> of an empty HTML DOM element.</p>
-					</div>
-				</div>
-			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<a href="values.value.html" class="tsd-signature-type">Value</a>
-						<ul class="tsd-hierarchy">
-							<li>
-								<span class="target">JavaScriptOutputValue</span>
-							</li>
-						</ul>
+						<span class="target">Wrattler</span>
 					</li>
 				</ul>
 			</section>
@@ -94,69 +80,89 @@
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section tsd-is-not-exported">
-							<h3>Properties</h3>
+							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite tsd-is-not-exported"><a href="values.javascriptoutputvalue.html#kind" class="tsd-kind-icon">kind</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="values.javascriptoutputvalue.html#render" class="tsd-kind-icon">render</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="wrattler.wrattler-1.html#createnamednotebook" class="tsd-kind-icon">create<wbr>Named<wbr>Notebook</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="wrattler.wrattler-1.html#createnotebook" class="tsd-kind-icon">create<wbr>Notebook</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="wrattler.wrattler-1.html#getdefaultlanguages" class="tsd-kind-icon">get<wbr>Default<wbr>Languages</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
-				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite tsd-is-not-exported">
-					<a name="kind" class="tsd-anchor"></a>
-					<h3>kind</h3>
-					<div class="tsd-signature tsd-kind-icon">kind<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"jsoutput"</span></div>
-					<aside class="tsd-sources">
-						<p>Overrides <a href="values.value.html">Value</a>.<a href="values.value.html#kind">kind</a></p>
-						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/values.ts#L63">definitions/values.ts:63</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>A tag that is used for pattern matching on <code>KnownValue</code> instances.</p>
-						</div>
-					</div>
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+					<a name="createnamednotebook" class="tsd-anchor"></a>
+					<h3>create<wbr>Named<wbr>Notebook</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Named<wbr>Notebook<span class="tsd-signature-symbol">(</span>elementID<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, languagePlugins<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">LanguagePlugins</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/wrattler.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in wrattler.ts:41</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>elementID: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>languagePlugins: <span class="tsd-signature-type">LanguagePlugins</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/wrattler.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="render" class="tsd-anchor"></a>
-					<h3>render</h3>
-					<div class="tsd-signature tsd-kind-icon">render<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/values.ts#L66">definitions/values.ts:66</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>When displaying this value, Wrattler will create a new HTML <code>&lt;div&gt;</code> element with unique
-							ID and then pass the ID to this function to render whatever it needs.</p>
-						</div>
-					</div>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter-siganture">
-								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-property tsd-is-not-exported">
-									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>id<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+					<a name="createnotebook" class="tsd-anchor"></a>
+					<h3>create<wbr>Notebook</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Notebook<span class="tsd-signature-symbol">(</span>elementID<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, content<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, languagePlugins<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">LanguagePlugins</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/wrattler.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in wrattler.ts:45</li>
 								</ul>
-								<ul class="tsd-descriptions">
-									<li class="tsd-description">
-										<h4 class="tsd-parameters-title">Parameters</h4>
-										<ul class="tsd-parameters">
-											<li>
-												<h5>id: <span class="tsd-signature-type">string</span></h5>
-											</li>
-										</ul>
-										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-									</li>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>elementID: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>content: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>languagePlugins: <span class="tsd-signature-type">LanguagePlugins</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/wrattler.wrattlernotebook.html" class="tsd-signature-type">WrattlerNotebook</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+					<a name="getdefaultlanguages" class="tsd-anchor"></a>
+					<h3>get<wbr>Default<wbr>Languages</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Default<wbr>Languages<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">LanguagePlugins</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in wrattler.ts:27</li>
 								</ul>
-							</li>
-						</ul>
-					</div>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">LanguagePlugins</span></h4>
+						</li>
+					</ul>
 				</section>
 			</section>
 		</div>
@@ -173,47 +179,35 @@
 						<a href="../modules/languages.html">Languages</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/main.html">Main</a>
+						<a href="../modules/values.html">Values</a>
 					</li>
 					<li class="current tsd-kind-external-module">
-						<a href="../modules/values.html">Values</a>
+						<a href="../modules/wrattler.html">Wrattler</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="values.dataframe.html" class="tsd-kind-icon">Data<wbr>Frame</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="values.exportsvalue.html" class="tsd-kind-icon">Exports<wbr>Value</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="values.figure.html" class="tsd-kind-icon">Figure</a>
-					</li>
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="values.javascriptoutputvalue.html" class="tsd-kind-icon">Java<wbr>Script<wbr>Output<wbr>Value</a>
+					<li class="current tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="wrattler.wrattler-1.html" class="tsd-kind-icon">Wrattler</a>
 						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite tsd-is-not-exported">
-								<a href="values.javascriptoutputvalue.html#kind" class="tsd-kind-icon">kind</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+								<a href="wrattler.wrattler-1.html#createnamednotebook" class="tsd-kind-icon">create<wbr>Named<wbr>Notebook</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="values.javascriptoutputvalue.html#render" class="tsd-kind-icon">render</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+								<a href="wrattler.wrattler-1.html#createnotebook" class="tsd-kind-icon">create<wbr>Notebook</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+								<a href="wrattler.wrattler-1.html#getdefaultlanguages" class="tsd-kind-icon">get<wbr>Default<wbr>Languages</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="values.printout.html" class="tsd-kind-icon">Printout</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="values.value.html" class="tsd-kind-icon">Value</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/values.html#knownvalue" class="tsd-kind-icon">Known<wbr>Value</a>
+						<a href="../interfaces/wrattler.wrattlernotebook.html" class="tsd-kind-icon">Wrattler<wbr>Notebook</a>
 					</li>
 				</ul>
 			</nav>

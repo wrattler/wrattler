@@ -67,6 +67,15 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Wrattler cells can use special &quot;magic&quot; commands to load source files
+							from outside of a notebook. This type represents such files (resources).
+						Resources are stored in data store, so we just keep the <code>url</code>.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -99,9 +108,14 @@
 					<div class="tsd-signature tsd-kind-icon">file<wbr>Name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L21">definitions/languages.ts:21</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L105">definitions/languages.ts:105</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The file name of the original file that we loaded</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
 					<a name="language" class="tsd-anchor"></a>
@@ -109,19 +123,30 @@
 					<div class="tsd-signature tsd-kind-icon">language<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L20">definitions/languages.ts:20</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L103">definitions/languages.ts:103</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The name of the language that created the resource</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
 					<a name="scope" class="tsd-anchor"></a>
 					<h3>scope</h3>
-					<div class="tsd-signature tsd-kind-icon">scope<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<div class="tsd-signature tsd-kind-icon">scope<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"global"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"local"</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L22">definitions/languages.ts:22</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L108">definitions/languages.ts:108</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Global resources should be automatically imported in other cells.
+							Local resources are not automatically imported.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
 					<a name="url" class="tsd-anchor"></a>
@@ -129,9 +154,14 @@
 					<div class="tsd-signature tsd-kind-icon">url<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d800490/client/src/definitions/languages.ts#L24">definitions/languages.ts:24</a></li>
+							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/b6fd717/client/src/definitions/languages.ts#L110">definitions/languages.ts:110</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The URL where the resource is stored in a data store.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 		</div>
@@ -148,6 +178,9 @@
 						<a href="../modules/languages.html">Languages</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/main.html">Main</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/values.html">Values</a>
 					</li>
 				</ul>
@@ -155,10 +188,16 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.bindingcontext.html" class="tsd-kind-icon">Binding<wbr>Context</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.bindingresult.html" class="tsd-kind-icon">Binding<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.block.html" class="tsd-kind-icon">Block</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.blockstate.html" class="tsd-kind-icon">Block<wbr>State</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 						<a href="languages.editor.html" class="tsd-kind-icon">Editor</a>
@@ -168,6 +207,9 @@
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.editorstate.html" class="tsd-kind-icon">Editor<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="languages.evaluationcontext.html" class="tsd-kind-icon">Evaluation<wbr>Context</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.evaluationfailure.html" class="tsd-kind-icon">Evaluation<wbr>Failure</a>
@@ -201,9 +243,6 @@
 				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="languages.scopedictionary.html" class="tsd-kind-icon">Scope<wbr>Dictionary</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/languages.html#blockstate" class="tsd-kind-icon">Block<wbr>State</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/languages.html#evaluationresult" class="tsd-kind-icon">Evaluation<wbr>Result</a>
