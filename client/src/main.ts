@@ -1,15 +1,10 @@
 /** @hidden */
 
 /** This comment is needed so that TypeDoc parses the above one correctly */
-import {h,createProjector} from 'maquette'
+import { h,createProjector } from 'maquette'
 import { Log } from "./common/log"
 import * as Langs from './definitions/languages'
 import * as Graph from './definitions/graph'
-import { markdownLanguagePlugin } from './languages/markdown'
-import { javascriptLanguagePlugin } from './languages/javascript'
-import { externalLanguagePlugin } from './languages/external'
-// import { gammaLangaugePlugin } from "./languages/gamma/plugin"
-
 import * as Docs from './services/documentService'
 
 // ------------------------------------------------------------------------------------------------
@@ -51,7 +46,7 @@ function bindCell (cache:Graph.NodeCache,
   languagePlugins:LanguagePlugins,
   resources:Array<Langs.Resource>): Promise<{code: Graph.Node, exports: Graph.ExportNode[], resources: Array<Langs.Resource>}>{
   let languagePlugin = languagePlugins[editor.block.language]
-  return languagePlugin.bind(cache, scope, resources, editor.block);
+  return languagePlugin.bind({ cache:cache, scope:scope, resources:resources }, editor.block);
 }
 
 async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], languagePlugins:LanguagePlugins, stateresources: Array<Langs.Resource>) {
@@ -98,7 +93,7 @@ async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resour
   let languagePlugin = languagePlugins[node.language]
   let source = (<any>node).source ? (<any>node).source.substr(0, 100) + "..." : "(no source)"
   Log.trace("evaluation","Evaluating %s node: %s", node.language, source)
-  let evalResult = await languagePlugin.evaluate(node, resources);
+  let evalResult = await languagePlugin.evaluate({resources:resources}, node);
   Log.trace("evaluation","Evaluated %s node. Result: %O", node.language, node.value)
   switch(evalResult.kind) {
     case "success":
@@ -298,65 +293,8 @@ function createNodeCache() : Graph.NodeCache {
   }
 }
 
-// ------------------------------------------------------------------------------------------------
-// Render and update functions
-// ------------------------------------------------------------------------------------------------
-
-declare var PYTHONSERVICE_URI: string;
-declare var RSERVICE_URI: string;
-declare var RACKETSERVICE_URI: string;
-
-interface WrattlerNotebook {
-  getDocumentContent() : string
-  addDocumentContentChanged(handler:(newContent:string) => void) : void
+export {
+  LanguagePlugins, 
+  loadNotebook, 
+  initializeCells
 }
-
-class Wrattler {
-  getDefaultLanguages() : LanguagePlugins {
-    var languagePlugins : LanguagePlugins = { };
-    let pyCode =  "# This is a python cell \n# py[ID] = pd.DataFrame({\"id\":[\"[ID]\"], \"language\":[\"python\"]})";
-    let rCode = "# This is an R cell \n r[ID] <- data.frame(id = [ID], language =\"r\")";
-    let rcCode = ";; This is a Racket cell [ID]\n";
-
-    languagePlugins["markdown"] = markdownLanguagePlugin;
-    languagePlugins["javascript"] = javascriptLanguagePlugin;
-    languagePlugins["python"] = new externalLanguagePlugin("python", "fab fa-python", PYTHONSERVICE_URI, pyCode);
-    languagePlugins["r"] = new externalLanguagePlugin("r", "fab fa-r-project", RSERVICE_URI, rCode);
-    languagePlugins["racket"] = new externalLanguagePlugin("racket", "fa fa-question-circle", RACKETSERVICE_URI, rcCode);
-    return languagePlugins;
-  }
-
-  async createNamedNotebook(elementID:string, languagePlugins:LanguagePlugins) : Promise<WrattlerNotebook> {
-    return this.createNotebook(elementID, await Docs.getNamedDocumentContent(), languagePlugins);
-  }
-
-  async createNotebook(elementID:string, content:string, languagePlugins:LanguagePlugins) : Promise<WrattlerNotebook> {
-    Log.trace("main", "Creating notebook for id '%s'", elementID)
-    let documents = await Docs.getDocument(content);
-    var {counter, editors} = loadNotebook(documents, languagePlugins);
-
-    var currentContent = content;
-    var handlers : ((newContent:string) => void)[] = [];
-    function contentChanged(newContent:string) {
-      currentContent = newContent;
-      for(var h of handlers) h(currentContent);
-    }
-
-    initializeCells(elementID, counter, editors, languagePlugins, contentChanged);
-    return {
-      getDocumentContent : () => currentContent,
-      addDocumentContentChanged : (h:(newContent:string) => void) => handlers.push(h)
-    }
-  }
-}
-
-/*
-export async function initializeNotebook(elementID:string) {
-  Log.trace('main',"Init notebook with ID: %s", elementID)
-  let documents = await getNamedDocument();
-  var {counter, editors} = await loadNotebook(documents);
-  initializeCells(elementID, counter, editors)
-};
-*/
-
-(<any>window).wrattler = new Wrattler();

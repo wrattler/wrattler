@@ -30,9 +30,9 @@
  *   dependency graph to cache nodes so that, when you undo a change, Wrattler reuses
  *   the same graph node as before which remembers the previously evaluated results.
  * 
- * - The remaining types are internal to Wrattler. JavaScript language plugin uses [`JsNode`](../interfaces/graph.jsnode.html), which 
+ * - The remaining types are internal to Wrattler. JavaScript language plugin uses [`JsNode`](#jsnode), which 
  *   can be either [`JsExportNode`](../interfaces/graph.jsexportnode.html) or [`JsCodeNode`](../interfaces/graph.jscodenode.html).
- *   External language plugins uses [`ExternalNode`](../interfaces/graph.externalnode.html), which
+ *   External language plugins uses [`ExternalNode`](#externalnode), which
  *   can be either [`ExternalExportNode`](../interfaces/graph.externalexportnode.html) or [`ExternalCodeNode`](../interfaces/graph.externalcodenode.html).
  * 
  * @module Graph
