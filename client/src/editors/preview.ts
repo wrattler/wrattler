@@ -12,25 +12,21 @@ function printPreview(cellId:number, triggerSelect:(number) => void, selectedTab
     return h('div', {},[])
 }
 
-function printCurrentValue(cellId:number, value:Values.Value, tableName:string) {
+function printCurrentValue(cellId:number, value:Values.KnownValue, tableName:string) {
   let componentRootId = "_"+cellId.toString() + "_" + tableName
   switch(value.kind)
   {
     case "dataframe":
-      let df = <Values.DataFrame>value
-      return h('div', {key: "dataframe"+componentRootId, class:'table-container'}, [printCurrentTable(df.preview, tableName)]);
+      return h('div', {key: "dataframe"+componentRootId, class:'table-container'}, [printCurrentTable(value.preview, tableName)]);
     case "printout":
-      let printoutValue = <Values.Printout>value
-      return h('div', {key: "printout"+componentRootId}, [h('pre', {}, [printoutValue.data])])
+      return h('div', {key: "printout"+componentRootId}, [h('pre', {}, [value.data])])
     case "jsoutput":
-      let js = <Values.JavaScriptOutputValue>value
-      let callRender = (el) => js.render(el.id);
+      let callRender = (el) => value.render(el.id);
       return h('div', {key: "jsoutputs"+componentRootId}, [ 
         h('div', {key: "jsoutput"+componentRootId, id: "output_" + cellId.toString() + "_" + tableName, afterCreate:callRender, afterUpdate:callRender }, [])
       ])
     case "figure":
-      let img = <Values.Figure> value
-      return h('img.plot', {key: "figure"+componentRootId, id: "figure_" + cellId.toString() + "_" + tableName, src: 'data:image/png;base64,'+img.data})
+      return h('img.plot', {key: "figure"+componentRootId, id: "figure_" + cellId.toString() + "_" + tableName, src: 'data:image/png;base64,'+value.data})
     default:
       return h('div', {key: "Unsure"+componentRootId}, ["No idea what this is"])
   }

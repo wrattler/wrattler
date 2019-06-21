@@ -136,7 +136,7 @@ class MarkdownBlockKind implements Langs.Block {
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
     },
-    bind: async (cache, scope, resources: Array<Langs.Resource>, block: Langs.Block) : Promise<Langs.BindingResult> => {
+    bind: async (context: Langs.BindingContext, block: Langs.Block) : Promise<Langs.BindingResult> => {
       let mdBlock:MarkdownBlockKind = <MarkdownBlockKind> block
       let node:Graph.Node = {
         language:this.language, 
@@ -147,7 +147,7 @@ class MarkdownBlockKind implements Langs.Block {
       }
       return {code: node, exports: [], resources:[]};
     },
-    evaluate: async (node:Graph.Node) : Promise<Langs.EvaluationResult> => {
+    evaluate: async (context:Langs.EvaluationContext, node:Graph.Node) : Promise<Langs.EvaluationResult> => {
       return { kind: "success", value: { kind: "nothing" } };
     },
     save: (block:Langs.Block) => {

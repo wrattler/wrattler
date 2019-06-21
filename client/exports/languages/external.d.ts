@@ -16,7 +16,7 @@ export declare type ExternalState = {
     tabID: number;
 };
 export declare const ExternalEditor: Langs.Editor<ExternalState, ExternalEvent>;
-export declare class externalLanguagePlugin implements Langs.LanguagePlugin {
+export declare class ExternalLanguagePlugin implements Langs.LanguagePlugin {
     readonly language: string;
     readonly iconClassName: string;
     readonly editor: Langs.Editor<ExternalState, ExternalEvent>;
@@ -26,8 +26,8 @@ export declare class externalLanguagePlugin implements Langs.LanguagePlugin {
     readonly regex_local: RegExp;
     constructor(l: string, icon: string, uri: string, code: string);
     getDefaultCode(id: number): string;
-    evaluate(node: Graph.Node, resources: Array<Langs.Resource>): Promise<Langs.EvaluationResult>;
+    evaluate(context: Langs.EvaluationContext, node: Graph.Node): Promise<Langs.EvaluationResult>;
     parse(code: string): ExternalBlockKind;
-    bind(cache: Graph.NodeCache, scope: Langs.ScopeDictionary, resources: Array<Langs.Resource>, block: Langs.Block): Promise<Langs.BindingResult>;
+    bind(context: Langs.BindingContext, block: Langs.Block): Promise<Langs.BindingResult>;
     save(block: Langs.Block): string;
 }
