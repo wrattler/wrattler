@@ -58,6 +58,13 @@ type LanguagePlugins = { [lang:string] : Langs.LanguagePlugin }
  * in core Wrattler and `createNotebook` to create a new notebook instance.
  */
 class Wrattler {
+  /** Creates a new `LanguagePlugin` instance which delegates binding and evaluation
+   * to a specified langauge service. You can pass the returned `LanguagePlugin` to
+   * the `createNotebook` function to get a notebook supporting this langauge.  */
+  createExternalLanguagePlugin(language, serviceUrl:string, faClass?:string, defaultCode?:string) {
+    return new ExternalLanguagePlugin(language, faClass?faClass:"fa fa-question-circle", serviceUrl, defaultCode?defaultCode:"");
+  }
+
   /** Returns default language plugins for Markdown, JavaScript, R, Python and Racket   */
   getDefaultLanguages() : LanguagePlugins {
     var languagePlugins : LanguagePlugins = { };
