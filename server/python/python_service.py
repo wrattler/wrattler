@@ -259,6 +259,12 @@ def find_assignments(code_string):
             elif isinstance(node, ast.Call):
                 _find_elements(node.args, output_dict, "input_vals", global_scope)
                 _find_elements(node.func, output_dict, "input_vals", global_scope)
+            ## treat things like df[0] = x (i.e. ast.Subscript nodes) similarly to Call nodes
+            ## - i.e. we will need 'df' to be an import in order to avoid 'not defined' error.
+            elif isinstance(node, ast.Subscript):
+                _find_elements(node.value, output_dict, "input_vals", global_scope)
+                if parent and parent == "targets":
+                    _find_elements(node.value, output_dict, "targets", global_scope)
             elif isinstance(node, ast.Name) and parent:
                 if global_scope or parent=="input_vals":
                     ## only add this name if it isn't already in the list

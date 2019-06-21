@@ -22,3 +22,7 @@ docs/_site
 *~
 *.ipynb
 resources/.ipynb_checkpoints/
+.cache
+server/python/.cache
+.#*
+#*#
