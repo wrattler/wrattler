@@ -91,6 +91,7 @@
 						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="main.wrattler.html#createexternallanguageplugin" class="tsd-kind-icon">create<wbr>External<wbr>Language<wbr>Plugin</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="main.wrattler.html#createnamednotebook" class="tsd-kind-icon">create<wbr>Named<wbr>Notebook</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="main.wrattler.html#createnotebook" class="tsd-kind-icon">create<wbr>Notebook</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="main.wrattler.html#getdefaultlanguages" class="tsd-kind-icon">get<wbr>Default<wbr>Languages</a></li>
@@ -102,6 +103,45 @@
 			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+					<a name="createexternallanguageplugin" class="tsd-anchor"></a>
+					<h3>create<wbr>External<wbr>Language<wbr>Plugin</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>External<wbr>Language<wbr>Plugin<span class="tsd-signature-symbol">(</span>language<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, serviceUrl<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, faClass<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, defaultCode<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ExternalLanguagePlugin</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/7a822ab/client/src/wrattler.ts#L64">wrattler.ts:64</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Creates a new <code>LanguagePlugin</code> instance which delegates binding and evaluation
+										to a specified langauge service. You can pass the returned <code>LanguagePlugin</code> to
+									the <code>createNotebook</code> function to get a notebook supporting this langauge.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>language: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>serviceUrl: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> faClass: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> defaultCode: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">ExternalLanguagePlugin</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
 					<a name="createnamednotebook" class="tsd-anchor"></a>
 					<h3>create<wbr>Named<wbr>Notebook</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
@@ -111,7 +151,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d24a9df/client/src/wrattler.ts#L80">wrattler.ts:80</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/7a822ab/client/src/wrattler.ts#L87">wrattler.ts:87</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -143,7 +183,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d24a9df/client/src/wrattler.ts#L92">wrattler.ts:92</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/7a822ab/client/src/wrattler.ts#L99">wrattler.ts:99</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -187,7 +227,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/d24a9df/client/src/wrattler.ts#L62">wrattler.ts:62</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/7a822ab/client/src/wrattler.ts#L69">wrattler.ts:69</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -228,6 +268,9 @@
 					<li class="current tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="main.wrattler.html" class="tsd-kind-icon">Wrattler</a>
 						<ul>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
+								<a href="main.wrattler.html#createexternallanguageplugin" class="tsd-kind-icon">create<wbr>External<wbr>Language<wbr>Plugin</a>
+							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
 								<a href="main.wrattler.html#createnamednotebook" class="tsd-kind-icon">create<wbr>Named<wbr>Notebook</a>
 							</li>
