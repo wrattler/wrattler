@@ -71,7 +71,7 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
   }
 }
 
-export class externalLanguagePlugin implements Langs.LanguagePlugin {
+export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
   readonly language: string;
   readonly iconClassName: string;
   readonly editor: Langs.Editor<ExternalState, ExternalEvent>;
@@ -92,7 +92,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     return this.defaultCode.replace(/\[ID\]/g, id.toString());
   }
   
-  async evaluate(node:Graph.Node, resources: Array<Langs.Resource>) : Promise<Langs.EvaluationResult> {
+  async evaluate(context:Langs.EvaluationContext, node:Graph.Node) : Promise<Langs.EvaluationResult> {
     let externalNode = <Graph.ExternalNode>node
 
     async function getValue(blob, preview:boolean) : Promise<any> {
@@ -160,9 +160,9 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     }
   
     function findResourceURL(fileName): string {
-      for (let f = 0; f < resources.length; f++) {
-        if (resources[f].fileName==fileName) {
-          return  resources[f].url
+      for (let f = 0; f < context.resources.length; f++) {
+        if (context.resources[f].fileName==fileName) {
+          return  context.resources[f].url
         }
       }
       return ''
@@ -195,9 +195,9 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           }
         }
 
-        for (let r = 0; r < resources.length; r++) {
-          if ((resources[r].scope == 'global')&&(resources[r].language == externalNode.language)) {
-            let resourceURL = findResourceURL(resources[r].fileName)
+        for (let r = 0; r < context.resources.length; r++) {
+          if ((context.resources[r].scope == 'global')&&(context.resources[r].language == externalNode.language)) {
+            let resourceURL = findResourceURL(context.resources[r].fileName)
             if (resourceURL.length > 0){
               importedFiles.push(resourceURL)
             }  
@@ -233,14 +233,14 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
     return new ExternalBlockKind(code, this.language);
   }
 
-  async bind (cache:Graph.NodeCache, scope:Langs.ScopeDictionary, resources: Array<Langs.Resource>, block: Langs.Block) : Promise<Langs.BindingResult> {
+  async bind (context:Langs.BindingContext, block: Langs.Block) : Promise<Langs.BindingResult> {
     let exBlock = <ExternalBlockKind>block
     let initialHash = Md5.hashStr(exBlock.source)
     let antecedents : Graph.Node[] = []
     let newResources : Array<Langs.Resource> = []
     function resourceExists(fileName):boolean{
-      for (let r = 0; r < resources.length; r++) {
-        if (resources[r].fileName == fileName)
+      for (let r = 0; r < context.resources.length; r++) {
+        if (context.resources[r].fileName == fileName)
           return true
       }
       return false
@@ -291,7 +291,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       let body = 
         { "code": strippedSrc,
           "hash": initialHash,
-          "frames": Object.keys(scope) }
+          "frames": Object.keys(context.scope) }
       let headers = {'Content-Type': 'application/json'}
       let response = await axios.post(url, body, {headers: headers});
 
@@ -299,8 +299,8 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
       for (var n = 0 ; n < response.data.imports.length; n++) {
         if (namesOfImports.indexOf(response.data.imports[n]) < 0) {
           namesOfImports.push(response.data.imports[n])
-          if (response.data.imports[n] in scope) {
-            let antecedentNode = scope[response.data.imports[n]]
+          if (response.data.imports[n] in context.scope) {
+            let antecedentNode = context.scope[response.data.imports[n]]
             antecedents.push(antecedentNode);
           }
         }
@@ -316,7 +316,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
           hash: <string>allHash,
           source: exBlock.source,
           errors: []}
-      let cachedNode = <Graph.ExternalCodeNode>cache.tryFindNode(initialNode)
+      let cachedNode = <Graph.ExternalCodeNode>context.cache.tryFindNode(initialNode)
 
       let namesOfExports:Array<string> = []
       let dependencies:Graph.ExternalExportNode[] = [];
@@ -333,7 +333,7 @@ export class externalLanguagePlugin implements Langs.LanguagePlugin {
               antecedents:[cachedNode],
               errors: []
               };
-          let cachedExportNode = <Graph.ExternalExportNode>cache.tryFindNode(exportNode)
+          let cachedExportNode = <Graph.ExternalExportNode>context.cache.tryFindNode(exportNode)
           dependencies.push(cachedExportNode) 
           cachedNode.exportedVariables.push(cachedExportNode.variableName)
         }

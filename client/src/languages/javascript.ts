@@ -82,7 +82,7 @@ class JavascriptBlockKind implements Langs.Block {
     for (let l = 0; l < srcArray.length; l++) {
       
       if ((srcArray[l].match(regex_global))||(srcArray[l].match(regex_local))){
-        let scope = srcArray[l].match(regex_global)?'global':'local'
+        let scope : "global" | "local" = srcArray[l].match(regex_global) ? 'global' : 'local'
         let resourceName = srcArray[l].split(' ')[1]
         if (!resourceExists(resourceName)) {
           let newResource:Langs.Resource = {fileName:resourceName, language:language, scope: scope, url:''}
@@ -195,7 +195,7 @@ class JavascriptBlockKind implements Langs.Block {
     editor: javascriptEditor,
     getDefaultCode: (id:number) => "// This is a javascript cell. \n//var js" + id + " = [{'id':" + id + ", 'language':'javascript'}]",
 
-    evaluate: async (node:Graph.Node, resources: Array<Langs.Resource>) : Promise<Langs.EvaluationResult> => {
+    evaluate: async (context:Langs.EvaluationContext, node:Graph.Node) : Promise<Langs.EvaluationResult> => {
       let jsnode = <Graph.JsNode>node
       let regex_global:RegExp = /^%global/;
       let regex_local:RegExp = /^%local/;
@@ -238,9 +238,9 @@ class JavascriptBlockKind implements Langs.Block {
       }
 
       function findResourceURL(fileName): string {
-        for (let f = 0; f < resources.length; f++) {
-          if (resources[f].fileName==fileName) {
-            return  resources[f].url
+        for (let f = 0; f < context.resources.length; f++) {
+          if (context.resources[f].fileName==fileName) {
+            return  context.resources[f].url
           }
         }
         return ''
@@ -257,7 +257,7 @@ class JavascriptBlockKind implements Langs.Block {
           }
           returnArgs = returnArgs.concat("return __res;")
           let importedVars = "";
-          var argDictionary:{[key: string]: string} = {}
+          var argDictionary:{[key: string]: any} = {}
           for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
             let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
             argDictionary[imported.variableName] = await (<Values.DataFrame>imported.value).data.getValue();
@@ -282,9 +282,9 @@ class JavascriptBlockKind implements Langs.Block {
             }
           }
           
-          for (let r = 0; r < resources.length; r++) {
-            if ((resources[r].scope == 'global')&&(resources[r].language == 'javascript')) {
-              importedFiles.push(resources[r].fileName)
+          for (let r = 0; r < context.resources.length; r++) {
+            if ((context.resources[r].scope == 'global')&&(context.resources[r].language == 'javascript')) {
+              importedFiles.push(context.resources[r].fileName)
             }
           }
 
@@ -313,9 +313,9 @@ class JavascriptBlockKind implements Langs.Block {
     parse: (code:string) => {
       return new JavascriptBlockKind(code);
     },
-    bind: async (cache, scope, resources:Array<Langs.Resource>, block: Langs.Block):Promise<Langs.BindingResult> => {
+    bind: async (context:Langs.BindingContext, block: Langs.Block):Promise<Langs.BindingResult> => {
       let jsBlock = <JavascriptBlockKind>block
-      return getCodeResourcesAndExports(cache, scope, jsBlock.source, resources);
+      return getCodeResourcesAndExports(context.cache, context.scope, jsBlock.source, context.resources);
     },
     save: (block:Langs.Block) : string => {
       let jsBlock:JavascriptBlockKind = <JavascriptBlockKind> block
