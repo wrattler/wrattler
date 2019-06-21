@@ -9,6 +9,7 @@ To be updated every time code is pushed to ***master***.
 * Logic for re-binding modified - will now re-bind when moving to a new cell.
 * Added script ```build_release.sh``` to simplify building docker images and pushing to dockerhub.
 * Removed F# code and Fable from the client docker image - now uses node base image rather than dotnet. 
+* Added `docs` folder with `typedoc` generated Wrattler API documentation
 
 ### v0.2 (April 2019)
 
