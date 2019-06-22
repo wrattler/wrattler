@@ -214,7 +214,7 @@ class JavascriptBlockKind implements Langs.Block {
         }
       }
 
-      async function putValues(values) : Promise<Values.ExportsValue> {
+      async function putValues(values:{ (key:string) : any[] }) : Promise<Values.ExportsValue> {
         try {
           var results : Values.ExportsValue = { kind:"exports", exports:{} }
           for (let value in values) {
@@ -224,7 +224,7 @@ class JavascriptBlockKind implements Langs.Block {
             var exp : Values.DataFrame = {
               kind:"dataframe", 
               url: df_url, 
-              data: values[value], 
+              data: new AsyncLazy(async () => values[value]), 
               preview:values[value].slice(0, 10)
             }
             results.exports[value] = exp
@@ -294,7 +294,7 @@ class JavascriptBlockKind implements Langs.Block {
           }
 
           evalCode = "(function f(addOutput, args) {\n\t " + importedVars + "\n" + importedResourceContent + "\n" +strippedSrc + "\n" + returnArgs + "\n})"
-          let values : Values.ExportsValue = eval(evalCode)(addOutput, argDictionary);
+          let values : { (key:string) : any[] } = eval(evalCode)(addOutput, argDictionary);
           let exports = await putValues(values)
           for(let i = 0; i < outputs.length; i++) {
             var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: outputs[i] }

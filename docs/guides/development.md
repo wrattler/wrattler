@@ -1,3 +1,8 @@
+---
+layout: default
+title: Welcome
+---
+
 # How to run Wrattler via Docker(-compose)
 
 The easiest way to run Wrattler is using `docker-compose` on your local machine.
