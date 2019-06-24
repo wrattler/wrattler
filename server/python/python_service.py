@@ -375,14 +375,9 @@ def handle_eval(data):
         "figures": []
     }
 
-    frame_names = assign_dict['targets']
-    if len(results) != len(frame_names):
-        raise ApiException("Error: no. of output frames does not match no. results", status_code=500)
-
     wrote_ok=True
-    for i, name in enumerate(frame_names):
-
-        wrote_ok &= write_frame(results[i], name, output_hash)
+    for name, frame in results.items():
+        wrote_ok &= write_frame(frame, name, output_hash)
         return_dict["frames"].append({"name": name,"url": "{}/{}/{}"\
                                       .format(DATASTORE_URI,
                                               output_hash,
@@ -439,10 +434,10 @@ def construct_func_string(file_contents, code, input_val_dict, return_vars, outp
     func_string += "            os.rmdir(os.path.join('{}','{}'))\n".format(TMPDIR,output_hash)
     func_string += "            pass\n"
     func_string += "        pass\n"
-    func_string += "    return "
+    func_string += "    return {"
     for rv in return_vars:
-        func_string += "{},".format(rv)
-    func_string += "\n"
+        func_string += "'{}':{},".format(rv,rv)
+    func_string += "}\n"
     return func_string
 
 
@@ -452,6 +447,11 @@ def execute_code(file_contents, code, input_val_dict, return_vars, output_hash, 
     then do exec(func_string), then define another string call_string
     that calls this function,
     and then finally do eval(call_string)
+    Returns a dictionary:
+    {
+    "output": <console output>,
+    "results": {<frame_name>: <frame>, ... }
+    }
     """
     func_string = construct_func_string(file_contents,
                                         code,
@@ -467,16 +467,12 @@ def execute_code(file_contents, code, input_val_dict, return_vars, output_hash, 
             ### wrapping function wrattler_f should now be in the namespace
             func_output = eval('wrattler_f()')
             return_dict["output"] = s.getvalue().strip()
-            if isinstance(func_output, collections.Iterable):
-                results = []
-                for item in func_output:
-                    results.append(convert_from_pandas(item))
-                return_dict["results"] = results
-            elif not func_output:
-                return_dict["results"] = []
-            else:
-                result = convert_from_pandas(func_output)
-                return_dict["results"] = [result]
+            return_dict["results"] = {}
+            for k,v in func_output.items():
+                result = convert_from_pandas(v)
+                if result:
+                    return_dict["results"][k] = result
+
     except Exception as e:
         output = "{}: {}".format(type(e).__name__, e)
         raise ApiException(output, status_code=500)
