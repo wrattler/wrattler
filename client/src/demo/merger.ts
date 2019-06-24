@@ -1,6 +1,7 @@
 import * as Langs from '../definitions/languages'; 
 import * as Graph from '../definitions/graph'; 
 import * as Values from '../definitions/values'; 
+import * as Editor from '../editors/editor'; 
 import { h } from 'maquette';
 import { Md5 } from 'ts-md5';
 import { languages } from 'monaco-editor';
@@ -21,13 +22,15 @@ interface MergerBlock extends Langs.Block {
 
 type MergerCheckEvent = { kind:'check', frame:string, selected:boolean }
 type MergerNameEvent = { kind:'name', name:string }
-type MergerEvent = MergerCheckEvent | MergerNameEvent
+type MergerSwitchMode = { kind:'mode', mode:"visual" | "code" }
+type MergerEvent = MergerCheckEvent | MergerNameEvent | MergerSwitchMode
 
 type MergerState = { 
   id: number
   block: MergerBlock
   selected: { [frame:string] : boolean }
   newName: string
+  mode: "visual" | "code"
 }
 
 const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
@@ -35,10 +38,12 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
     let mergerBlock = <MergerBlock>block
     var selected = {}
     for (let s of mergerBlock.inputs) selected[s] = true;
-    return { id: id, block: <MergerBlock>block, selected:selected, newName:mergerBlock.output }
+    return { id: id, block: <MergerBlock>block, selected:selected, newName:mergerBlock.output, mode:"visual" }
   },
   update: (state:MergerState, event:MergerEvent) => {
     switch(event.kind) {
+      case 'mode':
+          return {...state, mode: event.mode }
       case 'check':
           var newSelected = { ...state.selected }
           newSelected[event.frame] = event.selected
@@ -51,7 +56,7 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
     let mergerNode = <MergerCodeNode>cell.code
     let source = state.newName + "=" + 
       Object.keys(state.selected).filter(s => state.selected[s]).join(",")
-    return h('div', {}, [ 
+    let visual = h('div', {key:'visual'}, [
       h('p', {}, [ "Choose data frames that you would like to merge:"] ),
       h('ul', {}, mergerNode.framesInScope.map(f => 
         h('li', { key:f }, [ 
@@ -70,6 +75,21 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
           h('input', {key:'i3', type: 'button', value: 'Evaluate', onclick: () => 
             context.evaluate(cell) }, []) )            
       ])
+    ])
+
+    let code = h('div', {key:'code'}, [ Editor.createMonacoEditor("merger", source, cell, context) ])
+    let preview = (cell.code.value == null) ? h('div', {key:'no-preview'}, []) :
+      h('div', {key:'preview'}, [ Editor.createOutputPreview(cell, (_) => {}, 0, <Values.ExportsValue>cell.code.value) ])
+
+    return h('div', {}, [     
+      h('div', {class: "tabs"},[
+        h('button', { class: state.mode=="code"?"selected":"normal", onclick:() => 
+          context.trigger({ kind:"mode", mode:"code" }) }, ["source code"]),
+        h('button', { class: state.mode=="visual"?"selected":"normal", onclick:() => 
+          context.trigger({ kind:"mode", mode:"visual" }) }, ["visual editor"])
+      ]),
+      ( state.mode == "code" ? code : visual ),
+      preview    
     ])
   }
 }

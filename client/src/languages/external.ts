@@ -3,8 +3,7 @@ import { Log } from "../common/log"
 import * as Langs from '../definitions/languages'; 
 import * as Graph from '../definitions/graph'; 
 import * as Values from '../definitions/values'; 
-import {printPreview} from '../editors/preview'; 
-import {createEditor} from '../editors/editor';
+import {createOutputPreview, createMonacoEditor} from '../editors/editor';
 import {Md5} from 'ts-md5';
 import axios from 'axios';
 import {AsyncLazy} from '../common/lazy';
@@ -64,8 +63,8 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
   render: (cell: Langs.BlockState, state:ExternalState, context:Langs.EditorContext<ExternalEvent>) => {
     let previewButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell) }, ["Evaluate"])
     let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
-    let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
-    let code = createEditor(cell.code.language, state.block.source, cell, context)
+    let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? previewButton : (createOutputPreview(cell, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
+    let code = createMonacoEditor(cell.code.language, state.block.source, cell, context)
     let errors = h('div', {}, [(cell.code.errors.length == 0) ? "" : cell.code.errors.map(err => {return h('p',{}, [err.message])})])
     return h('div', { }, [code, (cell.code.errors.length >0)?errors:preview])
   }

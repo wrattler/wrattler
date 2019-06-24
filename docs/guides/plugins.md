@@ -320,3 +320,37 @@ evaluate: async (context:Langs.EvaluationContext, node:Graph.Node) : Promise<Lan
   }
 }
 ```
+
+## Step 4
+
+Add `mode` and `MergerSwitchMode` event
+
+```typescript
+type MergerCheckEvent = { kind:'check', frame:string, selected:boolean }
+type MergerNameEvent = { kind:'name', name:string }
+type MergerSwitchMode = { kind:'mode', mode:"visual" | "code" }
+type MergerEvent = MergerCheckEvent | MergerNameEvent | MergerSwitchMode
+
+type MergerState = {
+  id: number
+  block: MergerBlock
+  selected: { [frame:string] : boolean }
+  newName: string
+  mode: "visual" | "code"
+}
+```
+
+`initialize`
+
+```
+return { id: id, block: <MergerBlock>block, selected:selected, newName:mergerBlock.output, mode:"visual" }
+```
+
+xx `update` xx
+
+```typescript
+case 'mode':
+  return {...state, mode: event.mode }
+```
+
+xx

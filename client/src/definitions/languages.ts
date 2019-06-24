@@ -272,8 +272,8 @@ interface EditorContext<TEvent> {
 interface EditorState {
   /** Unique ID of the block. This can be used to create 
    * unique Virutal DOM IDs during rendering */
-
   id: number
+  
   /** The block for which this editor was created */
   block: Block;
 }

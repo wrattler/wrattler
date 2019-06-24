@@ -2,8 +2,7 @@ import {h,VNode} from 'maquette';
 import * as Langs from '../definitions/languages';
 import * as Graph from '../definitions/graph';
 import * as Values from '../definitions/values';
-import {createEditor} from '../editors/editor';
-import {printPreview} from '../editors/preview';
+import {createOutputPreview, createMonacoEditor} from '../editors/editor';
 
 // import Plotly from 'Plotly';
 import ts, { createNoSubstitutionTemplateLiteral } from 'typescript';
@@ -183,8 +182,8 @@ class JavascriptBlockKind implements Langs.Block {
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
       let previewButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell) }, ["Evaluate"])
       let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
-      let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
-      let code = createEditor("javascript", state.block.source, cell, context)
+      let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? previewButton : (createOutputPreview(cell, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
+      let code = createMonacoEditor("javascript", state.block.source, cell, context)
       return h('div', { }, [code, preview])
     }
   }
