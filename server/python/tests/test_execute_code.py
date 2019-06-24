@@ -37,7 +37,7 @@ def test_execute_simple_func():
     import numpy, and define a trivial function in the code snippet, which is
     then used when filling a dataframe
     """
-    input_code = 'import numpy\ndef squareroot(x):\n  return numpy.sqrt(x)\n\ndf= pd.DataFrame({\"a\":[numpy.sqrt(9),squareroot(12),13],\"b\":[14,15,16]})'
+    input_code = 'import numpy\ndef squareroot(x):\n  return numpy.sqrt(x)\n\ndf= pd.DataFrame({\"a\":[numpy.sqrt(9),squareroot(16),13],\"b\":[14,15,16]})'
     input_vals = {}
     file_contents = ""
     return_targets = find_assignments(input_code)["targets"]
@@ -50,6 +50,32 @@ def test_execute_simple_func():
     result = result_dict["results"]
     assert(result)
     assert(isinstance(result,dict))
+    assert("df" in result.keys())
+    pddf = convert_to_pandas(result["df"])
+    assert(isinstance(pddf, pd.DataFrame))
+    assert(pddf["a"][0]==3)
+    assert(pddf["a"][1]==4)
+
+
+def test_non_df_assignment():
+    """
+    Check that things that can't be converted into dataframes do not get added to the
+    results dict
+    """
+    input_code = "x='hello'\ndf=pd.DataFrame({'a':[1,2,3]})\n"
+    file_contents = ""
+    output_hash = "doesntmatter"
+    input_vals = {}
+    return_targets = ["df","x"]
+    result_dict = execute_code(file_contents,
+                               input_code,
+                               input_vals,
+                               return_targets,
+                               output_hash)
+    result = result_dict["results"]
+    assert(result)
+    assert("df" in result.keys())
+    assert("x" not in result.keys())
 
 
 def test_get_error_output():
