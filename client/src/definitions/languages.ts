@@ -273,7 +273,7 @@ interface EditorState {
   /** Unique ID of the block. This can be used to create 
    * unique Virutal DOM IDs during rendering */
   id: number
-  
+
   /** The block for which this editor was created */
   block: Block;
 }
@@ -287,6 +287,8 @@ interface BlockState {
   /** The state of the editor associated with this block 
    * (also includes a reference to the block itself and its unique ID) */
   editor: EditorState
+
+  evaluationState: "unevaluated" | "pending" | "done"
 
   /** The dependency graph node created for the block as a whole */
   code: Graph.Node

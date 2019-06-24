@@ -15,12 +15,12 @@ interface NotebookAddEvent { kind:'add', id: number, language:string }
 interface NotebookToggleAddEvent { kind:'toggleadd', id: number }
 interface NotebookRemoveEvent { kind:'remove', id: number }
 interface NotebookBlockEvent { kind:'block', id:number, event:any }
-interface NotebookRefreshEvent { kind:'refresh' }
+interface NotebookUpdateEvalStateEvent { kind:'evalstate', hash:string, newState:"pending" | "done" }
 interface NotebookSourceChange { kind:'rebind', block: Langs.BlockState, newSource: string}
 
 type NotebookEvent =
   NotebookAddEvent | NotebookToggleAddEvent | NotebookRemoveEvent |
-  NotebookBlockEvent | NotebookRefreshEvent | NotebookSourceChange
+  NotebookBlockEvent | NotebookUpdateEvalStateEvent | NotebookSourceChange
 
 type LanguagePlugins = { [lang:string] : Langs.LanguagePlugin }
 
@@ -86,9 +86,12 @@ async function updateAndBindAllCells
     expandedMenu:state.expandedMenu, languagePlugins: state.languagePlugins, resources:state.resources };
 }
 
-async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resources:Array<Langs.Resource>) {
+async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resources:Array<Langs.Resource>, triggerEvalStateEvent) {
   if (node.value && (Object.keys(node.value).length > 0)) return;
-  for(var ant of node.antecedents) await evaluate(ant, languagePlugins, resources);
+
+  triggerEvalStateEvent(node.hash,"pending")
+
+  for(var ant of node.antecedents) await evaluate(ant, languagePlugins, resources, triggerEvalStateEvent);
 
   let languagePlugin = languagePlugins[node.language]
   let source = (<any>node).source ? (<any>node).source.substr(0, 100) + "..." : "(no source)"
@@ -103,6 +106,8 @@ async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resour
       node.errors = evalResult.errors;
       break;
   }
+
+  triggerEvalStateEvent(node.hash, "done")
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -118,7 +123,13 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
         trigger({ kind:'block', id:cell.editor.id, event:event }),
 
       evaluate: async (block:Langs.BlockState) => {
-        await evaluate(block.code, state.languagePlugins, state.resources)
+        // block.editor.id
+        // "pending"
+        function triggerEvalStateEvent(hash, newState) {
+          ///..
+        }
+
+        await evaluate(block.code, state.languagePlugins, state.resources, triggerEvalStateEvent)
         for(var exp of block.exports) await evaluate(exp, state.languagePlugins, state.resources)
         trigger({ kind:'refresh' })
       },
@@ -185,6 +196,8 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       }).reduce ((a,b)=> a.concat(b));
   }
   Log.trace('main', "Updating event type: '%s'", evt.kind)
+
+  // state.cells.map(cellState => cellState.code.hash == modifiedHash ? cellState.evaluationState)
 
   switch(evt.kind) {
     case 'block': {
