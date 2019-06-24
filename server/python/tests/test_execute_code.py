@@ -27,8 +27,8 @@ def test_execute_pd_concat():
                                output_hash)
     result = result_dict["results"]
     assert(len(result) == 1) # only one output of function
-    assert(isinstance(result[0], bytes))
-    result_df = convert_to_pandas(result[0])
+    assert(isinstance(result['z'], bytes))
+    result_df = convert_to_pandas(result['z'])
     assert(result_df.size == 12) ## 4 rows * 3 columns
 
 
@@ -49,7 +49,7 @@ def test_execute_simple_func():
                                output_hash)
     result = result_dict["results"]
     assert(result)
-    assert(isinstance(result,list))
+    assert(isinstance(result,dict))
 
 
 def test_get_error_output():
