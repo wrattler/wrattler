@@ -153,7 +153,7 @@ def convert_from_pandas(dataframe, max_size_json=0):
     if dataframe.size > max_size_json:
         try:
             return  pandas_to_arrow(dataframe)
-        except(pa.lib.ArrowTypeError):
+        except(pa.lib.ArrowTypeError, pa.lib.ArrowInvalid):
             print("Unable to convert to pyarrow table - inconsistent types in column?")
             return pandas_to_json(dataframe)
     else:
@@ -342,7 +342,7 @@ def handle_eval(data):
     This function will analyze and execute code, including retrieving input frames,
     and will return output as a dict:
        { "output": <text_output_from_cell>,
-         "frames" [ {"name": <frame_name>, "url": <frame_url>}, ... ]
+         "frames": [ {"name": <frame_name>, "url": <frame_url>}, ... ]
          "figures": [ {"name": <fig_name>, "url": <fig_url>}, ... ]
        }
 
