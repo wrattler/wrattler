@@ -1,7 +1,6 @@
 import {h, VNode} from 'maquette';
 import * as Values from '../definitions/values'; 
-import { pushd } from 'shelljs';
-
+  
 function printPreview(cellId:number, triggerSelect:(number) => void, selectedTable:number, cellValues:Values.ExportsValue) {
   let tableNames:Array<string> = Object.keys(cellValues.exports)
   if (tableNames.length > 0) {
