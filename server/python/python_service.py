@@ -223,14 +223,17 @@ def write_image(cell_hash):
     Return True if an image is written to the datastore, False if there is nothing to write,
     and raise an ApiException if there is a problem writing it.
     """
-    file_path = os.path.join(TMPDIR,cell_hash)
+    file_path = os.path.join(TMPDIR,cell_hash,'fig.png')
     if not os.path.exists(file_path):
         return False
     url = '{}/{}/figures'.format(DATASTORE_URI, cell_hash)
-    file_data = open(os.path.join(file_path,'fig.png'),'rb')
+    file_data = open(file_path,'rb')
     try:
         img_b64 = base64.b64encode(file_data.read())
         data = [{"IMAGE": img_b64.decode("utf-8")}]
+        ## now remove the figure
+        os.remove(file_path)
+        ## put it on the data store
         r = requests.put(url, json=data)
         return (r.status_code == 200)
     except(requests.exceptions.ConnectionError):
@@ -428,7 +431,9 @@ def construct_func_string(file_contents, code, input_val_dict, return_vars, outp
     ## save any plot output to a file in /tmp/<hash>/
     func_string += "    try:\n"
     func_string += "        os.makedirs(os.path.join('{}','{}'),exist_ok=True)\n".format(TMPDIR,output_hash)
-    func_string += "        plt.savefig(os.path.join('{}','{}','fig.png'))\n".format(TMPDIR,output_hash)
+    func_string += "        if len(plt.get_fignums()) > 0:\n"
+    func_string += "            plt.savefig(os.path.join('{}','{}','fig.png'))\n".format(TMPDIR,output_hash)
+    func_string += "            plt.close()\n"
     func_string += "    except(NameError):\n"
     func_string += "        with contextlib.suppress(FileNotFoundError):\n"
     func_string += "            os.rmdir(os.path.join('{}','{}'))\n".format(TMPDIR,output_hash)
