@@ -1,13 +1,16 @@
+/** @hidden */
+
+/** This comment is needed so that TypeDoc parses the above one correctly */
 import {h, VNode} from 'maquette';
-import * as Values from '../definitions/values'; 
-  
+import * as Values from '../definitions/values';
+
 function printPreview(cellId:number, triggerSelect:(number) => void, selectedTable:number, cellValues:Values.ExportsValue) {
   let tableNames:Array<string> = Object.keys(cellValues.exports)
   if (tableNames.length > 0) {
     let tabComponents = printTabs(triggerSelect, selectedTable, tableNames);
     return h('div', {}, [ tabComponents, printCurrentValue(cellId, cellValues.exports[tableNames[selectedTable]],tableNames[selectedTable]) ]);
   }
-  else 
+  else
     return h('div', {},[])
 }
 
@@ -21,7 +24,7 @@ function printCurrentValue(cellId:number, value:Values.KnownValue, tableName:str
       return h('div', {key: "printout"+componentRootId}, [h('pre', {}, [value.data])])
     case "jsoutput":
       let callRender = (el) => value.render(el.id);
-      return h('div', {key: "jsoutputs"+componentRootId}, [ 
+      return h('div', {key: "jsoutputs"+componentRootId}, [
         h('div', {key: "jsoutput"+componentRootId, id: "output_" + cellId.toString() + "_" + tableName, afterCreate:callRender, afterUpdate:callRender }, [])
       ])
     case "figure":
@@ -50,7 +53,7 @@ function printCurrentTable(aTable: any, tableName:string) {
       headerComponents.push(h('th',{key: tableName+"header"+i}, [tableHeaders[i]]))
     }
     rowsComponents.push(h('tr',{key: tableName+"rowheader"},[headerComponents]))
-    
+
     // for every row in dataframe, create rows
     let numRows = aTable.length > 100 ? 100 : aTable.length
     for (let row = 0; row < numRows; row++) {
@@ -83,7 +86,7 @@ function getCurrentRow(dfRow, keys) {
   let row: Array<string> = [];
   for (let k in keys) {
     row.push(dfRow[keys[k]]);
-  } 
+  }
   return row;
 }
 

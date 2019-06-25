@@ -11,4 +11,8 @@ article h2 { font-weight:300; font-size:20pt; }
 article h3 { font-weight:100; font-size:16pt; }
 article p, article li { font-size:12pt; }
 
-pre { border:none; background:white !important; margin:15px 25px 15px 25px; font:10pt Inconsolata; line-height:1.4em; }
+pre { border:none; background:white !important; margin:15px 25px 15px 25px; font:11pt Inconsolata; line-height:1.4em; }
+code { font:11pt Inconsolata; background:transparent; color:black; }
+a, a code { color:#38668d; }
+a:hover, a:hover code { color:#5483ac; }
+img.screenshot { max-width:80%; margin:10px 10% 10px 10%; }

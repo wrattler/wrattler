@@ -4,8 +4,6 @@ import * as Values from '../definitions/values';
 import * as Editor from '../editors/editor'; 
 import { h } from 'maquette';
 import { Md5 } from 'ts-md5';
-import { languages } from 'monaco-editor';
-import { AsyncLazy } from '../common/lazy';
 /*
 import * as monaco from 'monaco-editor';
 import marked from 'marked';
@@ -22,15 +20,13 @@ interface MergerBlock extends Langs.Block {
 
 type MergerCheckEvent = { kind:'check', frame:string, selected:boolean }
 type MergerNameEvent = { kind:'name', name:string }
-type MergerSwitchMode = { kind:'mode', mode:"visual" | "code" }
-type MergerEvent = MergerCheckEvent | MergerNameEvent | MergerSwitchMode
+type MergerEvent = MergerCheckEvent | MergerNameEvent
 
 type MergerState = { 
   id: number
   block: MergerBlock
   selected: { [frame:string] : boolean }
   newName: string
-  mode: "visual" | "code"
 }
 
 const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
@@ -38,12 +34,10 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
     let mergerBlock = <MergerBlock>block
     var selected = {}
     for (let s of mergerBlock.inputs) selected[s] = true;
-    return { id: id, block: <MergerBlock>block, selected:selected, newName:mergerBlock.output, mode:"visual" }
+    return { id: id, block: <MergerBlock>block, selected:selected, newName:mergerBlock.output }
   },
   update: (state:MergerState, event:MergerEvent) => {
     switch(event.kind) {
-      case 'mode':
-          return {...state, mode: event.mode }
       case 'check':
           var newSelected = { ...state.selected }
           newSelected[event.frame] = event.selected
@@ -52,11 +46,28 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
           return {...state, newName:event.name}
     }
   },
+
+  /*
   render: (cell:Langs.BlockState, state:MergerState, context:Langs.EditorContext<MergerEvent>) => {
     let mergerNode = <MergerCodeNode>cell.code
     let source = state.newName + "=" + 
       Object.keys(state.selected).filter(s => state.selected[s]).join(",")
-    let visual = h('div', {key:'visual'}, [
+    let evalButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell) }, ["Evaluate"])
+    return h('div', {}, [ 
+      h('div', {key:'ed'}, [ Editor.createMonacoEditor("merger", source, cell, context) ]),
+      h('div', {key:'prev'}, [
+        (cell.code.value == null) ? evalButton : 
+          Editor.createOutputPreview(cell, (_) => { }, 0, <Values.ExportsValue>cell.code.value)
+      ])
+    ]);
+  }
+  */
+
+  render: (cell:Langs.BlockState, state:MergerState, context:Langs.EditorContext<MergerEvent>) => {
+    let mergerNode = <MergerCodeNode>cell.code
+    let source = state.newName + "=" + 
+      Object.keys(state.selected).filter(s => state.selected[s]).join(",")
+    return h('div', {}, [ 
       h('p', {}, [ "Choose data frames that you would like to merge:"] ),
       h('ul', {}, mergerNode.framesInScope.map(f => 
         h('li', { key:f }, [ 
@@ -75,21 +86,6 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
           h('input', {key:'i3', type: 'button', value: 'Evaluate', onclick: () => 
             context.evaluate(cell) }, []) )            
       ])
-    ])
-
-    let code = h('div', {key:'code'}, [ Editor.createMonacoEditor("merger", source, cell, context) ])
-    let preview = (cell.code.value == null) ? h('div', {key:'no-preview'}, []) :
-      h('div', {key:'preview'}, [ Editor.createOutputPreview(cell, (_) => {}, 0, <Values.ExportsValue>cell.code.value) ])
-
-    return h('div', {}, [     
-      h('div', {class: "tabs"},[
-        h('button', { class: state.mode=="code"?"selected":"normal", onclick:() => 
-          context.trigger({ kind:"mode", mode:"code" }) }, ["source code"]),
-        h('button', { class: state.mode=="visual"?"selected":"normal", onclick:() => 
-          context.trigger({ kind:"mode", mode:"visual" }) }, ["visual editor"])
-      ]),
-      ( state.mode == "code" ? code : visual ),
-      preview    
     ])
   }
 }
@@ -151,10 +147,14 @@ export const mergerLanguagePlugin : Langs.LanguagePlugin = {
     switch(mergerNode.kind) {
       case 'code':
         let vals = mergerNode.antecedents.map(n => <Values.KnownValue>n.value)
-        let merged = await mergeDataFrames(mergerNode.output, mergerNode.hash, vals)
-        return { kind: "success", value: merged }
+        let merged = await mergeDataFrames(mergerNode.output, mergerNode.hash, vals)      
+        let res : { [key:string]: Values.KnownValue }= {}
+        res[mergerNode.output] = merged
+        let exps : Values.ExportsValue = { kind:"exports", exports: res }
+        return { kind: "success", value: exps }
       case 'export':
-        return { kind: "success", value: <Values.Value>mergerNode.mergerNode.value }
+        let expsVal = <Values.ExportsValue>mergerNode.mergerNode.value
+        return { kind: "success", value: expsVal.exports[mergerNode.mergerNode.output] }
     }
   },
 
@@ -164,8 +164,10 @@ export const mergerLanguagePlugin : Langs.LanguagePlugin = {
   },
 }
 
-declare var DATASTORE_URI: string;
 import axios from 'axios';
+import { AsyncLazy } from '../common/lazy';
+
+declare var DATASTORE_URI: string;
 
 async function putValue(variableName:string, hash:string, value:any[]) : Promise<string> {
   let url = DATASTORE_URI.concat("/" + hash).concat("/" + variableName)

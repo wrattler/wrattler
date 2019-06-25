@@ -1,5 +1,8 @@
+/** @hidden */
+
+/** This comment is needed so that TypeDoc parses the above one correctly */
 import * as monaco from 'monaco-editor';
-import * as Langs from '../definitions/languages'; 
+import * as Langs from '../definitions/languages';
 import {h, VNode} from 'maquette';
 
 function createMonaco(el, lang, source, rebind) {
@@ -22,7 +25,7 @@ function createMonaco(el, lang, source, rebind) {
       vertical: 'hidden',
       horizontal: 'hidden'
     }
-  });    
+  });
 
   ed.createContextKey('alwaysTrue', true);
   ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
@@ -34,7 +37,7 @@ function createMonaco(el, lang, source, rebind) {
 }
 
 function createEditor(lang:string, source:string, cell:Langs.BlockState, context:Langs.EditorContext<any>) {
-  let afterCreateHandler = (el) => { 
+  let afterCreateHandler = (el) => {
     let rebind = (code:string) => context.rebindSubsequent(cell, code)
     let ed = createMonaco(el, lang, source, rebind)
 
@@ -49,7 +52,7 @@ function createEditor(lang:string, source:string, cell:Langs.BlockState, context
 
         if (height !== lastHeight || width !== lastWidth) {
           lastHeight = height
-          lastWidth = width  
+          lastWidth = width
           ed.layout({width:width, height:height})
           el.style.height = height + "px"
         }
@@ -57,7 +60,7 @@ function createEditor(lang:string, source:string, cell:Langs.BlockState, context
     }
 
     let rebindCells = () => {
-      let model = ed.getModel() 
+      let model = ed.getModel()
       if (model) rebind(model.getValue(monaco.editor.EndOfLinePreference.LF))
     }
 

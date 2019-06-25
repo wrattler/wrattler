@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>BindingContext | Wrattler API documentation</title>
+	<title>Editor | Wrattler API documentation</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -54,13 +54,10 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/languages.html">Languages</a>
-				</li>
-				<li>
-					<a href="languages.bindingcontext.html">BindingContext</a>
+					<a href="editor.html">Editor</a>
 				</li>
 			</ul>
-			<h1>Interface BindingContext</h1>
+			<h1>External module Editor</h1>
 		</div>
 	</div>
 </header>
@@ -70,82 +67,121 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>A context that is passed to the <code>bind</code> operation of a <code>LanguagePlugin</code>. This
-						stores variables in scope, graph node cache and loaded resources.</p>
+						<p>xxx</p>
 					</div>
 				</div>
-			</section>
-			<section class="tsd-panel tsd-hierarchy">
-				<h3>Hierarchy</h3>
-				<ul class="tsd-hierarchy">
-					<li>
-						<span class="target">BindingContext</span>
-					</li>
-				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section tsd-is-not-exported">
-							<h3>Properties</h3>
+							<h3>Functions</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="languages.bindingcontext.html#cache" class="tsd-kind-icon">cache</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="languages.bindingcontext.html#resources" class="tsd-kind-icon">resources</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="languages.bindingcontext.html#scope" class="tsd-kind-icon">scope</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="editor.html#createmonacoeditor" class="tsd-kind-icon">create<wbr>Monaco<wbr>Editor</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="editor.html#createoutputpreview" class="tsd-kind-icon">create<wbr>Output<wbr>Preview</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
-				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="cache" class="tsd-anchor"></a>
-					<h3>cache</h3>
-					<div class="tsd-signature tsd-kind-icon">cache<span class="tsd-signature-symbol">:</span> <a href="graph.nodecache.html" class="tsd-signature-type">NodeCache</a></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/2cfd650/client/src/definitions/languages.ts#L165">definitions/languages.ts:165</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>A cache can be used for retrieving previously created graph nodes, so that
-							Wrattler can reuse previously evaluated values.</p>
-						</div>
-					</div>
+				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="createmonacoeditor" class="tsd-anchor"></a>
+					<h3>create<wbr>Monaco<wbr>Editor</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Monaco<wbr>Editor<span class="tsd-signature-symbol">(</span>language<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, source<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, cell<span class="tsd-signature-symbol">: </span><a href="../interfaces/languages.blockstate.html" class="tsd-signature-type">BlockState</a>, context<span class="tsd-signature-symbol">: </span><a href="../interfaces/languages.editorcontext.html" class="tsd-signature-type">EditorContext</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">VNode</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/2cfd650/client/src/editors/editor.ts#L34">editors/editor.ts:34</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>aa</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>language: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>source: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>cell: <a href="../interfaces/languages.blockstate.html" class="tsd-signature-type">BlockState</a></h5>
+								</li>
+								<li>
+									<h5>context: <a href="../interfaces/languages.editorcontext.html" class="tsd-signature-type">EditorContext</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<div class="tsd-comment tsd-typography">
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">VNode</span></h4>
+						</li>
+					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="resources" class="tsd-anchor"></a>
-					<h3>resources</h3>
-					<div class="tsd-signature tsd-kind-icon">resources<span class="tsd-signature-symbol">:</span> <a href="languages.resource.html" class="tsd-signature-type">Resource</a><span class="tsd-signature-symbol">[]</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/2cfd650/client/src/definitions/languages.ts#L170">definitions/languages.ts:170</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>A list of resources loaded by earlier cells.</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="scope" class="tsd-anchor"></a>
-					<h3>scope</h3>
-					<div class="tsd-signature tsd-kind-icon">scope<span class="tsd-signature-symbol">:</span> <a href="languages.scopedictionary.html" class="tsd-signature-type">ScopeDictionary</a></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/2cfd650/client/src/definitions/languages.ts#L168">definitions/languages.ts:168</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Provides language plugin with access to variables defined in earlier cells
-							that are now in scope.</p>
-						</div>
-					</div>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="createoutputpreview" class="tsd-anchor"></a>
+					<h3>create<wbr>Output<wbr>Preview</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Output<wbr>Preview<span class="tsd-signature-symbol">(</span>cell<span class="tsd-signature-symbol">: </span><a href="../interfaces/languages.blockstate.html" class="tsd-signature-type">BlockState</a>, triggerSelect<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span>, selectedTab<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, exportedValues<span class="tsd-signature-symbol">: </span><a href="../interfaces/values.exportsvalue.html" class="tsd-signature-type">ExportsValue</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">VNode</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/2cfd650/client/src/editors/editor.ts#L22">editors/editor.ts:22</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>aa</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>cell: <a href="../interfaces/languages.blockstate.html" class="tsd-signature-type">BlockState</a></h5>
+								</li>
+								<li>
+									<h5>triggerSelect: <span class="tsd-signature-type">function</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>selectedTab<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5>selectedTab: <span class="tsd-signature-type">number</span></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+								<li>
+									<h5>selectedTab: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>exportedValues: <a href="../interfaces/values.exportsvalue.html" class="tsd-signature-type">ExportsValue</a></h5>
+									<div class="tsd-comment tsd-typography">
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">VNode</span></h4>
+						</li>
+					</ul>
 				</section>
 			</section>
 		</div>
@@ -155,81 +191,30 @@
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="../modules/editor.html">Editor</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="../modules/graph.html">Graph</a>
-					</li>
 					<li class="current tsd-kind-external-module">
-						<a href="../modules/languages.html">Languages</a>
+						<a href="editor.html">Editor</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/main.html">Main</a>
+						<a href="graph.html">Graph</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/values.html">Values</a>
+						<a href="languages.html">Languages</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="main.html">Main</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="values.html">Values</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-				</ul>
-				<ul class="current">
-					<li class="current tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.bindingcontext.html" class="tsd-kind-icon">Binding<wbr>Context</a>
-						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="languages.bindingcontext.html#cache" class="tsd-kind-icon">cache</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="languages.bindingcontext.html#resources" class="tsd-kind-icon">resources</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="languages.bindingcontext.html#scope" class="tsd-kind-icon">scope</a>
-							</li>
-						</ul>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="editor.html#createmonacoeditor" class="tsd-kind-icon">create<wbr>Monaco<wbr>Editor</a>
 					</li>
-				</ul>
-				<ul class="after-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.bindingresult.html" class="tsd-kind-icon">Binding<wbr>Result</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.block.html" class="tsd-kind-icon">Block</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.blockstate.html" class="tsd-kind-icon">Block<wbr>State</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-						<a href="languages.editor.html" class="tsd-kind-icon">Editor</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-						<a href="languages.editorcontext.html" class="tsd-kind-icon">Editor<wbr>Context</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.editorstate.html" class="tsd-kind-icon">Editor<wbr>State</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.evaluationcontext.html" class="tsd-kind-icon">Evaluation<wbr>Context</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.evaluationfailure.html" class="tsd-kind-icon">Evaluation<wbr>Failure</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.evaluationsuccess.html" class="tsd-kind-icon">Evaluation<wbr>Success</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.languageplugin.html" class="tsd-kind-icon">Language<wbr>Plugin</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.resource.html" class="tsd-kind-icon">Resource</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="languages.scopedictionary.html" class="tsd-kind-icon">Scope<wbr>Dictionary</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/languages.html#evaluationresult" class="tsd-kind-icon">Evaluation<wbr>Result</a>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="editor.html#createoutputpreview" class="tsd-kind-icon">create<wbr>Output<wbr>Preview</a>
 					</li>
 				</ul>
 			</nav>
