@@ -256,7 +256,7 @@ interface EditorContext<TEvent> {
   trigger(event:TEvent) : void
   
   /** Trigger the evaluation of a given code block. */
-  evaluate(block:BlockState) : void
+  evaluate(blockId:number) : void
 
   /** Set the source of a given code block to the `newSource` and trigger rebinding
    * of all subsequent code blocks in a notebook. */

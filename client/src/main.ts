@@ -15,11 +15,12 @@ interface NotebookAddEvent { kind:'add', id: number, language:string }
 interface NotebookToggleAddEvent { kind:'toggleadd', id: number }
 interface NotebookRemoveEvent { kind:'remove', id: number }
 interface NotebookBlockEvent { kind:'block', id:number, event:any }
+interface NotebookUpdateTriggerEvalEvent { kind:'evaluate', id:number }
 interface NotebookUpdateEvalStateEvent { kind:'evalstate', hash:string, newState:"pending" | "done" }
 interface NotebookSourceChange { kind:'rebind', block: Langs.BlockState, newSource: string}
 
 type NotebookEvent =
-  NotebookAddEvent | NotebookToggleAddEvent | NotebookRemoveEvent |
+  NotebookAddEvent | NotebookToggleAddEvent | NotebookRemoveEvent | NotebookUpdateTriggerEvalEvent |
   NotebookBlockEvent | NotebookUpdateEvalStateEvent | NotebookSourceChange
 
 type LanguagePlugins = { [lang:string] : Langs.LanguagePlugin }
@@ -114,25 +115,11 @@ async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resour
 function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
   Log.trace("main", "Rendering %d cells", state.cells.length)
   let nodes = state.cells.map(cell => {
-    // The `context` object is passed to the render function. The `trigger` method
-    // of the object can be used to trigger events that cause a state update.
     let context : Langs.EditorContext<any> = {
       trigger: (event:any) =>
         trigger({ kind:'block', id:cell.editor.id, event:event }),
-
-      evaluate: async (block:Langs.BlockState) => {
-        // block.editor.id
-        // "pending"
-        function triggerEvalStateEvent(hash, newState) {
-          // Log.trace('main', "State: %s", newState)
-          // Log.trace('main', "Hash: %s", hash)
-          trigger({kind:'evalstate', hash:hash, newState})
-        }
-
-        await evaluate(block.code, state.languagePlugins, state.resources, triggerEvalStateEvent)
-        for(var exp of block.exports) await evaluate(exp, state.languagePlugins, state.resources, triggerEvalStateEvent)
-      },
-
+      evaluate: (blockId:number) => 
+        trigger({ kind:'evaluate', id:blockId }),
       rebindSubsequent: (block:Langs.BlockState, newSource: string) => {
         trigger({kind: 'rebind', block: block, newSource: newSource})
       }
@@ -178,7 +165,8 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
   return h('div', {class:'container-fluid', id:paperElementID}, [nodes])
 }
 
-async function update(state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
+async function update(trigger:(evt:NotebookEvent) => void,
+    state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
 
   function spliceEditor (editors:Langs.EditorState[], newEditor: Langs.EditorState, idOfAboveBlock: number) {
     return editors.map (editor => {
@@ -258,6 +246,18 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
         languagePlugins: state.languagePlugins, contentChanged: state.contentChanged,
         expandedMenu:state.expandedMenu, cells: removeCell(state.cells, evt.id), resources: state.resources};
 
+    case 'evaluate':
+      let triggerEvalStateEvent = (hash, newState) =>
+        trigger({kind:'evalstate', hash:hash, newState})
+      let doEvaluate = async (block:Langs.BlockState) => {
+        await evaluate(block.code, state.languagePlugins, state.resources, triggerEvalStateEvent)
+        for(var exp of block.exports) await evaluate(exp, state.languagePlugins, state.resources, triggerEvalStateEvent)
+      }
+      let blocks = state.cells.filter(b => b.editor.id == evt.id)
+      if (blocks.length > 0) doEvaluate(blocks[0]); 
+      else Log.error("main", "Tried to evaluate block that has been removed")
+      return state;
+
     case 'rebind':
       let newState = await updateAndBindAllCells(state, evt.block, evt.newSource);
       state.contentChanged(saveDocument(newState))
@@ -285,15 +285,31 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
   var state : NotebookState = {cache:cache, counter:counter, cells:newCells,
     contentChanged: contentChanged, expandedMenu:-1, languagePlugins:languagePlugins, resources: resources}
 
-  function updateAndRender(event:NotebookEvent) {
-    update(state, event).then(newState => {
-      state = newState
-      maquetteProjector.scheduleRender()
-    });
+  var events : NotebookEvent[] = []
+  var handling = false;
+
+  function trigger(event:NotebookEvent) {
+    events.push(event)
+    processEvents()
   }
 
-  maquetteProjector.replace(paperElement, () =>
-    render(updateAndRender, state))
+  function processEvents() {
+    Log.trace("main", "Processing events (%s). First of kind: %s", 
+      events.length, events.length>0?events[0].kind:"N/A")
+    if (events.length > 0 && !handling) {
+      handling = true;
+      let event = events[0]
+      events = events.slice(1)
+      update(trigger, state, event).then(newState => {
+        state = newState
+        handling = false;
+        if (events.length > 0) processEvents()
+        else maquetteProjector.scheduleRender()
+      });
+    }
+  }
+
+  maquetteProjector.replace(paperElement, () => render(trigger, state))
 }
 
 function loadNotebook(documents:Docs.DocumentElement[], languagePlugins:LanguagePlugins) {
