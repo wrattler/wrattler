@@ -95,9 +95,9 @@ async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resour
 
   let languagePlugin = languagePlugins[node.language]
   let source = (<any>node).source ? (<any>node).source.substr(0, 100) + "..." : "(no source)"
-  Log.trace("evaluation","Evaluating %s node: %s", node.language, source)
+  // Log.trace("evaluation","Evaluating %s node: %s", node.language, source)
   let evalResult = await languagePlugin.evaluate({resources:resources}, node);
-  Log.trace("evaluation","Evaluated %s node. Result: %O", node.language, node.value)
+  // Log.trace("evaluation","Evaluated %s node. Result: %O", node.language, node.value)
   switch(evalResult.kind) {
     case "success":
       node.value = evalResult.value;
@@ -126,8 +126,8 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
         // block.editor.id
         // "pending"
         function triggerEvalStateEvent(hash, newState) {
-          Log.trace('main', "State: %s", newState)
-          Log.trace('main', "Hash: %s", hash)
+          // Log.trace('main', "State: %s", newState)
+          // Log.trace('main', "Hash: %s", hash)
           trigger({kind:'evalstate', hash:hash, newState})
         }
 
@@ -219,8 +219,6 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
     }
 
     case 'evalstate':
-      Log.trace("Evaluation %s", JSON.stringify(evt))
-      // state.cells.map(cellState => cellState.code.hash == modifiedHash ? cellState.evaluationState)
       let newCells:Langs.BlockState[] = state.cells.map(cellState => {
         if (cellState.code.hash != evt.hash)
           return cellState
