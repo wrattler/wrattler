@@ -73,7 +73,7 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
           context.rebindSubsequent(cell, source) }, []),
         ( cell.code.value ? "" :
           h('input', {key:'i3', type: 'button', value: 'Evaluate', onclick: () => 
-            context.evaluate(cell) }, []) )            
+            context.evaluate(cell.editor.id) }, []) )            
       ])
     ])
 

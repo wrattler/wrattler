@@ -6,7 +6,7 @@ printHello("Tomas")
 %local hello.r
 printHello("May and Tim and Isaac")
 ```
-```javascript
+
 %global hello.ts
 printHello("May")
-```
+
