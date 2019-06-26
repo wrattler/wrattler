@@ -1,6 +1,7 @@
 import * as monaco from 'monaco-editor';
 import * as Langs from '../definitions/languages'; 
 import {h, VNode} from 'maquette';
+import { Log } from '../common/log';
 
 function createMonaco(el, lang, source, rebind) {
   let ed = monaco.editor.create(el, {
@@ -35,6 +36,7 @@ function createMonaco(el, lang, source, rebind) {
 
 function createEditor(lang:string, source:string, cell:Langs.BlockState, context:Langs.EditorContext<any>) {
   let afterCreateHandler = (el) => { 
+    Log.trace("editor", "Creating Monaco editor for id: %s (code: %s)", el.id, source.replace(/[\n\r]/g," ").substr(0,100))
     let rebind = (code:string) => context.rebindSubsequent(cell, code)
     let ed = createMonaco(el, lang, source, rebind)
 
