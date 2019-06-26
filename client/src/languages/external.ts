@@ -22,10 +22,10 @@ async function getValue(blob, preview:boolean) : Promise<any> {
   if (preview)
     url = url.concat("?nrow=10")
   try {
-    Log.trace("data-store", "Fetching data frame: %s", url)
+    Log.trace("external", "Fetching data frame: %s", url)
     let response = await axios.get(url, {headers: headers});
   
-    Log.trace("data-store", "Got data frame (%s rows): %s", response.data.length, pathname)
+    Log.trace("external", "Got data frame (%s rows): %s", response.data.length, pathname)
     return response.data
   }
   catch (error) {
@@ -33,19 +33,33 @@ async function getValue(blob, preview:boolean) : Promise<any> {
   }
 }
 
-async function getEval(body, serviceURI ) : Promise<Langs.EvaluationResult> {
-  let url = serviceURI.concat("/eval")
-  let headers = {'Accept': 'application/json'}
+async function getCachedOrEval(serviceUrl, body) : Promise<any> {
+  let cacheUrl = DATASTORE_URI.concat("/" + body.hash).concat("/.cached")
   try {
-    let response = await axios.post(url, body, {headers: headers});        
+    let params = {headers: {'Accept': 'application/json'}}
+    Log.trace("external", "Checking cached response: %s", cacheUrl)
+    let response = await axios.get(cacheUrl, params)
+    return response.data
+  } catch(e) {
+    Log.trace("external", "Checking failed, calling eval (%s)", e)
+    let params = { headers: {'Content-Type': 'application/json'} }        
+    let result = await axios.post(serviceUrl.concat("/eval"), body, params)
+    await axios.put(cacheUrl, result.data, params)
+    return result.data
+  }
+}
+
+async function getEval(body, serviceURI) : Promise<Langs.EvaluationResult> {  
+  try {
+    let response = await getCachedOrEval(serviceURI, body);        
     var results : Values.ExportsValue = { kind:"exports", exports:{} }
     
-    if (response.data.output.toString().length > 0){
-      let printouts : Values.Printout = { kind:"printout", data:response.data.output.toString() }
+    if (response.output.toString().length > 0){
+      let printouts : Values.Printout = { kind:"printout", data:response.output.toString() }
       results.exports['console'] = printouts
     }
     
-    for(let df of response.data.frames) {
+    for(let df of response.frames) {
       let exp : Values.DataFrame = 
         { kind:"dataframe", url:<string>df.url, 
           preview: await getValue(df.url, true), // TODO: Just first X rows
@@ -55,7 +69,7 @@ async function getEval(body, serviceURI ) : Promise<Langs.EvaluationResult> {
         results.exports[df.name] = exp
     }
     let figureIndex = 0;
-    for(let df of response.data.figures) {
+    for(let df of response.figures) {
       let raw = await getValue(df.url,false)
       let exp : Values.Figure = {kind:"figure", data: raw[0]['IMAGE']};
       results.exports['figure'+figureIndex.toString()] = exp
