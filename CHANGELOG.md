@@ -2,6 +2,15 @@
 
 To be updated every time code is pushed to ***master***.
 
+### v0.4 (June 2019)
+- Improve static source code analysis in Python to detect modified data frames
+- Adding more documentation on writing your own plugins and API docs
+- Mount `resources` when running Wrattler inside Docker
+- Improvements in the Arrow data store handling
+- Initial work on adding spinner when evaluating code
+- Improve evaluation UI: Shift+Enter now evaluates
+- Add caching of /eval requests, so we do not revaluate when hashes match
+
 ### v0.3 (June 2019)
 
 * Added jupyterlab support - jupyterlab runs in a docker container and has a wrattler extension enabling it to open files with a .wrattler extension using wrattler-app.js served by the client.

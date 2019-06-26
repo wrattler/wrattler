@@ -109,6 +109,25 @@ def test_method_calling_imports():
     assert(result["exports"] == ["x"])
 
 
+def test_subscript_imports_exports():
+    """
+    If we look at an element of an object such as a dataframe(e.g. x[0]), that dataframe needs to be
+    defined so should be an import.
+    If the element is an assignment target it should also be an export.
+    """
+    code = "df.x[0] = 3\n"
+    frames = ["df"]
+    testdata = {"code": code,
+                "frames": frames,
+                "hash": "irrelevant"}
+    result = handle_exports(testdata)
+    assert(len(result["imports"])==1)
+    assert(result["imports"][0] == "df")
+    assert(len(result["exports"])==1)
+    assert(result["exports"][0] == "df")
+
+
+
 def test_imports_same_var_twice():
     """
     We only want to read in a dataframe once, even if

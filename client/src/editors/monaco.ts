@@ -4,8 +4,9 @@
 import * as monaco from 'monaco-editor';
 import * as Langs from '../definitions/languages';
 import {h, VNode} from 'maquette';
+import { Log } from '../common/log';
 
-function createMonaco(el, lang, source, rebind) {
+function createMonaco(el, lang, source, rebindAndEvaluate) {
   let ed = monaco.editor.create(el, {
     value: source,
     language: lang,
@@ -30,16 +31,22 @@ function createMonaco(el, lang, source, rebind) {
   ed.createContextKey('alwaysTrue', true);
   ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
     let model = ed.getModel()
-    if (model) rebind(model.getValue(monaco.editor.EndOfLinePreference.LF))
+    if (model) rebindAndEvaluate(model.getValue(monaco.editor.EndOfLinePreference.LF))
   }, 'alwaysTrue');
 
   return ed;
 }
 
 function createEditor(lang:string, source:string, cell:Langs.BlockState, context:Langs.EditorContext<any>) {
-  let afterCreateHandler = (el) => {
-    let rebind = (code:string) => context.rebindSubsequent(cell, code)
-    let ed = createMonaco(el, lang, source, rebind)
+  let afterCreateHandler = (el) => { 
+    Log.trace("editor", "Creating Monaco editor for id: %s (code: %s)", el.id, source.replace(/[\n\r]/g," ").substr(0,100))
+    let rebindAndEvaluate = (code:string) => { 
+      Log.trace("editor", "Rebind triggered by Shift+Enter")
+      context.rebindSubsequent(cell, code)
+      Log.trace("editor", "Evaluation triggered by Shift+Enter")
+      context.evaluate(cell.editor.id)
+    }
+    let ed = createMonaco(el, lang, source, rebindAndEvaluate)
 
     let lastHeight = 100;
     let lastWidth = 0
@@ -60,8 +67,9 @@ function createEditor(lang:string, source:string, cell:Langs.BlockState, context
     }
 
     let rebindCells = () => {
-      let model = ed.getModel()
-      if (model) rebind(model.getValue(monaco.editor.EndOfLinePreference.LF))
+      let model = ed.getModel() 
+      Log.trace("editor", "Rebind triggered by onDidBlurEditorText")
+      if (model) context.rebindSubsequent(cell, model.getValue(monaco.editor.EndOfLinePreference.LF))
     }
 
     let model = ed.getModel()

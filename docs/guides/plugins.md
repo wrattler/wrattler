@@ -383,7 +383,7 @@ return h('div', {}, [
       context.rebindSubsequent(block, source) }, []),
     ( block.code.value ? "" :
       h('input', {key:'i3', type: 'button', value: 'Evaluate', onclick: () =>
-        context.evaluate(block) }, []) )            
+        context.evaluate(block.editor.id) }, []) )            
   ])
 ])
 ```

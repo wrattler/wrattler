@@ -153,7 +153,7 @@ def convert_from_pandas(dataframe, max_size_json=0):
     if dataframe.size > max_size_json:
         try:
             return  pandas_to_arrow(dataframe)
-        except(pa.lib.ArrowTypeError):
+        except(pa.lib.ArrowTypeError, pa.lib.ArrowInvalid):
             print("Unable to convert to pyarrow table - inconsistent types in column?")
             return pandas_to_json(dataframe)
     else:
@@ -223,14 +223,17 @@ def write_image(cell_hash):
     Return True if an image is written to the datastore, False if there is nothing to write,
     and raise an ApiException if there is a problem writing it.
     """
-    file_path = os.path.join(TMPDIR,cell_hash)
+    file_path = os.path.join(TMPDIR,cell_hash,'fig.png')
     if not os.path.exists(file_path):
         return False
     url = '{}/{}/figures'.format(DATASTORE_URI, cell_hash)
-    file_data = open(os.path.join(file_path,'fig.png'),'rb')
+    file_data = open(file_path,'rb')
     try:
         img_b64 = base64.b64encode(file_data.read())
         data = [{"IMAGE": img_b64.decode("utf-8")}]
+        ## now remove the figure
+        os.remove(file_path)
+        ## put it on the data store
         r = requests.put(url, json=data)
         return (r.status_code == 200)
     except(requests.exceptions.ConnectionError):
@@ -259,6 +262,12 @@ def find_assignments(code_string):
             elif isinstance(node, ast.Call):
                 _find_elements(node.args, output_dict, "input_vals", global_scope)
                 _find_elements(node.func, output_dict, "input_vals", global_scope)
+            ## treat things like df[0] = x (i.e. ast.Subscript nodes) similarly to Call nodes
+            ## - i.e. we will need 'df' to be an import in order to avoid 'not defined' error.
+            elif isinstance(node, ast.Subscript):
+                _find_elements(node.value, output_dict, "input_vals", global_scope)
+                if parent and parent == "targets":
+                    _find_elements(node.value, output_dict, "targets", global_scope)
             elif isinstance(node, ast.Name) and parent:
                 if global_scope or parent=="input_vals":
                     ## only add this name if it isn't already in the list
@@ -336,7 +345,7 @@ def handle_eval(data):
     This function will analyze and execute code, including retrieving input frames,
     and will return output as a dict:
        { "output": <text_output_from_cell>,
-         "frames" [ {"name": <frame_name>, "url": <frame_url>}, ... ]
+         "frames": [ {"name": <frame_name>, "url": <frame_url>}, ... ]
          "figures": [ {"name": <fig_name>, "url": <fig_url>}, ... ]
        }
 
@@ -345,16 +354,16 @@ def handle_eval(data):
     output_hash = data["hash"]
     assign_dict = find_assignments(code_string)
     files = data["files"] if "files" in data.keys() else []
-    ## first deal with any files that could contain function def'ns and/or import statements
-    file_content = ""
+    file_content_dict = {}
     for file_url in files:
-        file_content += get_file_content(file_url)
-        file_content += "\n"
+        filename = file_url.split("/")[-1]
+        file_content = get_file_content(file_url)
+        file_content_dict[filename] = file_content
 
     input_frames = data["frames"]
     frame_dict = retrieve_frames(input_frames)
     ## execute the code, get back a dict {"output": <string_output>, "results":<list_of_vals>}
-    results_dict = execute_code(file_content,
+    results_dict = execute_code(file_content_dict,
                                 code_string,
                                 frame_dict,
                                 assign_dict['targets'],
@@ -369,14 +378,9 @@ def handle_eval(data):
         "figures": []
     }
 
-    frame_names = assign_dict['targets']
-    if len(results) != len(frame_names):
-        raise ApiException("Error: no. of output frames does not match no. results", status_code=500)
-
     wrote_ok=True
-    for i, name in enumerate(frame_names):
-
-        wrote_ok &= write_frame(results[i], name, output_hash)
+    for name, frame in results.items():
+        wrote_ok &= write_frame(frame, name, output_hash)
         return_dict["frames"].append({"name": name,"url": "{}/{}/{}"\
                                       .format(DATASTORE_URI,
                                               output_hash,
@@ -427,26 +431,49 @@ def construct_func_string(file_contents, code, input_val_dict, return_vars, outp
     ## save any plot output to a file in /tmp/<hash>/
     func_string += "    try:\n"
     func_string += "        os.makedirs(os.path.join('{}','{}'),exist_ok=True)\n".format(TMPDIR,output_hash)
-    func_string += "        plt.savefig(os.path.join('{}','{}','fig.png'))\n".format(TMPDIR,output_hash)
+    func_string += "        if len(plt.get_fignums()) > 0:\n"
+    func_string += "            plt.savefig(os.path.join('{}','{}','fig.png'))\n".format(TMPDIR,output_hash)
+    func_string += "            plt.close()\n"
     func_string += "    except(NameError):\n"
     func_string += "        with contextlib.suppress(FileNotFoundError):\n"
     func_string += "            os.rmdir(os.path.join('{}','{}'))\n".format(TMPDIR,output_hash)
     func_string += "            pass\n"
     func_string += "        pass\n"
-    func_string += "    return "
+    func_string += "    return {"
     for rv in return_vars:
-        func_string += "{},".format(rv)
-    func_string += "\n"
+        func_string += "'{}':{},".format(rv,rv)
+    func_string += "}\n"
     return func_string
 
 
-def execute_code(file_contents, code, input_val_dict, return_vars, output_hash, verbose=False):
+def execute_code(file_content_dict, code, input_val_dict, return_vars, output_hash, verbose=False):
     """
     Call a function that constructs a string containing a function definition,
-    then do exec(func_string), then define another string call_string
-    that calls this function,
-    and then finally do eval(call_string)
+    then do exec(func_string), which should mean that the function ('wratttler_f')
+    is defined, and then finally we do eval('wrattler_f()) to execute the function.
+
+    Takes arguments:
+      file_content_dict: is a dict of {<filename>:<content>,...} for files (e.g.
+                         containing function definitions) on the datastore.
+      code: is a string (the code in the cell)
+      input_val_dict: dictionary {<variable_name>: <data_retrieved_from_datastore>, ...}
+      return_vars: list of variable names found by find_assignments(code)
+      output_hash: hash of the cell - will be used to create URL on datastore for outputs.
+      verbose: if True will print out e.g. the function string.
+
+    Returns a dictionary:
+    {
+    "output": <console output>,
+    "results": {<frame_name>: <frame>, ... }
+    }
     """
+
+    ## first deal with any files that could contain function def'ns and/or import statements
+    file_contents = ""
+    for v in file_content_dict.values():
+        file_contents += v
+        file_contents += "\n"
+
     func_string = construct_func_string(file_contents,
                                         code,
                                         input_val_dict,
@@ -454,23 +481,31 @@ def execute_code(file_contents, code, input_val_dict, return_vars, output_hash, 
                                         output_hash)
     if verbose:
         print(func_string)
-    exec(func_string)
+    try:
+        exec(func_string)
+    except SyntaxError as e:
+        ## there is a problem either with the code fragment or with the file_contents -
+        ## see if we can narrow it down in order to provide a more helpful error msg
+        for fn, fc in file_content_dict.items():
+            try:
+                exec(fc)
+            except SyntaxError as se:
+                output = "SyntaxError when trying to execute imported file: {}".format(fn)
+                raise ApiException(output, status_code=500)
+        output = "SyntaxError when trying to execute code in cell: {}".format(e)
+        raise ApiException(output, status_code=500)
     return_dict = {"output": "", "results": []}
     try:
         with stdoutIO() as s:
             ### wrapping function wrattler_f should now be in the namespace
             func_output = eval('wrattler_f()')
             return_dict["output"] = s.getvalue().strip()
-            if isinstance(func_output, collections.Iterable):
-                results = []
-                for item in func_output:
-                    results.append(convert_from_pandas(item))
-                return_dict["results"] = results
-            elif not func_output:
-                return_dict["results"] = []
-            else:
-                result = convert_from_pandas(func_output)
-                return_dict["results"] = [result]
+            return_dict["results"] = {}
+            for k,v in func_output.items():
+                result = convert_from_pandas(v)
+                if result:
+                    return_dict["results"][k] = result
+
     except Exception as e:
         output = "{}: {}".format(type(e).__name__, e)
         raise ApiException(output, status_code=500)

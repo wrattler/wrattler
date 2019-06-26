@@ -180,9 +180,13 @@ class JavascriptBlockKind implements Langs.Block {
     },
 
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
-      let previewButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell) }, ["Evaluate"])
+      let previewButton = h('button', 
+        { class:'preview-button', onclick:() => { 
+            Log.trace("editor", "Evaluate button clicked in external language plugin")
+            context.evaluate(cell.editor.id) } }, ["Evaluate!"] )
+      let spinner = h('i', {id:'cellSpinner_'+cell.editor.id, class: 'fas fa-spinner fa-spin' }, [])
       let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
-      let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? previewButton : (createOutputPreview(cell, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
+      let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? (cell.evaluationState=='pending')?spinner:previewButton : (createOutputPreview(cell, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
       let code = createMonacoEditor("javascript", state.block.source, cell, context)
       return h('div', { }, [code, preview])
     }
