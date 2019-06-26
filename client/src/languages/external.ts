@@ -3,16 +3,95 @@ import { Log } from "../common/log"
 import * as Langs from '../definitions/languages'; 
 import * as Graph from '../definitions/graph'; 
 import * as Values from '../definitions/values'; 
-import {printPreview} from '../editors/preview'; 
-import {createEditor} from '../editors/editor';
+import {createOutputPreview, createMonacoEditor} from '../editors/editor';
 import {Md5} from 'ts-md5';
 import axios from 'axios';
 import {AsyncLazy} from '../common/lazy';
 import * as Doc from '../services/documentService';
-import { WSAETOOMANYREFS } from 'constants';
-import { LanguageService } from 'typescript';
+
+// ------------------------------------------------------------------------------------------------
+// Helper functions for working with data store 
+// ------------------------------------------------------------------------------------------------
 
 declare var DATASTORE_URI: string;
+
+async function getValue(blob, preview:boolean) : Promise<any> {
+  var pathname = new URL(blob).pathname;
+  let headers = {'Accept': 'application/json'}
+  let url = DATASTORE_URI.concat(pathname)
+  if (preview)
+    url = url.concat("?nrow=10")
+  try {
+    Log.trace("external", "Fetching data frame: %s", url)
+    let response = await axios.get(url, {headers: headers});
+  
+    Log.trace("external", "Got data frame (%s rows): %s", response.data.length, pathname)
+    return response.data
+  }
+  catch (error) {
+    throw error;
+  }
+}
+
+async function getCachedOrEval(serviceUrl, body) : Promise<any> {
+  let cacheUrl = DATASTORE_URI.concat("/" + body.hash).concat("/.cached")
+  try {
+    let params = {headers: {'Accept': 'application/json'}}
+    Log.trace("external", "Checking cached response: %s", cacheUrl)
+    let response = await axios.get(cacheUrl, params)
+    return response.data
+  } catch(e) {
+    Log.trace("external", "Checking failed, calling eval (%s)", e)
+    let params = { headers: {'Content-Type': 'application/json'} }        
+    let result = await axios.post(serviceUrl.concat("/eval"), body, params)
+    await axios.put(cacheUrl, result.data, params)
+    return result.data
+  }
+}
+
+async function getEval(body, serviceURI) : Promise<Langs.EvaluationResult> {  
+  try {
+    let response = await getCachedOrEval(serviceURI, body);        
+    var results : Values.ExportsValue = { kind:"exports", exports:{} }
+    
+    if (response.output.toString().length > 0){
+      let printouts : Values.Printout = { kind:"printout", data:response.output.toString() }
+      results.exports['console'] = printouts
+    }
+    
+    for(let df of response.frames) {
+      let exp : Values.DataFrame = 
+        { kind:"dataframe", url:<string>df.url, 
+          preview: await getValue(df.url, true), // TODO: Just first X rows
+          data: new AsyncLazy<any>(() => getValue(df.url,false)) // TODO: This function is called later when JS calls data.getValue()
+        };
+      if (Array.isArray(exp.preview))
+        results.exports[df.name] = exp
+    }
+    let figureIndex = 0;
+    for(let df of response.figures) {
+      let raw = await getValue(df.url,false)
+      let exp : Values.Figure = {kind:"figure", data: raw[0]['IMAGE']};
+      results.exports['figure'+figureIndex.toString()] = exp
+      figureIndex++;
+    }
+    
+    let evalResults:Langs.EvaluationResult = {kind: 'success', value: results} 
+    return evalResults;
+  }
+  catch (error) {
+    if (error.response != null) {
+      let e = {message:<string>error.response.data.error}
+      let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [e]} 
+      return evalResults
+    }
+    else {
+      let e = {message:'Failed to evaluate'}
+      let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [e]} 
+      return evalResults
+    }
+  }
+}
 
 
 // ------------------------------------------------------------------------------------------------
@@ -61,11 +140,15 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
     return state
   },
 
-  render: (cell: Langs.BlockState, state:ExternalState, context:Langs.EditorContext<ExternalEvent>) => {
-    let previewButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell) }, ["Evaluate"])
+  render: (cell: Langs.BlockState, state:ExternalState, context:Langs.EditorContext<ExternalEvent>) => {    
+    let previewButton = h('button', 
+      { class:'preview-button', onclick:() => { 
+          Log.trace("editor", "Evaluate button clicked in external language plugin")
+          context.evaluate(cell.editor.id) } }, ["Evaluate!"] )
+    let spinner = h('i', {id:'cellSpinner_'+cell.editor.id, class: 'fas fa-spinner fa-spin' }, [])
     let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
-    let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
-    let code = createEditor(cell.code.language, state.block.source, cell, context)
+    let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? (cell.evaluationState=='pending')?spinner:previewButton : (createOutputPreview(cell, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
+    let code = createMonacoEditor(cell.code.language, state.block.source, cell, context)
     let errors = h('div', {}, [(cell.code.errors.length == 0) ? "" : cell.code.errors.map(err => {return h('p',{}, [err.message])})])
     return h('div', { }, [code, (cell.code.errors.length >0)?errors:preview])
   }
@@ -95,70 +178,6 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
   async evaluate(context:Langs.EvaluationContext, node:Graph.Node) : Promise<Langs.EvaluationResult> {
     let externalNode = <Graph.ExternalNode>node
 
-    async function getValue(blob, preview:boolean) : Promise<any> {
-      var pathname = new URL(blob).pathname;
-      let headers = {'Accept': 'application/json'}
-      let url = DATASTORE_URI.concat(pathname)
-      if (preview)
-        url = url.concat("?nrow=10")
-      try {
-        Log.trace("data-store", "Fetching data frame: %s", url)
-        let response = await axios.get(url, {headers: headers});
-      
-        Log.trace("data-store", "Got data frame (%s rows): %s", response.data.length, pathname)
-        return response.data
-      }
-      catch (error) {
-        throw error;
-      }
-    }
-  
-    async function getEval(body, serviceURI ) : Promise<Langs.EvaluationResult> {
-      let url = serviceURI.concat("/eval")
-      let headers = {'Accept': 'application/json'}
-      try {
-        let response = await axios.post(url, body, {headers: headers});        
-        var results : Values.ExportsValue = { kind:"exports", exports:{} }
-        
-        if (response.data.output.toString().length > 0){
-          let printouts : Values.Printout = { kind:"printout", data:response.data.output.toString() }
-          results.exports['console'] = printouts
-        }
-        
-        for(let df of response.data.frames) {
-          let exp : Values.DataFrame = 
-            { kind:"dataframe", url:<string>df.url, 
-              preview: await getValue(df.url, true), // TODO: Just first X rows
-              data: new AsyncLazy<any>(() => getValue(df.url,false)) // TODO: This function is called later when JS calls data.getValue()
-            };
-          if (Array.isArray(exp.preview))
-            results.exports[df.name] = exp
-        }
-        let figureIndex = 0;
-        for(let df of response.data.figures) {
-          let raw = await getValue(df.url,false)
-          let exp : Values.Figure = {kind:"figure", data: raw[0]['IMAGE']};
-          results.exports['figure'+figureIndex.toString()] = exp
-          figureIndex++;
-        }
-        
-        let evalResults:Langs.EvaluationResult = {kind: 'success', value: results} 
-        return evalResults;
-      }
-      catch (error) {
-        if (error.response != null) {
-          let e = {message:<string>error.response.data.error}
-          let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [e]} 
-          return evalResults
-        }
-        else {
-          let e = {message:'Failed to evaluate'}
-          let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [e]} 
-          return evalResults
-        }
-      }
-    }
-  
     function findResourceURL(fileName): string {
       for (let f = 0; f < context.resources.length; f++) {
         if (context.resources[f].fileName==fileName) {
@@ -257,6 +276,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
           // return "http://wrattler_wrattler_data_store_1:7102".concat("/"+hash).concat("/"+variableName)
       }
       catch (error) {
+        console.log(error)
         throw error;
       }
     }
@@ -293,56 +313,58 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
           "hash": initialHash,
           "frames": Object.keys(context.scope) }
       let headers = {'Content-Type': 'application/json'}
-      let response = await axios.post(url, body, {headers: headers});
-
-      let namesOfImports:Array<string> = []
-      for (var n = 0 ; n < response.data.imports.length; n++) {
-        if (namesOfImports.indexOf(response.data.imports[n]) < 0) {
-          namesOfImports.push(response.data.imports[n])
-          if (response.data.imports[n] in context.scope) {
-            let antecedentNode = context.scope[response.data.imports[n]]
-            antecedents.push(antecedentNode);
+  
+      let response = await axios.post(url, body, {headers: headers})
+      // .then(response=> {
+        let namesOfImports:Array<string> = []
+        for (var n = 0 ; n < response.data.imports.length; n++) {
+          if (namesOfImports.indexOf(response.data.imports[n]) < 0) {
+            namesOfImports.push(response.data.imports[n])
+            if (response.data.imports[n] in context.scope) {
+              let antecedentNode = context.scope[response.data.imports[n]]
+              antecedents.push(antecedentNode);
+            }
           }
         }
-      }
 
-      let allHash = Md5.hashStr(antecedents.map(a => a.hash).join("-") + exBlock.source)
-      let initialNode:Graph.ExternalCodeNode = 
-        { language:this.language, 
-          antecedents:antecedents,
-          exportedVariables:[],
-          kind: 'code',
-          value: null,
-          hash: <string>allHash,
-          source: exBlock.source,
-          errors: []}
-      let cachedNode = <Graph.ExternalCodeNode>context.cache.tryFindNode(initialNode)
+        let allHash = Md5.hashStr(antecedents.map(a => a.hash).join("-") + exBlock.source)
+        let initialNode:Graph.ExternalCodeNode = 
+          { language:this.language, 
+            antecedents:antecedents,
+            exportedVariables:[],
+            kind: 'code',
+            value: null,
+            hash: <string>allHash,
+            source: exBlock.source,
+            errors: []}
+        let cachedNode = <Graph.ExternalCodeNode>context.cache.tryFindNode(initialNode)
 
-      let namesOfExports:Array<string> = []
-      let dependencies:Graph.ExternalExportNode[] = [];
-      for (var n = 0 ; n < response.data.exports.length; n++) {
-        if (namesOfExports.indexOf(response.data.exports[n]) < 0) {
-          namesOfExports.push(response.data.exports[n])
-          let exportNode:Graph.ExternalExportNode = {
-              variableName: response.data.exports[n],
-              value: null,
-              language:this.language,
-              code: cachedNode, 
-              hash: <string>Md5.hashStr(allHash + response.data.exports[n]),
-              kind: 'export',
-              antecedents:[cachedNode],
-              errors: []
-              };
-          let cachedExportNode = <Graph.ExternalExportNode>context.cache.tryFindNode(exportNode)
-          dependencies.push(cachedExportNode) 
-          cachedNode.exportedVariables.push(cachedExportNode.variableName)
+        let namesOfExports:Array<string> = []
+        let dependencies:Graph.ExternalExportNode[] = [];
+        for (var n = 0 ; n < response.data.exports.length; n++) {
+          if (namesOfExports.indexOf(response.data.exports[n]) < 0) {
+            namesOfExports.push(response.data.exports[n])
+            let exportNode:Graph.ExternalExportNode = {
+                variableName: response.data.exports[n],
+                value: null,
+                language:this.language,
+                code: cachedNode, 
+                hash: <string>Md5.hashStr(allHash + response.data.exports[n]),
+                kind: 'export',
+                antecedents:[cachedNode],
+                errors: []
+                };
+            let cachedExportNode = <Graph.ExternalExportNode>context.cache.tryFindNode(exportNode)
+            dependencies.push(cachedExportNode) 
+            cachedNode.exportedVariables.push(cachedExportNode.variableName)
+          }
         }
-      }
-      Log.trace("binding", "Binding external - hash: %s, dependencies: %s", allHash, cachedNode.antecedents.map(n => n.hash))
-      return {code: cachedNode, exports: dependencies, resources:newResources};
+        Log.trace("binding", "Binding external - hash: %s, dependencies: %s", allHash, cachedNode.antecedents.map(n => n.hash))
+        return {code: cachedNode, exports: dependencies, resources:newResources};
+   
     }
     catch (error) {
-      console.error(error);
+      let newError:Graph.Error = {message:error.response.data.error}
       let code = 
         { language:this.language, 
           antecedents:antecedents,
@@ -351,7 +373,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
           value: null,
           hash: <string>Md5.hashStr(exBlock.source),
           source: exBlock.source,
-          errors: [error]}
+          errors: [newError]}
       return {code: code, exports: [], resources:[]};
     }
   }

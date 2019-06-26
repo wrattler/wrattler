@@ -27,6 +27,7 @@ import { loadNotebook, initializeCells } from './main'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
 import { ExternalLanguagePlugin } from './languages/external'
+import { mergerLanguagePlugin } from './demo/merger'
 
 /** @hidden */
 declare var PYTHONSERVICE_URI: string;
@@ -77,6 +78,7 @@ class Wrattler {
     languagePlugins["python"] = new ExternalLanguagePlugin("python", "fab fa-python", PYTHONSERVICE_URI, pyCode);
     languagePlugins["r"] = new ExternalLanguagePlugin("r", "fab fa-r-project", RSERVICE_URI, rCode);
     languagePlugins["racket"] = new ExternalLanguagePlugin("racket", "fa fa-question-circle", RACKETSERVICE_URI, rcCode);
+    //languagePlugins["merger"] = mergerLanguagePlugin;
     return languagePlugins;
   }
 

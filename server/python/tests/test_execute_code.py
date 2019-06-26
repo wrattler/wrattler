@@ -18,7 +18,7 @@ def test_execute_pd_concat():
     input_vals = {"x" : [{"a":1, "b":2},{"a":2,"b":3}],
                   "y": [{"b":4,"c": 2},{"b": 5,"c": 7}]}
     output_hash = "somehash"
-    file_contents = ""
+    file_contents = {}
     return_targets = find_assignments(input_code)["targets"]
     result_dict = execute_code(file_contents,
                                input_code,
@@ -27,8 +27,8 @@ def test_execute_pd_concat():
                                output_hash)
     result = result_dict["results"]
     assert(len(result) == 1) # only one output of function
-    assert(isinstance(result[0], bytes))
-    result_df = convert_to_pandas(result[0])
+    assert(isinstance(result['z'], bytes))
+    result_df = convert_to_pandas(result['z'])
     assert(result_df.size == 12) ## 4 rows * 3 columns
 
 
@@ -37,9 +37,9 @@ def test_execute_simple_func():
     import numpy, and define a trivial function in the code snippet, which is
     then used when filling a dataframe
     """
-    input_code = 'import numpy\ndef squareroot(x):\n  return numpy.sqrt(x)\n\ndf= pd.DataFrame({\"a\":[numpy.sqrt(9),squareroot(12),13],\"b\":[14,15,16]})'
+    input_code = 'import numpy\ndef squareroot(x):\n  return numpy.sqrt(x)\n\ndf= pd.DataFrame({\"a\":[numpy.sqrt(9),squareroot(16),13],\"b\":[14,15,16]})'
     input_vals = {}
-    file_contents = ""
+    file_contents = {}
     return_targets = find_assignments(input_code)["targets"]
     output_hash = "somehash"
     result_dict = execute_code(file_contents,
@@ -49,7 +49,33 @@ def test_execute_simple_func():
                                output_hash)
     result = result_dict["results"]
     assert(result)
-    assert(isinstance(result,list))
+    assert(isinstance(result,dict))
+    assert("df" in result.keys())
+    pddf = convert_to_pandas(result["df"])
+    assert(isinstance(pddf, pd.DataFrame))
+    assert(pddf["a"][0]==3)
+    assert(pddf["a"][1]==4)
+
+
+def test_non_df_assignment():
+    """
+    Check that things that can't be converted into dataframes do not get added to the
+    results dict
+    """
+    input_code = "x='hello'\ndf=pd.DataFrame({'a':[1,2,3]})\n"
+    file_contents = {}
+    output_hash = "doesntmatter"
+    input_vals = {}
+    return_targets = ["df","x"]
+    result_dict = execute_code(file_contents,
+                               input_code,
+                               input_vals,
+                               return_targets,
+                               output_hash)
+    result = result_dict["results"]
+    assert(result)
+    assert("df" in result.keys())
+    assert("x" not in result.keys())
 
 
 def test_get_error_output():
@@ -58,7 +84,7 @@ def test_get_error_output():
     """
     input_code='x = 1/0'
     input_vals={}
-    file_contents = ""
+    file_contents = {}
     return_targets = find_assignments(input_code)["targets"]
     output_hash = "somehash"
     with pytest.raises(ApiException) as exc:
@@ -76,7 +102,7 @@ def test_get_normal_output():
     """
     input_code = 'print("hello world")'
     input_vals = {}
-    file_contents = ""
+    file_contents = {}
     return_targets = find_assignments(input_code)["targets"]
     output_hash = "somehash"
     result_dict = execute_code(file_contents,
@@ -97,7 +123,7 @@ def test_get_two_normal_outputs():
     """
     input_code = 'print("hello world")\nprint("hi again")\n'
     input_vals = {}
-    file_contents = ""
+    file_contents = {}
     return_targets = find_assignments(input_code)["targets"]
     output_hash = "somehash"
     result_dict = execute_code(file_contents,
@@ -119,7 +145,7 @@ def test_get_normal_output_in_func():
     """
     input_code='def printy():\n print("hello funcky world")\n\nprinty()'
     input_vals={}
-    file_contents = ""
+    file_contents = {}
     return_targets = find_assignments(input_code)["targets"]
     output_hash = "somehash"
     result_dict = execute_code(file_contents,
@@ -141,7 +167,7 @@ def test_use_function_from_file():
     """
     input_code = 'print("Result is {}".format(myfunc(4)))'
     input_vals = {}
-    file_contents = 'import numpy\ndef myfunc(inputval):\n  return numpy.sqrt(inputval)\n'
+    file_contents = {'someFile.py': 'import numpy\ndef myfunc(inputval):\n  return numpy.sqrt(inputval)\n'}
     return_targets = find_assignments(input_code)["targets"]
     output_hash = "irrelevant"
     result_dict = execute_code(file_contents,
@@ -153,3 +179,46 @@ def test_use_function_from_file():
     assert(output)
     assert(isinstance(output,str))
     assert("Result is 2" in output)
+
+
+def test_syntax_error_in_file():
+    """
+    imagine we had a file from the datastore containing
+    a function definition and an import statement, but there's a syntax error
+    (e.g. 'dfe' rather than 'def') - should throw an ApiException and tell us the
+    filename.
+    """
+    input_code = 'print("Hello world")\n'
+    input_vals = {}
+
+    file_contents = {'someFile.py': 'import numpy\ndfe myfunc(inputval):\n  return numpy.sqrt(inputval)\n'}
+    return_targets = find_assignments(input_code)["targets"]
+    output_hash = "irrelevant"
+    with pytest.raises(ApiException) as exc:
+        result_dict = execute_code(file_contents,
+                                   input_code,
+                                   input_vals,
+                                   return_targets,
+                                   output_hash)
+
+        assert('someFile.py' in exc.message)
+
+
+def test_syntax_error_in_code():
+    """
+    We have a function definition in someFile.py but we have a typo in our code fragment
+    """
+    input_code = 'pritn(printHello("Wrattler"))\n'
+    input_vals = {}
+
+    file_contents = {'someFile.py': 'def printHello(inputname):\n  return "hello {}".format(inputname)\n'}
+    return_targets = find_assignments(input_code)["targets"]
+    output_hash = "irrelevant"
+    with pytest.raises(ApiException) as exc:
+        result_dict = execute_code(file_contents,
+                                   input_code,
+                                   input_vals,
+                                   return_targets,
+                                   output_hash)
+
+        assert('code in cell' in exc.message)

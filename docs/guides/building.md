@@ -1,4 +1,7 @@
-![Build status](https://api.travis-ci.com/wrattler/wrattler.svg?branch=master)
+---
+layout: default
+title: Welcome
+---
 
 If you get
 
