@@ -69,21 +69,18 @@ async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], 
 
 async function updateAndBindAllCells
     (state:NotebookState, cell:Langs.BlockState, newSource: string): Promise<NotebookState> {
-  Log.trace("Binding", "Begin rebinding subsequent cells %O %s", cell, newSource)
-  var index = state.counter;
+  Log.trace("binding", "Begin rebinding subsequent cells %O %s", cell, newSource)
   let editors = state.cells.map(c => {
     let lang = state.languagePlugins[c.editor.block.language]
     if (c.editor.id == cell.editor.id) {
       let block = lang.parse(newSource);
-      let editor:Langs.EditorState = lang.editor.initialize(index++, block);
+      let editor:Langs.EditorState = lang.editor.initialize(c.editor.id, block);
       return editor;
     }
     else return c.editor;
   });
   let {newCells, updatedResources} = await bindAllCells(state.cache, editors, state.languagePlugins, state.resources);
-  state.resources = updatedResources
-  return { cache:state.cache, cells:newCells, counter:index, contentChanged:state.contentChanged,
-    expandedMenu:state.expandedMenu, languagePlugins: state.languagePlugins, resources:state.resources };
+  return { ...state, cells:newCells, resources:updatedResources };
 }
 
 async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resources:Array<Langs.Resource>, triggerEvalStateEvent) {
@@ -115,6 +112,7 @@ async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resour
 // ------------------------------------------------------------------------------------------------
 
 function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
+  Log.trace("main", "Rendering %d cells", state.cells.length)
   let nodes = state.cells.map(cell => {
     // The `context` object is passed to the render function. The `trigger` method
     // of the object can be used to trigger events that cause a state update.
@@ -177,7 +175,6 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
       ]
     );
   });
-  // Log.trace('main', "Re-Creating notebook for id '%s'", paperElementID)
   return h('div', {class:'container-fluid', id:paperElementID}, [nodes])
 }
 
