@@ -209,13 +209,14 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
           return newCell
         }
       })
-      return { cache:state.cache, 
-        counter: state.counter, 
-        cells: newCells, 
-        contentChanged:state.contentChanged,
-        expandedMenu: state.expandedMenu, 
-        languagePlugins: state.languagePlugins, 
-        resources: state.resources };
+      return {...state, cells: newCells}
+      // return { cache:state.cache, 
+      //   counter: state.counter, 
+      //   cells: newCells, 
+      //   contentChanged:state.contentChanged,
+      //   expandedMenu: state.expandedMenu, 
+      //   languagePlugins: state.languagePlugins, 
+      //   resources: state.resources };
     }
 
     case 'evalstate':
