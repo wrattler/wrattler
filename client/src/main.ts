@@ -57,7 +57,7 @@ async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], 
     let editor = editors[c]
     let {code, exports, resources} = await bindCell(cache, scope, editor, languagePlugins, updatedResources);
     updatedResources = updatedResources.concat(resources)
-    var newCell = { editor:editor, code:code, exports:exports }
+    var newCell:Langs.BlockState = { editor:editor, code:code, exports:exports, evaluationState: "unevaluated"}
     for (var e = 0; e < exports.length; e++ ) {
       let exportNode = exports[e];
       scope[exportNode.variableName] = exportNode;
@@ -126,12 +126,13 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
         // block.editor.id
         // "pending"
         function triggerEvalStateEvent(hash, newState) {
-          ///..
+          Log.trace('main', "State: %s", newState)
+          Log.trace('main', "Hash: %s", hash)
+          trigger({kind:'evalstate', hash:hash, newState})
         }
 
         await evaluate(block.code, state.languagePlugins, state.resources, triggerEvalStateEvent)
-        for(var exp of block.exports) await evaluate(exp, state.languagePlugins, state.resources)
-        trigger({ kind:'refresh' })
+        for(var exp of block.exports) await evaluate(exp, state.languagePlugins, state.resources, triggerEvalStateEvent)
       },
 
       rebindSubsequent: (block:Langs.BlockState, newSource: string) => {
@@ -176,7 +177,7 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
       ]
     );
   });
-  Log.trace('main', "Re-Creating notebook for id '%s'", paperElementID)
+  // Log.trace('main', "Re-Creating notebook for id '%s'", paperElementID)
   return h('div', {class:'container-fluid', id:paperElementID}, [nodes])
 }
 
@@ -197,17 +198,48 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
   }
   Log.trace('main', "Updating event type: '%s'", evt.kind)
 
-  // state.cells.map(cellState => cellState.code.hash == modifiedHash ? cellState.evaluationState)
-
   switch(evt.kind) {
     case 'block': {
-      let newCells = state.cells.map(cellState =>
-        (cellState.editor.id != evt.id) ? cellState :
-          { editor: state.languagePlugins[cellState.editor.block.language].editor.update(cellState.editor, evt.event),
-            code: cellState.code, exports: cellState.exports })
-      return { cache:state.cache, counter: state.counter, cells: newCells, contentChanged:state.contentChanged,
-        expandedMenu: state.expandedMenu, languagePlugins: state.languagePlugins, resources: state.resources };
+      let newCells:Langs.BlockState[] = state.cells.map(cellState => {
+        if (cellState.editor.id != evt.id)
+          return cellState
+        else {
+          var newCell:Langs.BlockState = { editor: state.languagePlugins[cellState.editor.block.language].editor.update(cellState.editor, evt.event),
+             code:cellState.code, exports:exports, evaluationState: "unevaluated"}
+          return newCell
+        }
+      })
+      return { cache:state.cache, 
+        counter: state.counter, 
+        cells: newCells, 
+        contentChanged:state.contentChanged,
+        expandedMenu: state.expandedMenu, 
+        languagePlugins: state.languagePlugins, 
+        resources: state.resources };
     }
+
+    case 'evalstate':
+      Log.trace("Evaluation %s", JSON.stringify(evt))
+      // state.cells.map(cellState => cellState.code.hash == modifiedHash ? cellState.evaluationState)
+      let newCells:Langs.BlockState[] = state.cells.map(cellState => {
+        if (cellState.code.hash != evt.hash)
+          return cellState
+        else {
+          var newCell:Langs.BlockState = { 
+            editor: cellState.editor,
+            code:cellState.code, 
+            exports:cellState.exports, 
+            evaluationState: evt.newState}
+          return newCell
+        }
+      })
+      return { cache:state.cache, 
+        counter: state.counter, 
+        cells: newCells, 
+        contentChanged:state.contentChanged,
+        expandedMenu: state.expandedMenu, 
+        languagePlugins: state.languagePlugins, 
+        resources: state.resources };
 
     case 'toggleadd':
       return { cache: state.cache, counter: state.counter, cells: state.cells,
@@ -225,9 +257,6 @@ async function update(state:NotebookState, evt:NotebookEvent) : Promise<Notebook
       return {cache:state.cache, counter: state.counter+1, expandedMenu:-1,
         cells: newCells, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged, resources: state.resources };
     }
-
-    case 'refresh':
-      return state;
 
     case 'remove':
       return {cache:state.cache, counter: state.counter,
@@ -250,7 +279,7 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
   let maquetteProjector = createProjector();
   let paperElement = document.getElementById(elementID);
   paperElementID = elementID;
-  Log.trace('main', "Looking for element %s", paperElementID)
+  Log.trace('main', "Looking for a element %s", paperElementID)
   let elementNotFoundError:string = "Missing paper element: "+elementID
   if (!paperElement) throw elementNotFoundError
 

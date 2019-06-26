@@ -61,9 +61,11 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
   },
 
   render: (cell: Langs.BlockState, state:ExternalState, context:Langs.EditorContext<ExternalEvent>) => {
-    let previewButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell) }, ["Evaluate"])
+    
+    let previewButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell) }, ["Evaluate!"])
+    let spinner = h('i', {id:'cellSpinner_'+cell.editor.id, class: 'fas fa-spinner fa-spin' }, [])
     let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
-    let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? previewButton : (createOutputPreview(cell, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
+    let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? (cell.evaluationState=='pending')?spinner:previewButton : (createOutputPreview(cell, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
     let code = createMonacoEditor(cell.code.language, state.block.source, cell, context)
     let errors = h('div', {}, [(cell.code.errors.length == 0) ? "" : cell.code.errors.map(err => {return h('p',{}, [err.message])})])
     return h('div', { }, [code, (cell.code.errors.length >0)?errors:preview])
