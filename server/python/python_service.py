@@ -354,16 +354,16 @@ def handle_eval(data):
     output_hash = data["hash"]
     assign_dict = find_assignments(code_string)
     files = data["files"] if "files" in data.keys() else []
-    ## first deal with any files that could contain function def'ns and/or import statements
-    file_content = ""
+    file_content_dict = {}
     for file_url in files:
-        file_content += get_file_content(file_url)
-        file_content += "\n"
+        filename = file_url.split("/")[-1]
+        file_content = get_file_content(file_url)
+        file_content_dict[filename] = file_content
 
     input_frames = data["frames"]
     frame_dict = retrieve_frames(input_frames)
     ## execute the code, get back a dict {"output": <string_output>, "results":<list_of_vals>}
-    results_dict = execute_code(file_content,
+    results_dict = execute_code(file_content_dict,
                                 code_string,
                                 frame_dict,
                                 assign_dict['targets'],
@@ -446,18 +446,34 @@ def construct_func_string(file_contents, code, input_val_dict, return_vars, outp
     return func_string
 
 
-def execute_code(file_contents, code, input_val_dict, return_vars, output_hash, verbose=False):
+def execute_code(file_content_dict, code, input_val_dict, return_vars, output_hash, verbose=False):
     """
     Call a function that constructs a string containing a function definition,
-    then do exec(func_string), then define another string call_string
-    that calls this function,
-    and then finally do eval(call_string)
+    then do exec(func_string), which should mean that the function ('wratttler_f')
+    is defined, and then finally we do eval('wrattler_f()) to execute the function.
+
+    Takes arguments:
+      file_content_dict: is a dict of {<filename>:<content>,...} for files (e.g.
+                         containing function definitions) on the datastore.
+      code: is a string (the code in the cell)
+      input_val_dict: dictionary {<variable_name>: <data_retrieved_from_datastore>, ...}
+      return_vars: list of variable names found by find_assignments(code)
+      output_hash: hash of the cell - will be used to create URL on datastore for outputs.
+      verbose: if True will print out e.g. the function string.
+
     Returns a dictionary:
     {
     "output": <console output>,
     "results": {<frame_name>: <frame>, ... }
     }
     """
+
+    ## first deal with any files that could contain function def'ns and/or import statements
+    file_contents = ""
+    for v in file_content_dict.values():
+        file_contents += v
+        file_contents += "\n"
+
     func_string = construct_func_string(file_contents,
                                         code,
                                         input_val_dict,
@@ -465,7 +481,19 @@ def execute_code(file_contents, code, input_val_dict, return_vars, output_hash, 
                                         output_hash)
     if verbose:
         print(func_string)
-    exec(func_string)
+    try:
+        exec(func_string)
+    except SyntaxError as e:
+        ## there is a problem either with the code fragment or with the file_contents -
+        ## see if we can narrow it down in order to provide a more helpful error msg
+        for fn, fc in file_content_dict.items():
+            try:
+                exec(fc)
+            except SyntaxError as se:
+                output = "SyntaxError when trying to execute imported file: {}".format(fn)
+                raise ApiException(output, status_code=500)
+        output = "SyntaxError when trying to execute code in cell: {}".format(e)
+        raise ApiException(output, status_code=500)
     return_dict = {"output": "", "results": []}
     try:
         with stdoutIO() as s:
