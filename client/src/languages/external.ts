@@ -8,10 +8,76 @@ import {Md5} from 'ts-md5';
 import axios from 'axios';
 import {AsyncLazy} from '../common/lazy';
 import * as Doc from '../services/documentService';
-import { WSAETOOMANYREFS } from 'constants';
-import { LanguageService } from 'typescript';
+
+// ------------------------------------------------------------------------------------------------
+// Helper functions for working with data store 
+// ------------------------------------------------------------------------------------------------
 
 declare var DATASTORE_URI: string;
+
+async function getValue(blob, preview:boolean) : Promise<any> {
+  var pathname = new URL(blob).pathname;
+  let headers = {'Accept': 'application/json'}
+  let url = DATASTORE_URI.concat(pathname)
+  if (preview)
+    url = url.concat("?nrow=10")
+  try {
+    Log.trace("data-store", "Fetching data frame: %s", url)
+    let response = await axios.get(url, {headers: headers});
+  
+    Log.trace("data-store", "Got data frame (%s rows): %s", response.data.length, pathname)
+    return response.data
+  }
+  catch (error) {
+    throw error;
+  }
+}
+
+async function getEval(body, serviceURI ) : Promise<Langs.EvaluationResult> {
+  let url = serviceURI.concat("/eval")
+  let headers = {'Accept': 'application/json'}
+  try {
+    let response = await axios.post(url, body, {headers: headers});        
+    var results : Values.ExportsValue = { kind:"exports", exports:{} }
+    
+    if (response.data.output.toString().length > 0){
+      let printouts : Values.Printout = { kind:"printout", data:response.data.output.toString() }
+      results.exports['console'] = printouts
+    }
+    
+    for(let df of response.data.frames) {
+      let exp : Values.DataFrame = 
+        { kind:"dataframe", url:<string>df.url, 
+          preview: await getValue(df.url, true), // TODO: Just first X rows
+          data: new AsyncLazy<any>(() => getValue(df.url,false)) // TODO: This function is called later when JS calls data.getValue()
+        };
+      if (Array.isArray(exp.preview))
+        results.exports[df.name] = exp
+    }
+    let figureIndex = 0;
+    for(let df of response.data.figures) {
+      let raw = await getValue(df.url,false)
+      let exp : Values.Figure = {kind:"figure", data: raw[0]['IMAGE']};
+      results.exports['figure'+figureIndex.toString()] = exp
+      figureIndex++;
+    }
+    
+    let evalResults:Langs.EvaluationResult = {kind: 'success', value: results} 
+    return evalResults;
+  }
+  catch (error) {
+    if (error.response != null) {
+      let e = {message:<string>error.response.data.error}
+      let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [e]} 
+      return evalResults
+    }
+    else {
+      let e = {message:'Failed to evaluate'}
+      let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [e]} 
+      return evalResults
+    }
+  }
+}
 
 
 // ------------------------------------------------------------------------------------------------
@@ -98,70 +164,6 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
   async evaluate(context:Langs.EvaluationContext, node:Graph.Node) : Promise<Langs.EvaluationResult> {
     let externalNode = <Graph.ExternalNode>node
 
-    async function getValue(blob, preview:boolean) : Promise<any> {
-      var pathname = new URL(blob).pathname;
-      let headers = {'Accept': 'application/json'}
-      let url = DATASTORE_URI.concat(pathname)
-      if (preview)
-        url = url.concat("?nrow=10")
-      try {
-        Log.trace("data-store", "Fetching data frame: %s", url)
-        let response = await axios.get(url, {headers: headers});
-      
-        Log.trace("data-store", "Got data frame (%s rows): %s", response.data.length, pathname)
-        return response.data
-      }
-      catch (error) {
-        throw error;
-      }
-    }
-  
-    async function getEval(body, serviceURI ) : Promise<Langs.EvaluationResult> {
-      let url = serviceURI.concat("/eval")
-      let headers = {'Accept': 'application/json'}
-      try {
-        let response = await axios.post(url, body, {headers: headers});        
-        var results : Values.ExportsValue = { kind:"exports", exports:{} }
-        
-        if (response.data.output.toString().length > 0){
-          let printouts : Values.Printout = { kind:"printout", data:response.data.output.toString() }
-          results.exports['console'] = printouts
-        }
-        
-        for(let df of response.data.frames) {
-          let exp : Values.DataFrame = 
-            { kind:"dataframe", url:<string>df.url, 
-              preview: await getValue(df.url, true), // TODO: Just first X rows
-              data: new AsyncLazy<any>(() => getValue(df.url,false)) // TODO: This function is called later when JS calls data.getValue()
-            };
-          if (Array.isArray(exp.preview))
-            results.exports[df.name] = exp
-        }
-        let figureIndex = 0;
-        for(let df of response.data.figures) {
-          let raw = await getValue(df.url,false)
-          let exp : Values.Figure = {kind:"figure", data: raw[0]['IMAGE']};
-          results.exports['figure'+figureIndex.toString()] = exp
-          figureIndex++;
-        }
-        
-        let evalResults:Langs.EvaluationResult = {kind: 'success', value: results} 
-        return evalResults;
-      }
-      catch (error) {
-        if (error.response != null) {
-          let e = {message:<string>error.response.data.error}
-          let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [e]} 
-          return evalResults
-        }
-        else {
-          let e = {message:'Failed to evaluate'}
-          let evalResults:Langs.EvaluationResult = {kind: 'error', errors: [e]} 
-          return evalResults
-        }
-      }
-    }
-  
     function findResourceURL(fileName): string {
       for (let f = 0; f < context.resources.length; f++) {
         if (context.resources[f].fileName==fileName) {
