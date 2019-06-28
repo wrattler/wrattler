@@ -67,7 +67,12 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>xxx</p>
+						<p>This module contains two helper functions that you can use to create
+							standard user interface for your custom language plugins. Those functions
+							are used by the built-in language plugins for JavaScript, Python and R.
+							The typical way of using those functions is to call them from the
+							<code>render</code> operation of your implementation of the
+						<a href="../interfaces/languages.editor.html"><code>Editor</code></a> interface.</p>
 					</div>
 				</div>
 			</section>
@@ -91,34 +96,54 @@
 					<a name="createmonacoeditor" class="tsd-anchor"></a>
 					<h3>create<wbr>Monaco<wbr>Editor</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Monaco<wbr>Editor<span class="tsd-signature-symbol">(</span>language<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, source<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, cell<span class="tsd-signature-symbol">: </span><a href="../interfaces/languages.blockstate.html" class="tsd-signature-type">BlockState</a>, context<span class="tsd-signature-symbol">: </span><a href="../interfaces/languages.editorcontext.html" class="tsd-signature-type">EditorContext</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">VNode</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Monaco<wbr>Editor<span class="tsd-signature-symbol">(</span>language<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, source<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, block<span class="tsd-signature-symbol">: </span><a href="../interfaces/languages.blockstate.html" class="tsd-signature-type">BlockState</a>, context<span class="tsd-signature-symbol">: </span><a href="../interfaces/languages.editorcontext.html" class="tsd-signature-type">EditorContext</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">VNode</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/2cfd650/client/src/editors/editor.ts#L34">editors/editor.ts:34</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/f9128c8/client/src/editors/editor.ts#L61">editors/editor.ts:61</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>aa</p>
+									<p>The function creates a Monaco code editor. If the language is one of the langauges
+										understood by Monaco, it will automatically use correct syntax highlighting.
+										You will typically call this function from the <code>render</code> operation of your
+										<a href="../interfaces/languages.editor.html"><code>Editor</code></a> implementation. This happens each
+										time any event is triggered, but <code>createMonacoEditor</code> uses Maquette in a way that
+									does not re-create the editor each time rendering occurs.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>language: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The name of a programming language that Monaco should use for
+										syntax highlighting.</p>
+									</div>
 								</li>
 								<li>
 									<h5>source: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Current source code. This is only used when the editor is created
+											for the first time, so you do not need to worry about updating current source
+										code after each keystroke (only after each rebinding).</p>
+									</div>
 								</li>
 								<li>
-									<h5>cell: <a href="../interfaces/languages.blockstate.html" class="tsd-signature-type">BlockState</a></h5>
+									<h5>block: <a href="../interfaces/languages.blockstate.html" class="tsd-signature-type">BlockState</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Code block that owns the editor. This is mainly used to get unique
+										ID of the block and avoid re-creating editor on each <code>render</code>.</p>
+									</div>
 								</li>
 								<li>
 									<h5>context: <a href="../interfaces/languages.editorcontext.html" class="tsd-signature-type">EditorContext</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
 									<div class="tsd-comment tsd-typography">
+										<p>Context passed to the <code>render</code> operation. The editor uses this to
+										trigger rebinding and evaluation when user hits <code>Shift+Enter</code> in the editor.</p>
 									</div>
 								</li>
 							</ul>
@@ -130,27 +155,40 @@
 					<a name="createoutputpreview" class="tsd-anchor"></a>
 					<h3>create<wbr>Output<wbr>Preview</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Output<wbr>Preview<span class="tsd-signature-symbol">(</span>cell<span class="tsd-signature-symbol">: </span><a href="../interfaces/languages.blockstate.html" class="tsd-signature-type">BlockState</a>, triggerSelect<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span>, selectedTab<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, exportedValues<span class="tsd-signature-symbol">: </span><a href="../interfaces/values.exportsvalue.html" class="tsd-signature-type">ExportsValue</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">VNode</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Output<wbr>Preview<span class="tsd-signature-symbol">(</span>block<span class="tsd-signature-symbol">: </span><a href="../interfaces/languages.blockstate.html" class="tsd-signature-type">BlockState</a>, triggerSelect<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span>, selectedTab<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, exportedValues<span class="tsd-signature-symbol">: </span><a href="../interfaces/values.exportsvalue.html" class="tsd-signature-type">ExportsValue</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">VNode</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/2cfd650/client/src/editors/editor.ts#L22">editors/editor.ts:22</a></li>
+									<li>Defined in <a href="https://github.com/wrattler/wrattler/blob/f9128c8/client/src/editors/editor.ts#L37">editors/editor.ts:37</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>aa</p>
+									<p>The function creates a preview displaying the outputs of a given code block.
+										It supports all of the <a href="../modules/values.html#knownvalue"><code>KnownValue</code></a> objects,
+										i.e. data frames, figures, JavaScript components and console printouts. When
+										using this function, you need to keep the index of selected tab as part of your
+										editor state and you also need to define an event to modify the selected tab
+									index.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>cell: <a href="../interfaces/languages.blockstate.html" class="tsd-signature-type">BlockState</a></h5>
+									<h5>block: <a href="../interfaces/languages.blockstate.html" class="tsd-signature-type">BlockState</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Specifies the code block for which we ware generating preview</p>
+									</div>
 								</li>
 								<li>
 									<h5>triggerSelect: <span class="tsd-signature-type">function</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>This function is called whenever the user clicks on a
+											different tab. It should trigger an event that updates the selected tab in your
+										editor state.</p>
+									</div>
 									<ul class="tsd-parameters">
 										<li class="tsd-parameter-siganture">
 											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
@@ -172,10 +210,17 @@
 								</li>
 								<li>
 									<h5>selectedTab: <span class="tsd-signature-type">number</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Index of a currently selected tab. The first tab has index
+										0, so if you only ever export a single tab, you can set this to <code>0</code>.</p>
+									</div>
 								</li>
 								<li>
 									<h5>exportedValues: <a href="../interfaces/values.exportsvalue.html" class="tsd-signature-type">ExportsValue</a></h5>
 									<div class="tsd-comment tsd-typography">
+										<p>The value to display. You can typically obtain it by
+											accessing <code>&lt;Values.ExportsValue&gt;block.code.value</code>, but make sure this is not
+										<code>null</code>.</p>
 									</div>
 								</li>
 							</ul>

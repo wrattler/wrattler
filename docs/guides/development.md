@@ -1,9 +1,11 @@
 ---
 layout: default
-title: Welcome
+title: Building and modifying Wrattler
 ---
 
-# How to run Wrattler via Docker(-compose)
+# Building and modifying Wrattler
+
+## How to run Wrattler via Docker(-compose)
 
 **NOTE: This is heavily outdated**
 

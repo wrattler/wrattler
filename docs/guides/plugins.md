@@ -623,7 +623,42 @@ evaluate: async (context:Langs.EvaluationContext, node:Graph.Node)
 }
 ```
 
+We start by casting the provided graph node to `MergerNode` (which will always
+work because Wrattler only calls our plugin for graph nodes that we created).
+We construct two kinds of nodes, so we need to handle two cases:
 
+- The value of the first node, representing the whole code block is of type
+  [`ExportsValue`](../api/interfaces/values.exportsvalue.html). This keeps 
+  values of all variables that are exported from the code block. We collect
+  all imported values by looking at node's `antecedents`, call `mergeDataFrames`
+  and then construct a dictionary with just one key-value pair for the single
+  exported data frame.
+
+- The second node represents a single exported data frame, i.e. a value of type
+  [`DataFrame`](../api/interfaces/values.dataframe.html). Note that you can similarly
+  export [figures](../api/interfaces/values.figure.html), [console 
+  printouts](../api/interfaces/values.printout.html) or [JavaScript 
+  views](../api/interfaces/values.javascriptoutputvalue.html). In our implementation,
+  the "exported data frame" graph node depends on the "code block" graph node
+  and so we can get the `ExportsValue` value and extract the previously evaluated
+  data frame. In other plugins, the dependency graph can be more fine grained and
+  using an exported variable might not require evaluating all code in the code block.
+
+The last bit of code that we need to add is the `mergeDataFrames` function. 
+Wrattler stores data passed between code blocks in _data store_, which is an
+HTTP service, independent of individual language plugins. This way, the data can
+easily be shared between multiple languages including both services that run in the
+browser and services that run as independent processes.
+
+The [`DataFrame`](../api/interfaces/values.dataframe.html) type stores `url` of 
+the data stored in a data store. For convenient way of working with it in the 
+browser, it also has (always available) `preview` with first few rows and 
+`data`, which is an `AsyncLazy` value - it has a method `getValue` which 
+returns a JavaScript promise that will either return the data (if it is already
+available on the client) or fetch it from the data store.
+
+We define a helper `putValue` that stores data in the data store and then
+use it in `mergeDataFrames`:
 
 ```typescript
 declare var DATASTORE_URI: string;
@@ -653,10 +688,41 @@ async function mergeDataFrames(variableName:string, hash:string,
 }
 ```
 
+The `DATASTORE_URI` variable is set by WebPack and represents the URL where the 
+data store service runs. To put data into the data store, we send a `PUT` request to 
+`http://data-store/<hash>/<var>` where `<hash>` is the hash of the code block 
+that created the data frame and `<var>` is the variable name. You can send data
+in JSON format as array of records using `application/json` content type, or in 
+the [Apache Arrow](https://arrow.apache.org) format using `application/octet-stream` 
+content type.
+
+To merge input data frames, we create a new array `allData`, iterate over 
+all the inputs and call `getValue` on all inputs that are data frames. This returns
+a promise, so we need to use `await` to get the actual data (we could do this in 
+parallel, but that would make the sample more complicated). We then construct 
+`AsyncLazy` value that, when called, returns the full dataset and `preview` 
+containing the first 100 rows. 
+
+If you run the code now, you should be able to use our Merger plugin and then access
+the merged data frame from another language - in the following screenshot, the 
+Python runtime (which runs as a separate service) fetches data from the data store:
 
 <img src="plugins/step3.png" class="screenshot">
 
-## Step 4
+## Step 4: Using standard editor components
+
+In Step 2 of this tutorial, we implemented a fully custom editor for our language 
+plugin. This illustrates some of the capabilities of Wrattler - if you want, you can
+extend it with rich interactive data exploration tools. However, it is also easy
+to reuse some of the standard Wrattler components.
+
+To briefly illustrate this, we can replace the earlier implementation of `render`
+with a much simpler one that uses two functions from the 
+[`Editor`](../api/modules/editor.html) module exported by Wrattler;
+`createMonacoEditor` creates a text editor based on the [Monaco editor](https://microsoft.github.io/monaco-editor/)
+and `createOutputPreview` generates tabs that show previews of all exported
+data frames, figures and console printouts.
+
 
 ```typescript
 render: (block:Langs.BlockState, state:MergerState, 
@@ -664,20 +730,36 @@ render: (block:Langs.BlockState, state:MergerState,
   let mergerNode = <MergerCodeNode>block.code
   let source = state.newName + "=" +
     Object.keys(state.selected).filter(s => state.selected[s]).join(",")
+
   let evalButton = h('button', 
-    { class:'preview-button', 
-      onclick:() => context.evaluate(block) }, 
+    { class:'preview-button', onclick:() => 
+        context.evaluate(block.editor.id) }, 
     ["Evaluate"])
+
   return h('div', {}, [
     h('div', {key:'ed'}, [ 
       Editor.createMonacoEditor("merger", source, block, context) ]),
     h('div', {key:'prev'}, [
       (block.code.value == null) ? evalButton :
-        Editor.createOutputPreview(block, (_) => 
+        Editor.createOutputPreview(block, (idx) => 
           { }, 0, <Values.ExportsValue>block.code.value)
     ])
   ]);
 }
 ```
+
+The function creates a text editor followed by either a preview (when the block 
+has been evaluated) or a button that triggers the evaluation (if the value is 
+not set). The second and third arguments of the `createOutputPreview` function 
+are needed if the block can produce multiple outputs (and hence multiple tabs).
+This is not the case for our plugin. For other plugins, you will need to keep the
+selected tab index in the editor state and define an event to update it. 
+The second argument will be a function that triggers the event and sets the selected
+tab index to `idx` and the third argument will be the selected index.
+
+As you can see in the following screenshot, we can now edit the code associated
+with the merger plugin directly in the text form `out=in1,...,ink` and when we
+evaluate it, we see a preview that looks the same as previews for standard 
+Wrattler code blocks:
 
 <img src="plugins/step4.png" class="screenshot">
