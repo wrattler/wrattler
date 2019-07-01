@@ -9,7 +9,7 @@ var errorMsg = "{0} missing in package.json";
 
 var config = {
   entry: { 
-    "app": "../src/main.ts",
+    "app": "../src/wrattler.ts",
     // "editor.worker": 'monaco-editor/esm/vs/editor/editor.worker.js',
   },
   publicDir: resolve("../public"),

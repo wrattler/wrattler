@@ -41,15 +41,18 @@ class MarkdownBlockKind implements Langs.Block {
       scrollbar: {
         verticalHasArrows: true,
         horizontalHasArrows: true,
-        vertical: 'none',
-        horizontal: 'none'
+        vertical: 'hidden',
+        horizontal: 'hidden'
       }
     });    
 
     ed.createContextKey('alwaysTrue', true);
     ed.addCommand(monaco.KeyCode.Enter | monaco.KeyMod.Shift,function (e) {
-      let code = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF)
-      context.trigger({kind: 'update', source: code})
+      let model = ed.getModel()
+      if (model) {
+        let code = model.getValue(monaco.editor.EndOfLinePreference.LF)
+        context.trigger({kind: 'update', source: code})
+      }
     }, 'alwaysTrue');
   
     return ed;
@@ -107,18 +110,22 @@ class MarkdownBlockKind implements Langs.Block {
         let afterCreateHandler = (el) => { 
           let ed = createMonaco(el, state.block.source, context)
           let resizeEditor = () => {
-            let lines = ed.getModel().getValue(monaco.editor.EndOfLinePreference.LF, false).split('\n').length
-            let height = lines * 20.0;
-            let width = el.clientWidth
+            let model = ed.getModel()
+            if (model) {
+              let lines = model.getValue(monaco.editor.EndOfLinePreference.LF, false).split('\n').length
+              let height = lines * 20.0;
+              let width = el.clientWidth
 
-            if (height !== lastHeight || width !== lastWidth) {
-              lastHeight = height
-              lastWidth = width  
-              ed.layout({width:width, height:height})
-              el.style.height = height + "px"
+              if (height !== lastHeight || width !== lastWidth) {
+                lastHeight = height
+                lastWidth = width  
+                ed.layout({width:width, height:height})
+                el.style.height = height + "px"
+              }
             }
           }
-          ed.getModel().onDidChangeContent(resizeEditor);
+          let model = ed.getModel()
+          if (model) model.onDidChangeContent(resizeEditor);
           resizeEditor();
         }
         return h('div', {}, [

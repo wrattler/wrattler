@@ -1,9 +1,11 @@
 title: Wrattler
-baseurl: ""
+baseurl: /wrattler
 url: "https://tbd"
 
 # Build settings
 markdown: kramdown
+highlighter: rouge
+
 theme: minima
 gems:
   - jekyll-feed

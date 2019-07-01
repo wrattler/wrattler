@@ -2,8 +2,7 @@ import {h,VNode} from 'maquette';
 import * as Langs from '../definitions/languages';
 import * as Graph from '../definitions/graph';
 import * as Values from '../definitions/values';
-import {createEditor} from '../editors/editor';
-import {printPreview} from '../editors/preview';
+import {createOutputPreview, createMonacoEditor} from '../editors/editor';
 
 // import Plotly from 'Plotly';
 import ts, { createNoSubstitutionTemplateLiteral } from 'typescript';
@@ -181,10 +180,14 @@ class JavascriptBlockKind implements Langs.Block {
     },
 
     render: (cell: Langs.BlockState, state:JavascriptState, context:Langs.EditorContext<JavascriptEvent>) => {
-      let previewButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell) }, ["Evaluate"])
+      let previewButton = h('button', 
+        { class:'preview-button', onclick:() => { 
+            Log.trace("editor", "Evaluate button clicked in external language plugin")
+            context.evaluate(cell.editor.id) } }, ["Evaluate!"] )
+      let spinner = h('i', {id:'cellSpinner_'+cell.editor.id, class: 'fas fa-spinner fa-spin' }, [])
       let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
-      let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? previewButton : (printPreview(cell.editor.id, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
-      let code = createEditor("javascript", state.block.source, cell, context)
+      let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? (cell.evaluationState=='pending')?spinner:previewButton : (createOutputPreview(cell, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
+      let code = createMonacoEditor("javascript", state.block.source, cell, context)
       return h('div', { }, [code, preview])
     }
   }
@@ -214,7 +217,7 @@ class JavascriptBlockKind implements Langs.Block {
         }
       }
 
-      async function putValues(values) : Promise<Values.ExportsValue> {
+      async function putValues(values:{ (key:string) : any[] }) : Promise<Values.ExportsValue> {
         try {
           var results : Values.ExportsValue = { kind:"exports", exports:{} }
           for (let value in values) {
@@ -224,7 +227,7 @@ class JavascriptBlockKind implements Langs.Block {
             var exp : Values.DataFrame = {
               kind:"dataframe", 
               url: df_url, 
-              data: values[value], 
+              data: new AsyncLazy(async () => values[value]), 
               preview:values[value].slice(0, 10)
             }
             results.exports[value] = exp
@@ -294,7 +297,7 @@ class JavascriptBlockKind implements Langs.Block {
           }
 
           evalCode = "(function f(addOutput, args) {\n\t " + importedVars + "\n" + importedResourceContent + "\n" +strippedSrc + "\n" + returnArgs + "\n})"
-          let values : Values.ExportsValue = eval(evalCode)(addOutput, argDictionary);
+          let values : { (key:string) : any[] } = eval(evalCode)(addOutput, argDictionary);
           let exports = await putValues(values)
           for(let i = 0; i < outputs.length; i++) {
             var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: outputs[i] }

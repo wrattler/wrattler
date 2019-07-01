@@ -256,7 +256,7 @@ interface EditorContext<TEvent> {
   trigger(event:TEvent) : void
   
   /** Trigger the evaluation of a given code block. */
-  evaluate(block:BlockState) : void
+  evaluate(blockId:number) : void
 
   /** Set the source of a given code block to the `newSource` and trigger rebinding
    * of all subsequent code blocks in a notebook. */
@@ -272,8 +272,8 @@ interface EditorContext<TEvent> {
 interface EditorState {
   /** Unique ID of the block. This can be used to create 
    * unique Virutal DOM IDs during rendering */
-
   id: number
+
   /** The block for which this editor was created */
   block: Block;
 }
@@ -287,6 +287,8 @@ interface BlockState {
   /** The state of the editor associated with this block 
    * (also includes a reference to the block itself and its unique ID) */
   editor: EditorState
+
+  evaluationState: "unevaluated" | "pending" | "done"
 
   /** The dependency graph node created for the block as a whole */
   code: Graph.Node

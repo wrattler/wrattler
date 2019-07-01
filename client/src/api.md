@@ -6,7 +6,7 @@ as part of Wrattler notebooks. Furthermore, Wrattler can also be instantiated an
 used as part of a web page containing other content.  This API documentation describes 
 the most important types that you need if you want to extend or use Wrattler.
 
-### Wrattler notebdook
+### Wrattler notebook
 
 The [`Main` module](modules/main.html) contains types that you need to create new instances
 of Wrattler notebooks in browser using JavaScript, get notified when the contents of such
@@ -34,3 +34,10 @@ need to evaluate code. In Wrattler, all evaluated results are linked with the de
 meaning that they are invalidated when the code chages. Each language plugin can define its own
 custom types of values to use internally, but it can also use some standard Wrattler value types,
 for example to represent data frames, figures or console outputs.
+
+### Editor helpers
+
+The [`Editor` module](modules/editor.html) module exposes two reusable user interface elements
+that you can use when creating the user interface for a custom language plugin. The first is 
+a function to create a text editor based on the [Monaco editor](https://microsoft.github.io/monaco-editor/)
+and the second one lets you create tabs that display previews for all the exports of a code block.
