@@ -222,3 +222,40 @@ def test_syntax_error_in_code():
                                    output_hash)
 
         assert('code in cell' in exc.message)
+
+
+def test_html_output_string():
+    """
+    Test the addOutput functionality with a string argument
+    """
+    input_code = 'addOutput("<html></html>")\n'
+    input_vals = {}
+    file_contents = {}
+    return_targets = find_assignments(input_code)["targets"]
+    output_hash = "irrelevant"
+    result_dict = execute_code(file_contents,
+                               input_code,
+                               input_vals,
+                               return_targets,
+                               output_hash)
+
+    assert('html_output' in result_dict.keys())
+
+
+def test_html_output_wrong_type():
+    """
+    Test the addOutput functionality with a string argument
+    """
+    input_code = 'addOutput(42)\n'
+    input_vals = {}
+    file_contents = {}
+    return_targets = find_assignments(input_code)["targets"]
+    output_hash = "irrelevant"
+    with pytest.raises(ApiException) as exc:
+        result_dict = execute_code(file_contents,
+                                   input_code,
+                                   input_vals,
+                                   return_targets,
+                                   output_hash)
+
+        assert('code in cell' in exc.message)

@@ -421,7 +421,16 @@ def construct_func_string(file_contents, code, input_val_dict, return_vars, outp
     func_string += "    import os\n"
     func_string += "    import contextlib\n"
     func_string += "    import matplotlib\n"
+    func_string += "    import IPython\n"
     func_string += "    matplotlib.use('Cairo')\n\n"
+    func_string += "    wrattler_return_dict = {}\n\n"
+    func_string += "    def addOutput(html_output):\n"
+    func_string += "        if isinstance(html_output, str):\n"
+    func_string += "           wrattler_return_dict['html_output'] = html_output\n"
+    func_string += "        elif isinstance(html_output, IPython.core.display.HTML):\n"
+    func_string += "           wrattler_return_dict['html_output'] = html_output.data\n"
+    func_string += "        else:\n"
+    func_string += "           raise ApiException('Unknown html_output format - please call addOutput with either an html string, or an IPython.core.display.HTML object')\n\n"
     ## add the contents of any files, ensuring correct indentation
     func_string += indent_code(file_contents)
     for k,v in input_val_dict.items():
@@ -439,10 +448,11 @@ def construct_func_string(file_contents, code, input_val_dict, return_vars, outp
     func_string += "            os.rmdir(os.path.join('{}','{}'))\n".format(TMPDIR,output_hash)
     func_string += "            pass\n"
     func_string += "        pass\n"
-    func_string += "    return {"
+    func_string += "    wrattler_return_dict['frames'] = {"
     for rv in return_vars:
         func_string += "'{}':{},".format(rv,rv)
     func_string += "}\n"
+    func_string += "    return wrattler_return_dict"
     return func_string
 
 
@@ -500,8 +510,10 @@ def execute_code(file_content_dict, code, input_val_dict, return_vars, output_ha
             ### wrapping function wrattler_f should now be in the namespace
             func_output = eval('wrattler_f()')
             return_dict["output"] = s.getvalue().strip()
+            if "html_output" in func_output.keys():
+                return_dict['html_output'] = func_output['html_output']
             return_dict["results"] = {}
-            for k,v in func_output.items():
+            for k,v in func_output['frames'].items():
                 result = convert_from_pandas(v)
                 if result:
                     return_dict["results"][k] = result
