@@ -239,8 +239,8 @@ def test_html_output_string():
                                return_targets,
                                output_hash)
 
-    assert('html_output' in result_dict.keys())
-
+    assert('html' in result_dict.keys())
+    assert(result_dict["html"]=="<html></html>")
 
 def test_html_output_wrong_type():
     """
