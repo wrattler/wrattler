@@ -23,7 +23,9 @@ function printCurrentValue(cellId:number, value:Values.KnownValue, tableName:str
     case "printout":
       return h('div', {key: "printout"+componentRootId}, [h('pre', {}, [value.data])])
     case "jsoutput":
-      let callRender = (el) => value.render(el.id);
+      let callRender = (el) => {
+        value.render(el.id)
+      };
       return h('div', {key: "jsoutputs"+componentRootId}, [
         h('div', {key: "jsoutput"+componentRootId, id: "output_" + cellId.toString() + "_" + tableName, afterCreate:callRender, afterUpdate:callRender }, [])
       ])
