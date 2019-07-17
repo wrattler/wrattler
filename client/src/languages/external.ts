@@ -77,7 +77,7 @@ async function getEval(body, serviceURI) : Promise<Langs.EvaluationResult> {
     }
 
     if (response['html'])
-      if (response.html.toString().length > 0){
+      if (JSON.stringify(response.html) !=  "{}"){
         var output : ((id:string) => void) = function(f) {
           let element:HTMLElement | null= document.getElementById(f)
           if (element)
@@ -86,7 +86,6 @@ async function getEval(body, serviceURI) : Promise<Langs.EvaluationResult> {
         var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: output }
         results.exports["output"] = exp
       }
-    
     let evalResults:Langs.EvaluationResult = {kind: 'success', value: results} 
     return evalResults;
   }
