@@ -49,10 +49,16 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
     documents.push(cellCode);
     currentPos = end
   }
-
+  
   if (currentPos < paragraph.length-1 && paragraph.substring(currentPos).trim() != "") {
     documents.push({language: "markdown", source: paragraph.substring(currentPos)})
   }
+
+  if (documents.length == 0) {
+    documents.push({language: "markdown", source: "Wellcome to Wrattler" })
+  }
+
+
   return documents;
 }
 
