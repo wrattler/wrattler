@@ -1,7 +1,7 @@
 /** @hidden */
 
 /** This comment is needed so that TypeDoc parses the above one correctly */
-import { h,createProjector } from 'maquette'
+import { h,createProjector, VNode } from 'maquette'
 import { Log } from "./common/log"
 import * as Langs from './definitions/languages'
 import * as Graph from './definitions/graph'
@@ -116,7 +116,29 @@ async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resour
 
 function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
   Log.trace("main", "Rendering %d cells", state.cells.length)
-  let nodes = state.cells.map(cell => {
+
+  function renderControlsBar() {
+    let langs = Object.keys(state.languagePlugins).map(lang =>
+      h('a', {
+          key:"add-" + lang,
+          onclick:()=>trigger({kind:'add', id:-1, language:lang})},
+        [ h('i', {'class':'fa fa-plus'}), lang ]))
+
+    let cmds = [
+      h('a', {key:"add", onclick:()=>trigger({kind:'toggleadd', id:-1})},[h('i', {'class':'fa fa-plus'}), "add below"]),
+    ]
+
+    let tools = state.expandedMenu == -1 ? langs : cmds;
+    let controls = h('div', {class:'controls'}, tools)
+
+    return h('div', {id: "controls_default", class:'controls-bar', key:"controls_default"}, [controls])
+  }
+  
+  let defaultControl:VNode = h('div', {id: 'add_default', class:'cell cell-c-default', key: 'add_default'}, [
+    renderControlsBar()
+  ]);
+
+  let nodes:Array<VNode> = state.cells.map(cell => {
     let context : Langs.EditorContext<any> = {
       trigger: (event:any) =>
         trigger({ kind:'block', id:cell.editor.id, event:event }),
@@ -150,15 +172,15 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
     ])
 
     let langs = Object.keys(state.languagePlugins).map(lang =>
-        h('a', {
-            key:"add-" + lang,
-            onclick:()=>trigger({kind:'add', id:cell.editor.id, language:lang})},
-          [ h('i', {'class':'fa fa-plus'}), lang ]))
-      .concat(
-        h('a', {
-            key:"cancel",
-            onclick:()=>trigger({kind:'toggleadd', id:-1})},
-          [h('i', {'class':'fa fa-times'}), "cancel"]))
+      h('a', {
+          key:"add-" + lang,
+          onclick:()=>trigger({kind:'add', id:cell.editor.id, language:lang})},
+        [ h('i', {'class':'fa fa-plus'}), lang ]))
+    .concat(
+      h('a', {
+          key:"cancel",
+          onclick:()=>trigger({kind:'toggleadd', id:-1})},
+        [h('i', {'class':'fa fa-times'}), "cancel"]))
 
     let cmds = [
       h('a', {key:"add", onclick:()=>trigger({kind:'toggleadd', id:cell.editor.id})},[h('i', {'class':'fa fa-plus'}), "add below"]),
@@ -167,27 +189,37 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
 
     let tools = state.expandedMenu == cell.editor.id ? langs : cmds;
     let controls = h('div', {class:'controls'}, tools)
+    let controlsBar = h('div', {class:'controls-bar', key:"controls_"+cell.editor.id}, [controls])
+    let iconsBar = h('div', {class:'icons-bar', key:"icons_"+cell.editor.id}, [icons, move])
+    let contentBar = h('div', {class:'content-bar', key:"content_"+cell.editor.id}, [content])
 
-    let controlsBar = h('div', {class:'controls-bar'}, [controls])
-    let iconsBar = h('div', {class:'icons-bar'}, [icons, move])
-    let contentBar = h('div', {class:'content-bar'}, [content])
     let langIndex = Object.keys(state.languagePlugins).indexOf(cell.editor.block.language) % 5;
     return h('div', {class:'cell cell-c' + langIndex, key:cell.editor.id}, [
         iconsBar, contentBar, controlsBar
       ]
     );
   });
-  return h('div', {class:'container-fluid', id:paperElementID}, [nodes])
+  return h('div', {class:'container-fluid', id:paperElementID}, [defaultControl, nodes])
 }
 
 async function update(trigger:(evt:NotebookEvent) => void,
     state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
 
   function spliceEditor (editors:Langs.EditorState[], newEditor: Langs.EditorState, idOfAboveBlock: number) {
-    return editors.map (editor => {
+    if (idOfAboveBlock > -1) {
+      return editors.map (editor => {
         if (editor.id === idOfAboveBlock) return [editor, newEditor];
         else return [editor]
       }).reduce ((a,b)=> a.concat(b));
+    }
+    else {
+      return editors.map (editor => {
+        if (editor.id === 0) return [newEditor,editor];
+        else return [editor]
+      }).reduce ((a,b)=> a.concat(b));
+      // editors.unshift(newEditor)
+      // return editors
+    }
   }
 
   function moveUpEditor (editors: Langs.EditorState[], selectedEditor: Langs.EditorState, idOfSelectedBlock:number) {
@@ -296,8 +328,7 @@ async function update(trigger:(evt:NotebookEvent) => void,
         resources: state.resources };
 
     case 'toggleadd':
-      return { cache: state.cache, counter: state.counter, cells: state.cells,
-        expandedMenu: evt.id, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged, resources: state.resources };
+      return {...state, expandedMenu: evt.id};
 
     case 'move': {
       let newEditors: Langs.EditorState[] = []
@@ -317,6 +348,7 @@ async function update(trigger:(evt:NotebookEvent) => void,
     }
 
     case 'add': {
+      console.log(evt)
       let newId = state.counter + 1;
       let lang = state.languagePlugins[evt.language];
       let newDocument = { "language": evt.language, "source": lang.getDefaultCode(newId) };
