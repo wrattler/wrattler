@@ -18,8 +18,6 @@ var one = [{'name':'Joe', 'age':50}]
 
 ```python
 two = pd.DataFrame({"name":["Jim"], "age":[51]})
-df another():
-    return True
 ```
 
 ```r

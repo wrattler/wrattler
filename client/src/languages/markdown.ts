@@ -101,13 +101,16 @@ class MarkdownBlockKind implements Langs.Block {
 
       if (!state.editing) {
         // If we are not in edit mode, we just render a VNode and return no-op handler
-        return h('div', {}, [
-          h('p', {innerHTML: marked(state.block.source), onclick:() => context.trigger({kind:'edit'})}, ["Edit"]),
-        ] )
+        Log.trace("editor", "Creating Monaco editor for id: %s (code: %s)", cell.editor.id, state.block.source.replace(/[\n\r]/g," ").substr(0,100))
+        return h('p', {id: "viewer_" + cell.editor.id.toString(),
+            innerHTML: marked(state.block.source), 
+            onclick:() => context.trigger({kind:'edit'})}, ["Edit"])
+        
       } else {
         let lastHeight = 100;
         let lastWidth = 0
         let afterCreateHandler = (el) => { 
+          Log.trace("editor", "Creating Monaco editor for id: %s (code: %s)", el.id, state.block.source.replace(/[\n\r]/g," ").substr(0,100))
           let ed = createMonaco(el, state.block.source, context)
           let resizeEditor = () => {
             let model = ed.getModel()
@@ -128,9 +131,8 @@ class MarkdownBlockKind implements Langs.Block {
           if (model) model.onDidChangeContent(resizeEditor);
           resizeEditor();
         }
-        return h('div', {}, [
-          h('div', { id: "editor_" + state.id.toString(), afterCreate:afterCreateHandler }, [ ])
-        ] )      
+        return h('div', { id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
+        
       }
     }
   }

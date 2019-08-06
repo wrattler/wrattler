@@ -6,12 +6,14 @@ import { Log } from "./common/log"
 import * as Langs from './definitions/languages'
 import * as Graph from './definitions/graph'
 import * as Docs from './services/documentService'
+import { editor } from 'monaco-editor';
 
 // ------------------------------------------------------------------------------------------------
 // Notebook user interface state and event type
 // ------------------------------------------------------------------------------------------------
 
 interface NotebookAddEvent { kind:'add', id: number, language:string }
+interface NotebookMoveEvent { kind:'move', cell: Langs.BlockState, direction:"up"|"down"}
 interface NotebookToggleAddEvent { kind:'toggleadd', id: number }
 interface NotebookRemoveEvent { kind:'remove', id: number }
 interface NotebookBlockEvent { kind:'block', id:number, event:any }
@@ -21,7 +23,7 @@ interface NotebookSourceChange { kind:'rebind', block: Langs.BlockState, newSour
 
 type NotebookEvent =
   NotebookAddEvent | NotebookToggleAddEvent | NotebookRemoveEvent | NotebookUpdateTriggerEvalEvent |
-  NotebookBlockEvent | NotebookUpdateEvalStateEvent | NotebookSourceChange
+  NotebookBlockEvent | NotebookUpdateEvalStateEvent | NotebookSourceChange | NotebookMoveEvent
 
 type LanguagePlugins = { [lang:string] : Langs.LanguagePlugin }
 
@@ -134,6 +136,19 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
       h('span', {}, [cell.editor.block.language] )
     ])
 
+    let move = h('div', {class:'move'}, [
+      h('i', {
+        id:'moveUp_'+cell.editor.id, 
+        class: 'fa fa-arrow-up', 
+        onclick:()=>{trigger({ kind:'move', cell: cell, direction:"up" })}
+      }, []),
+      h('i', {
+        id:'moveDown_'+cell.editor.id, 
+        class: 'fa fa-arrow-down',
+        onclick:()=>{trigger({ kind:'move', cell: cell, direction:"down"})}
+      }, []),
+    ])
+
     let langs = Object.keys(state.languagePlugins).map(lang =>
         h('a', {
             key:"add-" + lang,
@@ -154,7 +169,7 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
     let controls = h('div', {class:'controls'}, tools)
 
     let controlsBar = h('div', {class:'controls-bar'}, [controls])
-    let iconsBar = h('div', {class:'icons-bar'}, [icons])
+    let iconsBar = h('div', {class:'icons-bar'}, [icons, move])
     let contentBar = h('div', {class:'content-bar'}, [content])
     let langIndex = Object.keys(state.languagePlugins).indexOf(cell.editor.block.language) % 5;
     return h('div', {class:'cell cell-c' + langIndex, key:cell.editor.id}, [
@@ -173,6 +188,61 @@ async function update(trigger:(evt:NotebookEvent) => void,
         if (editor.id === idOfAboveBlock) return [editor, newEditor];
         else return [editor]
       }).reduce ((a,b)=> a.concat(b));
+  }
+
+  function moveUpEditor (editors: Langs.EditorState[], selectedEditor: Langs.EditorState, idOfSelectedBlock:number) {
+    let idOfEditorAbove:number = 0
+    let previousEditorID: number = 0
+    for (let e = 0; e < editors.length; e++) {
+      if (editors[e].id == idOfSelectedBlock){
+        idOfEditorAbove = previousEditorID
+      }
+      previousEditorID = editors[e].id
+    }
+    
+    let editorAbove:Langs.EditorState = editors[idOfEditorAbove]
+  
+    let newEditorState:Langs.EditorState[] = editors.map (editor => {
+      if (editor.id === editorAbove.id) {
+        return [selectedEditor];
+      }
+      if (editor.id === idOfSelectedBlock) {
+        return [editorAbove] 
+      }
+      else return [editor]
+    }).reduce ((a,b)=> a.concat(b))
+
+    newEditorState.map((es,index)=>es.id=index)
+    // console.log(newEditorState)
+    return newEditorState
+  }
+
+  function moveDownEditor (editors: Langs.EditorState[], selectedEditor: Langs.EditorState, idOfSelectedBlock:number) {
+    let idOfEditorBelow:number = 0
+    let subsequentEditorID: number = 0
+    for (let e = editors.length-1; e >= 0; e--) {
+      if (editors[e].id == idOfSelectedBlock){
+        idOfEditorBelow = subsequentEditorID
+      }
+      subsequentEditorID = editors[e].id
+    }
+    
+    let editorBelow:Langs.EditorState = editors[idOfEditorBelow]
+  
+    let newEditorState:Langs.EditorState[] = editors.map (editor => {
+      if (editor.id === editorBelow.id) {
+        return [selectedEditor];
+      }
+      if (editor.id === idOfSelectedBlock) {
+        return [editorBelow] 
+      }
+      else return [editor]
+    }).reduce ((a,b)=> a.concat(b))
+
+    newEditorState.map((es,index)=>es.id=index)
+
+    console.log(newEditorState)
+    return newEditorState
   }
 
   function removeCell (cells:Langs.BlockState[], idOfSelectedBlock: number) {
@@ -228,6 +298,23 @@ async function update(trigger:(evt:NotebookEvent) => void,
     case 'toggleadd':
       return { cache: state.cache, counter: state.counter, cells: state.cells,
         expandedMenu: evt.id, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged, resources: state.resources };
+
+    case 'move': {
+      let newEditors: Langs.EditorState[] = []
+      if ((state.cells[0].editor.id == evt.cell.editor.id) && (evt.direction == 'up')) 
+        return {...state};
+
+      if ((state.cells[state.cells.length-1].editor.id == evt.cell.editor.id) && (evt.direction == 'down')) 
+        return {...state};
+      
+      if (evt.direction == 'up')
+        newEditors = moveUpEditor(state.cells.map(c => c.editor), evt.cell.editor, evt.cell.editor.id)
+      else 
+        newEditors = moveDownEditor(state.cells.map(c => c.editor), evt.cell.editor, evt.cell.editor.id)
+
+      let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resources)
+      return {...state, cells: newCells, resources: updatedResources};
+    }
 
     case 'add': {
       let newId = state.counter + 1;
