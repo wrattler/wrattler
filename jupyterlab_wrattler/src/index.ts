@@ -16,6 +16,7 @@ export const MIME_TYPE = 'text/plain';
 
 
 class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
+  
   /**
    * Construct a new xkcd widget.
    */
@@ -104,7 +105,7 @@ const extensions: IRenderMime.IExtension | IRenderMime.IExtension[] = [
 ];
 
 export default extensions;
-
+console.log("hello may")
 class PrivateWrattler {
   
   elementID: string
