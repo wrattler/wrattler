@@ -206,20 +206,23 @@ async function update(trigger:(evt:NotebookEvent) => void,
     state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
 
   function spliceEditor (editors:Langs.EditorState[], newEditor: Langs.EditorState, idOfAboveBlock: number) {
+    let newEditorState:Langs.EditorState[] = []
     if (idOfAboveBlock > -1) {
-      return editors.map (editor => {
+      newEditorState = editors.map (editor => {
         if (editor.id === idOfAboveBlock) return [editor, newEditor];
         else return [editor]
       }).reduce ((a,b)=> a.concat(b));
+      newEditorState.map((es,index)=>es.id=index)
+      return newEditorState
     }
     else {
-      return editors.map (editor => {
+      newEditorState = editors.map (editor => {
         if (editor.id === 0) return [newEditor,editor];
         else return [editor]
       }).reduce ((a,b)=> a.concat(b));
-      // editors.unshift(newEditor)
-      // return editors
     }
+    newEditorState.map((es,index)=>es.id=index)
+    return newEditorState
   }
 
   function moveUpEditor (editors: Langs.EditorState[], selectedEditor: Langs.EditorState, idOfSelectedBlock:number) {
@@ -348,7 +351,6 @@ async function update(trigger:(evt:NotebookEvent) => void,
     }
 
     case 'add': {
-      console.log(evt)
       let newId = state.counter + 1;
       let lang = state.languagePlugins[evt.language];
       let newDocument = { "language": evt.language, "source": lang.getDefaultCode(newId) };
@@ -357,8 +359,9 @@ async function update(trigger:(evt:NotebookEvent) => void,
       let newEditors = spliceEditor(state.cells.map(c => c.editor), editor, evt.id)
       let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resources)
       state.resources = state.resources.concat(updatedResources)
-      return {cache:state.cache, counter: state.counter+1, expandedMenu:-1,
-        cells: newCells, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged, resources: state.resources };
+      // return {cache:state.cache, counter: state.counter+1, expandedMenu:-1,
+      //   cells: newCells, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged, resources: state.resources };
+      return {...state, counter: state.counter+1, expandedMenu:-1, cells: newCells, resources: state.resources}
     }
 
     case 'remove':
