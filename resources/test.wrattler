@@ -29,9 +29,63 @@ and then use both of them in JavaScript to render a simple HTML output:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```python
-one = pd.DataFrame({"name":["Jim"], "age":[51]})
+one = pd.DataFrame({"name":["Jim"], "age":[123123]})
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -39,8 +93,35 @@ There is a markdown here
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```r
-two <- data.frame(name=c("Jane"), age=c(54))
+two <- data.frame(name=c("Jane"), age=c(208787))
 ```
 ```javascript
 let three = one.concat(two).concat(one)
@@ -53,6 +134,33 @@ addOutput(function(id) {
   document.getElementById(id).innerHTML = html;
 });
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -93,4 +201,31 @@ following (after completing the above steps):
     dependency graph nodes has already been created. If so, it will reuse a past node.
     When you evaluate code, the result is stored in the graph node - and so, you should
     now see all original outputs just after hitting  `Shift` + `Enter`.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

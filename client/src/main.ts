@@ -38,7 +38,6 @@ type NotebookState = {
 }
 
 let paperElementID:string='paper'
-
 // ------------------------------------------------------------------------------------------------
 // Helper functions for binding nodes
 // ------------------------------------------------------------------------------------------------
@@ -94,8 +93,8 @@ async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resour
   for(var ant of node.antecedents) await evaluate(ant, languagePlugins, resources, triggerEvalStateEvent);
 
   let languagePlugin = languagePlugins[node.language]
-  let source = (<any>node).source ? (<any>node).source.substr(0, 100) + "..." : "(no source)"
-  // Log.trace("evaluation","Evaluating %s node: %s", node.language, source)
+  // let source = (<any>node).source ? (<any>node).source.substr(0, 100) + "..." : "(no source)"
+  // Log.trace("editor","Evaluating %s node: %s", node.language, source)
   let evalResult = await languagePlugin.evaluate({resources:resources}, node);
   // Log.trace("evaluation","Evaluated %s node. Result: %O", node.language, node.value)
   switch(evalResult.kind) {
@@ -275,8 +274,6 @@ async function update(trigger:(evt:NotebookEvent) => void,
     }).reduce ((a,b)=> a.concat(b))
 
     newEditorState.map((es,index)=>es.id=index)
-
-    console.log(newEditorState)
     return newEditorState
   }
 
@@ -286,7 +283,6 @@ async function update(trigger:(evt:NotebookEvent) => void,
         else return [cell]
       }).reduce ((a,b)=> a.concat(b));
   }
-  Log.trace('main', "Updating event type: '%s'", evt.kind)
 
   switch(evt.kind) {
     case 'block': {
@@ -322,13 +318,14 @@ async function update(trigger:(evt:NotebookEvent) => void,
           return newCell
         }
       })
-      return { cache:state.cache, 
-        counter: state.counter, 
-        cells: newCells, 
-        contentChanged:state.contentChanged,
-        expandedMenu: state.expandedMenu, 
-        languagePlugins: state.languagePlugins, 
-        resources: state.resources };
+      return {...state, cells: newCells}
+      // return { cache:state.cache, 
+      //   counter: state.counter, 
+      //   cells: newCells, 
+      //   contentChanged:state.contentChanged,
+      //   expandedMenu: state.expandedMenu, 
+      //   languagePlugins: state.languagePlugins, 
+      //   resources: state.resources };
 
     case 'toggleadd':
       return {...state, expandedMenu: evt.id};
@@ -384,6 +381,7 @@ async function update(trigger:(evt:NotebookEvent) => void,
     case 'rebind':
       let newState = await updateAndBindAllCells(state, evt.block, evt.newSource);
       state.contentChanged(saveDocument(newState))
+      Log.trace('jupyter',"This will trigger a render in Jupyter")
       return newState
   }
 }

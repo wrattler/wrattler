@@ -37,6 +37,8 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
     // console.log(this)
     // console.log(this.hasClass(CSS_CLASS))
     this._mimeType = options.mimeType; 
+    this.firstRender = true
+    
   }
 
   /**
@@ -45,6 +47,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
   readonly img: HTMLImageElement;
   private _mimeType: string;
   private wrattlerClass:PrivateWrattler;
+  private firstRender:boolean
   
   /**
    * Dispose of the widget.
@@ -58,15 +61,28 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
     let content = model.data[this._mimeType] as string ; 
+    console.log("render model called")
+    if (this.firstRender){
+      this.firstRender = false;
+      return new Promise<void> ((resolve)=>
+      {
+        setTimeout(()=>{
+          this.wrattlerClass.initNotebook(content, model)
+          this.update()
+          resolve()
+        },1*1000)
+      })
+    }
+    else {
+      return new Promise<void> ((resolve)=>
+      {
+        setTimeout(()=>{
+          this.update()
+          resolve()
+        },1*10)
+      })
+    }
     
-    return new Promise<void> ((resolve)=>
-    {
-      setTimeout(()=>{
-        this.wrattlerClass.initNotebook(content, model)
-        this.update();
-        resolve()
-      },1*1000)
-    })
   }
 }
 
@@ -105,13 +121,13 @@ const extensions: IRenderMime.IExtension | IRenderMime.IExtension[] = [
 ];
 
 export default extensions;
-console.log("hello may")
 class PrivateWrattler {
   
   elementID: string
 
   constructor(index:number) {
     this.elementID = "paper".concat(index.toString())
+    
   }
 
   createNode(): HTMLElement { 
@@ -128,14 +144,18 @@ class PrivateWrattler {
   }
 
   initNotebook (content:string, model:IRenderMime.IMimeModel) {
+    
     var langs = (<any>window).wrattler.getDefaultLanguages();
     (<any>window).wrattler.createNotebook(this.elementID, content, langs).then(function(notebook:any) {
       console.log("Wrattler created: "+JSON.stringify((<any>window).wrattler))
       notebook.addDocumentContentChanged(function (newContent:string) {
         let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
         newOptions.data={"text/plain": newContent}
+        console.log("setting data")
         model.setData(newOptions)
+        console.log("data set")
       })
+      
     });
   }
 }

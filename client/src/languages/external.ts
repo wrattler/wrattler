@@ -14,6 +14,7 @@ import * as Doc from '../services/documentService';
 // ------------------------------------------------------------------------------------------------
 
 declare var DATASTORE_URI: string;
+var NEW_DATASTORE_URI:string = window.location.protocol+"//"+window.location.hostname+":7102"
 
 async function getValue(blob, preview:boolean) : Promise<any> {
   var pathname = new URL(blob).pathname;
@@ -35,6 +36,9 @@ async function getValue(blob, preview:boolean) : Promise<any> {
 
 async function getCachedOrEval(serviceUrl, body) : Promise<any> {
   let cacheUrl = DATASTORE_URI.concat("/" + body.hash).concat("/.cached")
+  // console.log('using cache')
+  // console.log(DATASTORE_URI)
+  // console.log(NEW_DATASTORE_URI)
   // try {
   //   let params = {headers: {'Accept': 'application/json'}}
   //   Log.trace("external", "Checking cached response: %s", cacheUrl)
