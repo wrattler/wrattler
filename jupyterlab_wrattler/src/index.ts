@@ -60,30 +60,21 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    * Render Wrattler into this widget's node.
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    let content = model.data[this._mimeType] as string ; 
-    console.log("render model called")
-    if (this.firstRender){
-      this.firstRender = false;
-      return new Promise<void> ((resolve)=>
-      {
-        setTimeout(()=>{
-          this.wrattlerClass.initNotebook(content, model)
-          this.update()
-          resolve()
-        },1*1000)
-      })
-    }
-    else {
-      return new Promise<void> ((resolve)=>
-      {
-        setTimeout(()=>{
-          this.update()
-          resolve()
-        },1*10)
-      })
-    }
     
-  }
+    return new Promise<void> ((resolve)=>
+    {
+      let timeoutPeriod = this.firstRender ? 1000 : 1
+      setTimeout(()=>{
+        if (this.firstRender) {
+          let content = model.data[this._mimeType] as string ; 
+          this.wrattlerClass.initNotebook(content, model)
+          this.firstRender = false;
+        }
+        this.update()
+        resolve()
+      },1*timeoutPeriod)
+    })
+  } 
 }
 
 
