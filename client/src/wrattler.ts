@@ -35,6 +35,8 @@ declare var PYTHONSERVICE_URI: string;
 declare var RSERVICE_URI: string;
 /** @hidden */
 declare var RACKETSERVICE_URI: string;
+/** @hidden */
+declare var CLIENT_URI: string;
 
 /** 
  * Represents a created Wrattler notebook. The interface provides access to the 
@@ -54,6 +56,18 @@ interface WrattlerNotebook {
 type LanguagePlugins = { [lang:string] : Langs.LanguagePlugin }
 
 /**
+ * Wrattler notebook configuration. This currently specifies the language plugins
+ * to be used and URLs for services used by Wrattler such as the resource service and data store. 
+ */
+interface WrattlerConfig {
+  /** URL for a service that can be used for loading resources using `%global` or `%local`. If you 
+   * say `%global test.py`, Wrattler will fetch the file from `<resourceServerUrl>/resources/test.py`. */
+  resourceServerUrl : string
+  /** A dictionary with language names as keys that specifies language plugins to be used. */
+  languagePlugins : LanguagePlugins
+}
+
+/**
  * Main entry point that can be used for creating new Wrattler notebook instances.
  * You can use `getDefaultLanguages` to get default language plugins implemented 
  * in core Wrattler and `createNotebook` to create a new notebook instance.
@@ -66,28 +80,39 @@ class Wrattler {
     return new ExternalLanguagePlugin(language, faClass?faClass:"fa fa-question-circle", serviceUrl, defaultCode?defaultCode:"");
   }
 
-  /** Returns default language plugins for Markdown, JavaScript, R, Python and Racket   */
-  getDefaultLanguages() : LanguagePlugins {
+  /**
+   * Returns default language plugins for Markdown, JavaScript, R, Python and Racket.
+   * The `serviceUrls` argument specifies a dictionary with URLs for the services. You can
+   * use this to override the default URLs specified by Docker config (use `python`, `r` and `racket` 
+   * as the keys in the dictionary).
+   */
+  getDefaultConfig(serviceUrls? : { [language:string] : string } ) : WrattlerConfig {
     var languagePlugins : LanguagePlugins = { };
+    
+    function getServiceUrl(language:string, def:string) {
+      if (serviceUrls && serviceUrls[language]) return serviceUrls[language];
+      else return def;
+    }    
+
     let pyCode =  "# This is a python cell \n# py[ID] = pd.DataFrame({\"id\":[\"[ID]\"], \"language\":[\"python\"]})";
     let rCode = "# This is an R cell \n r[ID] <- data.frame(id = [ID], language =\"r\")";
     let rcCode = ";; This is a Racket cell [ID]\n";
 
     languagePlugins["markdown"] = markdownLanguagePlugin;
     languagePlugins["javascript"] = javascriptLanguagePlugin;
-    languagePlugins["python"] = new ExternalLanguagePlugin("python", "fab fa-python", PYTHONSERVICE_URI, pyCode);
-    languagePlugins["r"] = new ExternalLanguagePlugin("r", "fab fa-r-project", RSERVICE_URI, rCode);
-    languagePlugins["racket"] = new ExternalLanguagePlugin("racket", "fa fa-question-circle", RACKETSERVICE_URI, rcCode);
+    languagePlugins["python"] = new ExternalLanguagePlugin("python", "fab fa-python", getServiceUrl("python", PYTHONSERVICE_URI), pyCode);
+    languagePlugins["r"] = new ExternalLanguagePlugin("r", "fab fa-r-project", getServiceUrl("r", RSERVICE_URI), rCode);
+    languagePlugins["racket"] = new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode);
     // languagePlugins["merger"] = mergerLanguagePlugin;
-    return languagePlugins;
+    return { languagePlugins:languagePlugins, resourceServerUrl:CLIENT_URI };
   }
 
   /**
    * Creates a Wrattler notebook that loads notebooks automatically by requesting the `index.md` 
    * URL from the domain where it is hosted (or `another.md` when the current URl contains `?another` in the query string).
    */
-  async createNamedNotebook(elementID:string, languagePlugins:LanguagePlugins) : Promise<WrattlerNotebook> {
-    return this.createNotebook(elementID, await Docs.getNamedDocumentContent(), languagePlugins);
+  async createNamedNotebook(elementID:string, config:WrattlerConfig) : Promise<WrattlerNotebook> {
+    return this.createNotebook(elementID, await Docs.getNamedDocumentContent(), config);
   }
 
   /**
@@ -98,10 +123,10 @@ class Wrattler {
    * @param content Initial source code for the notebook in Markdown.
    * @param languagePlugins Language plugins to be used, typically the result of `getDefaultLanguages`
    */
-  async createNotebook(elementID:string, content:string, languagePlugins:LanguagePlugins) : Promise<WrattlerNotebook> {
+  async createNotebook(elementID:string, content:string, config:WrattlerConfig) : Promise<WrattlerNotebook> {
     Log.trace("main", "Creating notebook for id '%s'", elementID)
     let documents = await Docs.getDocument(content);
-    var {counter, editors} = loadNotebook(documents, languagePlugins);
+    var {counter, editors} = loadNotebook(documents, config.languagePlugins);
 
     var currentContent = content;
     var handlers : ((newContent:string) => void)[] = [];
@@ -110,7 +135,7 @@ class Wrattler {
       for(var h of handlers) h(currentContent);
     }
 
-    initializeCells(elementID, counter, editors, languagePlugins, contentChanged);
+    initializeCells(elementID, counter, editors, config.languagePlugins, config.resourceServerUrl, contentChanged);
     return {
       getDocumentContent : () => currentContent,
       addDocumentContentChanged : (h:(newContent:string) => void) => handlers.push(h)

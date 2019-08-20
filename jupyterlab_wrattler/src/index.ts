@@ -135,9 +135,15 @@ class PrivateWrattler {
   }
 
   initNotebook (content:string, model:IRenderMime.IMimeModel) {
-    
-    var langs = (<any>window).wrattler.getDefaultLanguages();
-    (<any>window).wrattler.createNotebook(this.elementID, content, langs).then(function(notebook:any) {
+
+    var services = 
+      { "r": "http://???",
+        "python": "http://???",
+        "racket": "http://???" }
+    var cfg = (<any>window).wrattler.getDefaultConfig(services);
+    cfg.resourceServerUrl = "http://???";
+
+    (<any>window).wrattler.createNotebook(this.elementID, content, cfg).then(function(notebook:any) {
       console.log("Wrattler created: "+JSON.stringify((<any>window).wrattler))
       notebook.addDocumentContentChanged(function (newContent:string) {
         let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}

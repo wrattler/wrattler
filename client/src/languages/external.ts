@@ -14,7 +14,6 @@ import * as Doc from '../services/documentService';
 // ------------------------------------------------------------------------------------------------
 
 declare var DATASTORE_URI: string;
-var NEW_DATASTORE_URI:string = window.location.protocol+"//"+window.location.hostname+":7102"
 
 async function getValue(blob, preview:boolean) : Promise<any> {
   var pathname = new URL(blob).pathname;
@@ -309,7 +308,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
         if (srcArray[l].match(this.regex_global)){
           let resourceName = srcArray[l].split(' ')[1]
           if (!resourceExists(resourceName)) {
-            let response = await Doc.getResourceContent(resourceName)
+            let response = await Doc.getResourceContent(context.resourceServerUrl, resourceName)
             let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'global', url:await putResource(resourceName, response)}
             newResources.push(newResource)
           }
@@ -317,7 +316,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
         else if (srcArray[l].match(this.regex_local)) {
           let resourceName = srcArray[l].split(' ')[1]
           if (!resourceExists(resourceName)) {
-            let response = await Doc.getResourceContent(resourceName)
+            let response = await Doc.getResourceContent(context.resourceServerUrl, resourceName)
             let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'local', url:await putResource(resourceName, response)}
             newResources.push(newResource)
           }
