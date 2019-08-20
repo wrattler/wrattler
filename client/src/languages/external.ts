@@ -35,26 +35,18 @@ async function getValue(blob, preview:boolean) : Promise<any> {
 
 async function getCachedOrEval(serviceUrl, body) : Promise<any> {
   let cacheUrl = DATASTORE_URI.concat("/" + body.hash).concat("/.cached")
-  // console.log('using cache')
-  // console.log(DATASTORE_URI)
-  // console.log(NEW_DATASTORE_URI)
-  // try {
-  //   let params = {headers: {'Accept': 'application/json'}}
-  //   Log.trace("external", "Checking cached response: %s", cacheUrl)
-  //   let response = await axios.get(cacheUrl, params)
-  //   return response.data
-  // } catch(e) {
-  //   Log.trace("external", "Checking failed, calling eval (%s)", e)
-  //   let params = { headers: {'Content-Type': 'application/json'} }        
-  //   let result = await axios.post(serviceUrl.concat("/eval"), body, params)
-  //   await axios.put(cacheUrl, result.data, params)
-  //   return result.data
-  // }
-  
+  try {
+    let params = {headers: {'Accept': 'application/json'}}
+    Log.trace("external", "Checking cached response: %s", cacheUrl)
+    let response = await axios.get(cacheUrl, params)
+    return response.data
+  } catch(e) {
+    Log.trace("external", "Checking failed, calling eval (%s)", e)
     let params = { headers: {'Content-Type': 'application/json'} }        
     let result = await axios.post(serviceUrl.concat("/eval"), body, params)
     await axios.put(cacheUrl, result.data, params)
     return result.data
+  }
 }
 
 async function getEval(body, serviceURI) : Promise<Langs.EvaluationResult> {  
@@ -214,7 +206,6 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
           importedFrames.push({ name: imported.variableName, url: (<Values.DataFrame>imported.value).url })
         }
         let src = externalNode.source.replace(/\r/g,'\n')
-        let hash = Md5.hashStr(src)
         
         let srcArray = src.split('\n')
         let strippedSrc = ''
@@ -240,9 +231,9 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
             }  
           }
         }
-
+        
         let body = {"code": strippedSrc,
-          "hash": hash,
+          "hash": externalNode.hash,
           "files" : importedFiles,
           "frames": importedFrames}
         return await getEval(body, this.serviceURI);
