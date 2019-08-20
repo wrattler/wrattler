@@ -82,7 +82,6 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
         },1*10)
       })
     }
-    
   }
 }
 
