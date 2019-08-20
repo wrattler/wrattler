@@ -104,7 +104,9 @@ class Wrattler {
     languagePlugins["r"] = new ExternalLanguagePlugin("r", "fab fa-r-project", getServiceUrl("r", RSERVICE_URI), rCode);
     languagePlugins["racket"] = new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode);
     // languagePlugins["merger"] = mergerLanguagePlugin;
-    return { languagePlugins:languagePlugins, resourceServerUrl:CLIENT_URI };
+    let newConfig:WrattlerConfig = { languagePlugins:languagePlugins, resourceServerUrl:CLIENT_URI };
+    console.log(newConfig)
+    return newConfig
   }
 
   /**
@@ -148,5 +150,6 @@ class Wrattler {
 export {
   Wrattler,
   LanguagePlugins,
-  WrattlerNotebook
+  WrattlerNotebook,
+  WrattlerConfig
 }

@@ -59,14 +59,29 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
   /**
    * Render Wrattler into this widget's node.
    */
-  async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    if (this.firstRender) {
-      let content = model.data[this._mimeType] as string ; 
-      this.wrattlerClass.initNotebook(content, model)
-      this.firstRender = false;
-    }
-    this.update()
-  } 
+  // async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+  //   if (this.firstRender) {
+  //     let content = model.data[this._mimeType] as string ; 
+  //     this.wrattlerClass.initNotebook(content, model)
+  //     this.firstRender = false;
+  //   }
+  //   this.update()
+  // } 
+  renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+    let content = model.data[this._mimeType] as string ; 
+    
+    return new Promise<void> ((resolve)=>
+    {
+      setTimeout(()=>{
+        if (this.firstRender) {
+          this.wrattlerClass.initNotebook(content, model)
+          this.firstRender = false
+        }
+        this.update();
+        resolve()
+      },1*1000)
+    })
+  }
 }
 
 
@@ -113,10 +128,51 @@ class PrivateWrattler {
     
   }
 
+  getResourceServerURL():string {
+    // sagemaker: https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/8080/wrattler-app.js
+    let windowUrl:string = window.location.href
+    let resourceServerUrl = window.location.protocol+"//"+window.location.hostname
+    if (windowUrl.includes('sagemaker.aws')){
+      resourceServerUrl = resourceServerUrl.concat("proxy/8080/")
+    }
+    else {
+      resourceServerUrl = resourceServerUrl.concat(":8080/")
+    }
+    return resourceServerUrl
+  }
+
+  getServiceServerURL() {
+    /*
+    - CLIENT_URI=http://localhost:8080
+     - RACKETSERVICE_URI=http://localhost:7104
+     - PYTHONSERVICE_URI=http://localhost:7101
+     - RSERVICE_URI=http://localhost:7103
+     - DATASTORE_URI=http://localhost:7102
+    */
+   //https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/7101/test 
+    let windowUrl:string = window.location.href
+    let pythonPort: string = "7101"
+    let racketPort: string = "7104"
+    let rPort: string = "7103"
+    let baseURL:string = window.location.protocol+"//"+window.location.hostname
+    if (windowUrl.includes('sagemaker.aws')){
+      baseURL = baseURL.concat("/proxy/")
+    }
+    else {
+      baseURL = baseURL.concat(":")
+    }
+    return {
+      "r": baseURL.concat(rPort),
+      "python": baseURL.concat(pythonPort),
+      "racket": baseURL.concat(racketPort)}
+  }
+
   createNode(): HTMLElement { 
     let wrattlerScript: HTMLScriptElement;
     wrattlerScript = document.createElement("script");
-    wrattlerScript.setAttribute("src","http://localhost:8080/wrattler-app.js");
+    let resourceServerURL = this.getResourceServerURL()
+    console.log(resourceServerURL.concat("wrattler-app.js"))
+    wrattlerScript.setAttribute("src",resourceServerURL.concat("wrattler-app.js"));
     wrattlerScript.setAttribute("type","text/javascript");
     document.head.appendChild(wrattlerScript)
     let wrattlerParentDiv: HTMLDivElement = document.createElement('div');
@@ -127,13 +183,9 @@ class PrivateWrattler {
   }
 
   initNotebook (content:string, model:IRenderMime.IMimeModel) {
-
-    var services = 
-      { "r": "http://???",
-        "python": "http://???",
-        "racket": "http://???" }
+    var services = this.getServiceServerURL()
     var cfg = (<any>window).wrattler.getDefaultConfig(services);
-    cfg.resourceServerUrl = "http://???";
+    cfg.resourceServerUrl = this.getResourceServerURL();
 
     (<any>window).wrattler.createNotebook(this.elementID, content, cfg).then(function(notebook:any) {
       console.log("Wrattler created: "+JSON.stringify((<any>window).wrattler))

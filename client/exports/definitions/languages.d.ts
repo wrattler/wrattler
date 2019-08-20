@@ -121,6 +121,9 @@ interface EvaluationContext {
     /** A list of files that were loaded as global or local resources by any
      * language plugin for any cell appearing before the current one. */
     resources: Resource[];
+    /** URL for a service that can be used for loading resources using `%global` or `%local`. If you
+     * say `%global test.py`, Wrattler will fetch the file from `<resourceServerUrl>/resources/test.py`. */
+    resourceServerUrl: string;
 }
 /** Represents the result of the `eval` operation of a `LanguagePlugin`. */
 declare type EvaluationResult = EvaluationSuccess | EvaluationFailure;
@@ -156,6 +159,9 @@ interface BindingContext {
     /** Provides language plugin with access to variables defined in earlier cells
      * that are now in scope. */
     scope: ScopeDictionary;
+    /** URL for a service that can be used for loading resources using `%global` or `%local`. If you
+     * say `%global test.py`, Wrattler will fetch the file from `<resourceServerUrl>/resources/test.py`. */
+    resourceServerUrl: string;
     /** A list of resources loaded by earlier cells. */
     resources: Resource[];
 }
