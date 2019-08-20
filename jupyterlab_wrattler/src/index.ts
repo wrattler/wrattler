@@ -60,6 +60,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    * Render Wrattler into this widget's node.
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+<<<<<<< HEAD
     let content = model.data[this._mimeType] as string ; 
     console.log("render model called")
     if (this.firstRender){
@@ -83,6 +84,23 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
       })
     }
   }
+=======
+    
+    return new Promise<void> ((resolve)=>
+    {
+      let timeoutPeriod = this.firstRender ? 1000 : 1
+      setTimeout(()=>{
+        if (this.firstRender) {
+          let content = model.data[this._mimeType] as string ; 
+          this.wrattlerClass.initNotebook(content, model)
+          this.firstRender = false;
+        }
+        this.update()
+        resolve()
+      },1*timeoutPeriod)
+    })
+  } 
+>>>>>>> 93cc0121297a87083eca6093e4c902fdeed33436
 }
 
 

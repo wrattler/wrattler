@@ -207,7 +207,6 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
           importedFrames.push({ name: imported.variableName, url: (<Values.DataFrame>imported.value).url })
         }
         let src = externalNode.source.replace(/\r/g,'\n')
-        //let hash = Md5.hashStr(src)
         
         let srcArray = src.split('\n')
         let strippedSrc = ''
