@@ -162,10 +162,8 @@ class PrivateWrattler {
       baseURL = baseURL.concat("/proxy/")
     }
     else {
-      // THIS IS FOR TESTING BINDER
       baseURL = baseURL.concat("/proxy/")
       // baseURL = baseURL.concat(":")
-      
     }
     return {
       "r": baseURL.concat(rPort),
