@@ -175,7 +175,7 @@ class PrivateWrattler {
     let wrattlerScript: HTMLScriptElement;
     wrattlerScript = document.createElement("script");
     let resourceServerURL = this.getResourceServerURL()
-    console.log(resourceServerURL.concat("wrattler-app.js"))
+    console.log("This is for binder: ".concat(resourceServerURL.concat("wrattler-app.js")))
     wrattlerScript.setAttribute("src",resourceServerURL.concat("wrattler-app.js"));
     wrattlerScript.setAttribute("type","text/javascript");
     document.head.appendChild(wrattlerScript)
