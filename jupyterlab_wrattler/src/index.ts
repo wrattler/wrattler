@@ -136,7 +136,10 @@ class PrivateWrattler {
       resourceServerUrl = resourceServerUrl.concat("proxy/8080/")
     }
     else {
-      resourceServerUrl = resourceServerUrl.concat(":8080/")
+      // THIS IS FOR TESTING BINDER
+      resourceServerUrl = resourceServerUrl.concat("proxy/8080/")
+      // resourceServerUrl = resourceServerUrl.concat(":8080/")
+      
     }
     return resourceServerUrl
   }
@@ -159,7 +162,10 @@ class PrivateWrattler {
       baseURL = baseURL.concat("/proxy/")
     }
     else {
-      baseURL = baseURL.concat(":")
+      // THIS IS FOR TESTING BINDER
+      baseURL = baseURL.concat("/proxy/")
+      // baseURL = baseURL.concat(":")
+      
     }
     return {
       "r": baseURL.concat(rPort),
