@@ -133,11 +133,11 @@ class PrivateWrattler {
     let windowUrl:string = window.location.href
     let resourceServerUrl = window.location.protocol+"//"+window.location.hostname
     if (windowUrl.includes('sagemaker.aws')){
-      resourceServerUrl = resourceServerUrl.concat("proxy/8080/")
+      resourceServerUrl = resourceServerUrl.concat("/proxy/8080/")
     }
     else {
       // THIS IS FOR TESTING BINDER
-      resourceServerUrl = resourceServerUrl.concat("proxy/8080/")
+      resourceServerUrl = resourceServerUrl.concat("/proxy/8080/")
       // resourceServerUrl = resourceServerUrl.concat(":8080/")
       
     }
