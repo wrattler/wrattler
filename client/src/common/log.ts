@@ -1,4 +1,4 @@
-let enabledCategories = {"render":true}
+let enabledCategories = {"external":true}
 var colorIndex = -1
 var colorMap = {}
 function getColor(cat) {

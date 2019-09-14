@@ -5,14 +5,13 @@ import * as Values from '../definitions/values';
 import {createOutputPreview, createMonacoEditor} from '../editors/editor';
 
 // import Plotly from 'Plotly';
-import ts, { createNoSubstitutionTemplateLiteral } from 'typescript';
+import ts from 'typescript';
 import axios from 'axios';
 import {Md5} from 'ts-md5';
 import {AsyncLazy} from '../common/lazy';
 import * as Doc from '../services/documentService';
 import { Log } from '../common/log';
 
-declare var PYTHONSERVICE_URI: string;
 declare var DATASTORE_URI: string;
 
 // ------------------------------------------------------------------------------------------------
@@ -293,7 +292,7 @@ class JavascriptBlockKind implements Langs.Block {
 
           let importedResourceContent:string = ''
           for (let f = 0; f < importedFiles.length; f++) {
-            importedResourceContent=importedResourceContent.concat(await Doc.getResourceContent(importedFiles[f])).concat("\n")
+            importedResourceContent=importedResourceContent.concat(await Doc.getResourceContent(context.resourceServerUrl, importedFiles[f])).concat("\n")
           }
 
           evalCode = "(function f(addOutput, args) {\n\t " + importedVars + "\n" + importedResourceContent + "\n" +strippedSrc + "\n" + returnArgs + "\n})"

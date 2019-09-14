@@ -31,3 +31,5 @@ EXPOSE 8889
 WORKDIR /public
 
 CMD ["jupyter","lab","--ip","0.0.0.0","--port","8889","--allow-root"]
+
+

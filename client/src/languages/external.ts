@@ -35,23 +35,18 @@ async function getValue(blob, preview:boolean) : Promise<any> {
 
 async function getCachedOrEval(serviceUrl, body) : Promise<any> {
   let cacheUrl = DATASTORE_URI.concat("/" + body.hash).concat("/.cached")
-  // try {
-  //   let params = {headers: {'Accept': 'application/json'}}
-  //   Log.trace("external", "Checking cached response: %s", cacheUrl)
-  //   let response = await axios.get(cacheUrl, params)
-  //   return response.data
-  // } catch(e) {
-  //   Log.trace("external", "Checking failed, calling eval (%s)", e)
-  //   let params = { headers: {'Content-Type': 'application/json'} }        
-  //   let result = await axios.post(serviceUrl.concat("/eval"), body, params)
-  //   await axios.put(cacheUrl, result.data, params)
-  //   return result.data
-  // }
-  
+  try {
+    let params = {headers: {'Accept': 'application/json'}}
+    Log.trace("external", "Checking cached response: %s", cacheUrl)
+    let response = await axios.get(cacheUrl, params)
+    return response.data
+  } catch(e) {
+    Log.trace("external", "Checking failed, calling eval (%s)", e)
     let params = { headers: {'Content-Type': 'application/json'} }        
     let result = await axios.post(serviceUrl.concat("/eval"), body, params)
     await axios.put(cacheUrl, result.data, params)
     return result.data
+  }
 }
 
 async function getEval(body, serviceURI) : Promise<Langs.EvaluationResult> {  
@@ -211,7 +206,6 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
           importedFrames.push({ name: imported.variableName, url: (<Values.DataFrame>imported.value).url })
         }
         let src = externalNode.source.replace(/\r/g,'\n')
-        let hash = Md5.hashStr(src)
         
         let srcArray = src.split('\n')
         let strippedSrc = ''
@@ -237,9 +231,9 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
             }  
           }
         }
-
+        
         let body = {"code": strippedSrc,
-          "hash": hash,
+          "hash": externalNode.hash,
           "files" : importedFiles,
           "frames": importedFrames}
         return await getEval(body, this.serviceURI);
@@ -305,7 +299,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
         if (srcArray[l].match(this.regex_global)){
           let resourceName = srcArray[l].split(' ')[1]
           if (!resourceExists(resourceName)) {
-            let response = await Doc.getResourceContent(resourceName)
+            let response = await Doc.getResourceContent(context.resourceServerUrl, resourceName)
             let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'global', url:await putResource(resourceName, response)}
             newResources.push(newResource)
           }
@@ -313,7 +307,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
         else if (srcArray[l].match(this.regex_local)) {
           let resourceName = srcArray[l].split(' ')[1]
           if (!resourceExists(resourceName)) {
-            let response = await Doc.getResourceContent(resourceName)
+            let response = await Doc.getResourceContent(context.resourceServerUrl, resourceName)
             let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'local', url:await putResource(resourceName, response)}
             newResources.push(newResource)
           }

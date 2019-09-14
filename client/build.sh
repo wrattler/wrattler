@@ -1,4 +1,4 @@
 yarn
 yarn build
-cp build/wrattler-app.js public/wrattler-app.js
+cp build/wrattler-app.js public/
 echo "Yarn built - Thanks Nick!"

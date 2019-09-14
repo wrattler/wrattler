@@ -34,11 +34,11 @@ type NotebookState = {
   counter: number
   expandedMenu : number
   cache: Graph.NodeCache
+  resourceServerUrl: string
   resources:Array<Langs.Resource>
 }
 
 let paperElementID:string='paper'
-
 // ------------------------------------------------------------------------------------------------
 // Helper functions for binding nodes
 // ------------------------------------------------------------------------------------------------
@@ -47,18 +47,19 @@ function bindCell (cache:Graph.NodeCache,
   scope:Langs.ScopeDictionary,
   editor:Langs.EditorState,
   languagePlugins:LanguagePlugins,
+  resourceServerUrl:string,
   resources:Array<Langs.Resource>): Promise<{code: Graph.Node, exports: Graph.ExportNode[], resources: Array<Langs.Resource>}>{
   let languagePlugin = languagePlugins[editor.block.language]
-  return languagePlugin.bind({ cache:cache, scope:scope, resources:resources }, editor.block);
+  return languagePlugin.bind({ resourceServerUrl:resourceServerUrl, cache:cache, scope:scope, resources:resources }, editor.block);
 }
 
-async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], languagePlugins:LanguagePlugins, stateresources: Array<Langs.Resource>) {
+async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], languagePlugins:LanguagePlugins, resourceServerUrl:string, stateresources: Array<Langs.Resource>) {
   var scope : Langs.ScopeDictionary = { };
   var newCells : Langs.BlockState[] = []
   let updatedResources: Array<Langs.Resource> = []
   for (var c = 0; c < editors.length; c++) {
     let editor = editors[c]
-    let {code, exports, resources} = await bindCell(cache, scope, editor, languagePlugins, updatedResources);
+    let {code, exports, resources} = await bindCell(cache, scope, editor, languagePlugins, resourceServerUrl, updatedResources);
     updatedResources = updatedResources.concat(resources)
     var newCell:Langs.BlockState = { editor:editor, code:code, exports:exports, evaluationState: "unevaluated"}
     for (var e = 0; e < exports.length; e++ ) {
@@ -71,8 +72,8 @@ async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], 
 }
 
 async function updateAndBindAllCells
-    (state:NotebookState, cell:Langs.BlockState, newSource: string): Promise<NotebookState> {
-  Log.trace("binding", "Begin rebinding subsequent cells %O %s", cell, newSource)
+    (state:NotebookState, cell:Langs.BlockState, newSource: string, resourceServerUrl:string): Promise<NotebookState> {
+  Log.trace("b inding", "Begin rebinding subsequent cells %O %s", cell, newSource)
   let editors = state.cells.map(c => {
     let lang = state.languagePlugins[c.editor.block.language]
     if (c.editor.id == cell.editor.id) {
@@ -82,21 +83,21 @@ async function updateAndBindAllCells
     }
     else return c.editor;
   });
-  let {newCells, updatedResources} = await bindAllCells(state.cache, editors, state.languagePlugins, state.resources);
+  let {newCells, updatedResources} = await bindAllCells(state.cache, editors, state.languagePlugins, resourceServerUrl, state.resources);
   return { ...state, cells:newCells, resources:updatedResources };
 }
 
-async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resources:Array<Langs.Resource>, triggerEvalStateEvent) {
+async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resourceServerUrl:string, resources:Array<Langs.Resource>, triggerEvalStateEvent) {
   if (node.value && (Object.keys(node.value).length > 0)) return;
 
   triggerEvalStateEvent(node.hash,"pending")
 
-  for(var ant of node.antecedents) await evaluate(ant, languagePlugins, resources, triggerEvalStateEvent);
+  for(var ant of node.antecedents) await evaluate(ant, languagePlugins, resourceServerUrl, resources, triggerEvalStateEvent);
 
   let languagePlugin = languagePlugins[node.language]
-  let source = (<any>node).source ? (<any>node).source.substr(0, 100) + "..." : "(no source)"
-  // Log.trace("evaluation","Evaluating %s node: %s", node.language, source)
-  let evalResult = await languagePlugin.evaluate({resources:resources}, node);
+  // let source = (<any>node).source ? (<any>node).source.substr(0, 100) + "..." : "(no source)"
+  // Log.trace("editor","Evaluating %s node: %s", node.language, source)
+  let evalResult = await languagePlugin.evaluate({resourceServerUrl:resourceServerUrl, resources:resources}, node);
   // Log.trace("evaluation","Evaluated %s node. Result: %O", node.language, node.value)
   switch(evalResult.kind) {
     case "success":
@@ -275,8 +276,6 @@ async function update(trigger:(evt:NotebookEvent) => void,
     }).reduce ((a,b)=> a.concat(b))
 
     newEditorState.map((es,index)=>es.id=index)
-
-    console.log(newEditorState)
     return newEditorState
   }
 
@@ -286,7 +285,6 @@ async function update(trigger:(evt:NotebookEvent) => void,
         else return [cell]
       }).reduce ((a,b)=> a.concat(b));
   }
-  Log.trace('main', "Updating event type: '%s'", evt.kind)
 
   switch(evt.kind) {
     case 'block': {
@@ -322,13 +320,14 @@ async function update(trigger:(evt:NotebookEvent) => void,
           return newCell
         }
       })
-      return { cache:state.cache, 
-        counter: state.counter, 
-        cells: newCells, 
-        contentChanged:state.contentChanged,
-        expandedMenu: state.expandedMenu, 
-        languagePlugins: state.languagePlugins, 
-        resources: state.resources };
+      return {...state, cells: newCells}
+      // return { cache:state.cache, 
+      //   counter: state.counter, 
+      //   cells: newCells, 
+      //   contentChanged:state.contentChanged,
+      //   expandedMenu: state.expandedMenu, 
+      //   languagePlugins: state.languagePlugins, 
+      //   resources: state.resources };
 
     case 'toggleadd':
       return {...state, expandedMenu: evt.id};
@@ -346,7 +345,7 @@ async function update(trigger:(evt:NotebookEvent) => void,
       else 
         newEditors = moveDownEditor(state.cells.map(c => c.editor), evt.cell.editor, evt.cell.editor.id)
 
-      let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resources)
+      let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resourceServerUrl, state.resources)
       return {...state, cells: newCells, resources: updatedResources};
     }
 
@@ -357,24 +356,20 @@ async function update(trigger:(evt:NotebookEvent) => void,
       let newBlock = lang.parse(newDocument.source);
       let editor = lang.editor.initialize(newId, newBlock);
       let newEditors = spliceEditor(state.cells.map(c => c.editor), editor, evt.id)
-      let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resources)
+      let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resourceServerUrl, state.resources)
       state.resources = state.resources.concat(updatedResources)
-      // return {cache:state.cache, counter: state.counter+1, expandedMenu:-1,
-      //   cells: newCells, languagePlugins: state.languagePlugins, contentChanged:state.contentChanged, resources: state.resources };
       return {...state, counter: state.counter+1, expandedMenu:-1, cells: newCells, resources: state.resources}
     }
 
     case 'remove':
-      return {cache:state.cache, counter: state.counter,
-        languagePlugins: state.languagePlugins, contentChanged: state.contentChanged,
-        expandedMenu:state.expandedMenu, cells: removeCell(state.cells, evt.id), resources: state.resources};
+      return {...state, cells: removeCell(state.cells, evt.id) };
 
     case 'evaluate':
       let triggerEvalStateEvent = (hash, newState) =>
         trigger({kind:'evalstate', hash:hash, newState})
       let doEvaluate = async (block:Langs.BlockState) => {
-        await evaluate(block.code, state.languagePlugins, state.resources, triggerEvalStateEvent)
-        for(var exp of block.exports) await evaluate(exp, state.languagePlugins, state.resources, triggerEvalStateEvent)
+        await evaluate(block.code, state.languagePlugins, state.resourceServerUrl, state.resources, triggerEvalStateEvent)
+        for(var exp of block.exports) await evaluate(exp, state.languagePlugins, state.resourceServerUrl, state.resources, triggerEvalStateEvent)
       }
       let blocks = state.cells.filter(b => b.editor.id == evt.id)
       if (blocks.length > 0) doEvaluate(blocks[0]); 
@@ -382,8 +377,9 @@ async function update(trigger:(evt:NotebookEvent) => void,
       return state;
 
     case 'rebind':
-      let newState = await updateAndBindAllCells(state, evt.block, evt.newSource);
+      let newState = await updateAndBindAllCells(state, evt.block, evt.newSource, state.resourceServerUrl);
       state.contentChanged(saveDocument(newState))
+      Log.trace('jupyter',"This will trigger a render in Jupyter")
       return newState
   }
 }
@@ -393,7 +389,7 @@ async function update(trigger:(evt:NotebookEvent) => void,
 // ------------------------------------------------------------------------------------------------
 
 async function initializeCells(elementID:string, counter: number, editors:Langs.EditorState[],
-    languagePlugins:LanguagePlugins, contentChanged:(newContent:string) => void) {
+    languagePlugins:LanguagePlugins, resourceServerUrl:string, contentChanged:(newContent:string) => void) {
   let maquetteProjector = createProjector();
   let paperElement = document.getElementById(elementID);
   paperElementID = elementID;
@@ -403,9 +399,9 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
 
   var cache = createNodeCache()
   var resources:Array<Langs.Resource> = []
-  var {newCells, updatedResources} = await bindAllCells(cache, editors, languagePlugins, resources);
+  var {newCells, updatedResources} = await bindAllCells(cache, editors, languagePlugins, resourceServerUrl, resources);
   resources = updatedResources
-  var state : NotebookState = {cache:cache, counter:counter, cells:newCells,
+  var state : NotebookState = {cache:cache, counter:counter, cells:newCells, resourceServerUrl:resourceServerUrl,
     contentChanged: contentChanged, expandedMenu:-1, languagePlugins:languagePlugins, resources: resources}
 
   var events : NotebookEvent[] = []
