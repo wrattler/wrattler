@@ -30,6 +30,7 @@ RUN pip3 install numpy
 RUN pip3 install pyarrow
 RUN pip3 install poetry
 RUN pip3 install clevercsv
+RUN pip3 install ipython
 
 ADD . /app
 WORKDIR /app

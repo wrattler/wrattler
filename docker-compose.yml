@@ -94,7 +94,7 @@ services:
     networks:
     - wrattler_nw
     volumes:
-      - ./jupyterlab_wrattler:/src
+      - ./jupyterlab_wrattler/src:/app/src
       - ./resources:/public
 
 networks:

@@ -30,7 +30,8 @@ handle_eval <- function(code, frames, hash, files=NULL) {
     ## as json in the following format:
     ##  {"output": <text_output>,
     ##   "frames": [{"name":<name>,"url":<url>},...],
-    ##   "figures": [{"name":<name>,"url":<url>},...]}
+    ##   "figures": [{"name":<name>,"url":<url>},...],
+    ##   "html": <html string> }
 
     ## The 'files' input argument will be a list of URLs for datastore locations
     ## of files containing function definitions.  The content of these files will
@@ -60,7 +61,11 @@ handle_eval <- function(code, frames, hash, files=NULL) {
     results <- uploadOutputs(outputsList, exportsList, hash)
     ## text output from executing code
     textOutput <- outputs$outputString
-    returnValue <- list(frames=results$frames, figures=results$figures, output=jsonlite::unbox(textOutput))
+    htmlOutput <- outputs$htmlString
+    returnValue <- list(frames=results$frames,
+                        figures=results$figures,
+                        output=jsonlite::unbox(textOutput),
+                        html=jsonlite::unbox(htmlOutput))
     return(jsonlite::toJSON(returnValue))
 }
 
@@ -307,11 +312,20 @@ constructFuncString <- function(code, importsList, hash, fileContent,
     if (debug) {
         stringFunc <- paste0(stringFunc,"    print(paste(Sys.time(), 'Finished reading input frames'))\n")
     }
+    stringFunc <- paste(stringFunc, "    outputs <- list()\n")
+    ## define addOutput function to put html output into the return list
+    stringFunc <- paste(stringFunc, "    addOutput <- function(htmlString) {\n")
+    stringFunc <- paste(stringFunc, "      outputs$htmlString <<- htmlString\n")
+    stringFunc <- paste(stringFunc, "    }\n\n")
+
+    ## now add the code fragment to the function string
     stringFunc <- paste(stringFunc, "    ", code, "\n")
     if (debug) {
         stringFunc <- paste0(stringFunc,"    print(paste(Sys.time(), 'Finished executing code'))\n")
     }
     stringFunc <- paste(stringFunc, "    returnVars <- list()\n")
+
+
     for (i in seq_along(impexp$exports)) {
         ## wrap adding things to returnVars list in a tryCatch, as currently
         ## it is possible that some out-of-scope variables will be in the 'exports' list
@@ -330,7 +344,8 @@ constructFuncString <- function(code, importsList, hash, fileContent,
     stringFunc <- paste(stringFunc,"       }\n")
     stringFunc <- paste(stringFunc,"     }\n")
     ## return the returnVars
-    stringFunc <- paste(stringFunc," \n    return(returnVars) \n")
+    stringFunc <- paste(stringFunc,"       outputs$returnVars <- returnVars\n")
+    stringFunc <- paste(stringFunc," \n    return(outputs) \n")
     stringFunc <- paste(stringFunc,  "}\n")
     return(stringFunc)
 }
@@ -349,6 +364,8 @@ writePlotToFile <- function(plot, hash, plotName) {
 executeCode <- function(code, importsList, hash, allFileContent="", debug=FALSE) {
 
     ## Call the function to create stringFunc, then parse and execute it.
+    ## Will return a named list:
+    ## ret(returnVars=<dataframes>,outputString=<console output>,htmlString=<html output>)
     if (debug) {
         print(paste("Executing code block \n",code))
     }
@@ -358,13 +375,16 @@ executeCode <- function(code, importsList, hash, allFileContent="", debug=FALSE)
     parsedFunc <- rlang::parse_expr(stringFunc)
 
     eval(parsedFunc)
-    s <- capture.output(returnVars <- wrattler_f())
+    ## capture.output gets the console output from executing the function.
+    s <- capture.output(funcOutput <- wrattler_f())
 
     clean_s <- lapply(s, cleanString)
     outputString <- paste(clean_s, collapse="\n")
 
     ret <- new.env()
-    ret$returnVars <- returnVars
+    ret$returnVars <- funcOutput$returnVars
+    ret$htmlString <- funcOutput$htmlString
     ret$outputString <- outputString
+
     return(ret)
 }

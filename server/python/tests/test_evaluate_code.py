@@ -100,3 +100,21 @@ def test_use_func_from_file():
                                        "files": ["http://dummy_datastore:7102/some/file"]
             })
             assert("Result is 3" in return_dict["output"])
+
+
+def test_html_output():
+    """
+    test that we get an 'html_output' field in the return_dict if we
+    call the addOutput function in our code fragment.
+    """
+
+    file_content = ""
+    input_code = 'addOutput("some_html")\n'
+    cell_hash = "testhash4"
+    with patch('python_service.write_frame') as mock_write_frame:
+        return_dict = handle_eval({"code": input_code,
+                                   "frames": [],
+                                   "hash": "testhash3",
+                                   "files": []
+            })
+        assert("html" in return_dict.keys())

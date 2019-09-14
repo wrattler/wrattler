@@ -232,7 +232,7 @@ interface EditorContext<TEvent> {
     /** Trigger an editor-specific event to be handled via the `update` function  */
     trigger(event: TEvent): void;
     /** Trigger the evaluation of a given code block. */
-    evaluate(block: BlockState): void;
+    evaluate(blockId: number): void;
     /** Set the source of a given code block to the `newSource` and trigger rebinding
      * of all subsequent code blocks in a notebook. */
     rebindSubsequent(block: BlockState, newSource: string): any;
@@ -258,6 +258,7 @@ interface BlockState {
     /** The state of the editor associated with this block
      * (also includes a reference to the block itself and its unique ID) */
     editor: EditorState;
+    evaluationState: "unevaluated" | "pending" | "done";
     /** The dependency graph node created for the block as a whole */
     code: Graph.Node;
     /** The dependency graph nodes representing data frames exported from the code block */

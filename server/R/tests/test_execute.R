@@ -107,3 +107,14 @@ test_that("We can evaluate a function defined in filecontent", {
     expect_that(result$outputString, equals("Hello Bob"))
 
 })
+
+## test we can use the addOutput function to output some HTML
+test_that("We can add html output", {
+    hash <- "testhash"
+    code <- "addOutput('<html></html>')\n"
+    importsList <- c()
+    fileContent <- ""
+    result <- executeCode(code, importsList, hash, fileContent)
+    expect_that(result$htmlString, equals("<html></html>"))
+
+})
