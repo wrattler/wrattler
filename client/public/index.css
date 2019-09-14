@@ -38,6 +38,9 @@ div.controls-bar {
 div.icons {
 	float:left;
 }
+div.move {
+	float:right;
+}
 div.controls {
 	float:right;
 }

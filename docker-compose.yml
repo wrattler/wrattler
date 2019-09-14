@@ -17,13 +17,13 @@ services:
     volumes:
      - ./client:/app
      - ./client/src:/app/src
-     - ./client/src/languagePlugins:/app/src/languagePlugins
      - ./resources:/app/public/resources
     entrypoint: /bin/bash
     command: "./entrypoint.sh"
     environment:
      - CLIENT_URI=http://localhost:8080
      - RACKETSERVICE_URI=http://localhost:7104
+     - AIASERVICE_URI=http://localhost:5050
      - PYTHONSERVICE_URI=http://localhost:7101
      - RSERVICE_URI=http://localhost:7103
      - DATASTORE_URI=http://localhost:7102
@@ -94,7 +94,7 @@ services:
     networks:
     - wrattler_nw
     volumes:
-      - ./jupyterlab_wrattler:/src
+      - ./jupyterlab_wrattler/src:/app/src
       - ./resources:/public
 
   wrattler_aiassistants:

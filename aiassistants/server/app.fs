@@ -90,6 +90,22 @@ let assistants =
     "test", startProcess "python" [| ".."; "test" |] "test.py" ]
   |> Map.ofSeq
 
+(*
+      let aias = 
+      [ { name:"Outlier detection", root:"http://localhost:5050/outlier", inputs:["input"],
+          description:"Detects outlier rows in a dataset by looking for rows with values further from the averages. Outlier rows can then be filtered based on the values of categorical columns."},
+        { name:"Data diff", root:"http://localhost:5050/test", inputs:["input"],
+          description:"Test that does not do anything useful.... " } ]
+          //description:"Detects structural differences between pairs of related tabular data sets and produces a corrective transformation that can be applied to reconcile those differences. "} ]
+
+*)
+type AiAssistant = {
+  name: string
+  description: string
+  inputs: string[]
+  root: string
+}
+
 let dsurl = Environment.GetEnvironmentVariable("DATASTORE_URI")
 
 let app : HttpHandler = fun f c -> Async.StartAsTask <| async {

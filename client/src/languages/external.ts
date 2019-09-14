@@ -206,7 +206,6 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
           importedFrames.push({ name: imported.variableName, url: (<Values.DataFrame>imported.value).url })
         }
         let src = externalNode.source.replace(/\r/g,'\n')
-        let hash = Md5.hashStr(src)
         
         let srcArray = src.split('\n')
         let strippedSrc = ''
@@ -232,9 +231,9 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
             }  
           }
         }
-
+        
         let body = {"code": strippedSrc,
-          "hash": hash,
+          "hash": externalNode.hash,
           "files" : importedFiles,
           "frames": importedFrames}
         return await getEval(body, this.serviceURI);
@@ -300,7 +299,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
         if (srcArray[l].match(this.regex_global)){
           let resourceName = srcArray[l].split(' ')[1]
           if (!resourceExists(resourceName)) {
-            let response = await Doc.getResourceContent(resourceName)
+            let response = await Doc.getResourceContent(context.resourceServerUrl, resourceName)
             let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'global', url:await putResource(resourceName, response)}
             newResources.push(newResource)
           }
@@ -308,7 +307,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
         else if (srcArray[l].match(this.regex_local)) {
           let resourceName = srcArray[l].split(' ')[1]
           if (!resourceExists(resourceName)) {
-            let response = await Doc.getResourceContent(resourceName)
+            let response = await Doc.getResourceContent(context.resourceServerUrl, resourceName)
             let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'local', url:await putResource(resourceName, response)}
             newResources.push(newResource)
           }

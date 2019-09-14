@@ -1,0 +1,38 @@
+```python
+%global hello.py
+printHello("Tomas")
+```
+```javascript
+// This is a javascript cell. 
+var js5 = [{'id':5, 'language':'javascript again'}]
+```
+```python
+# This is a python cell 
+py6 = pd.DataFrame({"id":["6"], "language":["python"]})
+```
+```python
+# This is a python cell 
+# py7 = pd.DataFrame({"id":["7"], "language":["python"]})
+```
+```javascript
+// This is a javascript cell. 
+//var js4 = [{'id':4, 'language':'javascript'}]
+```
+```r
+%local hello.r
+printHello("May and Tim and Isaac? and I am typing away")
+```
+
+
+
+
+
+
+%global hello.ts
+printHello("May")
+
+
+
+
+
+

@@ -372,3 +372,8 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
     return format(aiaBlock.assistant, aiaBlock.inputs, aiaBlock.newFrame, aiaBlock.code)
   }
 }
+
+export async function createAiaPlugin(url:string) : Promise<AiaLanguagePlugin> {
+  let response = await axios.get(url);
+  return new AiaLanguagePlugin(response.data);
+}
