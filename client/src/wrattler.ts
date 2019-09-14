@@ -28,6 +28,7 @@ import { markdownLanguagePlugin } from './languages/markdown'
 import { javascriptLanguagePlugin } from './languages/javascript'
 import { ExternalLanguagePlugin } from './languages/external'
 import { mergerLanguagePlugin } from './demo/merger'
+import { AiaLanguagePlugin } from './demo/aiassistant'
 
 /** @hidden */
 declare var PYTHONSERVICE_URI: string;
@@ -78,7 +79,15 @@ class Wrattler {
     languagePlugins["python"] = new ExternalLanguagePlugin("python", "fab fa-python", PYTHONSERVICE_URI, pyCode);
     languagePlugins["r"] = new ExternalLanguagePlugin("r", "fab fa-r-project", RSERVICE_URI, rCode);
     languagePlugins["racket"] = new ExternalLanguagePlugin("racket", "fa fa-question-circle", RACKETSERVICE_URI, rcCode);
-    // languagePlugins["merger"] = mergerLanguagePlugin;
+    languagePlugins["merger"] = mergerLanguagePlugin;
+
+    let aias = 
+      [ { name:"Outlier detection", root:"http://localhost:5050/outlier", inputs:["input"],
+          description:"Detects outlier rows in a dataset by looking for rows with values further from the averages. Outlier rows can then be filtered based on the values of categorical columns."},
+        { name:"Data diff", root:"http://localhost:5050/test", inputs:["input"],
+          description:"Test that does not do anything useful.... " } ]
+          //description:"Detects structural differences between pairs of related tabular data sets and produces a corrective transformation that can be applied to reconcile those differences. "} ]
+    languagePlugins["ai assistant"] = new AiaLanguagePlugin(aias);
     return languagePlugins;
   }
 
