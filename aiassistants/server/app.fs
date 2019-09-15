@@ -85,31 +85,27 @@ let startProcess fn wd args =
       printfn "PROCESS FAILED: %A" e })
   
 
-let assistants = 
-  [ "outlier", startProcess "dotnet" [| ".."; "outlier" |] "bin/Debug/netcoreapp2.2/outlier.dll"
-    "test", startProcess "python" [| ".."; "test" |] "test.py" ]
-  |> Map.ofSeq
+type Config = JsonProvider<"../config.json">
+let config = Config.Load(Path.Combine(Directory.GetCurrentDirectory(), "..", "config.json"))
 
-(*
-      let aias = 
-      [ { name:"Outlier detection", root:"http://localhost:5050/outlier", inputs:["input"],
-          description:"Detects outlier rows in a dataset by looking for rows with values further from the averages. Outlier rows can then be filtered based on the values of categorical columns."},
-        { name:"Data diff", root:"http://localhost:5050/test", inputs:["input"],
-          description:"Test that does not do anything useful.... " } ]
-          //description:"Detects structural differences between pairs of related tabular data sets and produces a corrective transformation that can be applied to reconcile those differences. "} ]
-
-*)
 type AiAssistant = {
   name: string
   description: string
   inputs: string[]
-  root: string
-}
+  root: string }
 
-let dsurl = Environment.GetEnvironmentVariable("DATASTORE_URI")
+let aias = config |> Array.map (fun a -> 
+  { name = a.Name; description = a.Description; inputs = a.Inputs; root = a.Id })
 
-let app : HttpHandler = fun f c -> Async.StartAsTask <| async {
-  // Get list of inputs and replace data store URLs with local file names
+let processes = 
+  [ for a in config -> a.Id, startProcess a.Process [| ".."; a.Id |] a.Arguments ]
+  |> Map.ofSeq
+
+let dsurl =
+  let dsurl = Environment.GetEnvironmentVariable("DATASTORE_URI")
+  if String.IsNullOrEmpty dsurl then "http://localhost:7102" else dsurl
+
+let aiareq handler : HttpHandler = fun f c -> Async.StartAsTask <| async {
   let inputs = c.Request.Headers.["Inputs"] |> Seq.tryHead |> Option.defaultValue ""
   let local = ResizeArray<_>()
   for kvp in inputs.Split([|','|], System.StringSplitOptions.RemoveEmptyEntries) do
@@ -121,22 +117,31 @@ let app : HttpHandler = fun f c -> Async.StartAsTask <| async {
   let inputs = String.concat "," local
 
   let url = (if c.Request.Path.HasValue then c.Request.Path.Value else "/").[1 ..]
-  let parts = url.Split([|'/'|], System.StringSplitOptions.RemoveEmptyEntries) 
-  let aname, parts = Array.head parts, Array.tail parts
-  let aproc = assistants.[aname]
+  let parts = url.Split([|'/'|], StringSplitOptions.RemoveEmptyEntries) |> List.ofArray
+  match parts with
+  | name::query -> 
+      let! res = handler inputs (processes.[name]) query 
+      return! Async.AwaitTask(res f c) 
+  | _ -> 
+      return! Async.AwaitTask(RequestErrors.BAD_REQUEST "Missing assistant name" f c) }
 
-  if (parts.Length > 2 && parts.[0] = "data") then
-    let query = parts.[3 ..] |> String.concat "/"
-    let! result = aproc.PostAndAsyncReply(fun repl -> GetData(inputs, query, repl))
-    let frameUrl = sprintf "%s/%s/%s" dsurl parts.[1] parts.[2]
-    let! _ = 
-      Http.AsyncRequest
-        ( frameUrl, httpMethod="PUT", headers=[HttpRequestHeaders.ContentType("application/json")], 
-          body=TextRequest(result.ToString()) )
-    return! Async.AwaitTask(json frameUrl f c)
+let (|Concat|) q = String.concat "/" q
 
-  else
-    let query = parts |> String.concat "/"
-    let! result = aproc.PostAndAsyncReply(fun repl -> GetCompletions(inputs, query, repl))
-    return! Async.AwaitTask(json result f c) }
-  
+let app : HttpHandler = 
+  choose [
+    route "/" >=> json aias
+    aiareq (fun inputs aia query -> async {
+      match query with 
+      | "data"::hash::var::Concat(query) ->
+          let! result = aia.PostAndAsyncReply(fun repl -> GetData(inputs, query, repl))
+          let frameUrl = sprintf "%s/%s/%s" dsurl hash var
+          let! _ = 
+            Http.AsyncRequest
+              ( frameUrl, httpMethod="PUT", headers=[HttpRequestHeaders.ContentType("application/json")], 
+                body=TextRequest(result.ToString()) )
+          return json frameUrl
+      | "completions"::Concat(query) ->
+          let! result = aia.PostAndAsyncReply(fun repl -> GetCompletions(inputs, query, repl))
+          return json result 
+      | _ ->
+          return RequestErrors.BAD_REQUEST "Invalid data or completions request" }) ]

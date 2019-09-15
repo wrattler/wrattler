@@ -60,6 +60,11 @@ div.controls {
 	margin-right:5px;
 }
 
+.cell-c-default .controls-bar a, .cell-c-default .icons-bar span, .cell-c-default .controls-bar .fa, 
+	.cell-c-default .icons-bar .fa, .cell-c-default .controls-bar .fab, .cell-c-default .icons-bar .fab { color:#d0d0d0; }
+.cell-c-default { border-color:#d0d0d0; }
+.cell-c-default a:hover, .cell-c-default a:hover i { color:#a0a0a0 !important; }
+
 .cell-c0 .controls-bar a, .cell-c0 .icons-bar span, .cell-c0 .controls-bar .fa, 
 	.cell-c0 .icons-bar .fa, .cell-c0 .controls-bar .fab, .cell-c0 .icons-bar .fab { color:#8DD3C7; }
 .cell-c0 { border-color:#8DD3C7; }

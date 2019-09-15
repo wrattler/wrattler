@@ -75,7 +75,7 @@ function parse(code:string) : { assistant:string|null, chain:Completion[], input
 }
 
 async function getCompletions(root:string, inputs:AiaInputs, path:string[]) : Promise<Completion[]> {
-  let url = root + "/" + path.join("/")
+  let url = root + "/completions/" + path.join("/")
   let header = Object.keys(inputs).map(k => k + "=" + inputs[k]).join(",")
   let response = await axios.get(url, {headers:{Inputs:header}});
   return response.data.map((r:any) =>
@@ -244,9 +244,13 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
           h('input', { value:aiaNode.newFrame, placeholder:'<name>', oninput: (e) => triggerFrameName((<any>e.target).value) }, []),
           h('span', {class:'text'}, [ " = " ]) ]
 
+      let previewButton = h('button', 
+        { class:'preview-button', onclick:() => { 
+            Log.trace("editor", "Evaluate button clicked in external language plugin")
+            ctx.evaluate(cell.editor.id) } }, ["Evaluate!"] )    
       let spinner = h('i', {class: 'fas fa-spinner fa-spin' }, [])
       let preview = h('div', {class:'preview'}, [
-        (cell.code.value == undefined || cell.evaluationState == 'pending') ? spinner :
+        (cell.code.value == undefined) ? (cell.evaluationState == 'pending') ? spinner : previewButton :
         (createOutputPreview(cell, () => {}, 0, <Values.ExportsValue>cell.code.value))]);
 
       return h('div', 
@@ -351,13 +355,14 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
     let aiaNode = <AiaNode>node
     switch(aiaNode.kind) {
       case 'code':
-        let res : { [key:string]: Values.KnownValue }= {}
-        if (aiaNode.newFrame != "" && aiaNode.assistant != null) {
+        let res : { [key:string]: Values.KnownValue } = {}
+        let newFrame = aiaNode.newFrame == "" ? "<name>" : aiaNode.newFrame; 
+        if (aiaNode.assistant != null) {
           let path = aiaNode.chain.length > 0 ? aiaNode.chain[aiaNode.chain.length-1].path : []
           var inputs : AiaInputs = {}
           for(let k of Object.keys(aiaNode.inputNodes)) inputs[k] = (<Values.DataFrame>aiaNode.inputNodes[k].value).url
-          let merged = await getResult(aiaNode.assistant.root, aiaNode.hash, aiaNode.newFrame, inputs, path)
-          res[aiaNode.newFrame] = merged
+          let merged = await getResult(aiaNode.assistant.root, aiaNode.hash, newFrame, inputs, path)
+          res[newFrame] = merged
         }
         let exps : Values.ExportsValue = { kind:"exports", exports: res }
         return { kind: "success", value: exps }
@@ -375,5 +380,7 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
 
 export async function createAiaPlugin(url:string) : Promise<AiaLanguagePlugin> {
   let response = await axios.get(url);
-  return new AiaLanguagePlugin(response.data);
+  let aia : AiAssistant[] = response.data; 
+  for(var i = 0; i< aia.length; i++) aia[i].root = url + "/" + aia[i].root;
+  return new AiaLanguagePlugin(aia);
 }
