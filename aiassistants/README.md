@@ -14,6 +14,40 @@ To create a new AI assistant, you'll need to (a) implement it! (2) add
 a bit of configuration to let the server know how to run your AI assistant
 and (3) optionally, add install scripts for your requirements to `Dockerfile`.
 
+## Getting and running Wrattler
+
+To run Wrattler, you will need to install [Docker](https://www.docker.com/).
+We are also using [Docker compose](https://docs.docker.com/compose/), which lets
+us start multiple Docker images (there is one for the central data store, one for each
+language plugin and one for AI assistants). Docker compose should be installed by
+default with Docker.
+
+To get the latest version of Wrattler with AI assistant support and run it, you 
+can run the following:
+
+```
+git clone -b aiassistants --single-branch https://github.com/wrattler/wrattler.git
+cd wrattler
+```
+
+This fetches the source code. Now we need to build the Docker images (this might take
+a long time, but it should be faster when you do this again) and run them:
+
+```
+docker-compose build
+docker-compose up
+```
+
+To stop Docker, you can hit `Ctrl+C`. You will then probably need to run `docker-compose down`
+which fully removes all the running Docker images. You can also see if there are any
+left running using `docker ps` and use `docker kill` to stop anything that's left 
+(or `docker rm` to remove a stopped process that, for some mysterious reason, is hanging
+around and blocking things...).
+
+Once you add your new AI assistant, you can run `docker-compose build` and `dokcer-compose up`
+again. This should be faster, because Docker will only need to rebuild one of the Docker
+images (the one with AI assistants).
+
 ## Configuration and installation
 
 First the boring bits! The configuration file that specifies what AI assistants
