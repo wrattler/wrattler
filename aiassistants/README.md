@@ -48,7 +48,7 @@ left running using `docker ps` and use `docker kill` to stop anything that's lef
 (or `docker rm` to remove a stopped process that, for some mysterious reason, is hanging
 around and blocking things...).
 
-Once you add your new AI assistant, you can run `docker-compose build` and `dokcer-compose up`
+Once you add your new AI assistant, you can run `docker-compose build` and `docker-compose up`
 again. This should be faster, because Docker will only need to rebuild one of the Docker
 images (the one with AI assistants).
 
