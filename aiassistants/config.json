@@ -15,5 +15,11 @@
     "process": "python",
     "arguments": "test.py",
     "inputs": ["input"],
-    "description": "This is a test that does not do anything useful at all, but it shows how to implement AI assistants in Python!" }
+    "description": "This is a test that does not do anything useful at all, but it shows how to implement AI assistants in Python!" },
+  { "name": "Test assistant2",
+    "id": "test2",
+    "process": "python",
+    "arguments": "test2.py",
+    "inputs": ["input"],
+    "description": "Ahhh" }
   ]
