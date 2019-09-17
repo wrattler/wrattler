@@ -18,6 +18,10 @@ RUN dotnet build /app/outlier/
 
 ADD datadiff /app/datadiff
 ADD test /app/test
+
+RUN pip3 install clevercsv
+ADD ccsv /app/ccsv
+
 EXPOSE 5050
 WORKDIR "app/server"
 CMD ["dotnet","bin/Debug/netcoreapp2.1/aiassistants.dll"]
