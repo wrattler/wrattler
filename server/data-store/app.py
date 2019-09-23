@@ -108,8 +108,12 @@ def create_app(name = __name__):
     app.register_blueprint(datastore_blueprint)
     return app
 
-if __name__ == "__main__":
-    ## create and run the flask app
 
+def main():
+    ## create and run the flask app
     app = create_app()
     app.run(host='0.0.0.0',port=7102, debug=True)
+
+
+if __name__ == "__main__":
+    main()
