@@ -54,6 +54,10 @@ def create_app(name = __name__):
     return app
 
 
-if __name__ == "__main__":
+def main():
     app = create_app()
     app.run(host='0.0.0.0',port=7101, debug=True)
+
+
+if __name__ == "__main__":
+    main()
