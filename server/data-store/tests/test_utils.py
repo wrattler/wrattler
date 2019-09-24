@@ -8,7 +8,7 @@ import pyarrow as pa
 import pandas as pd
 import pytest
 
-from utils import *
+from wrattler_data_store.utils import *
 
 def is_arrow_format(data):
     """

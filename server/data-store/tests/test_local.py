@@ -11,7 +11,7 @@ import pandas as pd
 import pyarrow as pa
 
 
-from storage import *
+from wrattler_data_store.storage import *
 
 
 def test_write_json_string():
