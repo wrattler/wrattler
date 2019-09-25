@@ -57,6 +57,7 @@ member3:some/path/more/even
 */
 
 function parse(code:string) : { assistant:string|null, chain:Completion[], inputs:AiaInputs, frame:string } {
+  code = code.split("\r\n").join("\n")
   if (code == "") return { assistant: null, chain: [], inputs: {}, frame: "" }
   let lines = code.split('\n')
   let head = lines[0].split(':')  
@@ -304,11 +305,11 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
   }
   parse (code:string) : Langs.Block {
     let parsed = parse(code)
-    console.log("PARSED: ", code, parsed)
     var block: AiaBlock = { language: "ai assistant", code: [], assistant: null, inputs: {}, newFrame: "" }
     for(var a of this.assistants) 
       if (a.name == parsed.assistant) 
         block = { language: "ai assistant", code: parsed.chain, assistant: a, inputs:parsed.inputs, newFrame:parsed.frame }
+    console.log("PARSED: ", code, parsed, block)
     return <Langs.Block>block
   }
 

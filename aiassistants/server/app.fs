@@ -79,26 +79,34 @@ let startProcess id (build:Config.Build[]) fn wd args =
         let! msg = inbox.Receive()
         match msg with 
         | Kill ->
+            printfn "Stopping process '%s'" id
             ps.Kill()
             raise StopProcess
         | GetData(inputs, query, repl) ->
+            printfn "Sending 'data' command to process '%s'" id
             ps.StandardInput.WriteLine(inputs)
             ps.StandardInput.WriteLine("data")
             ps.StandardInput.WriteLine(query)
+            printfn "Waiting for CSV file..."
             let out = ps.StandardOutput.ReadLine()
+            printfn "Received CSV file '%s'" out
             let json = serialize out
             //File.Delete(out)
             repl.Reply(json)
 
         | GetCompletions(inputs, query, repl) ->
+            printfn "Sending 'completions' command to process '%s'" id
             ps.StandardInput.WriteLine(inputs)
             ps.StandardInput.WriteLine("completions")
             ps.StandardInput.WriteLine(query)
-            [| let mutable line = ""
-               while (line <- ps.StandardOutput.ReadLine(); line <> "") do
-                 let path = ps.StandardOutput.ReadLine()
-                 printfn "  %s: %s" line path
-                 yield { name = line; path = path } |] |> repl.Reply
+            let completions = 
+              [| let mutable line = ""
+                 while (line <- ps.StandardOutput.ReadLine(); line <> "") do
+                   let path = ps.StandardOutput.ReadLine()
+                   printfn "  %s: %s" line path
+                   yield { name = line; path = path } |] 
+            printfn "Received '%d' completions" completions.Length
+            repl.Reply completions
     with 
     | StopProcess -> ()
     | e -> printfn "PROCESS FAILED: %A" e })
