@@ -6,7 +6,7 @@ import json
 import pandas as pd
 import pyarrow as pa
 
-from python_service import execute_code, find_assignments, convert_to_pandas
+from wrattler_python_service.python_service_utils import execute_code, find_assignments, convert_to_pandas
 from exceptions import ApiException
 
 def test_execute_pd_concat():
