@@ -8,6 +8,7 @@ import sys
 import json
 import re
 import parser
+import requests
 import pandas as pd
 import numpy as np
 import ast

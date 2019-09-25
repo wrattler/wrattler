@@ -29,7 +29,7 @@ def test_hello_world():
     """
     shutil.rmtree("/tmp/testhash3", ignore_errors=True)
     input_code = 'print("hello world")'
-    with patch('python_service.write_frame') as mock_write_frame:
+    with patch('wrattler_python_service.python_service_utils.write_frame') as mock_write_frame:
 
         return_dict = handle_eval({"code":input_code,
                                    "frames": [],
@@ -43,7 +43,7 @@ def test_assignment():
     test that a simple assignment outputs the url for a dataframe
     """
     input_code = 'df = pd.DataFrame({"x":[1,2,3]})'
-    with patch('python_service.write_frame') as mock_write_frame:
+    with patch('wrattler_python_service.python_service_utils.write_frame') as mock_write_frame:
         return_dict = handle_eval({"code":input_code,
                                    "frames": [],
                                    "hash": "irrelevant"})
@@ -60,7 +60,7 @@ def test_concat():
     input_code = 'df1 = pd.DataFrame({"name":["Alice","Bob"],"occupation":["cryptographer","crook"]})\n'
     input_code += 'df2 = pd.DataFrame({"name":["Carol"],"occupation":["copper"]})\n'
     input_code += 'df3 = df1.append(df2)\n'
-    with patch('python_service.write_frame', return_value=True) as mock_write_frame:
+    with patch('wrattler_python_service.python_service_utils.write_frame', return_value=True) as mock_write_frame:
         return_dict = handle_eval({"code":input_code,
                                    "frames": [],
                                    "hash": "testhash1"})
@@ -74,8 +74,8 @@ def test_create_plot():
     """
     shutil.rmtree("/tmp/testhash2",ignore_errors=True)
     input_code = "import matplotlib.pyplot as plt\nplt.plot([1,2,3])\n"
-    with patch('python_service.write_frame') as mock_write_frame:
-        with patch('python_service.write_image') as mock_write_image:
+    with patch('wrattler_python_service.python_service_utils.write_frame') as mock_write_frame:
+        with patch('wrattler_python_service.python_service_utils.write_image') as mock_write_image:
             return_dict = handle_eval({"code": input_code,
                                        "frames": [],
                                        "hash": "testhash32"})
@@ -92,8 +92,8 @@ def test_use_func_from_file():
     input_code = 'print("Result is {}".format(testfunc(9))) \n'
     cell_hash = "testhash3"
     filename = "testfile.py"
-    with patch('python_service.get_file_content', return_value=file_content) as mock_get_file_content:
-        with patch('python_service.write_frame') as mock_write_frame:
+    with patch('wrattler_python_service.python_service_utils.get_file_content', return_value=file_content) as mock_get_file_content:
+        with patch('wrattler_python_service.python_service_utils.write_frame') as mock_write_frame:
             return_dict = handle_eval({"code": input_code,
                                        "frames": [],
                                        "hash": "testhash3",
@@ -111,7 +111,7 @@ def test_html_output():
     file_content = ""
     input_code = 'addOutput("some_html")\n'
     cell_hash = "testhash4"
-    with patch('python_service.write_frame') as mock_write_frame:
+    with patch('wrattler_python_service.python_service_utils.write_frame') as mock_write_frame:
         return_dict = handle_eval({"code": input_code,
                                    "frames": [],
                                    "hash": "testhash3",
