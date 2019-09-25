@@ -13,7 +13,7 @@ import pandas as pd
 from unittest.mock import patch
 
 from wrattler_python_service.python_service_utils import handle_eval, read_frame, DATASTORE_URI
-from exceptions import ApiException
+from wrattler_python_service.exceptions import ApiException
 
 from flask import Flask
 from flask_restful import Api
