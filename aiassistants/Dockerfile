@@ -2,22 +2,19 @@ FROM mcr.microsoft.com/dotnet/core/sdk:2.2
 
 RUN apt-get update; apt-get install -y python3
 RUN apt-get update; apt-get install -y python3-pip
+RUN pip3 install pandas
 
 RUN mkdir /app
 
-ADD config.json /app
-
 ADD server /app/server
-ADD outlier /app/outlier
-
 RUN dotnet restore /app/server/
-RUN dotnet restore /app/outlier/
-
 RUN dotnet build /app/server/
-RUN dotnet build /app/outlier/
 
-ADD datadiff /app/datadiff
-ADD test /app/test
+ADD assistants/config.json /app
+ADD assistants/outlier /app/assistants/outlier
+ADD assistants/datadiff /app/assistants/datadiff
+ADD assistants/test /app/assistants/test
+
 EXPOSE 5050
 WORKDIR "app/server"
 CMD ["dotnet","bin/Debug/netcoreapp2.1/aiassistants.dll"]

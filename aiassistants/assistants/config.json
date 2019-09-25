@@ -1,6 +1,7 @@
 [ { "name": "Outlier detection", 
     "id": "outlier", 
     "inputs": ["input"],
+    "build": [ {"process":"dotnet", "arguments":"restore"}, {"process":"dotnet", "arguments":"build" }],
     "process": "dotnet",
     "arguments": "bin/Debug/netcoreapp2.2/outlier.dll",
     "description": "Detects outlier rows in a dataset by looking for rows with values further from the averages. Outlier rows can then be filtered based on the values of categorical columns."},
@@ -16,10 +17,10 @@
     "arguments": "test.py",
     "inputs": ["input"],
     "description": "This is a test that does not do anything useful at all, but it shows how to implement AI assistants in Python!" },
-  { "name": "Test assistant2",
+  { "name": "Test assistant",
     "id": "test2",
     "process": "python3",
     "arguments": "test2.py",
     "inputs": ["input"],
-    "description": "Ahhh" }
-  ]
+    "description": "This is... stupid!" }
+]

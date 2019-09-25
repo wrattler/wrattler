@@ -5,6 +5,8 @@ open System.Diagnostics
 open Giraffe
 open FSharp.Data
 
+type Config = JsonProvider<"config-sample.json">
+
 type DataStoreAgentMessage = 
   | Get of string * AsyncReplyChannel<string>
 
@@ -39,6 +41,9 @@ type Completion = { name:string; path:string }
 type ProcessMessage = 
   | GetData of inputs:string * query:string * AsyncReplyChannel<JsonValue>
   | GetCompletions of inputs:string * query:string * AsyncReplyChannel<Completion[]>
+  | Kill
+
+exception StopProcess 
 
 let serialize (file:string) =
   let csv = CsvFile.Load(file)
@@ -52,8 +57,18 @@ let serialize (file:string) =
     ||> Array.map2 (fun k v -> k, sp v) |> JsonValue.Record) 
   |> Array.ofSeq |> JsonValue.Array
 
-let startProcess fn wd args = 
+let startProcess id (build:Config.Build[]) fn wd args = 
   let dir = Directory.GetCurrentDirectory()
+
+  for b in build do
+    printfn "Running build script for '%s': %s %s" id b.Process b.Arguments
+    let psi = 
+      ProcessStartInfo(FileName=b.Process, WorkingDirectory=Path.Combine(Array.append [| dir |] wd), 
+        Arguments=b.Arguments, UseShellExecute=false)  
+    let ps = System.Diagnostics.Process.Start(psi)
+    ps.WaitForExit()
+    
+  printfn "Starting process for '%s': %s %s" id fn args
   let psi = 
     ProcessStartInfo(FileName=fn, WorkingDirectory=Path.Combine(Array.append [| dir |] wd), 
       Arguments=args, UseShellExecute=false, RedirectStandardOutput=true, RedirectStandardInput=true)  
@@ -63,6 +78,9 @@ let startProcess fn wd args =
       while true do 
         let! msg = inbox.Receive()
         match msg with 
+        | Kill ->
+            ps.Kill()
+            raise StopProcess
         | GetData(inputs, query, repl) ->
             ps.StandardInput.WriteLine(inputs)
             ps.StandardInput.WriteLine("data")
@@ -81,12 +99,43 @@ let startProcess fn wd args =
                  let path = ps.StandardOutput.ReadLine()
                  printfn "  %s: %s" line path
                  yield { name = line; path = path } |] |> repl.Reply
-    with e ->
-      printfn "PROCESS FAILED: %A" e })
+    with 
+    | StopProcess -> ()
+    | e -> printfn "PROCESS FAILED: %A" e })
   
+let waitForChange () = Async.FromContinuations(fun (cont, _, _) ->
+  let fsw = new FileSystemWatcher()
+  let mutable cts = new System.Threading.CancellationTokenSource()
+  let mutable finished = false
+  let l1 = obj()
+  let l2 = obj()
 
-type Config = JsonProvider<"../config.json">
-let config = Config.Load(Path.Combine(Directory.GetCurrentDirectory(), "..", "config.json"))
+  let update a = 
+    let work = async {      
+      do! Async.Sleep(2000)
+      let run = lock l2 (fun () ->
+        if not finished then
+          finished <- true
+          fsw.EnableRaisingEvents <- false
+          fsw.Dispose() 
+          true
+        else false )
+      if run then cont ()
+    }
+    lock l1 (fun () ->
+      cts.Cancel()       
+      cts <- new Threading.CancellationTokenSource()
+      Async.Start(work, cancellationToken = cts.Token)
+    )
+        
+  fsw.Path <- Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "assistants"))
+  fsw.NotifyFilter <- NotifyFilters.LastAccess ||| NotifyFilters.LastWrite ||| NotifyFilters.FileName ||| NotifyFilters.DirectoryName
+  fsw.Filter <- "config.json"
+  fsw.Changed.Add(fun e -> printfn "%A: %s" e.ChangeType e.FullPath; update ())
+  fsw.Created.Add(fun e -> printfn "%A: %s" e.ChangeType e.FullPath; update ())
+  fsw.Deleted.Add(fun e -> printfn "%A: %s" e.ChangeType e.FullPath; update ())
+  fsw.Renamed.Add(fun e -> printfn "%A: %s" e.ChangeType e.FullPath; update ())
+  fsw.EnableRaisingEvents <- true)
 
 type AiAssistant = {
   name: string
@@ -94,12 +143,34 @@ type AiAssistant = {
   inputs: string[]
   root: string }
 
-let aias = config |> Array.map (fun a -> 
-  { name = a.Name; description = a.Description; inputs = a.Inputs; root = a.Id })
+let loadConfig (config:string) = 
+  let config = Config.Parse(config)
+  let aias = config |> Array.map (fun a -> 
+    { name = a.Name; description = a.Description; inputs = a.Inputs; root = a.Id })
+  let processes = 
+    [ for a in config -> a.Id, startProcess a.Id a.Build a.Process [| ".."; "assistants"; a.Id |] a.Arguments ]
+    |> Map.ofSeq
+  aias, processes
 
-let processes = 
-  [ for a in config -> a.Id, startProcess a.Process [| ".."; a.Id |] a.Arguments ]
-  |> Map.ofSeq
+let readConfig () = 
+  File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "..", "assistants", "config.json"))
+let mutable config = readConfig ()
+let mutable aias, processes = loadConfig config
+
+Async.Start <| async {  
+  while true do 
+    printfn "Waiting for file changes..."
+    do! waitForChange ()
+    let newConfig = readConfig ()
+    if config <> newConfig then
+      config <- newConfig
+      printfn "Config file has changed. Reloading config and starting processes"
+      let kill = processes
+      let a, p = loadConfig config
+      aias <- a
+      processes <- p
+      printfn "Killing all old processes"
+      kill |> Map.iter (fun _ p -> p.Post(Kill)) }
 
 let dsurl =
   let dsurl = Environment.GetEnvironmentVariable("DATASTORE_URI")
@@ -129,7 +200,7 @@ let (|Concat|) q = String.concat "/" q
 
 let app : HttpHandler = 
   choose [
-    route "/" >=> json aias
+    route "/" >=> fun a r -> json aias a r
     aiareq (fun inputs aia query -> async {
       match query with 
       | "data"::hash::var::Concat(query) ->
