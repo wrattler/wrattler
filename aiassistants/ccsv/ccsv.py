@@ -212,10 +212,19 @@ def nice_name(opt, char, chrname):
     # unicode name of character
     pre, comp = opt.split("_")
     out = comp
-    if pre == "is":
-        out += " is " + chrname.lower() + " (" + char + ")"
+    if char == "":
+        post = ""
+    # TODO: this is a "failure" of the language used to talk to Wrattler: we
+    # can't have a literal ':' in the completion because that's what the query
+    # name/url are separated on.
+    elif char == ":":
+        post = ""
     else:
-        out += " is not " + chrname.lower() + " (" + char + ")"
+        post = " (" + char + ")"
+    if pre == "is":
+        out += " is " + chrname.lower() + post
+    else:
+        out += " is not " + chrname.lower() + post
     return out
 
 
