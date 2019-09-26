@@ -138,7 +138,7 @@ class PrivateWrattler {
     }
     else {
       // THIS IS FOR TESTING BINDER
-      resourceServerUrl = resourceServerUrl.concat(location.port).concat("/proxy/8080/")
+      resourceServerUrl = resourceServerUrl.concat("/"+location.port).concat("/proxy/8080/")
       console.log("Will look for wrattler-app.js here:" +resourceServerUrl)
       // resourceServerUrl = resourceServerUrl.concat(":8080/")
       
