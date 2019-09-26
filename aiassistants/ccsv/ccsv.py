@@ -92,6 +92,12 @@ class CleverCSVAssistant:
         print(tmpfname)
         sys.stdout.flush()
 
+
+def DEBUG(msg):
+    print("[CCSV_DEBUG] " + msg, file=sys.stderr)
+    sys.stderr.flush()
+
+
 def query2constraints(query):
     """ Parse a query to a dictionary of constraints
 
@@ -234,13 +240,40 @@ def charname(char):
     return "EMPTY"
 
 
-def error(msg):
+def send_message(messages, header="Info"):
     hdl, tmpfname = tempfile.mkstemp(prefix="clevercsv_", suffix=".csv")
+    table = [[header]]
+    if isinstance(messages, str):
+        table.append([messages])
+    else:
+        for line in messages:
+            table.append([line])
     with os.fdopen(hdl, "w") as fp:
-        fp.write("Error\n")
-        fp.write(msg)
+        writer = clevercsv.writer(fp)
+        writer.writerows(table)
     print(tmpfname)
     sys.stdout.flush()
+
+
+def info(msg):
+    send_message(msg, header="Info")
+
+
+def error(msg):
+    send_message(msg, header="Error")
+
+
+def tie_break_message(buf):
+    message = [
+        "CleverCSV couldn't determine a unique dialect, please provide constraints to help.",
+        "Here is a preview of the first few rows:",
+    ]
+    for _ in range(5):
+        line = next(buf, None)
+        if line is None:
+            break
+        message.append(line.strip("\r\n"))
+    return message
 
 
 def main():
