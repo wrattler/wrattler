@@ -132,12 +132,14 @@ class PrivateWrattler {
     // sagemaker: https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/8080/wrattler-app.js
     let windowUrl:string = window.location.href
     let resourceServerUrl = window.location.protocol+"//"+window.location.hostname
+    
     if (windowUrl.includes('sagemaker.aws')){
       resourceServerUrl = resourceServerUrl.concat("/proxy/8080/")
     }
     else {
       // THIS IS FOR TESTING BINDER
-      resourceServerUrl = resourceServerUrl.concat("/proxy/8080/")
+      resourceServerUrl = resourceServerUrl.concat(location.port).concat("/proxy/8080/")
+      console.log("Will look for wrattler-app.js here:" +resourceServerUrl)
       // resourceServerUrl = resourceServerUrl.concat(":8080/")
       
     }
