@@ -207,17 +207,10 @@ def main():
             print("")
             sys.stdout.flush()
         elif cmd == "data\n":
-            raw_df = pd.read_csv(filename)
-            csvdialect = None
-            if not dialect is None:
-                csvdialect = dialect.to_csv_dialect()
-            if not "data" in raw_df:
-                error(
-                    "Please provide a data frame with a single 'data' column."
-                )
-                continue
             buf = io.StringIO(data)
-            clean_df = pd.read_csv(buf, dialect=csvdialect)
+            reader = clevercsv.reader(buf, dialect)
+            tmp_df = pd.DataFrame.from_records(list(reader))
+            clean_df = tmp_df.replace(np.nan, "", regex=True)
 
             hdl, tmpfname = tempfile.mkstemp(
                 prefix="clevercsv_", suffix=".csv"
