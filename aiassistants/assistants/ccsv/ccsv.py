@@ -6,18 +6,6 @@ CleverCSV AI Assistant
 
 Author: G.J.J. van den Burg
 
-  { "name": "CleverCSV",
-    "id": "clevercsv",
-    "process": "python",
-    "arguments": "ccsv.py",
-    "inputs": ["input"],
-    "description": "CleverCSV helps import data from messy CSV files"
-  }
-
-Notes:
-    if the query is empty, the output dataframe should be CleverCSV's best 
-    guess.
-
 """
 
 import io
