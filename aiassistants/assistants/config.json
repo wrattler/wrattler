@@ -16,5 +16,12 @@
     "process": "python3",
     "arguments": "test.py",
     "inputs": ["input"],
-    "description": "This is a test that does not do anything useful at all, but it shows how to implement AI assistants in Python!" }
+    "description": "This is a test that does not do anything useful at all, but it shows how to implement AI assistants in Python!" },
+  { "name": "CleverCSV",
+    "id": "ccsv",
+    "process": "python3",
+    "arguments": "ccsv.py",
+    "inputs": ["input"],
+    "description": "CleverCSV helps import data from messy CSV files"
+  }
 ]
