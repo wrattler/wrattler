@@ -21,10 +21,8 @@ Notes:
 """
 
 # TODO:
-# - ensure no two "is_delimiter" queries can be passed
 # - handle empty string delimiter in pandas
-# - remove mutually exclusive options: i.e. "quotechar is empty" and "quotechar 
-# is not empty" as only options is not meaningful.
+# - figure out how to return a non-uniform table
 
 import io
 import os
@@ -32,8 +30,9 @@ import sys
 import tempfile
 import unicodedata
 
-import pandas as pd
 import clevercsv
+import pandas as pd
+import requests
 
 # dialect components that we're considering
 COMPONENTS = ["delimiter", "quotechar", "escapechar"]
@@ -85,8 +84,7 @@ def query2constraints(query):
     return constraints
 
 
-def dialects_satisfying_constraints(filename, constraints):
-    data = load_data(filename)
+def dialects_satisfying_constraints(data, constraints):
     options = clevercsv.potential_dialects.get_dialects(data)
     satisfying = []
     for dialect in options:
@@ -104,28 +102,40 @@ def dialects_satisfying_constraints(filename, constraints):
             continue
 
         satisfying.append(dialect)
-    return data, satisfying
+    return satisfying
 
 
 def load_data(csvfile):
     # load the data from a Wrattler CSV file (i.e. a DataFrame with a single
     # cell in the "data" column)
     df = pd.read_csv(csvfile)
-    if not "data" in df:
-        error("Please provide a data frame with a single 'data' column.")
-    return df["data"][0]
+    if not "data" in df or "url" in df:
+        error(
+            "Please provide a data frame with either a single 'data' column or a single 'url' column."
+        )
+    if "data" in df:
+        return df["data"][0]
+    req = requests.get(df["url"][0])
+    return req.content
 
 
-def get_options(satisfying):
+def get_options(satisfying_dialects, constraints):
     # must be a mapping of is_component/not_component to a list of unicode
     # names for characters
     options = {}
     for component in COMPONENTS:
         available = set()
-        for dialect in satisfying:
+
+        # if the component is already fixed, there are no valid options
+        if constraints[component]["fix"] is not None:
+            continue
+
+        for dialect in satisfying_dialects:
             val = getattr(dialect, component)
             available.add(val)
-        if len(available):
+
+        # there has to be more than one option for choice to make sense
+        if len(available) > 1:
             options["not_" + component] = sorted(available)
             options["is_" + component] = sorted(available)
     return options
@@ -169,13 +179,12 @@ def main():
         filename = inputs.strip().split(",")[0].split("=")[-1]
 
         constraints = query2constraints(query)
-        data, satisfying = dialects_satisfying_constraints(
-            filename, constraints
-        )
+        data = load_data(filename)
+        satisfying = dialects_satisfying_constraints(data, constraints)
         dialect = clevercsv.consistency.detect_consistency_dialects(
             data, satisfying
         )
-        options = get_options(satisfying)
+        options = get_options(satisfying, constraints)
         if cmd == "completions\n":
             for opt in sorted(options.keys()):
                 for char in sorted(options[opt]):

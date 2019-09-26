@@ -19,7 +19,7 @@ RUN dotnet build /app/outlier/
 ADD datadiff /app/datadiff
 ADD test /app/test
 
-RUN pip3 install clevercsv
+RUN pip3 install clevercsv requests
 ADD ccsv /app/ccsv
 
 EXPOSE 5050
