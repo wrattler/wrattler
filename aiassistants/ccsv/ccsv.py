@@ -20,10 +20,6 @@ Notes:
 
 """
 
-# TODO:
-# - handle empty string delimiter in pandas
-# - figure out how to return a non-uniform table
-
 import io
 import os
 import sys
@@ -32,6 +28,7 @@ import unicodedata
 
 import clevercsv
 import pandas as pd
+import numpy as np
 import requests
 
 # dialect components that we're considering
@@ -151,8 +148,8 @@ def get_options(satisfying_dialects, constraints):
 
 
 def nice_name(opt, char, chrname):
-    # assuming opt in is_component, not_component and val is uppercase unicode
-    # name of character
+    # assuming opt in [is_component, not_component] and val is uppercase
+    # unicode name of character
     pre, comp = opt.split("_")
     out = comp
     if pre == "is":
@@ -220,33 +217,7 @@ def main():
             print(tmpfname)
             sys.stdout.flush()
         else:
-            print("Unknown command: " + cmd)
-
-
-def oldmain():
-    while True:
-        inputs = (
-            sys.stdin.readline()
-        )  # clean=/app/input.csv,messy=/app/input.csv
-        cmd = sys.stdin.readline()  # completions | data
-        query = sys.stdin.readline()  # e.g. geo=EU28
-
-        if cmd == "completions\n":
-            print("first completion\npath1")
-            print("second completion\npath2")
-            print("third completion\npath3")
-            print("")
-            sys.stdout.flush()
-        else:
-            hdl, tmpfname = tempfile.mkstemp(
-                prefix="clevercsv_", suffix=".csv"
-            )
-            with os.fdopen(hdl, "w") as fp:
-                fp.write("one,two\n")
-                fp.write("1,2\n")
-                fp.write("3,4")
-            print(tmpfname)
-            sys.stdout.flush()
+            error("Unknown command: " + cmd)
 
 
 if __name__ == "__main__":
