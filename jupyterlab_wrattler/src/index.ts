@@ -159,18 +159,21 @@ class PrivateWrattler {
     let pythonPort: string = "7101"
     let racketPort: string = "7104"
     let rPort: string = "7103"
+    let datastorePort: string = "7102"
+
     let baseURL:string = window.location.protocol+"//"+window.location.hostname
     if (windowUrl.includes('sagemaker.aws')){
       baseURL = baseURL.concat("/proxy/")
     }
     else {
-      baseURL = baseURL.concat("/proxy/")
+      baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
       // baseURL = baseURL.concat(":")
     }
     return {
       "r": baseURL.concat(rPort),
       "python": baseURL.concat(pythonPort),
-      "racket": baseURL.concat(racketPort)}
+      "racket": baseURL.concat(racketPort),
+      "datastore": baseURL.concat(datastorePort)}
   }
 
   createNode(): HTMLElement { 
