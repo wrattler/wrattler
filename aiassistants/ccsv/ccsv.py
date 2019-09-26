@@ -35,6 +35,63 @@ import requests
 COMPONENTS = ["delimiter", "quotechar", "escapechar"]
 
 
+class AIAssistantError(Exception):
+    def __init__(self, message, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.message = message
+
+
+class AIAssistantInfo(Exception):
+    def __init__(self, message, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.message = message
+
+
+class CleverCSVAssistant:
+    def __init__(self, inputs, query):
+        self.inputs = inputs
+        self.query = query
+        self.initialize(inputs, query)
+
+    def initialize(self, inputs, query):
+        filename = inputs.strip().split(",")[0].split("=")[-1]
+        self.data = load_data(filename)
+
+        constraints = query2constraints(query)
+        satisfying = dialects_satisfying_constraints(self.data, constraints)
+        self.dialect = clevercsv.consistency.detect_consistency_dialects(
+            self.data, satisfying
+        )
+        self.options = get_options(satisfying, constraints)
+
+    def get_completions(self):
+        for opt in sorted(self.options.keys()):
+            for char in sorted(self.options[opt]):
+                name = charname(char)
+                print(
+                    nice_name(opt, char, name)
+                    + "\n"
+                    + self.query
+                    + "/%s=%s" % (opt, name)
+                )
+        print("")
+        sys.stdout.flush()
+
+    def get_data(self):
+        buf = io.StringIO(self.data)
+        if self.dialect is None:
+            message = tie_break_message(buf)
+            raise AIAssistantInfo(message)
+        reader = clevercsv.reader(buf, self.dialect)
+        tmp_df = pd.DataFrame.from_records(list(reader))
+        clean_df = tmp_df.replace(np.nan, "", regex=True)
+
+        hdl, tmpfname = tempfile.mkstemp(prefix="clevercsv_", suffix=".csv")
+        with os.fdopen(hdl, "w") as fp:
+            clean_df.to_csv(fp, index=False, header=False)
+        print(tmpfname)
+        sys.stdout.flush()
+
 def query2constraints(query):
     """ Parse a query to a dictionary of constraints
 
@@ -53,8 +110,9 @@ def query2constraints(query):
         try:
             component, name = el.split("=", maxsplit=1)
         except ValueError:
-            error("Internal error: unpacking query failed for element: " + el)
-
+            raise AIAssistantError(
+                "Internal error: unpacking query failed for element: %r" % el
+            )
         if name == "EMPTY":
             char = ""
         else:
@@ -71,7 +129,9 @@ def query2constraints(query):
             error("Internal error: schema error for component: " + component)
 
         if not component in COMPONENTS:
-            error("Internal error: unknown component: " + component)
+            raise AIAssistantError(
+                "Internal error, unknown component: %r" % component
+            )
 
         if action == "block":
             constraints[component]["block"].append(char)
@@ -120,7 +180,7 @@ def load_data(csvfile):
             data = fp.read()
         return data
     else:
-        error(
+        raise AIAssistantError(
             "Please provide a DataFrame with a 'data', 'url', or 'filename' column."
         )
 
@@ -176,48 +236,26 @@ def error(msg):
 
 def main():
     while True:
+        # Read stdin
         inputs = sys.stdin.readline()
-        cmd = sys.stdin.readline()
+        command = sys.stdin.readline()
         query = sys.stdin.readline()  # e.g. delimiter=comma
+
+        # strip newlines
+        inputs = inputs.strip("\n")
+        command = command.strip("\n")
         query = query.strip("\n")
 
-        # get the input filename
-        filename = inputs.strip().split(",")[0].split("=")[-1]
-
-        constraints = query2constraints(query)
-        data = load_data(filename)
-        satisfying = dialects_satisfying_constraints(data, constraints)
-        dialect = clevercsv.consistency.detect_consistency_dialects(
-            data, satisfying
-        )
-        options = get_options(satisfying, constraints)
-        if cmd == "completions\n":
-            for opt in sorted(options.keys()):
-                for char in sorted(options[opt]):
-                    name = charname(char)
-                    print(
-                        nice_name(opt, char, name)
-                        + "\n"
-                        + query
-                        + "/%s=%s" % (opt, name)
-                    )
-            print("")
-            sys.stdout.flush()
-        elif cmd == "data\n":
-            buf = io.StringIO(data)
-            reader = clevercsv.reader(buf, dialect)
-            tmp_df = pd.DataFrame.from_records(list(reader))
-            clean_df = tmp_df.replace(np.nan, "", regex=True)
-
-            hdl, tmpfname = tempfile.mkstemp(
-                prefix="clevercsv_", suffix=".csv"
-            )
-            with os.fdopen(hdl, "w") as fp:
-                clean_df.to_csv(fp)
-            print(tmpfname)
-            sys.stdout.flush()
-        else:
-            error("Unknown command: " + cmd)
+        try:
+            assistant = CleverCSVAssistant(inputs, query)
+            if command == "completions":
+                assistant.get_completions()
+            elif command == "data":
+                assistant.get_data()
+        except AIAssistantError as err:
+            error(err.message)
+        except AIAssistantInfo as err:
+            info(err.message)
 
 
 if __name__ == "__main__":
