@@ -107,16 +107,25 @@ def dialects_satisfying_constraints(data, constraints):
 
 def load_data(csvfile):
     # load the data from a Wrattler CSV file (i.e. a DataFrame with a single
-    # cell in the "data" column)
+    # cell in the "data"/"url"/"filename" column)
+
+    # we can use pandas here because this is the csv file written by wrattler
     df = pd.read_csv(csvfile)
-    if not "data" in df or "url" in df:
-        error(
-            "Please provide a data frame with either a single 'data' column or a single 'url' column."
-        )
-    if "data" in df:
+    if "data" in df.columns:
         return df["data"][0]
-    req = requests.get(df["url"][0])
-    return req.content
+    elif "url" in df.columns:
+        req = requests.get(df["url"][0])
+        return req.content
+    elif "filename" in df.columns:
+        filename = df["filename"][0]
+        enc = clevercsv.utils.get_encoding(filename)
+        with open(filename, "r", newline="", encoding=enc) as fp:
+            data = fp.read()
+        return data
+    else:
+        error(
+            "Please provide a DataFrame with a 'data', 'url', or 'filename' column."
+        )
 
 
 def get_options(satisfying_dialects, constraints):
