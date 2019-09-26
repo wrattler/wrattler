@@ -172,7 +172,7 @@ def load_data(csvfile):
         return df["data"][0]
     elif "url" in df.columns:
         req = requests.get(df["url"][0])
-        return req.content
+        return req.content.decode(req.encoding)
     elif "filename" in df.columns:
         filename = df["filename"][0]
         enc = clevercsv.utils.get_encoding(filename)
