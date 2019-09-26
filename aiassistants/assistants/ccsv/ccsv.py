@@ -46,11 +46,15 @@ class CleverCSVAssistant:
         self.data = load_data(filename)
 
         constraints = query2constraints(query)
+        DEBUG("constraints: %r" % constraints)
         satisfying = dialects_satisfying_constraints(self.data, constraints)
+        DEBUG("satisfying: %r" % satisfying)
         self.dialect = clevercsv.consistency.detect_consistency_dialects(
             self.data, satisfying
         )
+        DEBUG("dialect: %r" % self.dialect)
         self.options = get_options(satisfying, constraints)
+        DEBUG("options: %r" % self.options)
 
     def get_completions(self):
         for opt in sorted(self.options.keys()):
