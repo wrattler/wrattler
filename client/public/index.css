@@ -331,6 +331,7 @@ button.delete {
 	width:200px;
 	max-height:300px;
 	overflow-y:auto;
+	overflow-x:auto;
 	vertical-align:top;
 	background:#f4f4f4; 
 	border:solid 3px #e8e8e8;
@@ -344,7 +345,8 @@ button.delete {
 }
 .aia .completion .item {
 	display:block;
-	cursor:pointer;
+	cursor:pointer;	
+	white-space: nowrap;
 	padding:0px 10px 0px 6px;
 }
 .aia .completion a:hover {

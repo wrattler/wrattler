@@ -104,8 +104,10 @@ services:
       dockerfile: Dockerfile
     ports:
     - "5050:5050"
+    volumes:
+    - ./aiassistants/assistants:/app/assistants
     environment:
-     - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
+    - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
     networks:
     - wrattler_nw
 

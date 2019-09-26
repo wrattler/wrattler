@@ -26,8 +26,8 @@ resources/.ipynb_checkpoints/
 server/python/.cache
 .#*
 .ionide
-aiassistants/outlier/bin
-aiassistants/outlier/obj
+aiassistants/assistants/outlier/bin
+aiassistants/assistants/outlier/obj
 aiassistants/server/bin
 aiassistants/server/obj
 #*#

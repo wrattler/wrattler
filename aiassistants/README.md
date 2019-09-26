@@ -38,13 +38,17 @@ docker-compose build
 docker-compose up
 ```
 
+Once everything starts, you will see something like _"wrattler_client_1: Compiled succesfully"_. 
+It might take some time before this happens, but when it's ready, you can open Wrattler in your
+browser by going to [http://localhost:8080](http://localhost:8080).
+
 To stop Docker, you can hit `Ctrl+C`. You will then probably need to run `docker-compose down`
 which fully removes all the running Docker images. You can also see if there are any
 left running using `docker ps` and use `docker kill` to stop anything that's left 
 (or `docker rm` to remove a stopped process that, for some mysterious reason, is hanging
 around and blocking things...).
 
-Once you add your new AI assistant, you can run `docker-compose build` and `dokcer-compose up`
+Once you add your new AI assistant, you can run `docker-compose build` and `docker-compose up`
 again. This should be faster, because Docker will only need to rebuild one of the Docker
 images (the one with AI assistants).
 
