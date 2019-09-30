@@ -75,7 +75,17 @@ async function getEval(body, serviceURI) : Promise<Langs.EvaluationResult> {
       results.exports['figure'+figureIndex.toString()] = exp
       figureIndex++;
     }
-    
+
+    if (response['html'])
+      if (JSON.stringify(response.html) !=  "{}"){
+        var output : ((id:string) => void) = function(f) {
+          let element:HTMLElement | null= document.getElementById(f)
+          if (element)
+            element.innerHTML = response.html.toString();
+        };
+        var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: output }
+        results.exports["output"] = exp
+      }
     let evalResults:Langs.EvaluationResult = {kind: 'success', value: results} 
     return evalResults;
   }
@@ -196,7 +206,6 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
           importedFrames.push({ name: imported.variableName, url: (<Values.DataFrame>imported.value).url })
         }
         let src = externalNode.source.replace(/\r/g,'\n')
-        let hash = Md5.hashStr(src)
         
         let srcArray = src.split('\n')
         let strippedSrc = ''
@@ -222,9 +231,9 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
             }  
           }
         }
-
+        
         let body = {"code": strippedSrc,
-          "hash": hash,
+          "hash": externalNode.hash,
           "files" : importedFiles,
           "frames": importedFrames}
         return await getEval(body, this.serviceURI);
@@ -290,7 +299,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
         if (srcArray[l].match(this.regex_global)){
           let resourceName = srcArray[l].split(' ')[1]
           if (!resourceExists(resourceName)) {
-            let response = await Doc.getResourceContent(resourceName)
+            let response = await Doc.getResourceContent(context.resourceServerUrl, resourceName)
             let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'global', url:await putResource(resourceName, response)}
             newResources.push(newResource)
           }
@@ -298,7 +307,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
         else if (srcArray[l].match(this.regex_local)) {
           let resourceName = srcArray[l].split(' ')[1]
           if (!resourceExists(resourceName)) {
-            let response = await Doc.getResourceContent(resourceName)
+            let response = await Doc.getResourceContent(context.resourceServerUrl, resourceName)
             let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'local', url:await putResource(resourceName, response)}
             newResources.push(newResource)
           }

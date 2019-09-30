@@ -22,8 +22,8 @@
     window.onload = function() {
       //  "# Welcome to Wrattler"
       // wrattlerParent = document.createElement("script");
-      var langs = wrattler.getDefaultLanguages();
-      wrattler.createNamedNotebook("paper", langs).then(function(notebook) {
+      var cfg = wrattler.getDefaultConfig();
+      wrattler.createNamedNotebook("paper", cfg).then(function(notebook) {
       });
     }
   </script>

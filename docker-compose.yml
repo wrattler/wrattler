@@ -17,7 +17,6 @@ services:
     volumes:
      - ./client:/app
      - ./client/src:/app/src
-     - ./client/src/languagePlugins:/app/src/languagePlugins
      - ./resources:/app/public/resources
     entrypoint: /bin/bash
     command: "./entrypoint.sh"
@@ -95,7 +94,7 @@ services:
     networks:
     - wrattler_nw
     volumes:
-      - ./jupyterlab_wrattler:/src
+      - ./jupyterlab_wrattler/src:/app/src
       - ./resources:/public
 
 networks:

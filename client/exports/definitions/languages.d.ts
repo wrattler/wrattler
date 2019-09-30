@@ -121,6 +121,9 @@ interface EvaluationContext {
     /** A list of files that were loaded as global or local resources by any
      * language plugin for any cell appearing before the current one. */
     resources: Resource[];
+    /** URL for a service that can be used for loading resources using `%global` or `%local`. If you
+     * say `%global test.py`, Wrattler will fetch the file from `<resourceServerUrl>/resources/test.py`. */
+    resourceServerUrl: string;
 }
 /** Represents the result of the `eval` operation of a `LanguagePlugin`. */
 declare type EvaluationResult = EvaluationSuccess | EvaluationFailure;
@@ -156,6 +159,9 @@ interface BindingContext {
     /** Provides language plugin with access to variables defined in earlier cells
      * that are now in scope. */
     scope: ScopeDictionary;
+    /** URL for a service that can be used for loading resources using `%global` or `%local`. If you
+     * say `%global test.py`, Wrattler will fetch the file from `<resourceServerUrl>/resources/test.py`. */
+    resourceServerUrl: string;
     /** A list of resources loaded by earlier cells. */
     resources: Resource[];
 }
@@ -232,7 +238,7 @@ interface EditorContext<TEvent> {
     /** Trigger an editor-specific event to be handled via the `update` function  */
     trigger(event: TEvent): void;
     /** Trigger the evaluation of a given code block. */
-    evaluate(block: BlockState): void;
+    evaluate(blockId: number): void;
     /** Set the source of a given code block to the `newSource` and trigger rebinding
      * of all subsequent code blocks in a notebook. */
     rebindSubsequent(block: BlockState, newSource: string): any;
@@ -258,6 +264,7 @@ interface BlockState {
     /** The state of the editor associated with this block
      * (also includes a reference to the block itself and its unique ID) */
     editor: EditorState;
+    evaluationState: "unevaluated" | "pending" | "done";
     /** The dependency graph node created for the block as a whole */
     code: Graph.Node;
     /** The dependency graph nodes representing data frames exported from the code block */

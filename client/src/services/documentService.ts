@@ -1,5 +1,4 @@
 import axios from 'axios';
-declare var CLIENT_URI: string;
 
 interface DocumentElement {
   language: string
@@ -49,10 +48,16 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
     documents.push(cellCode);
     currentPos = end
   }
-
+  
   if (currentPos < paragraph.length-1 && paragraph.substring(currentPos).trim() != "") {
     documents.push({language: "markdown", source: paragraph.substring(currentPos)})
   }
+
+  if (documents.length == 0) {
+    documents.push({language: "markdown", source: "Wellcome to Wrattler" })
+  }
+
+
   return documents;
 }
 
@@ -66,8 +71,8 @@ async function getNamedDocumentContent(): Promise<string> {
   return response.data;
 }
 
-async function getResourceContent(sourceURL:string): Promise<string> {
-  let response = await axios.get(CLIENT_URI.concat("/resources/").concat(sourceURL))
+async function getResourceContent(resourceServerUrl:string, sourceURL:string): Promise<string> {
+  let response = await axios.get(resourceServerUrl.concat("/resources/").concat(sourceURL))
   return response.data;
 }
   

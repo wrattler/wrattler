@@ -345,8 +345,9 @@ def handle_eval(data):
     This function will analyze and execute code, including retrieving input frames,
     and will return output as a dict:
        { "output": <text_output_from_cell>,
-         "frames": [ {"name": <frame_name>, "url": <frame_url>}, ... ]
-         "figures": [ {"name": <fig_name>, "url": <fig_url>}, ... ]
+         "frames": [ {"name": <frame_name>, "url": <frame_url>}, ... ],
+         "figures": [ {"name": <fig_name>, "url": <fig_url>}, ... ],
+         "html": <html string>
        }
 
     """
@@ -377,6 +378,8 @@ def handle_eval(data):
         "frames": [],
         "figures": []
     }
+    if "html" in results_dict.keys():
+        return_dict["html"] = results_dict["html"]
 
     wrote_ok=True
     for name, frame in results.items():
@@ -421,7 +424,16 @@ def construct_func_string(file_contents, code, input_val_dict, return_vars, outp
     func_string += "    import os\n"
     func_string += "    import contextlib\n"
     func_string += "    import matplotlib\n"
+    func_string += "    import IPython\n"
     func_string += "    matplotlib.use('Cairo')\n\n"
+    func_string += "    wrattler_return_dict = {}\n\n"
+    func_string += "    def addOutput(html_output):\n"
+    func_string += "        if isinstance(html_output, str):\n"
+    func_string += "           wrattler_return_dict['html'] = html_output\n"
+    func_string += "        elif isinstance(html_output, IPython.core.display.HTML):\n"
+    func_string += "           wrattler_return_dict['html'] = html_output.data\n"
+    func_string += "        else:\n"
+    func_string += "           raise ApiException('Unknown html_output format - please call addOutput with either an html string, or an IPython.core.display.HTML object')\n\n"
     ## add the contents of any files, ensuring correct indentation
     func_string += indent_code(file_contents)
     for k,v in input_val_dict.items():
@@ -439,10 +451,11 @@ def construct_func_string(file_contents, code, input_val_dict, return_vars, outp
     func_string += "            os.rmdir(os.path.join('{}','{}'))\n".format(TMPDIR,output_hash)
     func_string += "            pass\n"
     func_string += "        pass\n"
-    func_string += "    return {"
+    func_string += "    wrattler_return_dict['frames'] = {"
     for rv in return_vars:
         func_string += "'{}':{},".format(rv,rv)
     func_string += "}\n"
+    func_string += "    return wrattler_return_dict"
     return func_string
 
 
@@ -500,8 +513,10 @@ def execute_code(file_content_dict, code, input_val_dict, return_vars, output_ha
             ### wrapping function wrattler_f should now be in the namespace
             func_output = eval('wrattler_f()')
             return_dict["output"] = s.getvalue().strip()
+            if "html" in func_output.keys():
+                return_dict['html'] = func_output['html']
             return_dict["results"] = {}
-            for k,v in func_output.items():
+            for k,v in func_output['frames'].items():
                 result = convert_from_pandas(v)
                 if result:
                     return_dict["results"][k] = result
