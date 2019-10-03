@@ -125,54 +125,62 @@ class PrivateWrattler {
 
   constructor(index:number) {
     this.elementID = "paper".concat(index.toString())
-    
   }
 
   getResourceServerURL():string {
-    // sagemaker: https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/8080/wrattler-app.js
     let windowUrl:string = window.location.href
     let resourceServerUrl = window.location.protocol+"//"+window.location.hostname
-    
-    if (windowUrl.includes('sagemaker.aws')){
-      resourceServerUrl = resourceServerUrl.concat("/proxy/8080/")
+    let clientPort = "8080"
+    // THIS IS FOR TESTING BINDER
+    if (windowUrl.includes('mybinder.org')){
+      // resourceServerUrl = resourceServerUrl.concat("/proxy/8080/")
+      resourceServerUrl = resourceServerUrl.concat(":"+location.port).concat("/proxy/").concat(clientPort)
     }
     else {
-      // THIS IS FOR TESTING BINDER
-      resourceServerUrl = resourceServerUrl.concat(":"+location.port).concat("/proxy/8080/")
-      console.log("Will look for wrattler-app.js here:" +resourceServerUrl)
-      // resourceServerUrl = resourceServerUrl.concat(":8080/")
-      
+      resourceServerUrl = resourceServerUrl.concat(":8080/") 
     }
+    console.log("Will look for wrattler-app.js here:" +resourceServerUrl)
     return resourceServerUrl
   }
 
   getServiceServerURL() {
-    /*
-    - CLIENT_URI=http://localhost:8080
-     - RACKETSERVICE_URI=http://localhost:7104
-     - PYTHONSERVICE_URI=http://localhost:7101
-     - RSERVICE_URI=http://localhost:7103
-     - DATASTORE_URI=http://localhost:7102
-    */
-   //https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/7101/test 
+    // sagemaker: https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/7101/test 
     let windowUrl:string = window.location.href
     let pythonPort: string = "7101"
     let racketPort: string = "7104"
     let rPort: string = "7103"
-    let datastorePort: string = "7102"
-
+    
     let baseURL:string = window.location.protocol+"//"+window.location.hostname
-    if (windowUrl.includes('sagemaker.aws')){
-      baseURL = baseURL.concat("/proxy/")
+    if (windowUrl.includes('mybinder.org')){
+      baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
     }
     else {
-      baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
-      // baseURL = baseURL.concat(":")
+      baseURL = baseURL.concat(":")
     }
+
+    console.log("Will look for r here:" +baseURL.concat(rPort))
+    console.log("Will look for python here:" +baseURL.concat(pythonPort))
+    console.log("Will look for racket here:" +baseURL.concat(racketPort))
+
     return {
       "r": baseURL.concat(rPort),
       "python": baseURL.concat(pythonPort),
-      "racket": baseURL.concat(racketPort),
+      "racket": baseURL.concat(racketPort)
+    }
+  }
+
+  getDataStoreURL() {
+    let windowUrl:string = window.location.href
+    let datastorePort: string = "7102"
+
+    let baseURL:string = window.location.protocol+"//"+window.location.hostname
+    if (windowUrl.includes('mybinder.org')){
+      baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
+    }
+    else {
+      baseURL = baseURL.concat(":")
+    }
+    return {
       "datastore": baseURL.concat(datastorePort)}
   }
 
@@ -180,7 +188,6 @@ class PrivateWrattler {
     let wrattlerScript: HTMLScriptElement;
     wrattlerScript = document.createElement("script");
     let resourceServerURL = this.getResourceServerURL()
-    console.log("This is for binder: ".concat(resourceServerURL.concat("wrattler-app.js")))
     wrattlerScript.setAttribute("src",resourceServerURL.concat("wrattler-app.js"));
     wrattlerScript.setAttribute("type","text/javascript");
     document.head.appendChild(wrattlerScript)
@@ -192,8 +199,9 @@ class PrivateWrattler {
   }
 
   initNotebook (content:string, model:IRenderMime.IMimeModel) {
-    var services = this.getServiceServerURL()
-    var cfg = (<any>window).wrattler.getDefaultConfig(services);
+    let services = this.getServiceServerURL()
+    let storage = this.getDataStoreURL()
+    var cfg = (<any>window).wrattler.getDefaultConfig(services, storage);
     cfg.resourceServerUrl = this.getResourceServerURL();
 
     (<any>window).wrattler.createNotebook(this.elementID, content, cfg).then(function(notebook:any) {
@@ -201,11 +209,8 @@ class PrivateWrattler {
       notebook.addDocumentContentChanged(function (newContent:string) {
         let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
         newOptions.data={"text/plain": newContent}
-        console.log("setting data")
         model.setData(newOptions)
-        console.log("data set")
       })
-      
     });
   }
 }
