@@ -6,7 +6,7 @@ import os
 import pytest
 import json
 
-from python_service import read_frame, write_frame, retrieve_frames
+from wrattler_python_service.python_service_utils import read_frame, write_frame, retrieve_frames
 
 cell_hash = 'abc123def'
 frame_name = 'testframe'

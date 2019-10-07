@@ -5,7 +5,7 @@ Utility functions for data-store flask app
 import json
 import pyarrow as pa
 import pandas as pd
-from exceptions import DataStoreException
+from .exceptions import DataStoreException
 
 
 def filter_json(data, nrow):

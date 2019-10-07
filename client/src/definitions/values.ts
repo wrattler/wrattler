@@ -51,7 +51,7 @@ interface Value {
 * understands. Those are values that should be exported by the `exports` property of 
 * `ExportsValue` and represent images, console outputs, data frames, etc.
 */
-type KnownValue = JavaScriptOutputValue | DataFrame | ExportsValue | Printout | Figure
+type KnownValue = JavaScriptOutputValue | DataFrame | Printout | Figure
 
 /**
 * Represents a bit of exported JavaScript functionality that creates custom DOM output.
