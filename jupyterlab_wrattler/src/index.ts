@@ -137,7 +137,8 @@ class PrivateWrattler {
       resourceServerUrl = resourceServerUrl.concat(":"+location.port).concat("/proxy/").concat(clientPort)
     }
     else {
-      resourceServerUrl = resourceServerUrl.concat(":8080/") 
+      // resourceServerUrl = resourceServerUrl.concat(":8080/") 
+      resourceServerUrl = resourceServerUrl.concat("/proxy/8080/")
     }
     console.log("Will look for wrattler-app.js here:" +resourceServerUrl)
     return resourceServerUrl
@@ -155,7 +156,8 @@ class PrivateWrattler {
       baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
     }
     else {
-      baseURL = baseURL.concat(":")
+      // baseURL = baseURL.concat(":")
+      baseURL = baseURL.concat("/proxy/")
     }
 
     console.log("Will look for r here:" +baseURL.concat(rPort))
@@ -178,7 +180,8 @@ class PrivateWrattler {
       baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
     }
     else {
-      baseURL = baseURL.concat(":")
+      // baseURL = baseURL.concat(":")
+      baseURL = baseURL.concat("/proxy/")
     }
     console.log("Will look for datastore here:" +baseURL.concat(datastorePort))
     return baseURL.concat(datastorePort)
