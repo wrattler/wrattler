@@ -12,8 +12,6 @@ import {AsyncLazy} from '../common/lazy';
 import * as Doc from '../services/documentService';
 import { Log } from '../common/log';
 
-declare var DATASTORE_URI: string;
-
 // ------------------------------------------------------------------------------------------------
 // Markdown plugin
 // ------------------------------------------------------------------------------------------------
@@ -24,7 +22,6 @@ declare var DATASTORE_URI: string;
 class JavascriptBlockKind implements Langs.Block {
     language : string;
     source : string;
-    
     
     constructor(source:string) {
       this.language = "javascript";
@@ -62,7 +59,7 @@ class JavascriptBlockKind implements Langs.Block {
     async function putResource(fileName:string, code: string) : Promise<string> {
       let hash = Md5.hashStr(fileName)
       try {
-        let url = DATASTORE_URI.concat("/"+hash).concat("/"+fileName)
+        let url = this.datastoreURI.concat("/"+hash).concat("/"+fileName)
         // let url = "http://wrattler_wrattler_data_store_1:7102"
         let headers = {'Content-Type': 'text/html'}
         var response = await axios.put(url, code, {headers: headers});
@@ -191,23 +188,34 @@ class JavascriptBlockKind implements Langs.Block {
     }
   }
 
-  export const javascriptLanguagePlugin : Langs.LanguagePlugin = {
-    language: "javascript",
-    iconClassName: "fab fa-js-square",
-    editor: javascriptEditor,
-    getDefaultCode: (id:number) => "// This is a javascript cell. \n//var js" + id + " = [{'id':" + id + ", 'language':'javascript'}]",
+  export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
+    language: string
+    iconClassName: string
+    editor: Langs.Editor<JavascriptState, JavascriptEvent>
+    datastoreURI:string
 
-    evaluate: async (context:Langs.EvaluationContext, node:Graph.Node) : Promise<Langs.EvaluationResult> => {
+    constructor(datastoreURI:string) {
+      this.language = "javascript"
+      this.iconClassName= "fab fa-js-square"
+      this.editor= javascriptEditor
+      this.datastoreURI = datastoreURI
+    }
+    
+    getDefaultCode(id:number):string {
+      return "// This is a javascript cell. \n//var js" + id + " = [{'id':" + id + ", 'language':'javascript'}]"
+    }
+
+    async evaluate(context:Langs.EvaluationContext, node:Graph.Node) : Promise<Langs.EvaluationResult> {
       let jsnode = <Graph.JsNode>node
       let regex_global:RegExp = /^%global/;
       let regex_local:RegExp = /^%local/;
 
       async function putValue(variableName, hash, value) : Promise<string> {
-        let url = DATASTORE_URI.concat("/"+hash).concat("/"+variableName)
+        let url = this.datastoreURI.concat("/"+hash).concat("/"+variableName)
         let headers = {'Content-Type': 'application/json'}
         try {
           var response = await axios.put(url, value, {headers: headers});
-          return DATASTORE_URI.concat("/"+hash).concat("/"+variableName)
+          return this.datastoreURI.concat("/"+hash).concat("/"+variableName)
           // return "http://wrattler_wrattler_data_store_1:7102".concat("/"+hash).concat("/"+variableName)
         }
         catch (error) {
@@ -239,14 +247,14 @@ class JavascriptBlockKind implements Langs.Block {
         }
       }
 
-      function findResourceURL(fileName): string {
-        for (let f = 0; f < context.resources.length; f++) {
-          if (context.resources[f].fileName==fileName) {
-            return  context.resources[f].url
-          }
-        }
-        return ''
-      }
+      // function findResourceURL(fileName): string {
+      //   for (let f = 0; f < context.resources.length; f++) {
+      //     if (context.resources[f].fileName==fileName) {
+      //       return  context.resources[f].url
+      //     }
+      //   }
+      //   return ''
+      // }
 
       switch(jsnode.kind) {
         case 'code':
@@ -311,15 +319,18 @@ class JavascriptBlockKind implements Langs.Block {
           // return exportsValue.exports[exportNodeName]
           return {kind: 'success', value: exportsValue.exports[exportNodeName]}
       }
-    },
-    parse: (code:string) => {
+    }
+
+    parse (code:string) {
       return new JavascriptBlockKind(code);
-    },
-    bind: async (context:Langs.BindingContext, block: Langs.Block):Promise<Langs.BindingResult> => {
+    }
+    
+    async bind (context:Langs.BindingContext, block: Langs.Block):Promise<Langs.BindingResult> {
       let jsBlock = <JavascriptBlockKind>block
       return getCodeResourcesAndExports(context.cache, context.scope, jsBlock.source, context.resources);
-    },
-    save: (block:Langs.Block) : string => {
+    }
+
+    save (block:Langs.Block) : string {
       let jsBlock:JavascriptBlockKind = <JavascriptBlockKind> block
       let content:string = ""
       content = content
@@ -328,6 +339,5 @@ class JavascriptBlockKind implements Langs.Block {
         .concat("\n")
         .concat("```\n")
       return content
-
     }
   }

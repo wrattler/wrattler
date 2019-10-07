@@ -180,6 +180,7 @@ class PrivateWrattler {
     else {
       baseURL = baseURL.concat(":")
     }
+    console.log("Will look for datastore here:" +baseURL.concat(datastorePort))
     return {
       "datastore": baseURL.concat(datastorePort)}
   }

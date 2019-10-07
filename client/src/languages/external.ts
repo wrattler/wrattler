@@ -13,12 +13,10 @@ import * as Doc from '../services/documentService';
 // Helper functions for working with data store 
 // ------------------------------------------------------------------------------------------------
 
-declare var DATASTORE_URI: string;
-
 async function getValue(blob, preview:boolean) : Promise<any> {
   var pathname = new URL(blob).pathname;
   let headers = {'Accept': 'application/json'}
-  let url = DATASTORE_URI.concat(pathname)
+  let url = this.datastoreURI.concat(pathname)
   if (preview)
     url = url.concat("?nrow=10")
   try {
@@ -34,7 +32,7 @@ async function getValue(blob, preview:boolean) : Promise<any> {
 }
 
 async function getCachedOrEval(serviceUrl, body) : Promise<any> {
-  let cacheUrl = DATASTORE_URI.concat("/" + body.hash).concat("/.cached")
+  let cacheUrl = this.datastoreURI.concat("/" + body.hash).concat("/.cached")
   try {
     let params = {headers: {'Accept': 'application/json'}}
     Log.trace("external", "Checking cached response: %s", cacheUrl)
@@ -172,13 +170,15 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
   readonly defaultCode : string;
   readonly regex_global:RegExp = /^%global/;
   readonly regex_local:RegExp = /^%local/;
+  readonly datastoreURI: string;
 
-  constructor(l: string, icon:string, uri: string, code:string) {
+  constructor(l: string, icon:string, serviceURI: string, code:string, datastoreUri: string) {
     this.language = l;
     this.iconClassName = icon;
-    this.serviceURI = uri;
+    this.serviceURI = serviceURI;
     this.editor = ExternalEditor;
     this.defaultCode = code;
+    this.datastoreURI = datastoreUri
   }
 
   getDefaultCode(id:number) {
@@ -277,7 +277,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
     async function putResource(fileName:string, code: string) : Promise<string> {
       let hash = Md5.hashStr(fileName)
       try {
-        let url = DATASTORE_URI.concat("/"+hash).concat("/"+fileName)
+        let url = this.datastoreURI.concat("/"+hash).concat("/"+fileName)
         // let url = "http://wrattler_wrattler_data_store_1:7102"
         let headers = {'Content-Type': 'text/html'}
         var response = await axios.put(url, code, {headers: headers});
