@@ -181,8 +181,7 @@ class PrivateWrattler {
       baseURL = baseURL.concat(":")
     }
     console.log("Will look for datastore here:" +baseURL.concat(datastorePort))
-    return {
-      "datastore": baseURL.concat(datastorePort)}
+    return baseURL.concat(datastorePort)
   }
 
   createNode(): HTMLElement { 
@@ -206,7 +205,6 @@ class PrivateWrattler {
     cfg.resourceServerUrl = this.getResourceServerURL();
 
     (<any>window).wrattler.createNotebook(this.elementID, content, cfg).then(function(notebook:any) {
-      console.log("Wrattler created: "+JSON.stringify((<any>window).wrattler))
       notebook.addDocumentContentChanged(function (newContent:string) {
         let newOptions: IRenderMime.IMimeModel.ISetDataOptions = {}
         newOptions.data={"text/plain": newContent}

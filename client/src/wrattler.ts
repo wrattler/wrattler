@@ -108,7 +108,7 @@ class Wrattler {
     languagePlugins["racket"] = new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI));
     // languagePlugins["merger"] = mergerLanguagePlugin;
     let newConfig:WrattlerConfig = { languagePlugins:languagePlugins, resourceServerUrl:CLIENT_URI, datastoreURL: (datastoreUrl ? datastoreUrl : DATASTORE_URI) };
-    console.log("Wrattler configured as: "+JSON.stringify(newConfig))
+    console.log("Wrattler configured as: "+JSON.stringify(languagePlugins["python"]))
     return newConfig
   }
 
