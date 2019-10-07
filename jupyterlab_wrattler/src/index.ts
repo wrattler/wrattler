@@ -16,12 +16,12 @@ export const MIME_TYPE = 'text/plain';
 
 
 class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
-  
+
   /**
    * Construct a new xkcd widget.
    */
   constructor(options: IRenderMime.IRendererOptions) {
-    
+
     function getRandomInt(max:number) {
       return Math.floor(Math.random() * Math.floor(max));
     }
@@ -32,13 +32,13 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
     this.wrattlerClass = wrattler
     this.id = 'paperparent'.concat(index.toString());
     this.title.label = 'Wrattler';
-    this.title.closable = true;      
-    this.addClass(CSS_CLASS); 
+    this.title.closable = true;
+    this.addClass(CSS_CLASS);
     // console.log(this)
     // console.log(this.hasClass(CSS_CLASS))
-    this._mimeType = options.mimeType; 
+    this._mimeType = options.mimeType;
     this.firstRender = true
-    
+
   }
 
   /**
@@ -48,7 +48,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
   private _mimeType: string;
   private wrattlerClass:PrivateWrattler;
   private firstRender:boolean
-  
+
   /**
    * Dispose of the widget.
    */
@@ -61,15 +61,15 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    */
   async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
     if (this.firstRender) {
-      let content = model.data[this._mimeType] as string ; 
+      let content = model.data[this._mimeType] as string ;
       this.wrattlerClass.initNotebook(content, model)
       this.firstRender = false;
     }
     this.update()
-  } 
+  }
   // renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-  //   let content = model.data[this._mimeType] as string ; 
-    
+  //   let content = model.data[this._mimeType] as string ;
+
   //   return new Promise<void> ((resolve)=>
   //   {
   //     setTimeout(()=>{
@@ -120,19 +120,19 @@ const extensions: IRenderMime.IExtension | IRenderMime.IExtension[] = [
 
 export default extensions;
 class PrivateWrattler {
-  
+
   elementID: string
 
   constructor(index:number) {
     this.elementID = "paper".concat(index.toString())
-    
+
   }
 
   getResourceServerURL():string {
     // sagemaker: https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/8080/wrattler-app.js
     let windowUrl:string = window.location.href
     let resourceServerUrl = window.location.protocol+"//"+window.location.hostname
-    
+
     if (windowUrl.includes('sagemaker.aws')){
       resourceServerUrl = resourceServerUrl.concat("/proxy/8080/")
     }
@@ -141,7 +141,7 @@ class PrivateWrattler {
       resourceServerUrl = resourceServerUrl.concat(":"+location.port).concat("/proxy/8080/")
       console.log("Will look for wrattler-app.js here:" +resourceServerUrl)
       // resourceServerUrl = resourceServerUrl.concat(":8080/")
-      
+
     }
     return resourceServerUrl
   }
@@ -154,7 +154,7 @@ class PrivateWrattler {
      - RSERVICE_URI=http://localhost:7103
      - DATASTORE_URI=http://localhost:7102
     */
-   //https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/7101/test 
+   //https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/7101/test
     let windowUrl:string = window.location.href
     let pythonPort: string = "7101"
     let racketPort: string = "7104"
@@ -164,7 +164,7 @@ class PrivateWrattler {
       baseURL = baseURL.concat("/proxy/")
     }
     else {
-      baseURL = baseURL.concat("/proxy/")
+      baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
       // baseURL = baseURL.concat(":")
     }
     return {
@@ -173,7 +173,7 @@ class PrivateWrattler {
       "racket": baseURL.concat(racketPort)}
   }
 
-  createNode(): HTMLElement { 
+  createNode(): HTMLElement {
     let wrattlerScript: HTMLScriptElement;
     wrattlerScript = document.createElement("script");
     let resourceServerURL = this.getResourceServerURL()
@@ -202,7 +202,7 @@ class PrivateWrattler {
         model.setData(newOptions)
         console.log("data set")
       })
-      
+
     });
   }
 }
