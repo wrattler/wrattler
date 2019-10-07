@@ -191,7 +191,7 @@ class PrivateWrattler {
     let wrattlerScript: HTMLScriptElement;
     wrattlerScript = document.createElement("script");
     let resourceServerURL = this.getResourceServerURL()
-    wrattlerScript.setAttribute("src",resourceServerURL.concat("wrattler-app.js"));
+    wrattlerScript.setAttribute("src",resourceServerURL.concat("/wrattler-app.js"));
     wrattlerScript.setAttribute("type","text/javascript");
     document.head.appendChild(wrattlerScript)
     let wrattlerParentDiv: HTMLDivElement = document.createElement('div');
