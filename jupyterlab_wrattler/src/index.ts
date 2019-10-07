@@ -16,12 +16,12 @@ export const MIME_TYPE = 'text/plain';
 
 
 class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
-  
+
   /**
    * Construct a new xkcd widget.
    */
   constructor(options: IRenderMime.IRendererOptions) {
-    
+
     function getRandomInt(max:number) {
       return Math.floor(Math.random() * Math.floor(max));
     }
@@ -32,13 +32,13 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
     this.wrattlerClass = wrattler
     this.id = 'paperparent'.concat(index.toString());
     this.title.label = 'Wrattler';
-    this.title.closable = true;      
-    this.addClass(CSS_CLASS); 
+    this.title.closable = true;
+    this.addClass(CSS_CLASS);
     // console.log(this)
     // console.log(this.hasClass(CSS_CLASS))
-    this._mimeType = options.mimeType; 
+    this._mimeType = options.mimeType;
     this.firstRender = true
-    
+
   }
 
   /**
@@ -48,7 +48,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
   private _mimeType: string;
   private wrattlerClass:PrivateWrattler;
   private firstRender:boolean
-  
+
   /**
    * Dispose of the widget.
    */
@@ -61,15 +61,15 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
    */
   async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
     if (this.firstRender) {
-      let content = model.data[this._mimeType] as string ; 
+      let content = model.data[this._mimeType] as string ;
       this.wrattlerClass.initNotebook(content, model)
       this.firstRender = false;
     }
     this.update()
-  } 
+  }
   // renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-  //   let content = model.data[this._mimeType] as string ; 
-    
+  //   let content = model.data[this._mimeType] as string ;
+
   //   return new Promise<void> ((resolve)=>
   //   {
   //     setTimeout(()=>{
@@ -120,7 +120,7 @@ const extensions: IRenderMime.IExtension | IRenderMime.IExtension[] = [
 
 export default extensions;
 class PrivateWrattler {
-  
+
   elementID: string
 
   constructor(index:number) {
@@ -184,7 +184,7 @@ class PrivateWrattler {
     return baseURL.concat(datastorePort)
   }
 
-  createNode(): HTMLElement { 
+  createNode(): HTMLElement {
     let wrattlerScript: HTMLScriptElement;
     wrattlerScript = document.createElement("script");
     let resourceServerURL = this.getResourceServerURL()
