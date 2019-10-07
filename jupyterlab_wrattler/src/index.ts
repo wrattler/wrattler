@@ -59,29 +59,29 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
   /**
    * Render Wrattler into this widget's node.
    */
-  async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    if (this.firstRender) {
-      let content = model.data[this._mimeType] as string ;
-      this.wrattlerClass.initNotebook(content, model)
-      this.firstRender = false;
-    }
-    this.update()
-  }
-  // renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-  //   let content = model.data[this._mimeType] as string ;
-
-  //   return new Promise<void> ((resolve)=>
-  //   {
-  //     setTimeout(()=>{
-  //       if (this.firstRender) {
-  //         this.wrattlerClass.initNotebook(content, model)
-  //         this.firstRender = false
-  //       }
-  //       this.update();
-  //       resolve()
-  //     },1*1000)
-  //   })
+  // async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+  //   if (this.firstRender) {
+  //     let content = model.data[this._mimeType] as string ;
+  //     this.wrattlerClass.initNotebook(content, model)
+  //     this.firstRender = false;
+  //   }
+  //   this.update()
   // }
+  renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+    let content = model.data[this._mimeType] as string ;
+
+    return new Promise<void> ((resolve)=>
+    {
+      setTimeout(()=>{
+        if (this.firstRender) {
+          this.wrattlerClass.initNotebook(content, model)
+          this.firstRender = false
+        }
+        this.update();
+        resolve()
+      },1*1000)
+    })
+  }
 }
 
 
@@ -138,7 +138,7 @@ class PrivateWrattler {
     }
     else {
       // resourceServerUrl = resourceServerUrl.concat(":8080/") 
-      resourceServerUrl = resourceServerUrl.concat("/proxy/8080/")
+      resourceServerUrl = resourceServerUrl.concat(":"+location.port).concat("/proxy/").concat(clientPort)
     }
     console.log("Will look for wrattler-app.js here:" +resourceServerUrl)
     return resourceServerUrl
@@ -157,7 +157,7 @@ class PrivateWrattler {
     }
     else {
       // baseURL = baseURL.concat(":")
-      baseURL = baseURL.concat("/proxy/")
+      baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
     }
 
     console.log("Will look for r here:" +baseURL.concat(rPort))
@@ -181,7 +181,7 @@ class PrivateWrattler {
     }
     else {
       // baseURL = baseURL.concat(":")
-      baseURL = baseURL.concat("/proxy/")
+      baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
     }
     console.log("Will look for datastore here:" +baseURL.concat(datastorePort))
     return baseURL.concat(datastorePort)
