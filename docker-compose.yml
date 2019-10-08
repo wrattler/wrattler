@@ -81,7 +81,7 @@ services:
     ports:
     - "7102:7102"
     environment:
-    - WRATTLER_LOCAL_STORAGE=True
+    - WRATTLER_LOCAL_STORAGE=true
     networks:
     - wrattler_nw
 
