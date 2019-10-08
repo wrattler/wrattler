@@ -24,7 +24,8 @@ export declare class ExternalLanguagePlugin implements Langs.LanguagePlugin {
     readonly defaultCode: string;
     readonly regex_global: RegExp;
     readonly regex_local: RegExp;
-    constructor(l: string, icon: string, uri: string, code: string);
+    readonly datastoreURI: string;
+    constructor(l: string, icon: string, serviceURI: string, code: string, datastoreUri: string);
     getDefaultCode(id: number): string;
     evaluate(context: Langs.EvaluationContext, node: Graph.Node): Promise<Langs.EvaluationResult>;
     parse(code: string): ExternalBlockKind;
