@@ -9,6 +9,9 @@ RUN apt-get update; apt-get install -y libssl-dev
 RUN apt-get update; apt-get install -y libxml2-dev
 
 RUN pip3 install pandas
+RUN pip3 install sklearn
+RUN pip3 install matplotlib
+RUN pip3 install greenery
 
 RUN Rscript -e "install.packages(\"devtools\",repos=\"http://cran.us.r-project.org\")"
 RUN Rscript -e "install.packages(\"dplyr\",repos=\"http://cran.us.r-project.org\")"
