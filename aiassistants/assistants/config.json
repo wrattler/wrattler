@@ -22,5 +22,12 @@
     "process": "python3",
     "arguments": "ptype_runner.py",
     "inputs": ["input"],
-    "description": "Infers data types!" }
+    "description": "Infers data types!" },
+  { "name": "CleverCSV",
+    "id": "ccsv",
+    "process": "python3",
+    "arguments": "ccsv.py",
+    "inputs": ["input"],
+    "description": "CleverCSV helps import data from messy CSV files"
+  }
 ]
