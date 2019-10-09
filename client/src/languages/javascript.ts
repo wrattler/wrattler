@@ -42,25 +42,6 @@ export type JavascriptState = {
   tabID: number
 }
 
-async function getCachedOrEval(body, datastoreURI) : Promise<any> {
-  let cacheUrl = datastoreURI.concat("/" + body.hash).concat("/.cached")
-  try {
-    let params = {headers: {'Accept': 'application/json'}}
-    Log.trace("external", "Checking cached response: %s", cacheUrl)
-    let response = await axios.get(cacheUrl, params)
-    return response.data
-  } catch(e) {
-    Log.trace("external", "Checking failed, calling eval (%s)", e)
-    let values : { (key:string) : any[] } = eval(evalCode)(addOutput, argDictionary);
-        let exports = await putValues(values, this.datastoreURI)
-        for(let i = 0; i < outputs.length; i++) {
-          var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: outputs[i] }
-          exports.exports["output" + i] = exp
-        }
-    return result.data
-  }
-}
-
 
 async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.ScopeDictionary, source: string, resources:Array<Langs.Resource>): Promise<Langs.BindingResult> {
   let language = "javascript"
