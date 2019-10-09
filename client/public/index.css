@@ -60,6 +60,11 @@ div.controls {
 	margin-right:5px;
 }
 
+.cell-c-default .controls-bar a, .cell-c-default .icons-bar span, .cell-c-default .controls-bar .fa, 
+	.cell-c-default .icons-bar .fa, .cell-c-default .controls-bar .fab, .cell-c-default .icons-bar .fab { color:#d0d0d0; }
+.cell-c-default { border-color:#d0d0d0; }
+.cell-c-default a:hover, .cell-c-default a:hover i { color:#a0a0a0 !important; }
+
 .cell-c0 .controls-bar a, .cell-c0 .icons-bar span, .cell-c0 .controls-bar .fa, 
 	.cell-c0 .icons-bar .fa, .cell-c0 .controls-bar .fab, .cell-c0 .icons-bar .fab { color:#8DD3C7; }
 .cell-c0 { border-color:#8DD3C7; }
@@ -250,3 +255,134 @@ button.delete {
 	}
  }
 
+
+/* ----------------------------------------------------------------------------
+	AI assistants
+-----------------------------------------------------------------------------*/
+
+.aia li {
+	margin-bottom:10px;
+}
+.aia div.body {
+	padding-left:30px;
+}
+.aia div.body > span:first-child {
+	margin-left:-30px;
+}
+.aia input {
+	border:solid 3px #e8e8e8;
+	background:#fafafa;
+	padding:2px 10px 3px 10px;
+	color:#808080;
+	font-size: 11pt;
+	letter-spacing:0.5px;
+	font-weight: bold;
+	width:120px;
+}
+.aia .text {
+	margin:0px 10px 0px 5px;
+}
+.aia .chain, .aia .plus button { 
+	background:#f4f4f4; 
+	border:solid 3px #e8e8e8;
+	padding:2px 6px 2px 6px;
+	margin:0px 8px 8px 0px;
+	border-radius:4px; 
+	display:inline-block;
+	cursor:default;
+	color:#808080;
+	font-size: 11pt;
+	letter-spacing:0.5px;
+	font-weight: bold;
+}
+.aia .preview {
+	margin-top:10px;
+}
+.aia .plus {
+	min-height:32px;
+	margin:0px 8px 4px 0px;
+	display:inline-block;
+}
+.aia .chain button {
+	border-style:none;
+	background:inherit;
+	color:#808080;
+	font-size:80%;
+	margin:0px 0px 0px 2px;
+	padding:2px 4px 2px 4px;
+	cursor:pointer;
+}
+.aia .plus button {
+	background:#808080;
+	border-style:none;
+	color:white;
+	font-size:60%;
+	position:relative;
+	top:0px;
+	margin-right:0px;
+	cursor:pointer;
+}
+.aia ::placeholder {
+  color:#d0d0d0;
+  opacity: 1;
+}
+
+.aia .completion {
+	width:200px;
+	max-height:300px;
+	overflow-y:auto;
+	overflow-x:auto;
+	vertical-align:top;
+	background:#f4f4f4; 
+	border:solid 3px #e8e8e8;
+	padding:0px;
+	margin:4px 8px 4px 0px;
+	border-radius:4px; 
+	display:inline-block;
+	color:#808080;
+	font-size: 11pt;
+	letter-spacing:0.5px;
+}
+.aia .completion .item {
+	display:block;
+	cursor:pointer;	
+	white-space: nowrap;
+	padding:0px 10px 0px 6px;
+}
+.aia .completion a:hover {
+	background:#e8e8e8;
+	color:#606060 !important;
+}
+
+.aia .tools {
+	padding:5px 0px 5px 0px;
+}
+.aia .tools div {
+	margin:5px 10px 0px 0px;
+}
+.aia .tools div span {
+	min-width:80px;
+	margin-top:2px;
+	float:left;
+}
+.aia .tools select {
+	border:solid 3px #e8e8e8;
+	background:#f4f4f4;
+	padding:2px 10px 2px 10px;
+	color:#808080;
+	font-size: 11pt;
+	letter-spacing:0.5px;
+}
+.aia .tools button {
+	border:solid 3px #e8e8e8;
+	background:#f4f4f4;
+	padding:1px 10px 0.5px 10px;
+	color:#808080;
+	font-size: 11pt;
+	letter-spacing:0.5px;
+	font-weight: bold;
+	margin:5px 0px 0px 0px;
+}
+.aia .tools button:disabled {
+	color:#d0d0d0;
+}

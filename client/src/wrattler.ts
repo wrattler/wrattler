@@ -28,6 +28,7 @@ import { markdownLanguagePlugin } from './languages/markdown'
 import { JavascriptLanguagePlugin } from './languages/javascript'
 import { ExternalLanguagePlugin } from './languages/external'
 import { mergerLanguagePlugin } from './demo/merger'
+import { createAiaPlugin } from './languages/aiassistant'
 
 /** @hidden */
 declare var PYTHONSERVICE_URI: string;
@@ -39,6 +40,7 @@ declare var RACKETSERVICE_URI: string;
 declare var CLIENT_URI: string;
 /** @hidden */
 declare var DATASTORE_URI: string;
+declare var AIASERVICE_URI: string
 
 /** 
  * Represents a created Wrattler notebook. The interface provides access to the 
@@ -55,7 +57,7 @@ interface WrattlerNotebook {
 /** 
  * A dictionary that associates a language plugin with a language name.
  */
-type LanguagePlugins = { [lang:string] : Langs.LanguagePlugin }
+type LanguagePlugins = { [lang:string] : Promise<Langs.LanguagePlugin> }
 
 /**
  * Wrattler notebook configuration. This currently specifies the language plugins
@@ -96,19 +98,31 @@ class Wrattler {
       if (serviceUrls && serviceUrls[language]) return serviceUrls[language];
       else return def;
     }    
+    async function unit<T>(v:T) : Promise<T> {
+      return v;
+    }
 
     let pyCode =  "# This is a python cell \n# py[ID] = pd.DataFrame({\"id\":[\"[ID]\"], \"language\":[\"python\"]})";
     let rCode = "# This is an R cell \n r[ID] <- data.frame(id = [ID], language =\"r\")";
     let rcCode = ";; This is a Racket cell [ID]\n";
 
-    languagePlugins["markdown"] = markdownLanguagePlugin;
-    languagePlugins["javascript"] = new JavascriptLanguagePlugin(datastoreUrl ? datastoreUrl : DATASTORE_URI);
-    languagePlugins["python"] = new ExternalLanguagePlugin("python", "fab fa-python", getServiceUrl("python", PYTHONSERVICE_URI), pyCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI));
-    languagePlugins["r"] = new ExternalLanguagePlugin("r", "fab fa-r-project", getServiceUrl("r", RSERVICE_URI), rCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI));
-    languagePlugins["racket"] = new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI));
-    // languagePlugins["merger"] = mergerLanguagePlugin;
-    let newConfig:WrattlerConfig = { languagePlugins:languagePlugins, resourceServerUrl:CLIENT_URI, datastoreURL: (datastoreUrl ? datastoreUrl : DATASTORE_URI) };
-    console.log("Wrattler configured as: "+JSON.stringify(languagePlugins["python"]))
+    // languagePlugins["markdown"] = markdownLanguagePlugin;
+    // languagePlugins["javascript"] = new JavascriptLanguagePlugin(datastoreUrl ? datastoreUrl : DATASTORE_URI);
+    // languagePlugins["python"] = new ExternalLanguagePlugin("python", "fab fa-python", getServiceUrl("python", PYTHONSERVICE_URI), pyCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI));
+    // languagePlugins["r"] = new ExternalLanguagePlugin("r", "fab fa-r-project", getServiceUrl("r", RSERVICE_URI), rCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI));
+    // languagePlugins["racket"] = new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI));
+    // // languagePlugins["merger"] = mergerLanguagePlugin;
+    // let newConfig:WrattlerConfig = { languagePlugins:languagePlugins, resourceServerUrl:CLIENT_URI, datastoreURL: (datastoreUrl ? datastoreUrl : DATASTORE_URI) };
+    // console.log("Wrattler configured as: "+JSON.stringify(languagePlugins["python"]))
+    languagePlugins["markdown"] = unit(markdownLanguagePlugin);
+    languagePlugins["javascript"] = unit(new JavascriptLanguagePlugin(datastoreUrl ? datastoreUrl : DATASTORE_URI));
+    languagePlugins["python"] = unit(new ExternalLanguagePlugin("python", "fab fa-python", getServiceUrl("python", PYTHONSERVICE_URI), pyCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
+    languagePlugins["r"] = unit(new ExternalLanguagePlugin("r", "fab fa-r-project", getServiceUrl("r", RSERVICE_URI), rCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
+    languagePlugins["racket"] = unit(new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
+    // languagePlugins["merger"] = unit(mergerLanguagePlugin);
+    // languagePlugins["ai assistant"] = createAiaPlugin(getServiceUrl("ai assistant", AIASERVICE_URI), (datastoreUrl ? datastoreUrl : DATASTORE_URI));
+
+    let newConfig:WrattlerConfig = { languagePlugins:languagePlugins, resourceServerUrl:CLIENT_URI, datastoreURL: (datastoreUrl ? datastoreUrl : DATASTORE_URI)  };
     return newConfig
   }
 
@@ -131,7 +145,10 @@ class Wrattler {
   async createNotebook(elementID:string, content:string, config:WrattlerConfig) : Promise<WrattlerNotebook> {
     Log.trace("main", "Creating notebook for id '%s'", elementID)
     let documents = await Docs.getDocument(content);
-    var {counter, editors} = loadNotebook(documents, config.languagePlugins);
+    let langs : {[lang:string] : Langs.LanguagePlugin} = {}
+    for(let p of Object.keys(config.languagePlugins)) langs[p] = await config.languagePlugins[p];
+
+    var {counter, editors} = loadNotebook(documents, langs);
 
     var currentContent = content;
     var handlers : ((newContent:string) => void)[] = [];
@@ -140,7 +157,7 @@ class Wrattler {
       for(var h of handlers) h(currentContent);
     }
 
-    initializeCells(elementID, counter, editors, config.languagePlugins, config.resourceServerUrl, contentChanged);
+    initializeCells(elementID, counter, editors, langs, config.resourceServerUrl, contentChanged);
     return {
       getDocumentContent : () => currentContent,
       addDocumentContentChanged : (h:(newContent:string) => void) => handlers.push(h)

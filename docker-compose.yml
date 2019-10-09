@@ -17,13 +17,13 @@ services:
     volumes:
      - ./client:/app
      - ./client/src:/app/src
-     - ./client/src/languagePlugins:/app/src/languagePlugins
      - ./resources:/app/public/resources
     entrypoint: /bin/bash
     command: "./entrypoint.sh"
     environment:
      - CLIENT_URI=http://localhost:8080
      - RACKETSERVICE_URI=http://localhost:7104
+     - AIASERVICE_URI=http://localhost:5050
      - PYTHONSERVICE_URI=http://localhost:7101
      - RSERVICE_URI=http://localhost:7103
      - DATASTORE_URI=http://localhost:7102
@@ -42,7 +42,6 @@ services:
     - wrattler_nw
     volumes:
     - ./resources:/app/resources
-
 
   wrattler_r_service:
     container_name: wrattler_wrattler_r_service_1
@@ -97,6 +96,20 @@ services:
     volumes:
       - ./jupyterlab_wrattler/src:/app/src
       - ./resources:/public
+
+  wrattler_aiassistants:
+    container_name: wrattler_wrattler_aiassistants_1
+    build:
+      context: aiassistants
+      dockerfile: Dockerfile
+    ports:
+    - "5050:5050"
+    volumes:
+    - ./aiassistants/assistants:/app/assistants
+    environment:
+    - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
+    networks:
+    - wrattler_nw
 
 networks:
   wrattler_nw:

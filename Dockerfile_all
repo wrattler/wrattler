@@ -29,6 +29,7 @@ ENV PYTHONSERVICE_URI http://localhost:7101
 ENV RSERVICE_URI http://localhost:7103
 ENV DATASTORE_URI http://localhost:7102
 ENV RACKETSERVICE_URI http://localhost:7104
+ENV AIASERVICE_URI http://localhost:5050
 
 EXPOSE 8080
 

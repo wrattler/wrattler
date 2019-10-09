@@ -14,7 +14,7 @@ interface WrattlerNotebook {
  * A dictionary that associates a language plugin with a language name.
  */
 declare type LanguagePlugins = {
-    [lang: string]: Langs.LanguagePlugin;
+    [lang: string]: Promise<Langs.LanguagePlugin>;
 };
 /**
  * Wrattler notebook configuration. This currently specifies the language plugins
