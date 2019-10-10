@@ -16,6 +16,11 @@ RUN Rscript -e "install.packages(\"lpSolve\",repos=\"http://cran.us.r-project.or
 
 RUN Rscript -e "devtools::install_github(\"tpetricek/datadiff\") "
 
+RUN pip3 install pandas
+RUN pip3 install sklearn
+RUN pip3 install matplotlib
+RUN pip3 install greenery
+
 RUN mkdir /app
 
 ADD server /app/server
