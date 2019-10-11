@@ -42,6 +42,27 @@ export type JavascriptState = {
   tabID: number
 }
 
+async function getCachedOrEval(body, datastoreURI:string, argDictionary) : Promise<any> {
+  let cacheUrl = datastoreURI.concat("/" + body.hash).concat("/.cached")
+  try {
+    let params = {headers: {'Accept': 'application/json'}}
+    Log.trace("js", "Checking cached response: %s", cacheUrl)
+    let response = await axios.get(cacheUrl, params)
+    return response.data
+  } catch(e) {
+    Log.trace("js", "Checking failed at JS, calling eval (%s)", e)
+    var outputs : ((id:string) => void)[] = [];
+    var addOutput = function(f) {
+      outputs.push(f)
+    }
+    let values : { (key:string) : any[] } = eval(body.code)(addOutput, argDictionary);
+    for(let i = 0; i < outputs.length; i++) {
+      var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: outputs[i] }
+      exports.exports["output" + i] = exp
+    }
+    return values
+  }
+}
 
 async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.ScopeDictionary, source: string, resources:Array<Langs.Resource>): Promise<Langs.BindingResult> {
   let language = "javascript"
@@ -265,11 +286,6 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
           argDictionary[imported.variableName] = await (<Values.DataFrame>imported.value).data.getValue();
           importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
         }
-        var outputs : ((id:string) => void)[] = [];
-        var addOutput = function(f) {
-          outputs.push(f)
-        }
-
         let srcArray = jsCodeNode.source.split('\n')
         let strippedSrc = ''
         let importedFiles : Array<string> = [];
@@ -296,12 +312,15 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
         }
 
         evalCode = "(function f(addOutput, args) {\n\t " + importedVars + "\n" + importedResourceContent + "\n" +strippedSrc + "\n" + returnArgs + "\n})"
-        let values : { (key:string) : any[] } = eval(evalCode)(addOutput, argDictionary);
+        // let values : { (key:string) : any[] } = eval(evalCode)(addOutput, argDictionary);
+        let body = {"code": evalCode,
+          "hash": jsnode.hash,
+          "files" : importedFiles,
+          "frames": importedVars}
+
+        let values : { (key:string) : any[] } = await getCachedOrEval(body, this.datastoreURI, argDictionary)
         let exports = await putValues(values, this.datastoreURI)
-        for(let i = 0; i < outputs.length; i++) {
-          var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: outputs[i] }
-          exports.exports["output" + i] = exp
-        }
+        
         // return exports
         return {kind: 'success', value: exports}
       case 'export':
