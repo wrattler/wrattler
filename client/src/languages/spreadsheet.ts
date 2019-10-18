@@ -39,7 +39,31 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
     return state
   },
   render: () => {
-    return h('p.output', {}, ["Hello World!"])
+    let rowsComponents:Array<any> = []
+    let headerComponents:Array<any> = []
+    // for this table, create headers
+    let colHeaders: Array<string> = 'abcdefghijk'.split('')
+    
+    headerComponents.push(h('th',{key: "spreadsheetColFirstHeader"}, [""]))
+    for (let c = 0; c < colHeaders.length; c++) {
+      headerComponents.push(h('th',{key: "spreadsheetHeader"+c}, [colHeaders[c]]))
+    }
+    rowsComponents.push(h('tr',{key: "spreadsheetColHeader"},[headerComponents]))
+
+    let numRows = 5
+    let rowHeaders = _.range(0,numRows)
+    
+    for (let row = 0; row < numRows; row++) {
+      let columnsComponents:Array<any> = []
+      for (let col = 0; col < colHeaders.length; col++) {
+        if (col == 0)
+          columnsComponents.push(h('th', {key: "spreadsheetColumn"+row+col}, [rowHeaders[row].toString()]))
+        else
+          columnsComponents.push(h('td', {key: "spreadsheetColumn"+row+col}, [""]))
+      }
+      rowsComponents.push(h('tr',{key: "spreadsheetRow"+row},[columnsComponents]))
+    }
+    return h('table', {class:'table'},[rowsComponents]);
   }
 }
 
