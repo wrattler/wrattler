@@ -119,8 +119,8 @@ class Wrattler {
     languagePlugins["python"] = unit(new ExternalLanguagePlugin("python", "fab fa-python", getServiceUrl("python", PYTHONSERVICE_URI), pyCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
     languagePlugins["r"] = unit(new ExternalLanguagePlugin("r", "fab fa-r-project", getServiceUrl("r", RSERVICE_URI), rCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
     languagePlugins["racket"] = unit(new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
-    // languagePlugins["merger"] = unit(mergerLanguagePlugin);
-    // languagePlugins["ai assistant"] = createAiaPlugin(getServiceUrl("ai assistant", AIASERVICE_URI), (datastoreUrl ? datastoreUrl : DATASTORE_URI));
+    languagePlugins["merger"] = unit(mergerLanguagePlugin);
+    languagePlugins["ai assistant"] = createAiaPlugin(getServiceUrl("ai assistant", AIASERVICE_URI), (datastoreUrl ? datastoreUrl : DATASTORE_URI));
 
     let newConfig:WrattlerConfig = { languagePlugins:languagePlugins, resourceServerUrl:CLIENT_URI, datastoreURL: (datastoreUrl ? datastoreUrl : DATASTORE_URI)  };
     return newConfig
