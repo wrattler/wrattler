@@ -48,19 +48,15 @@ async function getCachedOrEval(body, datastoreURI:string, argDictionary) : Promi
     let params = {headers: {'Accept': 'application/json'}}
     Log.trace("js", "Checking cached response: %s", cacheUrl)
     let response = await axios.get(cacheUrl, params)
-    return response.data
+    return {values: response.data, outputs: undefined}
   } catch(e) {
     Log.trace("js", "Checking failed at JS, calling eval (%s)", e)
-    var outputs : ((id:string) => void)[] = [];
     var addOutput = function(f) {
       outputs.push(f)
     }
+    var outputs : ((id:string) => void)[] = [];
     let values : { (key:string) : any[] } = eval(body.code)(addOutput, argDictionary);
-    for(let i = 0; i < outputs.length; i++) {
-      var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: outputs[i] }
-      exports.exports["output" + i] = exp
-    }
-    return values
+    return {values: values, outputs: outputs}
   }
 }
 
@@ -318,10 +314,12 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
           "files" : importedFiles,
           "frames": importedVars}
 
-        let values : { (key:string) : any[] } = await getCachedOrEval(body, this.datastoreURI, argDictionary)
-        let exports = await putValues(values, this.datastoreURI)
-        
-        // return exports
+        let response : {values:{ (key:string) : any[] }, outputs: any} = await getCachedOrEval(body, this.datastoreURI, argDictionary)
+        let exports = await putValues(response.values, this.datastoreURI)
+        for(let i = 0; i < response.outputs.length; i++) {
+          var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: response.outputs[i] }
+          exports.exports["output" + i] = exp
+        }
         return {kind: 'success', value: exports}
       case 'export':
         let jsExportNode = <Graph.JsExportNode>node
