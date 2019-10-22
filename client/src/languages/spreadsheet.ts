@@ -7,6 +7,7 @@ import { Md5 } from 'ts-md5';
 import * as Values from '../definitions/values'; 
 import { Log } from '../common/log';
 import { updateArrayBindingPattern } from 'typescript';
+// import { Position } from 'monaco-editor';
 
 type Position = {row:number, col: string}
 
@@ -17,7 +18,7 @@ interface SpreadsheetBlock extends Langs.Block {
 type SpreadsheetState = { 
   id: number
   block: SpreadsheetBlock
-  Cols : Array<String>,
+  Cols : Array<string>,
   Rows: Array<number>
   Active: Position | null
   Cells: Map<Position, string>
@@ -28,15 +29,24 @@ type CellEditedEvent = { kind: 'edited', pos: Position}
 type SpreadsheetEvent = CellSelectedEvent | CellEditedEvent
 
 const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
+  
   initialize: (id:number, block:Langs.Block) => {  
-    return {
+    let newState = {
       id: id,
       block: block,
-      Cols : 'abcdefghijk'.split(''),
-      Rows:  _.range(0,5),
+      Cols : ' ABCDEFG'.split(''),
+      Rows:  _.range(0,3),
       Active: null,
-      Cells: new Map()
+      Cells: new Map<Position, string>()
     }
+    newState.Cols.forEach(col => {
+      newState.Rows.forEach(row => {
+        // Log.trace('spreadsheet', "Setting contents at init: ".concat(row.toString().concat(col)))
+        newState.Cells.set({row:row, col:col}, row.toString().concat(col))
+      });
+    });
+
+    return newState
   }, 
   update: (state:SpreadsheetState, event:SpreadsheetEvent) => {
     Log.trace("spreadsheet","Spreadsheet being updated: "+JSON.stringify(event))
@@ -50,36 +60,35 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
   render: (cell:Langs.BlockState, state:SpreadsheetState, context:Langs.EditorContext<SpreadsheetEvent>) => {
     let rowsComponents:Array<any> = []
     let headerComponents:Array<any> = []
-    // for this table, create headers
-    let numRows = 5
-    let colHeaders: Array<string> = ' abcdefghijk'.split('')
-    let rowHeaders = _.range(0,numRows)
-
-    for (let c = 0; c < colHeaders.length; c++) {
-      headerComponents.push(h('th',{key: "spreadsheetColumnHeader"+c, class:"spreadsheet-th"}, [colHeaders[c]]))
+    
+    for (let c = 0; c < state.Cols.length; c++) {
+      headerComponents.push(h('th',{key: "spreadsheetColumnHeader"+c, class:"spreadsheet-th"}, [state.Cols[c]]))
     }
     rowsComponents.push(h('tr',{key: "spreadsheetColHeader"},[headerComponents]))
  
     function renderEditor(pos:Position): VNode{
-      let inputComponent:VNode =  h('input', {key:"spreadsheetInput"+pos.row.toString()+pos.col,
+      let inputComponent:VNode =  h('input', {key:"spreadsheetInput"+pos.row.toString()+pos.col+cell.editor.id,
       type: "text"},[])
-      let editorComponent:VNode =  h('td', {key: "spreadsheetColumn"+pos.row.toString()+pos.col, 
+      let editorComponent:VNode =  h('td', {key: "spreadsheetColumn"+pos.row.toString()+pos.col+cell.editor.id, 
           class:  "spreadsheet-td input", 
           onchange:()=>{
             Log.trace("spreadsheet","Cell is edited")
           }}, [inputComponent])
-      Log.trace("spreadsheet","New editor "+JSON.stringify(editorComponent))
       return editorComponent
     }
 
-    function renderView(pos:Position){
+    function renderView(state: SpreadsheetState, positionKey:IteratorResult<Position>){
       let viewComponent:VNode;
+      let pos = positionKey.value
       if (pos.col == " ")
         viewComponent = h('th', { key: "spreadsheetRowHeader"+pos.row.toString()+pos.col, 
           class:"spreadsheet-th"}, [pos.row.toString()])
       else {
-        let displayComponent:VNode =  h('p', {key:"spreadsheetDisplay"+pos.row.toString()+pos.col},["..."])
-        viewComponent = h('td', {key: "spreadsheetColumn"+pos.row.toString()+pos.col, 
+        let value:string|undefined = state.Cells.get(pos)
+        let displayComponent:VNode =  h('p', 
+          {key:"spreadsheetDisplay"+pos.row.toString()+pos.col+cell.editor.id},
+          [value==undefined? "...":value])
+        viewComponent = h('td', {key: "spreadsheetColumn"+pos.row.toString()+pos.col+cell.editor.id, 
           class: "spreadsheet-td", 
           onclick:()=>{
             Log.trace("spreadsheet","Cell is clicked")
@@ -89,7 +98,8 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
       return viewComponent
     }
 
-    function renderCell(pos:Position, state: SpreadsheetState):VNode {
+    function renderCell(positionKey:IteratorResult<Position>, state: SpreadsheetState):VNode {
+      let pos = positionKey.value
       if ((state.Active != null) && 
         (state.Active.row == pos.row) && 
         (state.Active.col == pos.col)) {
@@ -97,19 +107,31 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
         return renderEditor(pos)
       }
       else {
-        return renderView(pos)
+        return renderView(state, positionKey)
       }
     }
 
-    for (let row = 0; row < numRows; row++) {
-      let columnsComponents:Array<any> = []
-      for (let col = 0; col < colHeaders.length; col++) {
-        columnsComponents.push(renderCell({row: row, col: colHeaders[col]}, state))
+    function getKey(pos:Position, state:SpreadsheetState):IteratorResult<Position> | undefined {
+      let keys = state.Cells.keys()
+      for (let k = 0; k < state.Cells.size; k++) {
+        let key:IteratorResult<Position> = keys.next()
+        if ((key.value.col == pos.col) && (key.value.row == pos.row)) 
+          return key
       }
-      rowsComponents.push(h('tr',{key: "spreadsheetRow"+row},[columnsComponents]))
+      return undefined
     }
-    console.log(state.Active)
-    return h('table', {class:'spreadsheet-table'},[rowsComponents]);
+
+    for (let row = 1; row <= state.Rows.length; row++) {
+      let columnsComponents:Array<any> = []
+      for (let col = 0; col < state.Cols.length; col++) {
+        let key = getKey({row: row, col: state.Cols[col]}, state)
+        if (key != undefined)
+          columnsComponents.push(renderCell(key, state))
+      }
+      rowsComponents.push(h('tr',{key: "spreadsheetRow"+row+cell.editor.id},[columnsComponents]))
+    }
+      
+    return h('table', {key: "spreadsheet"+cell.editor.id, class:'spreadsheet-table'},[rowsComponents]);
   }
 }
 
