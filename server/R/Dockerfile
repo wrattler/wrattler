@@ -6,8 +6,8 @@ RUN git clone https://github.com/alan-turing-institute/datadiff
 RUN Rscript -e "devtools::install_local('datadiff')"
 
 # copy current working directory
-ADD . R_service
-WORKDIR R_service
+ADD . /app
+WORKDIR /app
 
 # expose the port and start running the Jug http server.
 EXPOSE 7103
