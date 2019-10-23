@@ -8,8 +8,8 @@ import pandas as pd
 import pyarrow as pa
 import pytest
 
-from exceptions import ApiException
-from python_service import pandas_to_arrow, arrow_to_pandas, \
+from wrattler_python_service.exceptions import ApiException
+from wrattler_python_service.python_service_utils import pandas_to_arrow, arrow_to_pandas, \
     pandas_to_json, json_to_pandas, \
     convert_to_pandas, convert_from_pandas
 
