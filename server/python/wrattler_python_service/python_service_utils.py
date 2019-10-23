@@ -1,14 +1,14 @@
 """
-Collection of functions called by the flask app that provide the
-functionality of the wrattler python service.
+Implementation of the functionality behind the exports and eval endpoints
+for the Wrattler python service.
 """
 
-import requests
-import re
 import os
 import sys
 import json
+import re
 import parser
+import requests
 import pandas as pd
 import numpy as np
 import ast
@@ -18,7 +18,7 @@ from io import StringIO
 import contextlib
 import pyarrow as pa
 
-from exceptions import ApiException
+from .exceptions import ApiException
 
 if 'DATASTORE_URI' in os.environ.keys():
     DATASTORE_URI = os.environ['DATASTORE_URI']

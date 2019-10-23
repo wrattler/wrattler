@@ -139,8 +139,10 @@ class PrivateWrattler {
       resourceServerUrl = resourceServerUrl.concat(":"+location.port).concat("/proxy/")
     }
     else {
+
       resourceServerUrl = resourceServerUrl.concat(":") 
       // resourceServerUrl = resourceServerUrl.concat(":"+location.port).concat("/proxy/").concat(clientPort)
+
     }
     console.log("Will look for wrattler-app.js here:" +resourceServerUrl.concat(clientPort))
     return resourceServerUrl.concat(clientPort)
@@ -158,7 +160,9 @@ class PrivateWrattler {
       baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
     }
     else {
+
       baseURL = baseURL.concat(":")
+
     }
 
     console.log("Will look for r here:" +baseURL.concat(rPort))

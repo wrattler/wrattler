@@ -8,10 +8,10 @@ import pyarrow as pa
 
 from azure.storage.blob import BlockBlobService
 
-from utils import filter_data, convert_to_json, convert_to_arrow
-from exceptions import DataStoreException
+from .utils import filter_data, convert_to_json, convert_to_arrow
+from .exceptions import DataStoreException
 try:
-    from config import AzureConfig
+    from .config import AzureConfig
 except:
     print("File config.py not found.  Copy config.py.template and fill in your Azure storage account credentials in order to use Azure blob storage backend.")
 
