@@ -161,15 +161,22 @@ writeFrame <- function(frameData, frameName, cellHash) {
     } else if (typeof(frameData)=="closure") {
         return(FALSE) # probably a function definition - we don't want to store this
     } else {
+        wroteOK=FALSE
         # hopefully a dataframe that can be converted into Arrow or JSON
         response <- tryCatch({
             frameRaw <- arrowFromDataFrame(frameData)
-            PUT(url, body=frameRaw, encode="raw")
+            if (!is.null(frameRaw)) {
+                wroteOK=TRUE
+                PUT(url, body=frameRaw, encode="raw")
+            }
         }, error=function(cond) {
             frameJSON <- jsonFromDataFrame(frameData)
-            PUT(url, body=frameJSON, encode="json")
+            if (!is.null(frameJSON)) {
+                wroteOK=TRUE
+                PUT(url, body=frameJSON, encode="json")
+            }
         })
-        return(status_code(response) == 200)
+        if (wroteOK) return(status_code(response) == 200)
     }
     ## If we got to here, didn't manage to put frame on the datastore
     return(FALSE)
