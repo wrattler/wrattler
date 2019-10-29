@@ -6,6 +6,11 @@ library(base64enc)
 library(rlang)
 library(arrow)
 
+## arrow will override some possibly useful names from base - fix this here
+array <- base::array
+table <- base::table
+
+
 source("codeAnalysis.R")
 
 if (.Platform$OS.type == "unix") {
