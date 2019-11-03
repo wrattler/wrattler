@@ -51,7 +51,7 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
   render: (cell:Langs.BlockState, state:MergerState, context:Langs.EditorContext<MergerEvent>) => {
     let source = state.newName + "=" + 
       Object.keys(state.selected).filter(s => state.selected[s]).join(",")
-    let evalButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell) }, ["Evaluate"])
+    let evalButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell.editor.id) }, ["Evaluate"])
     return h('div', {}, [ 
       h('div', {key:'ed'}, [ Editor.createMonacoEditor("merger", source, cell, context) ]),
       h('div', {key:'prev'}, [
