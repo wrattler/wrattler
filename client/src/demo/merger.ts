@@ -49,7 +49,6 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
 
   /*
   render: (cell:Langs.BlockState, state:MergerState, context:Langs.EditorContext<MergerEvent>) => {
-    let mergerNode = <MergerCodeNode>cell.code
     let source = state.newName + "=" + 
       Object.keys(state.selected).filter(s => state.selected[s]).join(",")
     let evalButton = h('button', { class:'preview-button', onclick:() => context.evaluate(cell) }, ["Evaluate"])
