@@ -1,2 +1,0 @@
-let decr = let x = 2 in fun y → y - x in
-let x = 8 in numToStr (decr x)

@@ -1,2 +1,0 @@
-let incr = fun x → 1 + x in
-map incr [4, 6]

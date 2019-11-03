@@ -1,5 +1,0 @@
-let x = 6;
-let y = 12;
-let sum = x + y 
-in 
-(x * 100 / sum, y * 100 / sum)
