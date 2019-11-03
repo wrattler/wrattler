@@ -194,7 +194,7 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
     let iconsBar = h('div', {class:'icons-bar', key:"icons_"+cell.editor.id}, [icons, move])
     let contentBar = h('div', {class:'content-bar', key:"content_"+cell.editor.id}, [content])
 
-    let langIndex = Object.keys(state.languagePlugins).indexOf(cell.editor.block.language) % 5;
+    let langIndex = Object.keys(state.languagePlugins).indexOf(cell.editor.block.language)
     return h('div', {class:'cell cell-c' + langIndex, key:cell.editor.id}, [
         iconsBar, contentBar, controlsBar
       ]

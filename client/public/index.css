@@ -90,6 +90,11 @@ div.controls {
 .cell-c4 { border-color:#FB8072; }
 .cell-c4 a:hover, .cell-c4 a:hover i { color:#B13628 !important; }
 
+.cell-c5 .controls-bar a, .cell-c5 .icons-bar span, .cell-c5 .controls-bar .fa, 
+	.cell-c5 .icons-bar .fa, .cell-c5 .controls-bar .fab, .cell-c5 .icons-bar .fab { color:#BBAF53; }
+.cell-c5 { border-color:#BBAF53; }
+.cell-c5 a:hover, .cell-c5 a:hover i { color:#8D843F !important; }
+
 /* ----------------------------------------------------------------------------
 	
 -----------------------------------------------------------------------------*/

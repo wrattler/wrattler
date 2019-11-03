@@ -1,12 +1,9 @@
 import * as monaco from 'monaco-editor';
-import {h,createProjector,VNode} from 'maquette';
+import {h} from 'maquette';
 import marked from 'marked';
 import * as Langs from '../definitions/languages'; 
 import * as Graph from '../definitions/graph'; 
-import { Value } from '../definitions/values';
-import { Statement } from 'typescript';
 import { Md5 } from 'ts-md5';
-import { Log } from '../common/log';
 
 // ------------------------------------------------------------------------------------------------
 // Markdown plugin

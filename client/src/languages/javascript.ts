@@ -1,4 +1,4 @@
-import {h,VNode} from 'maquette';
+import {h} from 'maquette';
 import * as Langs from '../definitions/languages';
 import * as Graph from '../definitions/graph';
 import * as Values from '../definitions/values';
