@@ -1,0 +1,10 @@
+let f = fun x y → match y == 0 as {
+   True → [x, y];
+   False → x / y
+};
+let g = fun x → typematch x as {
+   List → "Division by zero";
+   Num → "Answer: " ++ numToStr x
+}
+in 
+(g (f 5 6), g (f 5 0))
