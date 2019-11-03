@@ -39,7 +39,7 @@ function createOutputPreview(block:Langs.BlockState, triggerSelect:(selectedTab:
 }
 
 /**
- * The function creates a Monaco code editor. If the language is one of the langauges
+ * The function creates a Monaco code editor. If the language is one of the languages
  * understood by Monaco, it will automatically use correct syntax highlighting. 
  * You will typically call this function from the `render` operation of your 
  * [`Editor`](../interfaces/languages.editor.html) implementation. This happens each

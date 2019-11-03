@@ -112,7 +112,7 @@ type MergerState = {
 
 An editor then needs to implement the [`Editor`](../api/interfaces/languages.editor.html)
 interface. In the following, the `update` function returns the original state; the 
-`render` function returns constant HTML and we also need to add an `initalize` function
+`render` function returns constant HTML and we also need to add an `initialize` function
 that takes the required parameters and stores them in our `MergerState`:
 
 
@@ -137,7 +137,7 @@ which lets you trigger both local and global events. We will need thse later.
 ### Implementing the language plugin interface
 
 Finally, the main interface that each language plugin needs to implement
-is the [`LangaugePlugin`](../api/interfaces/languages.languageplugin.html)
+is the [`LanguagePlugin`](../api/interfaces/languages.languageplugin.html)
 interface. You can find detailed explanation of the individual attributes and
 methods in the [API documentation](../api/interfaces/languages.languageplugin.html).
 Briefly, the `parse` and `save` methods turn source code into a `Block` value
@@ -155,7 +155,7 @@ export const mergerLanguagePlugin : Langs.LanguagePlugin = {
   editor: mergerEditor,
   getDefaultCode: (id:number) => "",
 
-  parse: (code:string) => { langauge: "merger" },
+  parse: (code:string) => { language: "merger" },
   save: (block:Langs.Block) => "",
 
   bind: async (context: Langs.BindingContext, block: Langs.Block) :
@@ -257,7 +257,7 @@ interface MergerCodeNode extends Graph.Node {
 }
 ```
 
-These two types will be used in a number of places in the [`LangaugePlugin`](../api/interfaces/languages.languageplugin.html)
+These two types will be used in a number of places in the [`LanguagePlugin`](../api/interfaces/languages.languageplugin.html)
 implementation. Before getting to that, we revisit the implementation of the 
 [`Editor`](../api/interfaces/languages.editor.html) component for our plugin.
 

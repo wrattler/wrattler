@@ -35,8 +35,8 @@ interface WrattlerConfig {
  */
 declare class Wrattler {
     /** Creates a new `LanguagePlugin` instance which delegates binding and evaluation
-     * to a specified langauge service. You can pass the returned `LanguagePlugin` to
-     * the `createNotebook` function to get a notebook supporting this langauge.  */
+     * to a specified language service. You can pass the returned `LanguagePlugin` to
+     * the `createNotebook` function to get a notebook supporting this language.  */
     /**
      * Returns default language plugins for Markdown, JavaScript, R, Python and Racket.
      * The `serviceUrls` argument specifies a dictionary with URLs for the services. You can
@@ -52,7 +52,7 @@ declare class Wrattler {
      */
     createNamedNotebook(elementID: string, config: WrattlerConfig): Promise<WrattlerNotebook>;
     /**
-     * Given initial Markdown source code and a dictionary with langauge plugins,
+     * Given initial Markdown source code and a dictionary with language plugins,
      * create a new instance of Wrattler and render it in a given HTML document element.
      *
      * @param elementID HTML document element to be used for rendering the notebook.
