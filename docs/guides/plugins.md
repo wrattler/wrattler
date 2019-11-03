@@ -345,7 +345,7 @@ In principle, you could use mutation too, but that can easily lead to unexpected
 bugs.
 
 The implementation of `render` is not too complicated, but it is quite long, 
-because it creates a lot of user interfacce. It generates an `<ul>` list with
+because it creates a lot of user interface. It generates an `<ul>` list with
 all the frames in scope and then `input` for specifying the new name. It also
 generates two buttons - `Rebind` button and `Evaluate` button - which we will
 discuss shortly.

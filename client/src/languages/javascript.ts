@@ -12,13 +12,6 @@ import {AsyncLazy} from '../common/lazy';
 import * as Doc from '../services/documentService';
 import { Log } from '../common/log';
 
-// ------------------------------------------------------------------------------------------------
-// Markdown plugin
-// ------------------------------------------------------------------------------------------------
-
-/// A class that represents a Markdown block. All blocks need to have
-/// `language` and Markdown also keeps the Markdown source we edit and render
-
 export class JavascriptBlockKind implements Langs.Block {
   language : string;
   source : string;
