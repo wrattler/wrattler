@@ -73,7 +73,7 @@ async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], 
 
 async function updateAndBindAllCells
     (state:NotebookState, cell:Langs.BlockState, newSource: string, resourceServerUrl:string): Promise<NotebookState> {
-  Log.trace("b inding", "Begin rebinding subsequent cells %O %s", cell, newSource)
+  Log.trace("binding", "Begin rebinding subsequent cells %O %s", cell, newSource)
   let editors = state.cells.map(c => {
     let lang = state.languagePlugins[c.editor.block.language]
     if (c.editor.id == cell.editor.id) {
@@ -431,14 +431,23 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
   maquetteProjector.replace(paperElement, () => render(trigger, state))
 }
 
-function loadNotebook(documents:Docs.DocumentElement[], languagePlugins:LanguagePlugins) {
+function loadNotebook(documents:Docs.DocumentElement[], languagePlugins:LanguagePlugins): { counter: number, editors: Langs.EditorState[] } {
   let index = 0
-  let blockStates = documents.map(cell => {
-    let languagePlugin = languagePlugins[cell.language]; // TODO: Error handling
-    let block = languagePlugin.parse(cell.source);
-    let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block);
-    return editor;
-  })
+  let blockStates = documents
+    .filter(cell => {
+      // TODO: better error handling
+      const pluginFound: boolean = cell.language in languagePlugins
+      if (!pluginFound) {
+        Log.error("loadNotebook", `${cell.language} plugin not found.`)
+      }
+      return pluginFound
+    })
+    .map(cell => {
+      let languagePlugin = languagePlugins[cell.language];
+      let block = languagePlugin.parse(cell.source);
+      let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block);
+      return editor;
+    })
   return { counter: index, editors: blockStates };
 }
 
