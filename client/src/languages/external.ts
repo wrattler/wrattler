@@ -13,12 +13,10 @@ import * as Doc from '../services/documentService';
 // Helper functions for working with data store 
 // ------------------------------------------------------------------------------------------------
 
-declare var DATASTORE_URI: string;
-
-async function getValue(blob, preview:boolean) : Promise<any> {
+async function getValue(blob, preview:boolean, datastoreURI:string) : Promise<any> {
   var pathname = new URL(blob).pathname;
   let headers = {'Accept': 'application/json'}
-  let url = DATASTORE_URI.concat(pathname)
+  let url = datastoreURI.concat(pathname)
   if (preview)
     url = url.concat("?nrow=10")
   try {
@@ -33,15 +31,15 @@ async function getValue(blob, preview:boolean) : Promise<any> {
   }
 }
 
-async function getCachedOrEval(serviceUrl, body) : Promise<any> {
-  let cacheUrl = DATASTORE_URI.concat("/" + body.hash).concat("/.cached")
+async function getCachedOrEval(serviceUrl, body, datastoreURI) : Promise<any> {
+  let cacheUrl = datastoreURI.concat("/" + body.hash).concat("/.cached")
   try {
     let params = {headers: {'Accept': 'application/json'}}
     Log.trace("external", "Checking cached response: %s", cacheUrl)
     let response = await axios.get(cacheUrl, params)
     return response.data
   } catch(e) {
-    Log.trace("external", "Checking failed, calling eval (%s)", e)
+    Log.trace("external", "Checking failed at external, calling eval (%s)", e)
     let params = { headers: {'Content-Type': 'application/json'} }        
     let result = await axios.post(serviceUrl.concat("/eval"), body, params)
     await axios.put(cacheUrl, result.data, params)
@@ -49,9 +47,9 @@ async function getCachedOrEval(serviceUrl, body) : Promise<any> {
   }
 }
 
-async function getEval(body, serviceURI) : Promise<Langs.EvaluationResult> {  
+async function getEval(body, serviceURI, datastoreURI) : Promise<Langs.EvaluationResult> {  
   try {
-    let response = await getCachedOrEval(serviceURI, body);        
+    let response = await getCachedOrEval(serviceURI, body, datastoreURI);        
     var results : Values.ExportsValue = { kind:"exports", exports:{} }
     
     if (response.output.toString().length > 0){
@@ -62,15 +60,15 @@ async function getEval(body, serviceURI) : Promise<Langs.EvaluationResult> {
     for(let df of response.frames) {
       let exp : Values.DataFrame = 
         { kind:"dataframe", url:<string>df.url, 
-          preview: await getValue(df.url, true), // TODO: Just first X rows
-          data: new AsyncLazy<any>(() => getValue(df.url,false)) // TODO: This function is called later when JS calls data.getValue()
+          preview: await getValue(df.url, true, datastoreURI), // TODO: Just first X rows
+          data: new AsyncLazy<any>(() => getValue(df.url,false,datastoreURI)) // TODO: This function is called later when JS calls data.getValue()
         };
       if (Array.isArray(exp.preview))
         results.exports[df.name] = exp
     }
     let figureIndex = 0;
     for(let df of response.figures) {
-      let raw = await getValue(df.url,false)
+      let raw = await getValue(df.url,false,datastoreURI)
       let exp : Values.Figure = {kind:"figure", data: raw[0]['IMAGE']};
       results.exports['figure'+figureIndex.toString()] = exp
       figureIndex++;
@@ -155,7 +153,7 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
       { class:'preview-button', onclick:() => { 
           Log.trace("editor", "Evaluate button clicked in external language plugin")
           context.evaluate(cell.editor.id) } }, ["Evaluate!"] )
-    let spinner = h('i', {id:'cellSpinner_'+cell.editor.id, class: 'fas fa-spinner fa-spin' }, [])
+    let spinner = h('i', {id:'cellSpinner_'+cell.editor.id, class: 'fa fa-spinner fa-spin' }, [])
     let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
     let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? (cell.evaluationState=='pending')?spinner:previewButton : (createOutputPreview(cell, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
     let code = createMonacoEditor(cell.code.language, state.block.source, cell, context)
@@ -172,13 +170,15 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
   readonly defaultCode : string;
   readonly regex_global:RegExp = /^%global/;
   readonly regex_local:RegExp = /^%local/;
+  readonly datastoreURI: string;
 
-  constructor(l: string, icon:string, uri: string, code:string) {
+  constructor(l: string, icon:string, serviceURI: string, code:string, datastoreUri: string) {
     this.language = l;
     this.iconClassName = icon;
-    this.serviceURI = uri;
+    this.serviceURI = serviceURI;
     this.editor = ExternalEditor;
     this.defaultCode = code;
+    this.datastoreURI = datastoreUri
   }
 
   getDefaultCode(id:number) {
@@ -236,7 +236,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
           "hash": externalNode.hash,
           "files" : importedFiles,
           "frames": importedFrames}
-        return await getEval(body, this.serviceURI);
+        return await getEval(body, this.serviceURI, this.datastoreURI);
       case 'export':
         let exportNode = <Graph.ExternalExportNode>node
         let exportNodeName = exportNode.variableName
@@ -274,10 +274,10 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
       return false
     }
 
-    async function putResource(fileName:string, code: string) : Promise<string> {
+    async function putResource(fileName:string, code: string, datastoreURI:string) : Promise<string> {
       let hash = Md5.hashStr(fileName)
       try {
-        let url = DATASTORE_URI.concat("/"+hash).concat("/"+fileName)
+        let url = datastoreURI.concat("/"+hash).concat("/"+fileName)
         // let url = "http://wrattler_wrattler_data_store_1:7102"
         let headers = {'Content-Type': 'text/html'}
         var response = await axios.put(url, code, {headers: headers});
@@ -300,7 +300,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
           let resourceName = srcArray[l].split(' ')[1]
           if (!resourceExists(resourceName)) {
             let response = await Doc.getResourceContent(context.resourceServerUrl, resourceName)
-            let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'global', url:await putResource(resourceName, response)}
+            let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'global', url:await putResource(resourceName, response,this.datastoreURI)}
             newResources.push(newResource)
           }
         }
@@ -308,7 +308,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
           let resourceName = srcArray[l].split(' ')[1]
           if (!resourceExists(resourceName)) {
             let response = await Doc.getResourceContent(context.resourceServerUrl, resourceName)
-            let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'local', url:await putResource(resourceName, response)}
+            let newResource:Langs.Resource = {fileName:resourceName, language:this.language, scope: 'local', url:await putResource(resourceName, response,this.datastoreURI)}
             newResources.push(newResource)
           }
         }

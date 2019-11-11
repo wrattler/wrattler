@@ -11,9 +11,9 @@ import pandas as pd
 import pyarrow as pa
 
 
-from storage import *
+from wrattler_data_store.storage import *
 
-@pytest.mark.skipif("WRATTLER_LOCAL_STORAGE" in os.environ.keys(),
+@pytest.mark.skipif("WRATTLER_AZURE_STORAGE" not in os.environ.keys(),
                     reason="Relies on Azure backend")
 def test_json_round_trip():
     """
@@ -28,7 +28,7 @@ def test_json_round_trip():
     assert(result == j)
 
 
-@pytest.mark.skipif("WRATTLER_LOCAL_STORAGE" in os.environ.keys(),
+@pytest.mark.skipif("WRATTLER_AZURE_STORAGE" not in os.environ.keys(),
                     reason="Relies on Azure backend")
 def test_arrow_round_trip():
     """
