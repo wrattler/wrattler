@@ -5,8 +5,6 @@ import * as monaco from 'monaco-editor';
 import * as Langs from '../definitions/languages';
 import {h, VNode} from 'maquette';
 import { Log } from '../common/log';
-import {Md5} from 'ts-md5';
-import * as Graph from '../definitions/graph'; 
 
 function createMonaco(el, lang, source, rebindAndEvaluate) {
   let ed = monaco.editor.create(el, {
@@ -40,8 +38,9 @@ function createMonaco(el, lang, source, rebindAndEvaluate) {
 }
 
 function createEditor(lang:string, source:string, cell:Langs.BlockState, context:Langs.EditorContext<any>) {
+  
   let afterCreateHandler = (el) => { 
-    // Log.trace("editor", "Creating Monaco editor for id: %s (code: %s)", el.id, source.replace(/[\n\r]/g," ").substr(0,100))
+    Log.trace("editor", "Created Monaco editor for id: %s (code: %s)", el.id, source.replace(/[\n\r]/g," ").substr(0,100))
     let rebindAndEvaluate = (code:string) => { 
       Log.trace("editor", "Rebind + Evaluation triggered by Shift+Enter")
       context.rebindSubsequent(cell, code)
@@ -72,7 +71,7 @@ function createEditor(lang:string, source:string, cell:Langs.BlockState, context
     function rebindCells()  {
       let model = ed.getModel() 
       if (model) {
-        Log.trace("jupyter", "Rebind triggered by Blur event")
+        // Log.trace("editor", "Rebind triggered by Blur event")
         context.rebindSubsequent(cell, model.getValue(monaco.editor.EndOfLinePreference.LF))
       }
     }
@@ -80,10 +79,14 @@ function createEditor(lang:string, source:string, cell:Langs.BlockState, context
     let model = ed.getModel()
     if (model) model.onDidChangeContent(resizeEditor);
     ed.onDidBlurEditorText(rebindCells)
-    // window.addEventListener("resize", resizeEditor)
     setTimeout(resizeEditor, 1)
   }
-  return h('div', { id: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler }, [ ])
+
+  let afterUpdateHandler = (el) => { 
+    // Log.trace("editor", "Updating Monaco editor for id: %s (code: %s)", el.id, source.replace(/[\n\r]/g," ").substr(0,100))
+  }
+
+  return h('div', { id: "editor_" + cell.editor.id.toString(), key: "editor_" + cell.editor.id.toString(), afterCreate:afterCreateHandler, afterUpdate:afterUpdateHandler }, [ ])
 }
 
 export {

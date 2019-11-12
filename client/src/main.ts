@@ -71,9 +71,8 @@ async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], 
   return {newCells: newCells, updatedResources: updatedResources};
 }
 
-async function updateAndBindAllCells
-    (state:NotebookState, cell:Langs.BlockState, newSource: string, resourceServerUrl:string): Promise<NotebookState> {
-  Log.trace("b inding", "Begin rebinding subsequent cells %O %s", cell, newSource)
+async function updateAndBindAllCells (state:NotebookState, cell:Langs.BlockState, newSource: string, resourceServerUrl:string): Promise<NotebookState> {
+  Log.trace("binding", "Begin rebinding subsequent cells %O %s", cell, newSource)
   let editors = state.cells.map(c => {
     let lang = state.languagePlugins[c.editor.block.language]
     if (c.editor.id == cell.editor.id) {
@@ -116,8 +115,8 @@ async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resour
 // ------------------------------------------------------------------------------------------------
 
 function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
-  Log.trace("main", "Rendering %d cells", state.cells.length)
-
+  Log.trace("render", "Rendering %d cells", state.cells.length)
+  setTimeout(function(){ }, 3000);
   function renderControlsBar() {
     let langs = Object.keys(state.languagePlugins).map(lang =>
       h('a', {
@@ -200,12 +199,15 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
       ]
     );
   });
+
+  
   return h('div', {class:'container-fluid', id:paperElementID}, [defaultControl, nodes])
 }
 
 async function update(trigger:(evt:NotebookEvent) => void,
     state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
 
+  Log.trace("main", "Updating with event: %s", evt.kind)
   function spliceEditor (editors:Langs.EditorState[], newEditor: Langs.EditorState, idOfAboveBlock: number) {
     let newEditorState:Langs.EditorState[] = []
     if (idOfAboveBlock > -1) {
@@ -350,6 +352,7 @@ async function update(trigger:(evt:NotebookEvent) => void,
     }
 
     case 'add': {
+      Log.trace('main', "Adding cell")
       let newId = state.counter + 1;
       let lang = state.languagePlugins[evt.language];
       let newDocument = { "language": evt.language, "source": lang.getDefaultCode(newId) };
@@ -358,7 +361,10 @@ async function update(trigger:(evt:NotebookEvent) => void,
       let newEditors = spliceEditor(state.cells.map(c => c.editor), editor, evt.id)
       let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resourceServerUrl, state.resources)
       state.resources = state.resources.concat(updatedResources)
-      return {...state, counter: state.counter+1, expandedMenu:-1, cells: newCells, resources: state.resources}
+      newCells.map(c => {
+        Log.trace('main', "New cell: %s", JSON.stringify(c.editor.block))
+      })
+      return {...state, counter: newId, expandedMenu:-1, cells: newCells, resources: state.resources}
     }
 
     case 'remove':
@@ -408,6 +414,7 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
   var handling = false;
 
   function trigger(event:NotebookEvent) {
+    Log.trace("main", "Triggering event: %s", event.kind )
     events.push(event)
     processEvents()
   }
@@ -422,6 +429,7 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
       update(trigger, state, event).then(newState => {
         state = newState
         handling = false;
+        state.cells.map(c => Log.trace('main', "Cell: %s ", JSON.stringify(c.editor.block) ))
         if (events.length > 0) processEvents()
         else maquetteProjector.scheduleRender()
       });
