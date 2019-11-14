@@ -184,7 +184,9 @@ class PrivateWrattler {
 
     let baseURL:string = window.location.protocol+"//"+window.location.hostname
     if (USE_BINDER){
-      baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
+//	baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
+	baseURL = window.location.href;
+	baseURL = baseURL.replace("lab","proxy/");
     }
     else {
       baseURL = baseURL.concat(":")
