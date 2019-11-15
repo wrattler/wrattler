@@ -130,36 +130,27 @@ class PrivateWrattler {
   }
 
   getResourceServerURL():string {
-    // let windowUrl:string = window.location.href
       let resourceServerUrl = window.location.protocol+"//"+window.location.hostname
-
-
       let clientPort = "8080"
     // THIS IS FOR TESTING BINDER
     if (USE_BINDER){
 	resourceServerUrl = window.location.href;
 	resourceServerUrl = resourceServerUrl.replace("lab","proxy/");
-	// resourceServerUrl = resourceServerUrl.concat("/proxy/8080/")
-//	resourceServerUrl = resourceServerUrl.concat(":"+location.port).concat("/proxy/")
     }
     else {
       resourceServerUrl = resourceServerUrl.concat(":")
-      // resourceServerUrl = resourceServerUrl.concat(":"+location.port).concat("/proxy/").concat(clientPort)
     }
     console.log("Will look for wrattler-app.js here:" +resourceServerUrl.concat(clientPort))
     return resourceServerUrl.concat(clientPort)
   }
 
   getServiceServerURL() {
-    // sagemaker: https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/7101/test
-    // let windowUrl:string = window.location.href
     let pythonPort: string = "7101"
     let racketPort: string = "7104"
     let rPort: string = "7103"
 
     let baseURL:string = window.location.protocol+"//"+window.location.hostname
     if (USE_BINDER){
-///	baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
 	baseURL = window.location.href;
 	baseURL = baseURL.replace("lab","proxy/");
     }
@@ -179,12 +170,10 @@ class PrivateWrattler {
   }
 
     getDataStoreURL() {
-    // let windowUrl:string = window.location.href
     let datastorePort: string = "7102"
 
     let baseURL:string = window.location.protocol+"//"+window.location.hostname
     if (USE_BINDER){
-//	baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
 	baseURL = window.location.href;
 	baseURL = baseURL.replace("lab","proxy/");
     }
