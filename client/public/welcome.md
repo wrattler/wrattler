@@ -28,12 +28,6 @@ The following three cells illustrate the idea. We export two dataframes from R a
 and then use both of them in JavaScript to render a simple HTML output:
 
 ```python
-%global hello.py
-printHello("Tomas")
-printHello("Nick")
-```
-
-```python
 one = pd.DataFrame({"name":["Jim"], "age":[51]})
 ```
 

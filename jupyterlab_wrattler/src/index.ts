@@ -14,7 +14,7 @@ const CSS_CLASS = 'jp-Wrattler';
  */
 export const MIME_TYPE = 'text/plain';
 /** @hidden */
-export const USE_BINDER= true
+export const USE_BINDER= false
 
 class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
 
@@ -155,7 +155,9 @@ class PrivateWrattler {
 	baseURL = baseURL.replace("lab","proxy/");
     }
     else {
+
       baseURL = baseURL.concat(":")
+
     }
 
     console.log("Will look for r here:" +baseURL.concat(rPort))

@@ -42,6 +42,24 @@ export type JavascriptState = {
   tabID: number
 }
 
+async function getCachedOrEval(body, datastoreURI:string, argDictionary) : Promise<any> {
+  let cacheUrl = datastoreURI.concat("/" + body.hash).concat("/.cached")
+  try {
+    let params = {headers: {'Accept': 'application/json'}}
+    Log.trace("js", "Checking cached response: %s", cacheUrl)
+    let response = await axios.get(cacheUrl, params)
+    return {values: response.data, outputs: undefined}
+  } catch(e) {
+    Log.trace("js", "Checking failed at JS, calling eval (%s)", e)
+    var addOutput = function(f) {
+      outputs.push(f)
+    }
+    var outputs : ((id:string) => void)[] = [];
+    let values : { (key:string) : any[] } = eval(body.code)(addOutput, argDictionary);
+    return {values: values, outputs: outputs}
+  }
+}
+
 async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.ScopeDictionary, source: string, resources:Array<Langs.Resource>): Promise<Langs.BindingResult> {
   let language = "javascript"
   let regex_global:RegExp = /^%global/;
@@ -211,7 +229,6 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
     let regex_local:RegExp = /^%local/;
 
     async function putValue(variableName, hash, value, datastoreURI) : Promise<string> {
-      console.log(datastoreURI)
       let url = datastoreURI.concat("/"+hash).concat("/"+variableName)
       let headers = {'Content-Type': 'application/json'}
       try {
@@ -248,15 +265,6 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
       }
     }
 
-    // function findResourceURL(fileName): string {
-    //   for (let f = 0; f < context.resources.length; f++) {
-    //     if (context.resources[f].fileName==fileName) {
-    //       return  context.resources[f].url
-    //     }
-    //   }
-    //   return ''
-    // }
-
     switch(jsnode.kind) {
       case 'code':
         let returnArgs = "var __res = {};\n";
@@ -274,11 +282,6 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
           argDictionary[imported.variableName] = await (<Values.DataFrame>imported.value).data.getValue();
           importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
         }
-        var outputs : ((id:string) => void)[] = [];
-        var addOutput = function(f) {
-          outputs.push(f)
-        }
-
         let srcArray = jsCodeNode.source.split('\n')
         let strippedSrc = ''
         let importedFiles : Array<string> = [];
@@ -305,13 +308,18 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
         }
 
         evalCode = "(function f(addOutput, args) {\n\t " + importedVars + "\n" + importedResourceContent + "\n" +strippedSrc + "\n" + returnArgs + "\n})"
-        let values : { (key:string) : any[] } = eval(evalCode)(addOutput, argDictionary);
-        let exports = await putValues(values, this.datastoreURI)
-        for(let i = 0; i < outputs.length; i++) {
-          var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: outputs[i] }
+        // let values : { (key:string) : any[] } = eval(evalCode)(addOutput, argDictionary);
+        let body = {"code": evalCode,
+          "hash": jsnode.hash,
+          "files" : importedFiles,
+          "frames": importedVars}
+
+        let response : {values:{ (key:string) : any[] }, outputs: any} = await getCachedOrEval(body, this.datastoreURI, argDictionary)
+        let exports = await putValues(response.values, this.datastoreURI)
+        for(let i = 0; i < response.outputs.length; i++) {
+          var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: response.outputs[i] }
           exports.exports["output" + i] = exp
         }
-        // return exports
         return {kind: 'success', value: exports}
       case 'export':
         let jsExportNode = <Graph.JsExportNode>node

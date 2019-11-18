@@ -79,7 +79,8 @@ function getPlugins(isProduction) {
       RSERVICE_URI: JSON.stringify(typeof(process.env.RSERVICE_URI)=="undefined"?"http://localhost:7103":process.env.RSERVICE_URI),
       RACKETSERVICE_URI: JSON.stringify(typeof(process.env.RACKETSERVICE_URI)=="undefined"?"http://localhost:7104":process.env.RACKETSERVICE_URI),
       DATASTORE_URI: JSON.stringify(typeof(process.env.DATASTORE_URI)=="undefined"?"http://localhost:7102":process.env.DATASTORE_URI),
-      CLIENT_URI: JSON.stringify(typeof(process.env.CLIENT_URI)=="undefined"?"http://localhost:8080":process.env.CLIENT_URI)
+      CLIENT_URI: JSON.stringify(typeof(process.env.CLIENT_URI)=="undefined"?"http://localhost:8080":process.env.CLIENT_URI),
+      AIASERVICE_URI: JSON.stringify(typeof(process.env.AIASERVICE_URI)=="undefined"?"http://localhost:5050":process.env.AIASERVICE_URI)
     })
   ];
 }
