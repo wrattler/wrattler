@@ -14,7 +14,7 @@ const CSS_CLASS = 'jp-Wrattler';
  */
 export const MIME_TYPE = 'text/plain';
 /** @hidden */
-export const USE_BINDER= false
+export const USE_BINDER= true;
 
 class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
 
