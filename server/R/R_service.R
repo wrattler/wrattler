@@ -5,12 +5,7 @@ library(httr)
 library(base64enc)
 library(rlang)
 
-#USE_ARROW <- FALSE;
-
-#if (USE_ARROW) {
 library(arrow)
-#}
-
 
 ## arrow will override some possibly useful names from base - fix this here
 array <- base::array
@@ -132,18 +127,14 @@ readFrame <- function(url) {
         print("Unable to access datastore")
         return(NULL)
     }
-#    if (USE_ARROW) {
-        frame <- tryCatch({
-            rawData <-content(r, "raw")
-            arrowToDataFrame(rawData)
-        }, error = function(cond) {
-            jsonData <- content(r,"text")
-            jsonToDataFrame(jsonData)
-        })
- #   } else {
- #       jsonData <- content(r,"text")
- #       jsonToDataFrame(jsonData)
- #   }
+    frame <- tryCatch({
+        rawData <-content(r, "raw")
+        arrowToDataFrame(rawData)
+    }, error = function(cond) {
+        jsonData <- content(r,"text")
+        jsonToDataFrame(jsonData)
+    })
+
     return(frame)
 }
 
