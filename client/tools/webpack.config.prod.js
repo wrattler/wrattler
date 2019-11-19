@@ -10,7 +10,7 @@ module.exports = {
 		library: "MyLibrary",
     libraryTarget: "umd",
     filename: 'wrattler-[name].js',
-    path: common.config.buildDir,
+    path: common.config.buildDir
   },
   node: {
     fs: 'empty'

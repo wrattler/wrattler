@@ -8,7 +8,7 @@ import axios from 'axios';
 import { AsyncLazy } from '../common/lazy';
 import { Log } from "../common/log"
 
-declare var DATASTORE_URI: string;
+// declare var DATASTORE_URI: string;
 
 interface AiaBlock extends Langs.Block {
   language: string
@@ -83,10 +83,10 @@ async function getCompletions(root:string, inputs:AiaInputs, path:string[]) : Pr
     ({ name: r.name, path:r.path.split("/").filter((p:string) => p != "") }));
 }
 
-async function getValue(blob:string, preview:boolean) : Promise<any> {
+async function getValue(blob:string, preview:boolean, datastoreURI:string) : Promise<any> {
   var pathname = new URL(blob).pathname;
   let headers = {'Accept': 'application/json'}
-  let url = DATASTORE_URI.concat(pathname)
+  let url = datastoreURI.concat(pathname)
   if (preview) url = url.concat("?nrow=10")
   Log.trace("external", "Fetching data frame: %s", url)
   let response = await axios.get(url, {headers: headers});
@@ -94,14 +94,14 @@ async function getValue(blob:string, preview:boolean) : Promise<any> {
   return response.data
 }
 
-async function getResult(root:string, hash:string, name:string, inputs:AiaInputs, path:string[]) : Promise<Values.DataFrame> {
+async function getResult(root:string, hash:string, name:string, inputs:AiaInputs, path:string[], datastoreURI:string) : Promise<Values.DataFrame> {
   let url = root + "/data/" + hash + "/" + name + "/" + path.join("/")
   let header = Object.keys(inputs).map(k => k + "=" + inputs[k]).join(",")
   let response = await axios.get(url, {headers:{Inputs:header}});
   let frameUrl = response.data
   return { kind: "dataframe", url: frameUrl, 
-      preview: await getValue(frameUrl, true), 
-      data: new AsyncLazy<any>(() => getValue(frameUrl,false)) }
+      preview: await getValue(frameUrl, true, datastoreURI), 
+      data: new AsyncLazy<any>(() => getValue(frameUrl,false, datastoreURI)) }
 }
 /*
 
@@ -294,10 +294,12 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
   readonly iconClassName: string = "fa fa-magic"
   readonly editor: Langs.Editor<Langs.EditorState, any>
   private readonly assistants:AiAssistant[];
+  readonly datastoreURI: string;
 
-  constructor (assistants:AiAssistant[]) {
+  constructor (assistants:AiAssistant[], datastoreUri: string) {
     this.assistants = assistants
     this.editor = createAiaEditor(assistants)
+    this.datastoreURI = datastoreUri
   }
 
   getDefaultCode(id:number) { 
@@ -362,7 +364,7 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
           let path = aiaNode.chain.length > 0 ? aiaNode.chain[aiaNode.chain.length-1].path : []
           var inputs : AiaInputs = {}
           for(let k of Object.keys(aiaNode.inputNodes)) inputs[k] = (<Values.DataFrame>aiaNode.inputNodes[k].value).url
-          let merged = await getResult(aiaNode.assistant.root, aiaNode.hash, newFrame, inputs, path)
+          let merged = await getResult(aiaNode.assistant.root, aiaNode.hash, newFrame, inputs, path, this.datastoreURI)
           res[newFrame] = merged
         }
         let exps : Values.ExportsValue = { kind:"exports", exports: res }
@@ -379,9 +381,9 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
   }
 }
 
-export async function createAiaPlugin(url:string) : Promise<AiaLanguagePlugin> {
+export async function createAiaPlugin(url:string, datastoreURI:string) : Promise<AiaLanguagePlugin> {
   let response = await axios.get(url);
   let aia : AiAssistant[] = response.data; 
   for(var i = 0; i< aia.length; i++) aia[i].root = url + "/" + aia[i].root;
-  return new AiaLanguagePlugin(aia);
+  return new AiaLanguagePlugin(aia, datastoreURI);
 }

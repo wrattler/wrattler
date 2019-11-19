@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import patch
 import json
 
-from app import create_app
+from wrattler_python_service.python_service import create_app
 
 
 @pytest.fixture(scope='module')
@@ -49,7 +49,7 @@ def test_eval_simple_assignment(test_client):
     testcode = 'print("hello world")\nx = pd.DataFrame({"a": [1,2,3]})'
     testframes = []
     testhash = "abcdef"
-    with patch('python_service.write_frame', return_value=True) as mock_write_frame:
+    with patch('wrattler_python_service.python_service_utils.write_frame', return_value=True) as mock_write_frame:
         response = test_client.post("/eval",data=json.dumps({
             "files": [],
             "code": testcode,
