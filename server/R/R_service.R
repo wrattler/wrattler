@@ -4,7 +4,13 @@ library(jsonlite)
 library(httr)
 library(base64enc)
 library(rlang)
+
+#USE_ARROW <- FALSE;
+
+#if (USE_ARROW) {
 library(arrow)
+#}
+
 
 ## arrow will override some possibly useful names from base - fix this here
 array <- base::array
@@ -126,14 +132,18 @@ readFrame <- function(url) {
         print("Unable to access datastore")
         return(NULL)
     }
-    frame <- tryCatch({
-        rawData <-content(r, "raw")
-        arrowToDataFrame(rawData)
-    }, error = function(cond) {
-        jsonData <- content(r,"text")
-        jsonToDataFrame(jsonData)
-    })
-
+#    if (USE_ARROW) {
+        frame <- tryCatch({
+            rawData <-content(r, "raw")
+            arrowToDataFrame(rawData)
+        }, error = function(cond) {
+            jsonData <- content(r,"text")
+            jsonToDataFrame(jsonData)
+        })
+ #   } else {
+ #       jsonData <- content(r,"text")
+ #       jsonToDataFrame(jsonData)
+ #   }
     return(frame)
 }
 
@@ -161,22 +171,25 @@ writeFrame <- function(frameData, frameName, cellHash) {
     } else if (typeof(frameData)=="closure") {
         return(FALSE) # probably a function definition - we don't want to store this
     } else {
-        wroteOK=FALSE
         # hopefully a dataframe that can be converted into Arrow or JSON
         response <- tryCatch({
             frameRaw <- arrowFromDataFrame(frameData)
             if (!is.null(frameRaw)) {
-                wroteOK=TRUE
                 PUT(url, body=frameRaw, encode="raw")
             }
         }, error=function(cond) {
             frameJSON <- jsonFromDataFrame(frameData)
             if (!is.null(frameJSON)) {
-                wroteOK=TRUE
                 PUT(url, body=frameJSON, encode="json")
             }
         })
-        if (wroteOK) return(status_code(response) == 200)
+        wroteOK <- tryCatch({
+            status_code(response) == 200
+        }, error=function(cond) {
+            return(FALSE)
+        })
+
+        return(wroteOK)
     }
     ## If we got to here, didn't manage to put frame on the datastore
     return(FALSE)
