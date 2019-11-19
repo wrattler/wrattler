@@ -71,9 +71,8 @@ async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], 
   return {newCells: newCells, updatedResources: updatedResources};
 }
 
-async function updateAndBindAllCells
-    (state:NotebookState, cell:Langs.BlockState, newSource: string, resourceServerUrl:string): Promise<NotebookState> {
-  Log.trace("b inding", "Begin rebinding subsequent cells %O %s", cell, newSource)
+async function updateAndBindAllCells (state:NotebookState, cell:Langs.BlockState, newSource: string, resourceServerUrl:string): Promise<NotebookState> {
+  Log.trace("binding", "Begin rebinding subsequent cells %O %s", cell, newSource)
   let editors = state.cells.map(c => {
     let lang = state.languagePlugins[c.editor.block.language]
     if (c.editor.id == cell.editor.id) {
@@ -116,8 +115,8 @@ async function evaluate(node:Graph.Node, languagePlugins:LanguagePlugins, resour
 // ------------------------------------------------------------------------------------------------
 
 function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
-  Log.trace("main", "Rendering %d cells", state.cells.length)
-
+  Log.trace("render", "Rendering %d cells", state.cells.length)
+  setTimeout(function(){ }, 3000);
   function renderControlsBar() {
     let langs = Object.keys(state.languagePlugins).map(lang =>
       h('a', {
@@ -200,12 +199,15 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
       ]
     );
   });
+
+  
   return h('div', {class:'container-fluid', id:paperElementID}, [defaultControl, nodes])
 }
 
 async function update(trigger:(evt:NotebookEvent) => void,
     state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
 
+  Log.trace("main", "Updating with event: %s", evt.kind)
   function spliceEditor (editors:Langs.EditorState[], newEditor: Langs.EditorState, idOfAboveBlock: number) {
     let newEditorState:Langs.EditorState[] = []
     if (idOfAboveBlock > -1) {
@@ -213,7 +215,6 @@ async function update(trigger:(evt:NotebookEvent) => void,
         if (editor.id === idOfAboveBlock) return [editor, newEditor];
         else return [editor]
       }).reduce ((a,b)=> a.concat(b));
-      newEditorState.map((es,index)=>es.id=index)
       return newEditorState
     }
     else {
@@ -222,61 +223,29 @@ async function update(trigger:(evt:NotebookEvent) => void,
         else return [editor]
       }).reduce ((a,b)=> a.concat(b));
     }
-    newEditorState.map((es,index)=>es.id=index)
     return newEditorState
   }
 
-  function moveUpEditor (editors: Langs.EditorState[], selectedEditor: Langs.EditorState, idOfSelectedBlock:number) {
-    let idOfEditorAbove:number = 0
-    let previousEditorID: number = 0
-    for (let e = 0; e < editors.length; e++) {
-      if (editors[e].id == idOfSelectedBlock){
-        idOfEditorAbove = previousEditorID
+  function moveUpEditor (editors: Langs.EditorState[], selectedEditor: Langs.EditorState) {
+    let newEditors = editors.map(es => es);
+    for(let i = 0; i < editors.length; i++) {
+      if (editors[i].id == selectedEditor.id && i != 0) {
+        newEditors[i] = editors[i-1];
+        newEditors[i-1] = editors[i];
       }
-      previousEditorID = editors[e].id
     }
-    
-    let editorAbove:Langs.EditorState = editors[idOfEditorAbove]
-  
-    let newEditorState:Langs.EditorState[] = editors.map (editor => {
-      if (editor.id === editorAbove.id) {
-        return [selectedEditor];
-      }
-      if (editor.id === idOfSelectedBlock) {
-        return [editorAbove] 
-      }
-      else return [editor]
-    }).reduce ((a,b)=> a.concat(b))
-
-    newEditorState.map((es,index)=>es.id=index)
-    // console.log(newEditorState)
-    return newEditorState
+    return newEditors;
   }
 
-  function moveDownEditor (editors: Langs.EditorState[], selectedEditor: Langs.EditorState, idOfSelectedBlock:number) {
-    let idOfEditorBelow:number = 0
-    let subsequentEditorID: number = 0
-    for (let e = editors.length-1; e >= 0; e--) {
-      if (editors[e].id == idOfSelectedBlock){
-        idOfEditorBelow = subsequentEditorID
+  function moveDownEditor (editors: Langs.EditorState[], selectedEditor: Langs.EditorState) {
+    let newEditors = editors.map(es => es);
+    for(let i = 0; i < editors.length; i++) {
+      if (editors[i].id == selectedEditor.id && i != editors.length-1) {
+        newEditors[i] = editors[i+1];
+        newEditors[i+1] = editors[i];
       }
-      subsequentEditorID = editors[e].id
     }
-    
-    let editorBelow:Langs.EditorState = editors[idOfEditorBelow]
-  
-    let newEditorState:Langs.EditorState[] = editors.map (editor => {
-      if (editor.id === editorBelow.id) {
-        return [selectedEditor];
-      }
-      if (editor.id === idOfSelectedBlock) {
-        return [editorBelow] 
-      }
-      else return [editor]
-    }).reduce ((a,b)=> a.concat(b))
-
-    newEditorState.map((es,index)=>es.id=index)
-    return newEditorState
+    return newEditors;
   }
 
   function removeCell (cells:Langs.BlockState[], idOfSelectedBlock: number) {
@@ -341,24 +310,29 @@ async function update(trigger:(evt:NotebookEvent) => void,
         return {...state};
       
       if (evt.direction == 'up')
-        newEditors = moveUpEditor(state.cells.map(c => c.editor), evt.cell.editor, evt.cell.editor.id)
+        newEditors = moveUpEditor(state.cells.map(c => c.editor), evt.cell.editor)
       else 
-        newEditors = moveDownEditor(state.cells.map(c => c.editor), evt.cell.editor, evt.cell.editor.id)
+        newEditors = moveDownEditor(state.cells.map(c => c.editor), evt.cell.editor)
 
       let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resourceServerUrl, state.resources)
       return {...state, cells: newCells, resources: updatedResources};
     }
 
     case 'add': {
+      Log.trace('main', "Adding cell")
       let newId = state.counter + 1;
       let lang = state.languagePlugins[evt.language];
       let newDocument = { "language": evt.language, "source": lang.getDefaultCode(newId) };
       let newBlock = lang.parse(newDocument.source);
       let editor = lang.editor.initialize(newId, newBlock);
       let newEditors = spliceEditor(state.cells.map(c => c.editor), editor, evt.id)
+      Log.trace('main', "Spliced editor: %O", newEditors)      
       let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resourceServerUrl, state.resources)
       state.resources = state.resources.concat(updatedResources)
-      return {...state, counter: state.counter+1, expandedMenu:-1, cells: newCells, resources: state.resources}
+      newCells.map(c => {
+        Log.trace('main', "New cell: %s", JSON.stringify(c.editor.block))
+      })
+      return {...state, counter: newId, expandedMenu:-1, cells: newCells, resources: state.resources}
     }
 
     case 'remove':
@@ -408,6 +382,7 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
   var handling = false;
 
   function trigger(event:NotebookEvent) {
+    Log.trace("main", "Triggering event: %s", event.kind )
     events.push(event)
     processEvents()
   }
@@ -422,6 +397,7 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
       update(trigger, state, event).then(newState => {
         state = newState
         handling = false;
+        state.cells.map(c => Log.trace('main', "Cell: %s ", JSON.stringify(c.editor.block) ))
         if (events.length > 0) processEvents()
         else maquetteProjector.scheduleRender()
       });
