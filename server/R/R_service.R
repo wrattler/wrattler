@@ -114,15 +114,19 @@ getFileContent <- function(url) {
 
 readFrame <- function(url) {
     ## Read a dataframe from the datastore.
-    ## first, try to decode as apache arrow.
+    ## First try a URL we construct ourself from the hash and frame name.
+    ## If that fails, try the url we were given by the client.
+    ## When we get the payload, first try to decode as apache arrow.
     ## if this fails,  use jsonlite to deserialize json into a data.frame
 
-    r <- tryCatch({ GET(url) },
-        error=function(cond) {
-            frameNameAndHash <- getNameAndHashFromURL(url)
-            return(GET(makeURL(frameNameAndHash[[1]], frameNameAndHash[[2]])))
-        }
-    )
+    r <- tryCatch({
+        frameNameAndHash <- getNameAndHashFromURL(url)
+        GET(makeURL(frameNameAndHash[[1]], frameNameAndHash[[2]]))
+    },
+    error=function(cond) {
+        return(GET(url))
+    })
+
     if ( r$status != 200) {
         print("Unable to access datastore")
         return(NULL)
