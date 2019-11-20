@@ -156,9 +156,11 @@ export const ExternalEditor : Langs.Editor<ExternalState, ExternalEvent> = {
     let spinner = h('i', {id:'cellSpinner_'+cell.editor.id, class: 'fa fa-spinner fa-spin' }, [])
     let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
     let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? (cell.evaluationState=='pending')?spinner:previewButton : (createOutputPreview(cell, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
+    Log.trace("render", "Source as passed to editor to render: %s", JSON.stringify(state.block.source))
     let code = createMonacoEditor(cell.code.language, state.block.source, cell, context)
     let errors = h('div', {}, [(cell.code.errors.length == 0) ? "" : cell.code.errors.map(err => {return h('p',{}, [err.message])})])
-    return h('div', { }, [code, (cell.code.errors.length >0)?errors:preview])
+    let rendered = h('div', {key:"rendered_".concat(cell.editor.id.toString())}, [code, (cell.code.errors.length >0)?errors:preview])
+    return rendered
   }
 }
 

@@ -60,24 +60,24 @@ async function getCachedOrEval(body, datastoreURI:string, argDictionary) : Promi
   }
 }
 
-async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.ScopeDictionary, source: string, resources:Array<Langs.Resource>): Promise<Langs.BindingResult> {
+async function getCodeResourcesAndExports(context:Langs.BindingContext, source: string, datastoreURI:string): Promise<Langs.BindingResult> {
   let language = "javascript"
-  let regex_global:RegExp = /^%global/;
-  let regex_local:RegExp = /^%local/;
+  let regex_global:RegExp = /^\x2F\x2Fglobal/;
+  let regex_local:RegExp = /^\x2F\x2Flocal/;
 
   let newResources : Array<Langs.Resource> = []
   function resourceExists(fileName):boolean{
-    for (let r = 0; r < resources.length; r++) {
-      if (resources[r].fileName == fileName)
+    for (let r = 0; r < context.resources.length; r++) {
+      if (context.resources[r].fileName == fileName)
         return true
     }
     return false
   }
   
-  async function putResource(fileName:string, code: string) : Promise<string> {
+  async function putResource(fileName:string, code: string, datastoreURI:string) : Promise<string> {
     let hash = Md5.hashStr(fileName)
     try {
-      let url = this.datastoreURI.concat("/"+hash).concat("/"+fileName)
+      let url = datastoreURI.concat("/"+hash).concat("/"+fileName)
       // let url = "http://wrattler_wrattler_data_store_1:7102"
       let headers = {'Content-Type': 'text/html'}
       var response = await axios.put(url, code, {headers: headers});
@@ -93,12 +93,14 @@ async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.Sc
   let srcArray = src.split('\n')
   let strippedSrc = ''
   for (let l = 0; l < srcArray.length; l++) {
-    
+    Log.trace("functions", "srcArray: %s", JSON.stringify(srcArray[l]))
     if ((srcArray[l].match(regex_global))||(srcArray[l].match(regex_local))){
       let scope : "global" | "local" = srcArray[l].match(regex_global) ? 'global' : 'local'
       let resourceName = srcArray[l].split(' ')[1]
+      Log.trace("functions", "Resource Name: %s", JSON.stringify(resourceName))
       if (!resourceExists(resourceName)) {
-        let newResource:Langs.Resource = {fileName:resourceName, language:language, scope: scope, url:''}
+        let response = await Doc.getResourceContent(context.resourceServerUrl, resourceName)
+        let newResource:Langs.Resource = {fileName:resourceName, language:language, scope: scope, url:await putResource(resourceName, response, datastoreURI) }
         newResources.push(newResource)
       }
     }
@@ -120,9 +122,14 @@ async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.Sc
         case ts.SyntaxKind.Identifier:
           // REVIEW: As above, 'escapedText' is actually '__String' which might cause problems
           let argumentName = <string>(<ts.Identifier>child).escapedText;
-          if (argumentName in scope) {
-            let antecedentNode = scope[argumentName]
-            if (antecedents.indexOf(antecedentNode) == -1)
+          // if (argumentName in context.scope) {
+          //   let antecedentNode = context.scope[argumentName]
+          //   if (antecedents.indexOf(antecedentNode) == -1)
+          //     antecedents.push(antecedentNode);
+          // }
+          if (argumentName in context.scope) {
+            let antecedentNode = context.scope[argumentName]
+            if (antecedentNode.language != undefined && antecedents.indexOf(antecedentNode) == -1)
               antecedents.push(antecedentNode);
           }
           break;
@@ -143,7 +150,7 @@ async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.Sc
     source: source,
     errors: []
   }
-  let cachedNode = <Graph.JsCodeNode>cache.tryFindNode(initialNode)
+  let cachedNode = <Graph.JsCodeNode>context.cache.tryFindNode(initialNode)
 
   let dependencies:Graph.JsExportNode[] = [];
 
@@ -165,7 +172,7 @@ async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.Sc
             antecedents:[cachedNode],
             errors:[]
             };
-          let cachedExportNode = <Graph.JsExportNode>cache.tryFindNode(exportNode)
+          let cachedExportNode = <Graph.JsExportNode>context.cache.tryFindNode(exportNode)
           dependencies.push(cachedExportNode);
           cachedNode.exportedVariables.push(cachedExportNode.variableName);
           break;
@@ -279,8 +286,10 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
         var argDictionary:{[key: string]: any} = {}
         for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
           let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-          argDictionary[imported.variableName] = await (<Values.DataFrame>imported.value).data.getValue();
-          importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
+          if ((<Values.DataFrame>imported.value) != null) {
+            argDictionary[imported.variableName] = await (<Values.DataFrame>imported.value).data.getValue();
+            importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
+          } 
         }
         let srcArray = jsCodeNode.source.split('\n')
         let strippedSrc = ''
@@ -336,7 +345,7 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
   
   async bind (context:Langs.BindingContext, block: Langs.Block):Promise<Langs.BindingResult> {
     let jsBlock = <JavascriptBlockKind>block
-    return getCodeResourcesAndExports(context.cache, context.scope, jsBlock.source, context.resources);
+    return getCodeResourcesAndExports(context, jsBlock.source, this.datastoreURI);
   }
 
   save (block:Langs.Block) : string {
