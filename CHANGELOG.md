@@ -2,6 +2,17 @@
 
 To be updated every time code is pushed to ***master***.
 
+### v0.7 (November 2019)
+- Bugfixes in client related to adding cells of the same language.
+- Enable D3 visualizations.
+- Update to logic for getting URLs in Jupyterlab, in order to integrate with Binderhub.
+
+
+### v0.6 (November 2019)
+- Bugfixes for R service (avoid writing NULL dataframes to data store)
+- Modifications to structure of python service and datastore (convert both into python packages) in preparation for Binderhub integration.
+
+
 ### v0.5 (September 2019)
 - Change base docker image for client.
 - Changes to facilitate html output from python and R services.
