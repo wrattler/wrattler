@@ -72,7 +72,7 @@ async function bindAllCells(cache:Graph.NodeCache, editors:Langs.EditorState[], 
 }
 
 async function updateAndBindAllCells (state:NotebookState, cell:Langs.BlockState, newSource: string, resourceServerUrl:string): Promise<NotebookState> {
-  Log.trace("binding", "Begin rebinding subsequent cells %O %s", cell, newSource)
+  Log.trace("binding", "Begin rebinding subsequent cells. Cell: %O, New source: %O", cell, {"newSource": newSource})
   let editors = state.cells.map(c => {
     let lang = state.languagePlugins[c.editor.block.language]
     if (c.editor.id == cell.editor.id) {
