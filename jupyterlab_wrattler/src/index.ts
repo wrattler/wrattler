@@ -14,7 +14,17 @@ const CSS_CLASS = 'jp-Wrattler';
  */
 export const MIME_TYPE = 'text/plain';
 /** @hidden */
-export const USE_BINDER= false
+export const USE_BINDER= getUseBinder();
+
+function getUseBinder() {
+  let baseURL:string = window.location.hostname
+  console.log("BaseURL is: ".concat(baseURL))
+  if ((baseURL == "127.0.0.1") || ('localhost'))
+    return false
+  else
+    return true
+}
+
 
 class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
 
@@ -38,8 +48,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
     // console.log(this)
     // console.log(this.hasClass(CSS_CLASS))
     this._mimeType = options.mimeType;
-    this.firstRender = true
-
+    this.firstRender = true;
   }
 
   /**
@@ -156,13 +165,13 @@ class PrivateWrattler {
     let rPort: string = "7103"
     
     let baseURL:string = window.location.protocol+"//"+window.location.hostname
+    console.log("Using Binder flag set to: ".concat(JSON.stringify(USE_BINDER)))
     if (USE_BINDER){
+
       baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
     }
     else {
-
       baseURL = baseURL.concat(":")
-
     }
 
     console.log("Will look for r here:" +baseURL.concat(rPort))
