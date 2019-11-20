@@ -24,7 +24,7 @@
     "webpack-dev-server": "^3.1.1"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "maquette": "^3.3.0",
     "marked": "^0.4.0",
     "monaco-editor": "^0.17.0",
