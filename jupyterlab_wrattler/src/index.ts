@@ -20,7 +20,7 @@ export const USE_BINDER= getUseBinder();
 function getUseBinder() {
   let baseURL:string = window.location.hostname
   console.log("BaseURL is: ".concat(baseURL))
-  if ((baseURL == "127.0.0.1") || ('localhost'))
+  if ((baseURL == "127.0.0.1") || (baseURL == "localhost") || (baseURL == "0.0.0.0"))
     return false
   else
     return true
