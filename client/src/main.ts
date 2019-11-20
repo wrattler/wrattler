@@ -330,7 +330,7 @@ async function update(trigger:(evt:NotebookEvent) => void,
       let {newCells, updatedResources} = await bindAllCells(state.cache, newEditors, state.languagePlugins, state.resourceServerUrl, state.resources)
       state.resources = state.resources.concat(updatedResources)
       newCells.map(c => {
-        Log.trace('main', "New cell: %s", JSON.stringify(c.editor.block))
+        Log.trace('main', "New cell: %O", c.editor.block)
       })
       return {...state, counter: newId, expandedMenu:-1, cells: newCells, resources: state.resources}
     }
@@ -397,7 +397,7 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
       update(trigger, state, event).then(newState => {
         state = newState
         handling = false;
-        state.cells.map(c => Log.trace('main', "Cell: %s ", JSON.stringify(c.editor.block) ))
+        state.cells.map(c => Log.trace('main', "Cell: %O ", c.editor.block ))
         if (events.length > 0) processEvents()
         else maquetteProjector.scheduleRender()
       });

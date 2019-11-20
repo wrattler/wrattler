@@ -60,7 +60,7 @@ function createOutputPreview(block:Langs.BlockState, triggerSelect:(selectedTab:
  *   trigger rebinding and evaluation when user hits `Shift+Enter` in the editor.
  */
 function createMonacoEditor(language:string, source:string, block:Langs.BlockState, context:Langs.EditorContext<any>) : VNode {
-  Log.trace("editor", "Creating monaco editor with source: %s", source)
+  Log.trace("editor", "Creating monaco editor with source: %s", source.length > 200 ? source.substr(0, 200) + "..." : source)
   return Monaco.createEditor(language, source, block, context)
 }
 

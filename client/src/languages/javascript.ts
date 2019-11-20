@@ -92,8 +92,9 @@ async function getCodeResourcesAndExports(context:Langs.BindingContext, source: 
   let src = source.replace(/\r/g,'\n')
   let srcArray = src.split('\n')
   let strippedSrc = ''
+  for (let l = 0; l < srcArray.length && l < 5; l++) 
+    Log.trace("functions", "srcArray[%d/%d]: %s", l, srcArray.length, JSON.stringify(srcArray[l]));
   for (let l = 0; l < srcArray.length; l++) {
-    Log.trace("functions", "srcArray: %s", JSON.stringify(srcArray[l]))
     if ((srcArray[l].match(regex_global))||(srcArray[l].match(regex_local))){
       let scope : "global" | "local" = srcArray[l].match(regex_global) ? 'global' : 'local'
       let resourceName = srcArray[l].split(' ')[1]
