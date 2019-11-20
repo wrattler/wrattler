@@ -233,9 +233,9 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
 
   async evaluate(context:Langs.EvaluationContext, node:Graph.Node) : Promise<Langs.EvaluationResult> {
     let jsnode = <Graph.JsNode>node
-    let regex_global:RegExp = /^%global/;
-    let regex_local:RegExp = /^%local/;
-
+    let regex_global:RegExp = /^\x2F\x2Fglobal/;
+    let regex_local:RegExp = /^\x2F\x2Flocal/;
+  
     async function putValue(variableName, hash, value, datastoreURI) : Promise<string> {
       let url = datastoreURI.concat("/"+hash).concat("/"+variableName)
       let headers = {'Content-Type': 'application/json'}
@@ -253,17 +253,21 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
     async function putValues(values:{ (key:string) : any[] }, datastoreURI) : Promise<Values.ExportsValue> {
       try {
         var results : Values.ExportsValue = { kind:"exports", exports:{} }
-        for (let value in values) {
-          let dfString = JSON.stringify(values[value])
-          let hash = Md5.hashStr(dfString)
-          let df_url = await putValue(value, hash, dfString, datastoreURI)
-          var exp : Values.DataFrame = {
-            kind:"dataframe", 
-            url: df_url, 
-            data: new AsyncLazy(async () => values[value]), 
-            preview:values[value].slice(0, 10)
+        for (let value in values) {          
+          let df = values[value];
+          // Only attempt to store things that look like array of objects (this check may still fail though..)
+          if ((df != undefined) && Array.isArray(df) && (df.length == 0 || typeof(df[0]) =="object")) {
+            let dfString = JSON.stringify(values[value])
+            let hash = Md5.hashStr(dfString)
+            let df_url = await putValue(value, hash, dfString, datastoreURI)
+            var exp : Values.DataFrame = {
+              kind:"dataframe", 
+              url: df_url, 
+              data: new AsyncLazy(async () => values[value]), 
+              preview:values[value].slice(0, 10)
+            }
+            results.exports[value] = exp
           }
-          results.exports[value] = exp
         }
         return results;
       }
