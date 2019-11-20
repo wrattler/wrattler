@@ -8,6 +8,103 @@ loadScript("http://d3js.org/d3.v3.min.js")
 loadScript("https://code.jquery.com/jquery-3.4.1.min.js")
 ```
 
+```javascript
+loadInlineStyle(`
+.info {
+    padding: 6px 8px;
+    font-size: 20px;
+    font-family: 'Lora', serif;
+    background: rgba(255,255,255,0.6);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    width:200px;
+}
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+    font-family: 'Lora', serif;
+    font-style:  italic;
+    font-weight: 700;
+}
+.legend {
+    text-align: center;
+    line-height: 32px;
+    color: #777;
+    height: 102px;
+}
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+.band {
+    float: left;
+    height: 5px;
+    background-color: #c9c9c9;
+}
+body {
+    font-size: 16px;
+    font-family: 'Lora', serif;
+}
+b {
+    font-family: 'Lora' !important;
+    font-style:  italic;
+    font-weight: 700;
+}
+h1 {
+    margin: 0 0 5px;
+    color: #000000;
+    font-family: 'Lora', serif;
+    font-style:  italic;
+    font-weight: 700;
+    font-size: 20px;
+}	
+h3 {
+    font-family: 'Lora' !important;
+    font-style:  italic;
+    font-weight: 700;
+    color: #3a5a7d;
+    text-decoration: underline; 
+    font-size: 16px;
+}
+a:link {
+    color: #3a5a7d;
+    font-style:  italic;
+}
+a:visited {
+    color: #3a5a7d;
+}
+a:hover {
+    color: #3a5a7d;
+    background-color: #d7d7d7;
+}
+a:active {
+    color: #3a5a7d;
+    background-color: #d7d7d7;
+}
+svg {
+    position: relative;
+}
+html, body, #wrapper, #map {
+    height: 100%;
+}
+#wrapper {
+    margin-left: 260px;
+}
+#map {
+    float: left;
+    width: 100%;
+}
+#sidebar {
+    float: left;
+    width: 260px;
+    margin-left: -260px;
+}
+`)
+```
+
 okay
 
 ```javascript
