@@ -62,8 +62,8 @@ async function getCachedOrEval(body, datastoreURI:string, argDictionary) : Promi
 
 async function getCodeResourcesAndExports(context:Langs.BindingContext, source: string, datastoreURI:string): Promise<Langs.BindingResult> {
   let language = "javascript"
-  let regex_global:RegExp = /^%global/;
-  let regex_local:RegExp = /^%local/;
+  let regex_global:RegExp = /^\x2F\x2Fglobal/;
+  let regex_local:RegExp = /^\x2F\x2Flocal/;
 
   let newResources : Array<Langs.Resource> = []
   function resourceExists(fileName):boolean{
