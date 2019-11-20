@@ -8,6 +8,11 @@ with areas ranging between 0.018 square km to 684 square km.
 
 
 
+
+```javascript
+// This is a javascript cell. 
+//var js15 = [{'id':15, 'language':'javascript'}]
+```
 ```python
 # %global constants.py
 # %global utils.py
@@ -38,9 +43,11 @@ with areas ranging between 0.018 square km to 684 square km.
 
 
 
+
 ## Indices of deprivation & population density data
 To control for various indices of deprivation in the analysis, we load [data](https://data.london.gov.uk/dataset/indices-of-deprivation) indicating such measures provided by the Government (see 'IMDB2015' sheet in .xls). 
 In addition, to control for population density as a factor influencing crime rates, we also load demographic and related data, [Current LSOA boundaries post-2011](https://data.london.gov.uk/dataset/lsoa-atlas).
+
 
 
 
@@ -68,9 +75,11 @@ In addition, to control for population density as a factor influencing crime rat
 
 
 
+
 ## Scenic ratings
 Lastly, to obtain a measure of 'scenicness' for each LSOA, we load predictions made by a Neural Network that was trained on [Scenic-Or-Not](http://scenicornot.datasciencelab.co.uk/) data on Google Street View images. 
 These predictions will soon be made publicly available and the method has been discussed by [Law et al. (2018)](https://www.tandfonline.com/doi/abs/10.1080/13658816.2018.1555832).
+
 
 
 
@@ -87,7 +96,9 @@ These predictions will soon be made publicly available and the method has been d
 
 
 
+
 ## Combining the datasets
+
 
 
 
@@ -104,6 +115,7 @@ These predictions will soon be made publicly available and the method has been d
 
 
 
+
 # Visualisation
 Having loaded the crime data, we're first going to build a javascript visualisation using [d3](https://d3js.org/) and [leaflet](https://leafletjs.com/) 
 to qualitatively see whether there might be a relationship between crime counts and scenicness, as well as visually inspect the measures of deprivation
@@ -114,10 +126,12 @@ ratings of scenicness for specific points in the map (as opposed to an average r
 
 
 
+
 ```javascript
 // addOutput(function(myDiv) {
 // });
 ```
+
 
 
 
@@ -153,6 +167,7 @@ Performing Poisson regression on count data that exhibits this will result in a 
 The [negative binomial regression model](https://data.library.virginia.edu/getting-started-with-negative-binomial-regression-modeling/) 
 does not make this *mean = variance* assumption about the data. 
 The variance of a negative binomial distribution is a function of its mean and has an additional parameter to model the over-dispersion.
+
 
 
 
