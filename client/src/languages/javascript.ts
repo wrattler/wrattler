@@ -281,8 +281,10 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
         var argDictionary:{[key: string]: any} = {}
         for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
           let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
-          argDictionary[imported.variableName] = await (<Values.DataFrame>imported.value).data.getValue();
-          importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
+          if ((<Values.DataFrame>imported.value) != null) {
+            argDictionary[imported.variableName] = await (<Values.DataFrame>imported.value).data.getValue();
+            importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
+          } 
         }
         let srcArray = jsCodeNode.source.split('\n')
         let strippedSrc = ''
