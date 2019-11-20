@@ -81,20 +81,3 @@ addOutput(function(myDiv) {
   Plotly.newPlot(myDiv, data, { title: 'Apple stock prices' });
 });
 ```
-
-```javascript
-addOutput(function(myDiv) {
-  function unpack(key) {
-    return aapl.map(function(row) { return row[key]; });
-  }
-  function makeTrace(name, col, clr) {
-    return { type: "scatter", mode: "lines", name: name,
-      x: unpack('Date'), y: unpack(col), line: {color: clr} };
-  }
-  var data = [ 
-    makeTrace('AAPL High', 'AAPL.High', '#17BECF'),
-    makeTrace('AAPL Low', 'AAPL.Low', '#7F7F7F')
-  ];
-  Plotly.newPlot(myDiv, data, { title: 'Apple stock prices' });
-});
-```
