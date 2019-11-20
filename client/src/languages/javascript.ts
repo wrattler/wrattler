@@ -122,9 +122,14 @@ async function getCodeResourcesAndExports(context:Langs.BindingContext, source: 
         case ts.SyntaxKind.Identifier:
           // REVIEW: As above, 'escapedText' is actually '__String' which might cause problems
           let argumentName = <string>(<ts.Identifier>child).escapedText;
+          // if (argumentName in context.scope) {
+          //   let antecedentNode = context.scope[argumentName]
+          //   if (antecedents.indexOf(antecedentNode) == -1)
+          //     antecedents.push(antecedentNode);
+          // }
           if (argumentName in context.scope) {
             let antecedentNode = context.scope[argumentName]
-            if (antecedents.indexOf(antecedentNode) == -1)
+            if (antecedentNode.language != undefined && antecedents.indexOf(antecedentNode) == -1)
               antecedents.push(antecedentNode);
           }
           break;
