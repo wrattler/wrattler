@@ -321,9 +321,12 @@ def retrieve_frames(input_frames):
             r=requests.get(frame["url"])
             if r.status_code != 200:
                 raise ApiException("Problem retrieving dataframe %s"%frame["name"],status_code=r.status_code)
-            frame_content = r.content
+            ## The following line might throw a JsonDecodeError even
+            ## if the status code was 200 (e.g. jupyter-server-proxy
+            ## returning a page of html) - catch this.
+            frame_content = json.loads(r.content)
             frame_dict[frame["name"]] = frame_content
-        except(requests.exceptions.ConnectionError):
+        except:
             ## try falling back on read_frame method (using env var DATASTORE_URI)
             try:
                 cell_hash, frame_name = frame["url"].split("/")[-2:]

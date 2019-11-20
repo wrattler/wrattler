@@ -1,8 +1,12 @@
 library(jug)
 library(jsonlite)
 
-source("R_service.R")
+if (! is.na(Sys.getenv("R_SERVICE_HOME", unset=NA)) ) {
+    setwd(Sys.getenv("R_SERVICE_HOME"))
+    print(paste("Running from",getwd()))
+}
 
+source("R_service.R")
 
 ## the jug app itself, use infix to chain endpoints together.
 

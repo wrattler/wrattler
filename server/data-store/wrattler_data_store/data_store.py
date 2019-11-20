@@ -101,6 +101,12 @@ def store_or_retrieve(cell_hash, frame_name):
         return handle_get(request, cell_hash, frame_name)
 
 
+@datastore_blueprint.route("/test", methods=["GET"])
+def test():
+    return "Data store is alive!"
+
+
+
 def create_app(name = __name__):
     app = Flask(name)
     CORS(app)

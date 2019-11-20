@@ -4,6 +4,7 @@ library(jsonlite)
 library(httr)
 library(base64enc)
 library(rlang)
+
 library(arrow)
 
 ## arrow will override some possibly useful names from base - fix this here
@@ -113,15 +114,19 @@ getFileContent <- function(url) {
 
 readFrame <- function(url) {
     ## Read a dataframe from the datastore.
-    ## first, try to decode as apache arrow.
+    ## First try a URL we construct ourself from the hash and frame name.
+    ## If that fails, try the url we were given by the client.
+    ## When we get the payload, first try to decode as apache arrow.
     ## if this fails,  use jsonlite to deserialize json into a data.frame
 
-    r <- tryCatch({ GET(url) },
-        error=function(cond) {
-            frameNameAndHash <- getNameAndHashFromURL(url)
-            return(GET(makeURL(frameNameAndHash[[1]], frameNameAndHash[[2]])))
-        }
-    )
+    r <- tryCatch({
+        frameNameAndHash <- getNameAndHashFromURL(url)
+        GET(makeURL(frameNameAndHash[[1]], frameNameAndHash[[2]]))
+    },
+    error=function(cond) {
+        return(GET(url))
+    })
+
     if ( r$status != 200) {
         print("Unable to access datastore")
         return(NULL)
@@ -166,17 +171,22 @@ writeFrame <- function(frameData, frameName, cellHash) {
         response <- tryCatch({
             frameRaw <- arrowFromDataFrame(frameData)
             if (!is.null(frameRaw)) {
-                wroteOK=TRUE
                 PUT(url, body=frameRaw, encode="raw")
             }
         }, error=function(cond) {
             frameJSON <- jsonFromDataFrame(frameData)
             if (!is.null(frameJSON)) {
-                wroteOK=TRUE
                 PUT(url, body=frameJSON, encode="json")
             }
         })
-        if (wroteOK) return(status_code(response) == 200)
+        wroteOK <- tryCatch({
+            status_code(response) == 200
+        }, error=function(cond) {
+            return(FALSE)
+        })
+
+        return(wroteOK)
+
     }
     ## If we got to here, didn't manage to put frame on the datastore
     return(FALSE)
