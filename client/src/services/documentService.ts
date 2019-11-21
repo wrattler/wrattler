@@ -32,7 +32,7 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
   }
   
   let documents : DocumentElement[] = []; 
-  var regex = /```[a-z]+[^`]*```/g;
+  var regex = /```[a-z]+((?!```)(\s|\S))*```/g;
   var res; 
   var currentPos = 0;
   
