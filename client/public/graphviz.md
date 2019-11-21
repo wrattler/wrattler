@@ -31,7 +31,7 @@ joinRFlip <- rbind(rbind(three,two),one)
 
 ```javascript
 //local fullscreen.js
-makeFullScreen(addOutput, {title: "Hello world!",height:400}, function(id) {
+makeFullScreen({title: "Hello world!",height:400}, function(id) {
   document.getElementById(id).innerHTML = 
     `<img src="https://tomaspweb.blob.core.windows.net/calendar/2015/august-original.jpg" 
        style="height:calc(100% - 40px);max-width:calc(100% - 40px);margin:20px">`;
@@ -43,5 +43,5 @@ makeFullScreen(addOutput, {title: "Hello world!",height:400}, function(id) {
 ```javascript
 //local fullscreen.js
 //local graphviz.js
-createGraphViz(addOutput);
+createGraphViz();
 ```

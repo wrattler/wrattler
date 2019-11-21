@@ -44,7 +44,7 @@ function createGraphVizBody(id) {
   var network = new vis.Network(container, data, options);
 }
 
-function createGraphViz(addOutput) {
+function createGraphViz() {
   var found = false;
   var url = "https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis-network.min.js";
   for(let c of document.head.children) if (c.src == url) { found=true; break; }
@@ -53,7 +53,7 @@ function createGraphViz(addOutput) {
     scr.setAttribute("src", url);
     document.head.appendChild(scr);
   }
-  makeFullScreen(addOutput, {key:"graphviz", title:"Wrattler dependency graph", height:600}, function(id) {
+  makeFullScreen({key:"graphviz", title:"Wrattler dependency graph", height:600}, function(id) {
     function check() { 
       if (typeof(vis) != "undefined") createGraphVizBody(id)
       else window.setTimeout(check, 100);

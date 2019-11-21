@@ -18,7 +18,7 @@ function createDialog(id, title, f) {
   }
 }
 
-function makeFullScreen(addOutput, options, f) {
+function makeFullScreen(options, f) {
   let key = options.key ? options.key : "dialog"
   let title = options.title ? options.title : "Full screen view"
   let style = options.height ? "height:" + options.height + "px" : ""
