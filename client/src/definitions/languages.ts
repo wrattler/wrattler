@@ -125,9 +125,17 @@ interface ScopeDictionary {
  * `EvaluationContext` as an argument. It stores a list of available resources.
 */
 interface EvaluationContext {  
+  /** Provides access to all the language plugins taht are available. */
+  languagePlugins: LanguagePlugins
+
+  /** A list of cells in the current notebook. This can be used to inspect 
+   * aspects of the notebook state, other than the currently evaluated code. */
+  cells: BlockState[]
+
   /** A list of files that were loaded as global or local resources by any 
    * language plugin for any cell appearing before the current one. */
   resources: Resource[]
+
   /** URL for a service that can be used for loading resources using `%global` or `%local`. If you 
    * say `%global test.py`, Wrattler will fetch the file from `<resourceServerUrl>/resources/test.py`. */
   resourceServerUrl: string
@@ -303,12 +311,17 @@ interface BlockState {
   exports: Graph.Node[]
 }
 
+/** A dictionary of language plugins that uses the language name as the key and
+ * returns the concrete instance of a language plugin for each language */
+type LanguagePlugins = { [lang:string] : LanguagePlugin }
+
 export { 
   Block,
   Editor,
   EditorState,
   EditorContext,
   LanguagePlugin,
+  LanguagePlugins,
   BlockState,
   BindingContext,
   BindingResult,
