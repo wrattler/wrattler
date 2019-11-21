@@ -92,13 +92,17 @@ getNameAndHashFromURL <- function(url) {
 
 getFileContent <- function(url) {
     ## retrieve contents of a file (e.g. containing function definitions) from the datastore
-    r <- tryCatch({ GET(url, add_headers(Accept="text/html")) },
-       error=function(cond) {
-           filenameAndHash <- getNameAndHashFromURL(url)
-           return(GET(makeURL(filenameAndHash[[1]], filenameAndHash[[2]]),
-                      add_headers(Accept="text/html")))
-       }
-    )
+    r <- tryCatch({
+        ## first try to construct the URL ourselves based on
+        ## the hash, filename, and our datastore URL
+        filenameAndHash <- getNameAndHashFromURL(url)
+        return(GET(makeURL(filenameAndHash[[1]], filenameAndHash[[2]]),
+                   add_headers(Accept="text/html")))
+    }, error=function(cond) {
+            ## try falling back on the URL we were given
+            GET(url, add_headers(Accept="text/html")) },
+    })
+
     if ( r$status != 200) {
         print("Unable to access datastore")
         return(NULL)
