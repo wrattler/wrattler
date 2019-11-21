@@ -2,6 +2,10 @@
 
 To be updated every time code is pushed to ***master***.
 
+### v0.8 (November 2010)
+- Changes and fixes to enable interactive maps in Wrattler.
+
+
 ### v0.7 (November 2019)
 - Bugfixes in client related to adding cells of the same language.
 - Enable D3 visualizations.
