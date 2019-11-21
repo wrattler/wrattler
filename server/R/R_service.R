@@ -100,7 +100,7 @@ getFileContent <- function(url) {
                    add_headers(Accept="text/html")))
     }, error=function(cond) {
             ## try falling back on the URL we were given
-            GET(url, add_headers(Accept="text/html")) },
+            GET(url, add_headers(Accept="text/html"))
     })
 
     if ( r$status != 200) {
