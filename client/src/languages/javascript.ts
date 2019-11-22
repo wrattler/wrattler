@@ -42,7 +42,7 @@ export type JavascriptState = {
   tabID: number
 }
 
-async function getCachedOrEval(body, datastoreURI:string, argDictionary) : Promise<any> {
+async function getCachedOrEval(body, context:Langs.EvaluationContext, datastoreURI:string, argDictionary) : Promise<any> {
   let cacheUrl = datastoreURI.concat("/" + body.hash).concat("/.cached")
   try {
     let params = {headers: {'Accept': 'application/json'}}
@@ -55,7 +55,7 @@ async function getCachedOrEval(body, datastoreURI:string, argDictionary) : Promi
       outputs.push(f)
     }
     var outputs : ((id:string) => void)[] = [];
-    let values : { (key:string) : any[] } = eval(body.code)(addOutput, argDictionary);
+    let values : { (key:string) : any[] } = eval(body.code)(context, addOutput, argDictionary);
     return {values: values, outputs: outputs}
   }
 }
@@ -321,14 +321,20 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
           importedResourceContent=importedResourceContent.concat(await Doc.getResourceContent(context.resourceServerUrl, importedFiles[f])).concat("\n")
         }
 
-        evalCode = "(function f(addOutput, args) {\n\t " + importedVars + "\n" + importedResourceContent + "\n" +strippedSrc + "\n" + returnArgs + "\n})"
-        // let values : { (key:string) : any[] } = eval(evalCode)(addOutput, argDictionary);
+        evalCode = 
+          "(function f(context, addOutput, args) {\n\t " + 
+            importedVars + "\n" + 
+            importedResourceContent + "\n" +
+            strippedSrc + "\n" + 
+            returnArgs + "\n" + 
+          "})"
+        
         let body = {"code": evalCode,
           "hash": jsnode.hash,
           "files" : importedFiles,
           "frames": importedVars}
 
-        let response : {values:{ (key:string) : any[] }, outputs: any} = await getCachedOrEval(body, this.datastoreURI, argDictionary)
+        let response : {values:{ (key:string) : any[] }, outputs: any} = await getCachedOrEval(body, context, this.datastoreURI, argDictionary)
         let exports = await putValues(response.values, this.datastoreURI)
         for(let i = 0; i < response.outputs.length; i++) {
           var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: response.outputs[i] }
