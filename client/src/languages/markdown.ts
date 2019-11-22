@@ -148,7 +148,7 @@ class MarkdownBlockKind implements Langs.Block {
     bind: async (context: Langs.BindingContext, block: Langs.Block) : Promise<Langs.BindingResult> => {
       let mdBlock:MarkdownBlockKind = <MarkdownBlockKind> block
       let node:Graph.Node = {
-        language:this.language, 
+        language:"markdown", 
         antecedents:[],
         hash:<string>Md5.hashStr(mdBlock.source),
         value: null,
