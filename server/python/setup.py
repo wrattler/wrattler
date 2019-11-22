@@ -15,7 +15,7 @@ with open("requirements.txt", "r") as f:
 
 setup(
     name="wrattler-python-service",
-    version="0.5.3",
+    version="0.6",
     description="Python language service for the Wrattler notebook project",
     url="https://github.com/wrattler/wrattler",
     author="Nick Barlow, Tomas Petricek, May Yong",
