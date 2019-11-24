@@ -23,9 +23,8 @@ div.cell {
 }
 div.icons-bar {
 	height:25px;
-	margin-top:10px;
 	overflow:hidden;
-	margin-left:-15px;
+	margin:10px -15px 0px -15px;
 }
 div.content-bar {
 	padding:10px 0px 10px 0px;
@@ -47,6 +46,10 @@ div.controls {
 .controls-bar a, .icons-bar span {
 	font-size:10pt;
 	font-weight:bold;
+}
+.move a {
+	cursor: pointer;
+	margin-left:2px;
 }
 .controls-bar a {
 	margin:0px 0px 0px 15px;
