@@ -2,6 +2,12 @@
 
 To be updated every time code is pushed to ***master***.
 
+### v0.10 (November 2019)
+- CSS fixes for running in Jupyterlab
+- Better handling of waiting for Wrattler to load
+- Protection against NULL dataframes in R service
+- Add new R packages to base docker image.
+
 
 ### v0.9(November 2019)
 - Enable visualization of the dependency graph.
