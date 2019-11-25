@@ -2,13 +2,14 @@
 
 To be updated every time code is pushed to ***master***.
 
-### v0.89(November 2010)
+
+### v0.9(November 2019)
 - Enable visualization of the dependency graph.
 - Button for fullScreen view of cell outputs
 - Fixes to R and python services for loading e.g. function definitions from files when running in Binder.
 
 
-### v0.8 (November 2010)
+### v0.8 (November 2019)
 - Changes and fixes to enable interactive maps in Wrattler.
 
 
