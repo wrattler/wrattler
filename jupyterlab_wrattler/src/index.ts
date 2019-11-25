@@ -1,5 +1,6 @@
 import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 import { Widget } from '@phosphor/widgets';
+import '../style/jupyter.css';
 import '../style/index.css';
 
 

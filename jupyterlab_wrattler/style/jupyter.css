@@ -1,0 +1,9 @@
+.jp-Wrattler {
+  overflow: auto;
+  line-height: 1.5;
+  font-family: 'roboto';
+}
+
+.jp-Wrattler div.cell {
+  width:auto;
+}

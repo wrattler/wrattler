@@ -159,16 +159,10 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
     ])
 
     let move = h('div', {class:'move'}, [
-      h('i', {
-        id:'moveUp_'+cell.editor.id, 
-        class: 'fa fa-arrow-up', 
-        onclick:()=>{trigger({ kind:'move', cell: cell, direction:"up" })}
-      }, []),
-      h('i', {
-        id:'moveDown_'+cell.editor.id, 
-        class: 'fa fa-arrow-down',
-        onclick:()=>{trigger({ kind:'move', cell: cell, direction:"down"})}
-      }, []),
+      h('a', { onclick:()=> trigger({ kind:'move', cell: cell, direction:"up" }) },
+        [ h('i', { class: 'fa fa-arrow-up' }) ]),
+      h('a', { onclick:()=> trigger({ kind:'move', cell: cell, direction:"down" }) },
+        [ h('i', { class: 'fa fa-arrow-down' }) ])
     ])
 
     let langs = Object.keys(state.languagePlugins).map(lang =>
