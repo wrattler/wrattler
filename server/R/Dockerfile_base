@@ -17,7 +17,6 @@ RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu xenial-
 # install needed R packages
 
 RUN Rscript -e "install.packages('ggplot2')"
-RUN Rscript -e "install.packages('jug')"
 RUN Rscript -e "install.packages('xml2')"
 RUN Rscript -e "install.packages('httr')"
 RUN Rscript -e "install.packages('purrr')"
@@ -33,10 +32,6 @@ RUN Rscript -e "install.packages('gridExtra')"
 RUN Rscript -e "install.packages('dplyr')"
 RUN Rscript -e "install.packages('readr')"
 RUN Rscript -e "install.packages('rlang')"
-RUN Rscript -e "install.packages('AER')"
-RUN Rscript -e "install.packages('mltools')"
-RUN Rscript -e "install.packages('car')"
-
 
 # install apache arrow
 RUN apt-get install -y wget
@@ -53,3 +48,7 @@ RUN git clone --branch apache-arrow-0.13.0 https://github.com/apache/arrow.git
 RUN cd arrow/cpp && mkdir release && cd release && cmake .. cmake .. -DARROW_PARQUET=ON -DCMAKE_BUILD_TYPE=Release -DARROW_BOOST_USE_SHARED:BOOL=On && make install
 RUN Rscript -e "install.packages('devtools')"
 RUN Rscript -e "devtools::install_local('arrow/r')"
+# install archived packages
+RUN Rscript -e "install.packages('https://cran.r-project.org/src/contrib/Archive/infuser/infuser_0.2.8.tar.gz')"
+RUN Rscript -e "install.packages('webutils')"
+RUN Rscript -e "install.packages('https://cran.r-project.org/src/contrib/Archive/jug/jug_0.1.7.tar.gz')"
