@@ -24,7 +24,7 @@
     "url": "https://github.com/my_name/myextension.git"
   },
   "scripts": {
-    "build": "echo /* DO NOT EDIT! AUTOMATICALLY COPIED FROM client/public/index.css */ | cat - ../client/public/index.css > style/index.css && tsc",
+    "build": "tsc",
     "clean": "rimraf lib",
     "prepare": "npm run clean && npm run build",
     "watch": "tsc -w"
