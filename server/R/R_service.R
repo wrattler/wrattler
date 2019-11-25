@@ -238,6 +238,7 @@ jsonFromDataFrame <- function(frameData) {
 }
 
 arrowFromDataFrame <- function(frameData) {
+    if (is.null(frameData)) return(NULL)
     ## ensure everything is a character
     if (is.numeric(frameData)) frameData <- as.character(frameData)
     ## explicitly convert into a dataframe if we can
