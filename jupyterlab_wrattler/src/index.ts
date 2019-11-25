@@ -70,28 +70,21 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
   /**
    * Render Wrattler into this widget's node.
    */
-  // async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-  //   if (this.firstRender) {
-  //     let content = model.data[this._mimeType] as string ;
-  //     this.wrattlerClass.initNotebook(content, model)
-  //     this.firstRender = false;
-  //   }
-  //   this.update()
-  // }
-  renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    let content = model.data[this._mimeType] as string ;
+  async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+    let content = model.data[this._mimeType] as string
 
-    return new Promise<void> ((resolve)=>
-    {
-      setTimeout(()=>{
-        if (this.firstRender) {
-          this.wrattlerClass.initNotebook(content, model)
-          this.firstRender = false
-        }
-        this.update();
-        resolve()
-      },1*1000)
-    })
+    var i = 0;
+    while (!(<any>window).wrattler) {
+      console.log("Waiting for wrattler-app.js to be loaded... (" + (i++) + ")")
+      await new Promise(resolve => setTimeout(resolve, 200))
+    }
+    console.log("wrattler-app.js is available. Creating notebook...")
+
+    if (this.firstRender) {
+      this.wrattlerClass.initNotebook(content, model)
+      this.firstRender = false
+    }
+    this.update();
   }
 }
 
@@ -185,8 +178,8 @@ class PrivateWrattler {
 
     let baseURL:string = window.location.protocol+"//"+window.location.hostname
     if (USE_BINDER){
-	baseURL = window.location.href;
-	baseURL = baseURL.replace("lab","proxy/");
+      baseURL = window.location.href;
+      baseURL = baseURL.replace("lab","proxy/");
     }
     else {
       baseURL = baseURL.concat(":")
