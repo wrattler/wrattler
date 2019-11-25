@@ -223,6 +223,8 @@ jsonFromImageFile <- function(frameName, cellHash) {
 
 
 jsonFromDataFrame <- function(frameData) {
+    if (is.null(frameData)) return(NULL)
+
     ## jsonlite doesn't like converting numbers into json
     if (is.numeric(frameData)) frameData <- as.character(frameData)
     ## explicitly convert into a dataframe if we can
@@ -230,7 +232,6 @@ jsonFromDataFrame <- function(frameData) {
                           error=function(cond) {
                               return(NULL)
                           })
-    if (is.null(frameData)) return(NULL)
     ## convert to JSON
     frameJSON <- jsonlite::toJSON(frameData, na="null")
     return(frameJSON)
