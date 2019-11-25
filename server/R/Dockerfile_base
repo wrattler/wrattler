@@ -33,6 +33,10 @@ RUN Rscript -e "install.packages('gridExtra')"
 RUN Rscript -e "install.packages('dplyr')"
 RUN Rscript -e "install.packages('readr')"
 RUN Rscript -e "install.packages('rlang')"
+RUN Rscript -e "install.packages('AER')"
+RUN Rscript -e "install.packages('mltools')"
+RUN Rscript -e "install.packages('car')"
+
 
 # install apache arrow
 RUN apt-get install -y wget
