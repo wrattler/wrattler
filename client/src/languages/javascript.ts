@@ -42,7 +42,7 @@ export type JavascriptState = {
   tabID: number
 }
 
-async function getCachedOrEval(body, datastoreURI:string, argDictionary) : Promise<any> {
+async function getCachedOrEval(body, context:Langs.EvaluationContext, datastoreURI:string, argDictionary) : Promise<any> {
   let cacheUrl = datastoreURI.concat("/" + body.hash).concat("/.cached")
   try {
     let params = {headers: {'Accept': 'application/json'}}
@@ -55,7 +55,7 @@ async function getCachedOrEval(body, datastoreURI:string, argDictionary) : Promi
       outputs.push(f)
     }
     var outputs : ((id:string) => void)[] = [];
-    let values : { (key:string) : any[] } = eval(body.code)(addOutput, argDictionary);
+    let values : { (key:string) : any[] } = eval(body.code)(context, addOutput, argDictionary);
     return {values: values, outputs: outputs}
   }
 }
@@ -92,8 +92,9 @@ async function getCodeResourcesAndExports(context:Langs.BindingContext, source: 
   let src = source.replace(/\r/g,'\n')
   let srcArray = src.split('\n')
   let strippedSrc = ''
+  for (let l = 0; l < srcArray.length && l < 5; l++) 
+    Log.trace("functions", "srcArray[%d/%d]: %s", l, srcArray.length, JSON.stringify(srcArray[l]));
   for (let l = 0; l < srcArray.length; l++) {
-    Log.trace("functions", "srcArray: %s", JSON.stringify(srcArray[l]))
     if ((srcArray[l].match(regex_global))||(srcArray[l].match(regex_local))){
       let scope : "global" | "local" = srcArray[l].match(regex_global) ? 'global' : 'local'
       let resourceName = srcArray[l].split(' ')[1]
@@ -232,9 +233,9 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
 
   async evaluate(context:Langs.EvaluationContext, node:Graph.Node) : Promise<Langs.EvaluationResult> {
     let jsnode = <Graph.JsNode>node
-    let regex_global:RegExp = /^%global/;
-    let regex_local:RegExp = /^%local/;
-
+    let regex_global:RegExp = /^\x2F\x2Fglobal/;
+    let regex_local:RegExp = /^\x2F\x2Flocal/;
+  
     async function putValue(variableName, hash, value, datastoreURI) : Promise<string> {
       let url = datastoreURI.concat("/"+hash).concat("/"+variableName)
       let headers = {'Content-Type': 'application/json'}
@@ -252,17 +253,21 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
     async function putValues(values:{ (key:string) : any[] }, datastoreURI) : Promise<Values.ExportsValue> {
       try {
         var results : Values.ExportsValue = { kind:"exports", exports:{} }
-        for (let value in values) {
-          let dfString = JSON.stringify(values[value])
-          let hash = Md5.hashStr(dfString)
-          let df_url = await putValue(value, hash, dfString, datastoreURI)
-          var exp : Values.DataFrame = {
-            kind:"dataframe", 
-            url: df_url, 
-            data: new AsyncLazy(async () => values[value]), 
-            preview:values[value].slice(0, 10)
+        for (let value in values) {          
+          let df = values[value];
+          // Only attempt to store things that look like array of objects (this check may still fail though..)
+          if ((df != undefined) && Array.isArray(df) && (df.length == 0 || typeof(df[0]) =="object")) {
+            let dfString = JSON.stringify(values[value])
+            let hash = Md5.hashStr(dfString)
+            let df_url = await putValue(value, hash, dfString, datastoreURI)
+            var exp : Values.DataFrame = {
+              kind:"dataframe", 
+              url: df_url, 
+              data: new AsyncLazy(async () => values[value]), 
+              preview:values[value].slice(0, 10)
+            }
+            results.exports[value] = exp
           }
-          results.exports[value] = exp
         }
         return results;
       }
@@ -316,14 +321,20 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
           importedResourceContent=importedResourceContent.concat(await Doc.getResourceContent(context.resourceServerUrl, importedFiles[f])).concat("\n")
         }
 
-        evalCode = "(function f(addOutput, args) {\n\t " + importedVars + "\n" + importedResourceContent + "\n" +strippedSrc + "\n" + returnArgs + "\n})"
-        // let values : { (key:string) : any[] } = eval(evalCode)(addOutput, argDictionary);
+        evalCode = 
+          "(function f(context, addOutput, args) {\n\t " + 
+            importedVars + "\n" + 
+            importedResourceContent + "\n" +
+            strippedSrc + "\n" + 
+            returnArgs + "\n" + 
+          "})"
+        
         let body = {"code": evalCode,
           "hash": jsnode.hash,
           "files" : importedFiles,
           "frames": importedVars}
 
-        let response : {values:{ (key:string) : any[] }, outputs: any} = await getCachedOrEval(body, this.datastoreURI, argDictionary)
+        let response : {values:{ (key:string) : any[] }, outputs: any} = await getCachedOrEval(body, context, this.datastoreURI, argDictionary)
         let exports = await putValues(response.values, this.datastoreURI)
         for(let i = 0; i < response.outputs.length; i++) {
           var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: response.outputs[i] }

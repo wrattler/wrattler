@@ -4,7 +4,13 @@ library(jsonlite)
 library(httr)
 library(base64enc)
 library(rlang)
+
 library(arrow)
+
+## arrow will override some possibly useful names from base - fix this here
+array <- base::array
+table <- base::table
+
 
 source("codeAnalysis.R")
 
@@ -86,13 +92,17 @@ getNameAndHashFromURL <- function(url) {
 
 getFileContent <- function(url) {
     ## retrieve contents of a file (e.g. containing function definitions) from the datastore
-    r <- tryCatch({ GET(url, add_headers(Accept="text/html")) },
-       error=function(cond) {
-           filenameAndHash <- getNameAndHashFromURL(url)
-           return(GET(makeURL(filenameAndHash[[1]], filenameAndHash[[2]]),
-                      add_headers(Accept="text/html")))
-       }
-    )
+    r <- tryCatch({
+        ## first try to construct the URL ourselves based on
+        ## the hash, filename, and our datastore URL
+        filenameAndHash <- getNameAndHashFromURL(url)
+        return(GET(makeURL(filenameAndHash[[1]], filenameAndHash[[2]]),
+                   add_headers(Accept="text/html")))
+    }, error=function(cond) {
+            ## try falling back on the URL we were given
+            GET(url, add_headers(Accept="text/html"))
+    })
+
     if ( r$status != 200) {
         print("Unable to access datastore")
         return(NULL)
@@ -108,15 +118,19 @@ getFileContent <- function(url) {
 
 readFrame <- function(url) {
     ## Read a dataframe from the datastore.
-    ## first, try to decode as apache arrow.
+    ## First try a URL we construct ourself from the hash and frame name.
+    ## If that fails, try the url we were given by the client.
+    ## When we get the payload, first try to decode as apache arrow.
     ## if this fails,  use jsonlite to deserialize json into a data.frame
 
-    r <- tryCatch({ GET(url) },
-        error=function(cond) {
-            frameNameAndHash <- getNameAndHashFromURL(url)
-            return(GET(makeURL(frameNameAndHash[[1]], frameNameAndHash[[2]])))
-        }
-    )
+    r <- tryCatch({
+        frameNameAndHash <- getNameAndHashFromURL(url)
+        GET(makeURL(frameNameAndHash[[1]], frameNameAndHash[[2]]))
+    },
+    error=function(cond) {
+        return(GET(url))
+    })
+
     if ( r$status != 200) {
         print("Unable to access datastore")
         return(NULL)
@@ -156,15 +170,27 @@ writeFrame <- function(frameData, frameName, cellHash) {
     } else if (typeof(frameData)=="closure") {
         return(FALSE) # probably a function definition - we don't want to store this
     } else {
+        wroteOK=FALSE
         # hopefully a dataframe that can be converted into Arrow or JSON
         response <- tryCatch({
             frameRaw <- arrowFromDataFrame(frameData)
-            PUT(url, body=frameRaw, encode="raw")
+            if (!is.null(frameRaw)) {
+                PUT(url, body=frameRaw, encode="raw")
+            }
         }, error=function(cond) {
             frameJSON <- jsonFromDataFrame(frameData)
-            PUT(url, body=frameJSON, encode="json")
+            if (!is.null(frameJSON)) {
+                PUT(url, body=frameJSON, encode="json")
+            }
         })
-        return(status_code(response) == 200)
+        wroteOK <- tryCatch({
+            status_code(response) == 200
+        }, error=function(cond) {
+            return(FALSE)
+        })
+
+        return(wroteOK)
+
     }
     ## If we got to here, didn't manage to put frame on the datastore
     return(FALSE)
@@ -197,6 +223,8 @@ jsonFromImageFile <- function(frameName, cellHash) {
 
 
 jsonFromDataFrame <- function(frameData) {
+    if (is.null(frameData)) return(NULL)
+
     ## jsonlite doesn't like converting numbers into json
     if (is.numeric(frameData)) frameData <- as.character(frameData)
     ## explicitly convert into a dataframe if we can
@@ -204,13 +232,13 @@ jsonFromDataFrame <- function(frameData) {
                           error=function(cond) {
                               return(NULL)
                           })
-    if (is.null(frameData)) return(NULL)
     ## convert to JSON
     frameJSON <- jsonlite::toJSON(frameData, na="null")
     return(frameJSON)
 }
 
 arrowFromDataFrame <- function(frameData) {
+    if (is.null(frameData)) return(NULL)
     ## ensure everything is a character
     if (is.numeric(frameData)) frameData <- as.character(frameData)
     ## explicitly convert into a dataframe if we can

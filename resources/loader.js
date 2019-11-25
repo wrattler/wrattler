@@ -7,6 +7,31 @@ function loadScript(url) {
     scr.setAttribute("src", url);
     document.head.appendChild(scr);
     loaded.push(url)
-    console.log("Scripts loaded: "+JSON.stringify(loaded))
+    console.log("Styles and scripts loaded: "+JSON.stringify(loaded))
+  }
+}
+
+function loadStyle(url) { 
+  if (!loaded.includes(url))
+  {
+    var scr = document.createElement("link");
+    scr.setAttribute("href", url);
+    scr.setAttribute("rel", "stylesheet");
+    document.head.appendChild(scr);
+    loaded.push(url)
+    console.log("Styles and scripts loaded: "+JSON.stringify(loaded))
+  }
+}
+
+var inline = [];
+
+function loadInlineStyle(style) { 
+  if (!inline.includes(style))
+  {
+    var scr = document.createElement("style");
+    scr.setAttribute("type", "text/css");
+    scr.innerHTML = style;
+    document.head.appendChild(scr);
+    inline.push(style)
   }
 }
