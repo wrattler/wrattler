@@ -48,16 +48,16 @@ def get_file_content(url):
     (likely some function definitions and/or import statements).
     """
     try:
-        r=requests.get(url)
+        cell_hash, file_name = url.split("/")[-2:]
+        ds_url = '{}/{}/{}'.format(DATASTORE_URI, cell_hash, file_name)
+        r=requests.get(ds_url)
         if r.status_code is not 200:
             raise ApiException("Could not retrieve dataframe", status_code=r.status_code)
         file_content = r.content.decode("utf-8")
         return file_content
     except(requests.exceptions.ConnectionError):
         try:
-            ## Try falling back on the datastore environment variable
-            cell_hash, file_name = url.split("/")[-2:]
-            url = '{}/{}/{}'.format(DATASTORE_URI, cell_hash, file_name)
+            ## Try falling back on the URL we were given
             r = requests.get(url)
             if r.status_code is not 200:
                 raise ApiException("Could not retrieve dataframe", status_code=r.status_code)
@@ -321,9 +321,12 @@ def retrieve_frames(input_frames):
             r=requests.get(frame["url"])
             if r.status_code != 200:
                 raise ApiException("Problem retrieving dataframe %s"%frame["name"],status_code=r.status_code)
-            frame_content = r.content
+            ## The following line might throw a JsonDecodeError even
+            ## if the status code was 200 (e.g. jupyter-server-proxy
+            ## returning a page of html) - catch this.
+            frame_content = json.loads(r.content)
             frame_dict[frame["name"]] = frame_content
-        except(requests.exceptions.ConnectionError):
+        except:
             ## try falling back on read_frame method (using env var DATASTORE_URI)
             try:
                 cell_hash, frame_name = frame["url"].split("/")[-2:]

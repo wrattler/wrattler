@@ -1,5 +1,6 @@
 import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 import { Widget } from '@phosphor/widgets';
+import '../style/jupyter.css';
 import '../style/index.css';
 
 
@@ -14,12 +15,23 @@ const CSS_CLASS = 'jp-Wrattler';
  */
 export const MIME_TYPE = 'text/plain';
 /** @hidden */
-export const USE_BINDER= false
+
+export const USE_BINDER= getUseBinder();
+
+function getUseBinder() {
+  let baseURL:string = window.location.hostname
+  console.log("BaseURL is: ".concat(baseURL))
+  if ((baseURL == "127.0.0.1") || (baseURL == "localhost") || (baseURL == "0.0.0.0"))
+    return false
+  else
+    return true
+}
+
 
 class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
 
   /**
-   * Construct a new xkcd widget.
+   * Construct a new widget.
    */
   constructor(options: IRenderMime.IRendererOptions) {
 
@@ -38,8 +50,7 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
     // console.log(this)
     // console.log(this.hasClass(CSS_CLASS))
     this._mimeType = options.mimeType;
-    this.firstRender = true
-
+    this.firstRender = true;
   }
 
   /**
@@ -60,28 +71,21 @@ class RenderedWrattler extends Widget implements IRenderMime.IRenderer {
   /**
    * Render Wrattler into this widget's node.
    */
-  // async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-  //   if (this.firstRender) {
-  //     let content = model.data[this._mimeType] as string ;
-  //     this.wrattlerClass.initNotebook(content, model)
-  //     this.firstRender = false;
-  //   }
-  //   this.update()
-  // }
-  renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    let content = model.data[this._mimeType] as string ;
+  async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+    let content = model.data[this._mimeType] as string
 
-    return new Promise<void> ((resolve)=>
-    {
-      setTimeout(()=>{
-        if (this.firstRender) {
-          this.wrattlerClass.initNotebook(content, model)
-          this.firstRender = false
-        }
-        this.update();
-        resolve()
-      },1*1000)
-    })
+    var i = 0;
+    while (!(<any>window).wrattler) {
+      console.log("Waiting for wrattler-app.js to be loaded... (" + (i++) + ")")
+      await new Promise(resolve => setTimeout(resolve, 200))
+    }
+    console.log("wrattler-app.js is available. Creating notebook...")
+
+    if (this.firstRender) {
+      this.wrattlerClass.initNotebook(content, model)
+      this.firstRender = false
+    }
+    this.update();
   }
 }
 
@@ -130,39 +134,33 @@ class PrivateWrattler {
   }
 
   getResourceServerURL():string {
-    // let windowUrl:string = window.location.href
-    let resourceServerUrl = window.location.protocol+"//"+window.location.hostname
-    let clientPort = "8080"
+      let resourceServerUrl = window.location.protocol+"//"+window.location.hostname
+      let clientPort = "8080"
     // THIS IS FOR TESTING BINDER
     if (USE_BINDER){
-      // resourceServerUrl = resourceServerUrl.concat("/proxy/8080/")
-      resourceServerUrl = resourceServerUrl.concat(":"+location.port).concat("/proxy/")
+	resourceServerUrl = window.location.href;
+	resourceServerUrl = resourceServerUrl.replace("lab","proxy/");
     }
     else {
-
-      resourceServerUrl = resourceServerUrl.concat(":") 
-      // resourceServerUrl = resourceServerUrl.concat(":"+location.port).concat("/proxy/").concat(clientPort)
-
+      resourceServerUrl = resourceServerUrl.concat(":")
     }
     console.log("Will look for wrattler-app.js here:" +resourceServerUrl.concat(clientPort))
     return resourceServerUrl.concat(clientPort)
   }
 
   getServiceServerURL() {
-    // sagemaker: https://nb-wrattler-test-12.notebook.us-east-2.sagemaker.aws/proxy/7101/test 
-    // let windowUrl:string = window.location.href
     let pythonPort: string = "7101"
     let racketPort: string = "7104"
     let rPort: string = "7103"
-    
+
     let baseURL:string = window.location.protocol+"//"+window.location.hostname
+    console.log("Using Binder flag set to: ".concat(JSON.stringify(USE_BINDER)))
     if (USE_BINDER){
-      baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
+	      baseURL = window.location.href;
+	      baseURL = baseURL.replace("lab","proxy/");
     }
     else {
-
-      baseURL = baseURL.concat(":")
-
+        baseURL = baseURL.concat(":")
     }
 
     console.log("Will look for r here:" +baseURL.concat(rPort))
@@ -176,13 +174,13 @@ class PrivateWrattler {
     }
   }
 
-  getDataStoreURL() {
-    // let windowUrl:string = window.location.href
+    getDataStoreURL() {
     let datastorePort: string = "7102"
 
     let baseURL:string = window.location.protocol+"//"+window.location.hostname
     if (USE_BINDER){
-      baseURL = baseURL.concat(":"+location.port).concat("/proxy/")
+      baseURL = window.location.href;
+      baseURL = baseURL.replace("lab","proxy/");
     }
     else {
       baseURL = baseURL.concat(":")

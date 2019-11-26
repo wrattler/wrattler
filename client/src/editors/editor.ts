@@ -15,6 +15,7 @@ import * as Preview from './preview';
 import * as Langs from '../definitions/languages'; 
 import * as Values from '../definitions/values'; 
 import { VNode } from 'maquette';
+import { Log } from '../common/log';
 
 /**
  * The function creates a preview displaying the outputs of a given code block.
@@ -59,6 +60,7 @@ function createOutputPreview(block:Langs.BlockState, triggerSelect:(selectedTab:
  *   trigger rebinding and evaluation when user hits `Shift+Enter` in the editor.
  */
 function createMonacoEditor(language:string, source:string, block:Langs.BlockState, context:Langs.EditorContext<any>) : VNode {
+  Log.trace("editor", "Creating monaco editor with source: %s", source.length > 200 ? source.substr(0, 200) + "..." : source)
   return Monaco.createEditor(language, source, block, context)
 }
 

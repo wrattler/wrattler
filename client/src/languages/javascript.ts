@@ -35,7 +35,7 @@ export type JavascriptState = {
   tabID: number
 }
 
-async function getCachedOrEval(body, datastoreURI:string, argDictionary) : Promise<any> {
+async function getCachedOrEval(body, context:Langs.EvaluationContext, datastoreURI:string, argDictionary) : Promise<any> {
   let cacheUrl = datastoreURI.concat("/" + body.hash).concat("/.cached")
   try {
     let params = {headers: {'Accept': 'application/json'}}
@@ -48,29 +48,29 @@ async function getCachedOrEval(body, datastoreURI:string, argDictionary) : Promi
       outputs.push(f)
     }
     var outputs : ((id:string) => void)[] = [];
-    let values : { (key:string) : any[] } = eval(body.code)(addOutput, argDictionary);
+    let values : { (key:string) : any[] } = eval(body.code)(context, addOutput, argDictionary);
     return {values: values, outputs: outputs}
   }
 }
 
-async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.ScopeDictionary, source: string, resources:Array<Langs.Resource>): Promise<Langs.BindingResult> {
+async function getCodeResourcesAndExports(context:Langs.BindingContext, source: string, datastoreURI:string): Promise<Langs.BindingResult> {
   let language = "javascript"
-  let regex_global:RegExp = /^%global/;
-  let regex_local:RegExp = /^%local/;
+  let regex_global:RegExp = /^\x2F\x2Fglobal/;
+  let regex_local:RegExp = /^\x2F\x2Flocal/;
 
   let newResources : Array<Langs.Resource> = []
   function resourceExists(fileName):boolean{
-    for (let r = 0; r < resources.length; r++) {
-      if (resources[r].fileName == fileName)
+    for (let r = 0; r < context.resources.length; r++) {
+      if (context.resources[r].fileName == fileName)
         return true
     }
     return false
   }
   
-  async function putResource(fileName:string, code: string) : Promise<string> {
+  async function putResource(fileName:string, code: string, datastoreURI:string) : Promise<string> {
     let hash = Md5.hashStr(fileName)
     try {
-      let url = this.datastoreURI.concat("/"+hash).concat("/"+fileName)
+      let url = datastoreURI.concat("/"+hash).concat("/"+fileName)
       // let url = "http://wrattler_wrattler_data_store_1:7102"
       let headers = {'Content-Type': 'text/html'}
       var response = await axios.put(url, code, {headers: headers});
@@ -85,13 +85,16 @@ async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.Sc
   let src = source.replace(/\r/g,'\n')
   let srcArray = src.split('\n')
   let strippedSrc = ''
+  for (let l = 0; l < srcArray.length && l < 5; l++) 
+    Log.trace("functions", "srcArray[%d/%d]: %s", l, srcArray.length, JSON.stringify(srcArray[l]));
   for (let l = 0; l < srcArray.length; l++) {
-    
     if ((srcArray[l].match(regex_global))||(srcArray[l].match(regex_local))){
       let scope : "global" | "local" = srcArray[l].match(regex_global) ? 'global' : 'local'
       let resourceName = srcArray[l].split(' ')[1]
+      Log.trace("functions", "Resource Name: %s", JSON.stringify(resourceName))
       if (!resourceExists(resourceName)) {
-        let newResource:Langs.Resource = {fileName:resourceName, language:language, scope: scope, url:''}
+        let response = await Doc.getResourceContent(context.resourceServerUrl, resourceName)
+        let newResource:Langs.Resource = {fileName:resourceName, language:language, scope: scope, url:await putResource(resourceName, response, datastoreURI) }
         newResources.push(newResource)
       }
     }
@@ -113,9 +116,14 @@ async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.Sc
         case ts.SyntaxKind.Identifier:
           // REVIEW: As above, 'escapedText' is actually '__String' which might cause problems
           let argumentName = <string>(<ts.Identifier>child).escapedText;
-          if (argumentName in scope) {
-            let antecedentNode = scope[argumentName]
-            if (antecedents.indexOf(antecedentNode) == -1)
+          // if (argumentName in context.scope) {
+          //   let antecedentNode = context.scope[argumentName]
+          //   if (antecedents.indexOf(antecedentNode) == -1)
+          //     antecedents.push(antecedentNode);
+          // }
+          if (argumentName in context.scope) {
+            let antecedentNode = context.scope[argumentName]
+            if (antecedentNode.language != undefined && antecedents.indexOf(antecedentNode) == -1)
               antecedents.push(antecedentNode);
           }
           break;
@@ -136,7 +144,7 @@ async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.Sc
     source: source,
     errors: []
   }
-  let cachedNode = <Graph.JsCodeNode>cache.tryFindNode(initialNode)
+  let cachedNode = <Graph.JsCodeNode>context.cache.tryFindNode(initialNode)
 
   let dependencies:Graph.JsExportNode[] = [];
 
@@ -158,7 +166,7 @@ async function getCodeResourcesAndExports(cache:Graph.NodeCache, scope: Langs.Sc
             antecedents:[cachedNode],
             errors:[]
             };
-          let cachedExportNode = <Graph.JsExportNode>cache.tryFindNode(exportNode)
+          let cachedExportNode = <Graph.JsExportNode>context.cache.tryFindNode(exportNode)
           dependencies.push(cachedExportNode);
           cachedNode.exportedVariables.push(cachedExportNode.variableName);
           break;
@@ -191,7 +199,7 @@ export const javascriptEditor : Langs.Editor<JavascriptState, JavascriptEvent> =
       { class:'preview-button', onclick:() => { 
           Log.trace("editor", "Evaluate button clicked in external language plugin")
           context.evaluate(cell.editor.id) } }, ["Evaluate!"] )
-    let spinner = h('i', {id:'cellSpinner_'+cell.editor.id, class: 'fas fa-spinner fa-spin' }, [])
+    let spinner = h('i', {id:'cellSpinner_'+cell.editor.id, class: 'fa fa-spinner fa-spin' }, [])
     let triggerSelect = (t:number) => context.trigger({kind:'switchtab', index: t})
     let preview = h('div', {class:'preview'}, [(cell.code.value==undefined) ? (cell.evaluationState=='pending')?spinner:previewButton : (createOutputPreview(cell, triggerSelect, state.tabID, <Values.ExportsValue>cell.code.value))]);
     let code = createMonacoEditor("javascript", state.block.source, cell, context)
@@ -218,9 +226,9 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
 
   async evaluate(context:Langs.EvaluationContext, node:Graph.Node) : Promise<Langs.EvaluationResult> {
     let jsnode = <Graph.JsNode>node
-    let regex_global:RegExp = /^%global/;
-    let regex_local:RegExp = /^%local/;
-
+    let regex_global:RegExp = /^\x2F\x2Fglobal/;
+    let regex_local:RegExp = /^\x2F\x2Flocal/;
+  
     async function putValue(variableName, hash, value, datastoreURI) : Promise<string> {
       let url = datastoreURI.concat("/"+hash).concat("/"+variableName)
       let headers = {'Content-Type': 'application/json'}
@@ -238,17 +246,21 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
     async function putValues(values:{ (key:string) : any[] }, datastoreURI) : Promise<Values.ExportsValue> {
       try {
         var results : Values.ExportsValue = { kind:"exports", exports:{} }
-        for (let value in values) {
-          let dfString = JSON.stringify(values[value])
-          let hash = Md5.hashStr(dfString)
-          let df_url = await putValue(value, hash, dfString, datastoreURI)
-          var exp : Values.DataFrame = {
-            kind:"dataframe", 
-            url: df_url, 
-            data: new AsyncLazy(async () => values[value]), 
-            preview:values[value].slice(0, 10)
+        for (let value in values) {          
+          let df = values[value];
+          // Only attempt to store things that look like array of objects (this check may still fail though..)
+          if ((df != undefined) && Array.isArray(df) && (df.length == 0 || typeof(df[0]) =="object")) {
+            let dfString = JSON.stringify(values[value])
+            let hash = Md5.hashStr(dfString)
+            let df_url = await putValue(value, hash, dfString, datastoreURI)
+            var exp : Values.DataFrame = {
+              kind:"dataframe", 
+              url: df_url, 
+              data: new AsyncLazy(async () => values[value]), 
+              preview:values[value].slice(0, 10)
+            }
+            results.exports[value] = exp
           }
-          results.exports[value] = exp
         }
         return results;
       }
@@ -272,8 +284,10 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
         var argDictionary:{[key: string]: any} = {}
         for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
           let imported = <Graph.ExportNode>jsCodeNode.antecedents[i]
-          argDictionary[imported.variableName] = await (<Values.DataFrame>imported.value).data.getValue();
-          importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
+          if ((<Values.DataFrame>imported.value) != null) {
+            argDictionary[imported.variableName] = await (<Values.DataFrame>imported.value).data.getValue();
+            importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");
+          } 
         }
         let srcArray = jsCodeNode.source.split('\n')
         let strippedSrc = ''
@@ -300,14 +314,20 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
           importedResourceContent=importedResourceContent.concat(await Doc.getResourceContent(context.resourceServerUrl, importedFiles[f])).concat("\n")
         }
 
-        evalCode = "(function f(addOutput, args) {\n\t " + importedVars + "\n" + importedResourceContent + "\n" +strippedSrc + "\n" + returnArgs + "\n})"
-        // let values : { (key:string) : any[] } = eval(evalCode)(addOutput, argDictionary);
+        evalCode = 
+          "(function f(context, addOutput, args) {\n\t " + 
+            importedVars + "\n" + 
+            importedResourceContent + "\n" +
+            strippedSrc + "\n" + 
+            returnArgs + "\n" + 
+          "})"
+        
         let body = {"code": evalCode,
           "hash": jsnode.hash,
           "files" : importedFiles,
           "frames": importedVars}
 
-        let response : {values:{ (key:string) : any[] }, outputs: any} = await getCachedOrEval(body, this.datastoreURI, argDictionary)
+        let response : {values:{ (key:string) : any[] }, outputs: any} = await getCachedOrEval(body, context, this.datastoreURI, argDictionary)
         let exports = await putValues(response.values, this.datastoreURI)
         for(let i = 0; i < response.outputs.length; i++) {
           var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: response.outputs[i] }
@@ -329,7 +349,7 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
   
   async bind (context:Langs.BindingContext, block: Langs.Block):Promise<Langs.BindingResult> {
     let jsBlock = <JavascriptBlockKind>block
-    return getCodeResourcesAndExports(context.cache, context.scope, jsBlock.source, context.resources);
+    return getCodeResourcesAndExports(context, jsBlock.source, this.datastoreURI);
   }
 
   save (block:Langs.Block) : string {

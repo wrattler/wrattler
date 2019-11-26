@@ -1,4 +1,4 @@
-let enabledCategories = {"js":true}
+let enabledCategories = {"*":true,"render":true, "editor":true, "main":true}
 var colorIndex = -1
 var colorMap = {}
 function getColor(cat) {

@@ -61,6 +61,11 @@ takes a function and calls the function after Wrattler creates an element on the
 can use to render the content:
 
 ```javascript
+//global loader.js
+loadScript("https://d3js.org/d3.v3.min.js")
+```
+
+```javascript
 addOutput(function(myDiv) {
   function unpack(key) {
     return aapl.map(function(row) { return row[key]; });
