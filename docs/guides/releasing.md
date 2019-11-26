@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: page
 title: Building and releasing a new version of Wrattler
 ---
 
