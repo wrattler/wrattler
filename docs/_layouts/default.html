@@ -1,46 +1,55 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <link href="https://fonts.googleapis.com/css?family=PT+Sans|Old+Standard+TT:400,400i,700" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <meta name="generator" content="">
   <title>{% if page.title %}{{ page.title | escape }} | {% endif %}{{ site.title | escape }}</title>
-  <link href="/wrattler/style.css" rel="stylesheet">
-  <link href="/wrattler/syntax.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+  <link href="/wrattler/styles/style.css" rel="stylesheet">
+  <link href="/wrattler/styles/syntax.css" rel="stylesheet">
 </head>
 <body>
-  <header>
-  <div class="container">
-    <div class="row">
-      <div class="col-md-1"></div>
-      <div class="col-sm-12 col-md-10 header">
-        <h1><a href="/wrattler/">{{ site.title }}</a></h1>
+  <div class="menu">
+  <header class="container">
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <a class="navbar-brand" href="/wrattler/">Wrattler</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="http://github.com/wrattler">GitHub</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/wrattler/api">API Docs</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Guides
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="dropdown-item" href="/wrattler/guides/plugins.html">Creating language plugins</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="/wrattler/guides/development.html">Developing Wrattler</a>
+              <a class="dropdown-item" href="/wrattler/guides/releasing.html">Releasing Wrattler</a>
+            </div>
+          </li>
+        </ul>
       </div>
-    </div>
-  </div>
+    </nav>
   </header>
-  <article>
-  <div class="container">
-    <div class="row">
-      <div class="col-md-1 col-lg-1"></div>
-      <div class="col-sm-12 col-md-10 col-lg-8">
-        {{ content }}
-      </div>
-    </div>
   </div>
-  </article>
-  <footer>
-  <div class="container">
-    <div class="row">
-      <div class="col-md-1"></div>
-      <div class="col-sm-12 col-md-10 footer">
-        <p>Made with the Analytical Engine in London</p>
-      </div>
-    </div>
-  </div>
-  </footer>
+
+  {{ content }}
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </body>
 </html>
