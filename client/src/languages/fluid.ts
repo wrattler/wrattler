@@ -65,6 +65,9 @@ function rules (rs: monaco.languages.IMonarchLanguageRule[]): monaco.languages.I
 }
 
 // OLD STUFF:
+   // operators = ["-", "++", "+", "**", "*", "/", "===", "==", "<==", "<=", "<", ">==", ">=", ">"]
+   // C# style strings
+   // escapes = /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/
          // identifiers and keywords
          // [/[a-z_$][\w$]*/, { cases: { "@keywords": "keyword", "@default": "identifier" } }],
          // [/[A-Z][\w\$]*/, "type.identifier"],
@@ -91,24 +94,22 @@ function rules (rs: monaco.languages.IMonarchLanguageRule[]): monaco.languages.I
 // Based on example at https://microsoft.github.io/monaco-editor/monarch.html.
 class FluidTokensProvider implements monaco.languages.IMonarchLanguage {
    keywords = ["_", "as", "match", "fun", "in", "let", "letrec", "primitive", "typematch"]
-   operators = ["-", "++", "+", "**", "*", "/", "===", "==", "<==", "<=", "<", ">==", ">=", ">"]
-   // "(", ")", "=", "→", ";", "{", "}", ",", "[", "]", "..."
+   operators = [
+      "-", "++", "+",            // sumOp
+      "**",                      // exponentOp
+      "*", "/",                  // productOp
+      "==", "<=", "<", ">=", ">" // compareOp
+   ]
+   // "=", "→", ";", ",", "..."
    symbols = /[=><!~?:&|+\-*\/\^%]+/
-   // C# style strings
-   // escapes = /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/
    tokenizer = {
       root: rules([
-         // identifiers and keywords
          [/[a-zA-Z_][0-9a-zA-Z_]*'*/, { cases: { "@keywords": "keyword", "@default": "identifier" } }],
-         // whitespace
          { include: "@whitespace" },
-         // delimiters and operators
          [/[{}()\[\]]/, "@brackets"],
          [/[<>](?!@symbols)/, "@brackets"],
          [/@symbols/, { cases: { "@operators": "operator", "@default": "" } }],
-         // numbers
          [/\-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[e|E][-|+]?[0-9]+)?/, "number"],
-         // strings
          [/"(?:\\["\\]|[^\n"\\])*"/, "string"],
       ]),
       comment: rules([
