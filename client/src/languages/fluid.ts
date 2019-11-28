@@ -75,8 +75,9 @@ class FluidTokensProvider implements monaco.languages.IMonarchLanguage {
    tokenizer = {
       root: rules([
          // identifiers and keywords
-         [/[a-z_$][\w$]*/, { cases: { "@keywords": "keyword", "@default": "identifier" } }],
-         [/[A-Z][\w\$]*/, "type.identifier"],
+         [/[a-zA-Z_][0-9a-zA-Z_]*'*/, { cases: { "@keywords": "keyword", "@default": "identifier" } }],
+         // [/[a-z_$][\w$]*/, { cases: { "@keywords": "keyword", "@default": "identifier" } }],
+         // [/[A-Z][\w\$]*/, "type.identifier"],
          // whitespace
          { include: "@whitespace" },
          // delimiters and operators
@@ -84,18 +85,20 @@ class FluidTokensProvider implements monaco.languages.IMonarchLanguage {
          [/[<>](?!@symbols)/, "@brackets"],
          [/@symbols/, { cases: { "@operators": "operator", "@default": "" } }],
          // numbers
-         [/\d*\.\d+([eE][\-+]?\d+)?/, "number.float"],
-         [/0[xX][0-9a-fA-F]+/, "number.hex"],
-         [/\d+/, "number"],
+         // [/\d*\.\d+([eE][\-+]?\d+)?/, "number.float"],
+         // [/0[xX][0-9a-fA-F]+/, "number.hex"],
+         // [/\d+/, "number"],
+         [/\-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[e|E][-|+]?[0-9]+)?/, "number"],
          // delimiter: after number because of .\d floats
-         [/[;,.]/, "delimiter"],
+         // [/[;,.]/, "delimiter"],
          // strings
-         [/"([^"\\]|\\.)*$/, "string.invalid"], // non-terminated string
-         [/"/, { token: "string.quote", bracket: "@open", next: "@string" }],
+         // [/"([^"\\]|\\.)*$/, "string.invalid"], // non-terminated string
+         [/"(?:\\["\\]|[^\n"\\])*"/, "string"],
+         // [/"/, { token: "string.quote", bracket: "@open", next: "@string" }],
          // characters
-         [/'[^\\']'/, "string"],
-         [/(')(@escapes)(')/, ["string", "string.escape", "string"]],
-         [/'/, "string.invalid"]
+         // [/'[^\\']'/, "string"],
+         // [/(')(@escapes)(')/, ["string", "string.escape", "string"]],
+         // [/'/, "string.invalid"]
       ]),
       comment: rules([
          [/[^\/*]+/, "comment"],
@@ -110,7 +113,7 @@ class FluidTokensProvider implements monaco.languages.IMonarchLanguage {
          [/"/, { token: "string.quote", bracket: "@close", next: "@pop" }]
       ]),
       whitespace: rules([
-         [/[ \t\r\n]+/, "white"],
+         [/[ \f\t\r\n]+/, "white"],
          [/\/\*/, "comment", "@comment"],
          [/\/\/.*$/, "comment"],
       ])
