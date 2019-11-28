@@ -104,14 +104,14 @@ function rules (rs: monaco.languages.IMonarchLanguageRule[]): monaco.languages.I
 // Based on example at https://microsoft.github.io/monaco-editor/monarch.html.
 class FluidTokensProvider implements monaco.languages.IMonarchLanguage {
    keywords = ["_", "as", "match", "fun", "in", "let", "letrec", "primitive", "typematch"]
-   // not really sure how this works but this doesn't seem to do much
+   // not really sure how this works but this definition doesn't seem to do much
    operators = [
       "-", "++", "+",            // sumOp
       "**",                      // exponentOp
       "*", "/",                  // productOp
       "==", "<=", "<", ">=", ">" // compareOp
    ]
-   symbols = /→|;|,|\.\.\./ // omit = as not sure how to make that cohabit with ===, <=, etc
+   symbols = /→|;|,|\.\.\./ // omit = as not sure how to make it cohabit with ===, <=, etc
    tokenizer = {
       root: rules([
          [/[a-zA-Z_][0-9a-zA-Z_]*'*/, { cases: { "@keywords": "keyword", "@default": "identifier" } }],
