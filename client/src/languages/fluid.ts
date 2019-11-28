@@ -67,11 +67,11 @@ function rules (rs: monaco.languages.IMonarchLanguageRule[]): monaco.languages.I
 // Based on example at https://microsoft.github.io/monaco-editor/monarch.html.
 // TODO: make consistent with actual lexical grammar.
 class FluidTokensProvider implements monaco.languages.IMonarchLanguage {
-   keywords = ["as", "match", "fun", "in", "let", "letrec", "primitive", "typematch"]
+   keywords = ["_", "as", "match", "fun", "in", "let", "letrec", "primitive", "typematch"]
    operators = ["-", "++", "+", "**", "*", "/", "===", "==", "<==", "<=", "<", ">==", ">=", ">"]
    symbols = /[=><!~?:&|+\-*\/\^%]+/
    // C# style strings
-   escapes = /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/
+   // escapes = /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/
    tokenizer = {
       root: rules([
          // identifiers and keywords
@@ -106,12 +106,12 @@ class FluidTokensProvider implements monaco.languages.IMonarchLanguage {
          [/\*\//, "comment", "@pop"],
          [/[\/*]/, "comment"]
       ]),
-      string: rules([
-         [/[^\\"]+/, "string"],
-         [/@escapes/, "string.escape"],
-         [/\\./, "string.escape.invalid"],
-         [/"/, { token: "string.quote", bracket: "@close", next: "@pop" }]
-      ]),
+      // string: rules([
+      //   [/[^\\"]+/, "string"],
+      //   [/@escapes/, "string.escape"],
+      //   [/\\./, "string.escape.invalid"],
+      //   [/"/, { token: "string.quote", bracket: "@close", next: "@pop" }]
+      // ]),
       whitespace: rules([
          [/[ \f\t\r\n]+/, "white"],
          [/\/\*/, "comment", "@comment"],
