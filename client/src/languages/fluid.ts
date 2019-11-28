@@ -86,6 +86,14 @@ function rules (rs: monaco.languages.IMonarchLanguageRule[]): monaco.languages.I
          // [/'[^\\']'/, "string"],
          // [/(')(@escapes)(')/, ["string", "string.escape", "string"]],
          // [/'/, "string.invalid"]
+      // comment: rules([
+         // [/[^\/*]+/, "comment"],
+         // [/\/\*/, "comment", "@push"], // nested comment
+         // [/\*\//, "comment", "@pop"],
+         // [/[\/*]/, "comment"]
+      // ]),
+      // whitespace
+      //   [/\/\*/, "comment", "@comment"],
       // string: rules([
       //   [/[^\\"]+/, "string"],
       //   [/@escapes/, "string.escape"],
@@ -96,6 +104,7 @@ function rules (rs: monaco.languages.IMonarchLanguageRule[]): monaco.languages.I
 // Based on example at https://microsoft.github.io/monaco-editor/monarch.html.
 class FluidTokensProvider implements monaco.languages.IMonarchLanguage {
    keywords = ["_", "as", "match", "fun", "in", "let", "letrec", "primitive", "typematch"]
+   // not really sure how this works but this doesn't seem to do much
    operators = [
       "-", "++", "+",            // sumOp
       "**",                      // exponentOp
@@ -112,15 +121,8 @@ class FluidTokensProvider implements monaco.languages.IMonarchLanguage {
          [/\-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[e|E][-|+]?[0-9]+)?/, "number"],
          [/"(?:\\["\\]|[^\n"\\])*"/, "string"],
       ]),
-      comment: rules([
-         [/[^\/*]+/, "comment"],
-         [/\/\*/, "comment", "@push"], // nested comment
-         [/\*\//, "comment", "@pop"],
-         [/[\/*]/, "comment"]
-      ]),
       whitespace: rules([
          [/[ \f\t\r\n]+/, "white"],
-         [/\/\*/, "comment", "@comment"],
          [/\/\/.*$/, "comment"],
       ])
    }
