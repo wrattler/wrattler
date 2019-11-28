@@ -66,11 +66,13 @@ function rules (rs: monaco.languages.IMonarchLanguageRule[]): monaco.languages.I
 
 // OLD STUFF:
    // operators = ["-", "++", "+", "**", "*", "/", "===", "==", "<==", "<=", "<", ">==", ">=", ">"]
+   // symbols = /[= ><!~?:&|+\-*\/\^%]+/
    // C# style strings
    // escapes = /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/
          // identifiers and keywords
          // [/[a-z_$][\w$]*/, { cases: { "@keywords": "keyword", "@default": "identifier" } }],
          // [/[A-Z][\w\$]*/, "type.identifier"],
+         // [/[<>](?!@symbols)/, "@brackets"],
          // numbers
          // [/\d*\.\d+([eE][\-+]?\d+)?/, "number.float"],
          // [/0[xX][0-9a-fA-F]+/, "number.hex"],
@@ -100,14 +102,12 @@ class FluidTokensProvider implements monaco.languages.IMonarchLanguage {
       "*", "/",                  // productOp
       "==", "<=", "<", ">=", ">" // compareOp
    ]
-   // "=", "→", ";", ",", "..."
-   symbols = /[=><!~?:&|+\-*\/\^%]+/
+   symbols = /→|;|,|\.\.\./ // omit = as not sure how to make that cohabit with ===, <=, etc
    tokenizer = {
       root: rules([
          [/[a-zA-Z_][0-9a-zA-Z_]*'*/, { cases: { "@keywords": "keyword", "@default": "identifier" } }],
          { include: "@whitespace" },
          [/[{}()\[\]]/, "@brackets"],
-         [/[<>](?!@symbols)/, "@brackets"],
          [/@symbols/, { cases: { "@operators": "operator", "@default": "" } }],
          [/\-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[e|E][-|+]?[0-9]+)?/, "number"],
          [/"(?:\\["\\]|[^\n"\\])*"/, "string"],
