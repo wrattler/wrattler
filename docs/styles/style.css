@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css?family=Inconsolata|Kreon|Heebo:100,300,400,500,700,800,900&display=swap');
+
+body { font-family:Heebo,'segoe ui',sans-serif; }
+.navbar { background:transparent; padding:8px 0px 8px 0px; }
+h1, h2, h3, .navbar { font-family:kreon; }
+
+.menu { background:#272727; }
+.tagline { background:#fed766;padding:40px 0px 50px 0px; }
+.tagline h2 { font-size:30pt; margin-bottom:30px; margin-top:20px; }
+.tagline p { font-size:14pt; margin-bottom:30px; }
+.tagline .btn { padding:10px 30px 10px 30px; font-size:14pt; }
+
+.features h2 { font-size:16pt; font-weight:bold; }
+.features .row div { padding-top:20px;color:#606060; }
+
+.btn-primary { background:#6399FF; border-color:#6399FF; }
+.btn-primary:hover, .btn-primary:active { background:#598AE5; border-color:#598AE5; }
+
+
+article { padding:20px 0px 20px 0px; min-height:500px; }
+header h1 { font-weight:100; font-size:20pt; }
+header a, header a:hover { color:white; text-decoration:none; }
+
+article h1 { font-weight:100; font-size:30pt; }
+article h2 { font-weight:300; font-size:20pt; }
+article h3 { font-weight:100; font-size:16pt; }
+article p, article li { font-size:12pt; }
+
+pre { border:none; background:white !important; margin:15px 25px 15px 25px; font:11pt Inconsolata,consolas,monospace; line-height:1.4em; }
+code { font:11pt Inconsolata,consolas,monospace; background:transparent; color:black; }
+a, a code { color:#38668d; }
+a:hover, a:hover code { color:#5483ac; }
+img.screenshot { max-width:80%; margin:10px 10% 10px 10%; }

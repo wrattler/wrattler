@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: page
 title: Creating custom language plugins
 ---
 
@@ -111,7 +111,7 @@ type MergerState = {
 ```
 
 An editor then needs to implement the [`Editor`](../api/interfaces/languages.editor.html)
-interface. In the following, the `update` function returns the original state; the 
+interface. In the following, the `update` function returns the original state; the
 `render` function returns constant HTML and we also need to add an `initalize` function
 that takes the required parameters and stores them in our `MergerState`:
 
@@ -128,9 +128,9 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
 }
 ```
 
-Wrattler calls the `render` function with a few extra parameters. In additioon 
+Wrattler calls the `render` function with a few extra parameters. In additioon
 to the `MergerState` value, we also get state of the code block of type
-[`BlockState`](../api/interfaces/languages.blockstate.html), which links the 
+[`BlockState`](../api/interfaces/languages.blockstate.html), which links the
 block to the dependency graph and [`EditorContext`](../api/interfaces/languages.editorcontext.html),
 which lets you trigger both local and global events. We will need thse later.
 
@@ -144,7 +144,7 @@ Briefly, the `parse` and `save` methods turn source code into a `Block` value
 and vice versa; the `bind` operation constructs depenendecy graph for the code block
 and `evaluate` evaluates nodes in the dependnecy graph.
 
-In our trivial example, we don't have any source code, so `parse` returns a 
+In our trivial example, we don't have any source code, so `parse` returns a
 `Block` object with just the (required) `language` field and `save` returns empty
 string. For `bind` and `evaluate`, we have to do a little bit of work though:
 
@@ -183,24 +183,24 @@ hash calculated from the source code, so that changing the source code changes
 the hash.
 
 The `evaluate` operation does not do anything interesting yet. For any graph
-node, it just returns `success` and produces a value of kind `nothing`, which 
+node, it just returns `success` and produces a value of kind `nothing`, which
 is our own custom value type that represents a value with no useful data.
 
 ### Registering our plugin with Wrattler
 
-As mentioned earlier, this tutorial assumes that you are directly modifying the 
+As mentioned earlier, this tutorial assumes that you are directly modifying the
 Wrattler source code. If you were creating Wrattler instance using the exposed
-[`Wrattler`](../api/classes/main.wrattler.html) class, then you could add the 
+[`Wrattler`](../api/classes/main.wrattler.html) class, then you could add the
 plugin to the [`LanguagePlugins`](../api/modules/main.html#languageplugins)
 dictionary before calling `createNotebook`. However, if we're modifying the source
-directly, the easiest option is to modify the `getDefaultLanguages` function in 
+directly, the easiest option is to modify the `getDefaultLanguages` function in
 the `src/wrattler.ts` file. You need to import the `merger.ts` file:
 
 ```typescript
 import { mergerLanguagePlugin } from './demo/merger'
 ```
 
-Then, you need to add `merger` as one of the languages returned by 
+Then, you need to add `merger` as one of the languages returned by
 `getDefaultLanguages`:
 
 ```typescript
@@ -212,14 +212,14 @@ getDefaultLanguages() : LanguagePlugins {
 ```
 
 If you follow the above steps, you should be able to see "merger" as one of the
-options when you click the "add below" button to add a new code block. After adding a 
+options when you click the "add below" button to add a new code block. After adding a
 new "merger" block, you should see something along the following lines.
 
 <img src="plugins/step1.png" class="screenshot">
 
 ## Step 2: Building user interface for choosing variables
 
-In this section, we build a user interface that displays variables that are 
+In this section, we build a user interface that displays variables that are
 available in scope, allows user to choose some of them and also lets the user
 specify the name of the data frame that will be exported as a result from the
 code block. For now, we won't create the correct dependency graph and we will leave
@@ -228,7 +228,7 @@ out evaluation - we add those two in the next step.
 ### Blocks and dependency graphs
 
 The Merger plugin lets you specify the name of one output data frame and choose
-from a list of input data frames. We will need a way of representing "programs" 
+from a list of input data frames. We will need a way of representing "programs"
 created using the Merger plugin as strings and we'll use a simple text format
 `out=in1,in2,in3`.
 
@@ -237,8 +237,8 @@ name to some of the data structures that Wrattler keeps. When Wrattler parses
 source code for each code block, it creates a language-specific `Block` value. Later,
 it runs the `bind` operation of the language plugin to create a graph `Node`.
 We define a new type of blocks and nodes for our plugin and store `output`
-frame name and `inputs` in both. In addition, the `Node` will also need to remember 
-all data frames that are in scope (so that we can create a unchecked checkbox 
+frame name and `inputs` in both. In addition, the `Node` will also need to remember
+all data frames that are in scope (so that we can create a unchecked checkbox
 for those that are not selected).
 
 
@@ -258,22 +258,22 @@ interface MergerCodeNode extends Graph.Node {
 ```
 
 These two types will be used in a number of places in the [`LangaugePlugin`](../api/interfaces/languages.languageplugin.html)
-implementation. Before getting to that, we revisit the implementation of the 
+implementation. Before getting to that, we revisit the implementation of the
 [`Editor`](../api/interfaces/languages.editor.html) component for our plugin.
 
 ### Creating custom user interface for a plugin
 
-As mentioned earlier, plugins that add support for text-based programming 
+As mentioned earlier, plugins that add support for text-based programming
 languages, rather than interactive visual tools, do not have to implement
-their own user interface. You can either create an [external language 
+their own user interface. You can either create an [external language
 service](external.html) or you can use standard Wrattler editor component
 (discussed in Step 4). However, one of the nice features of Wrattler is that
-you can create your own user interfaces if you wish. 
+you can create your own user interfaces if you wish.
 
-To implement user interface for Merger, we start by revisiting the types to 
-represent state and events. We have two kinds of events. First, user can 
+To implement user interface for Merger, we start by revisiting the types to
+represent state and events. We have two kinds of events. First, user can
 check or uncheck a checkbox representing input data frame. Second, user can
-edit the name of the output data frame. As for state, we need to keep a 
+edit the name of the output data frame. As for state, we need to keep a
 dictionary with selected checkboxes and the output data frame name:
 
 ```typescript
@@ -293,7 +293,7 @@ We use TypeScript union type, written using `|` to represent events. As we'll
 see later, having `kind` in the object type allows us to pattern match on events
 using the `switch` construct. For the dictionary, we use an indexable object.
 
-Most of the work that we need to do in this step is to revisit the 
+Most of the work that we need to do in this step is to revisit the
 implementation of the [`Editor`](../api/interfaces/languages.editor.html)
 interface. The `initialize` operation takes `MergerBlock` representing the
 code block and produces initial `MergerState`. The `update` operation
@@ -301,8 +301,8 @@ takes `MergerState` and `MergerEvent` and produces a new `MergerState`.
 Note that `initialize` first casts the universal `Block` type to `MergerBlock`.
 This will always succeed because Wrattler only calls our plugin with blocks
 that have the correct `language` attribute and so we know that the blocks we
-get will actually be `MergerBlock` values. 
- 
+get will actually be `MergerBlock` values.
+
 ```typescript
 const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
   initialize: (id:number, block:Langs.Block) => {  
@@ -331,20 +331,20 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
 }
 ```
 
-In `initialize`, we iterate over the inputs and construct the `selected` 
+In `initialize`, we iterate over the inputs and construct the `selected`
 dictionary. Then we create `MergerState`, storing a reference to the block,
 its unique ID, the dictionary with selected inputs and a name for the output
-data frame. 
+data frame.
 
 The `update` operation uses `switch` to pattern match on events. If the event
 is `check`, we create a new dictionary of selected checkboxes. If the event is
-`name`, we create a new state with updated `newName`. Note that we follow the 
+`name`, we create a new state with updated `newName`. Note that we follow the
 Elm architecture here and return a new state rather than mutating the existing
 object, which can be done quite nicely using the `...state` spread operator.
 In principle, you could use mutation too, but that can easily lead to unexpected
 bugs.
 
-The implementation of `render` is not too complicated, but it is quite long, 
+The implementation of `render` is not too complicated, but it is quite long,
 because it creates a lot of user interfacce. It generates an `<ul>` list with
 all the frames in scope and then `input` for specifying the new name. It also
 generates two buttons - `Rebind` button and `Evaluate` button - which we will
@@ -390,7 +390,7 @@ return h('div', {}, [
 
 The code mostly just generates HTML for the user interface using the `h` function.
 Along the way, it uses the various information that we store in the `MergerCodeNode`
-node, such as `framesInScope` and also in the `state` object such as the current 
+node, such as `framesInScope` and also in the `state` object such as the current
 state of the checkboxes and current `newName` (used as the `value` of the `<input>`
 element).
 
@@ -399,14 +399,14 @@ The most interesting part is how we handle different events:
 - When the user checks or unchecks an input frame or changes the output frame name,
   we want to remember this information, but we do not immediately notify Wrattler
   about this. Consequently, Wrattler does not automatically invalidate subsequent
-  blocks (yet). This happens in the `onchange` event of a checkbox for an input data 
+  blocks (yet). This happens in the `onchange` event of a checkbox for an input data
   frame and the `oninput` event of the output name textbox. In those cases, we use
   `context.trigger` to trigger one of our `MergerEvent` values. This will call our
   `update` function to produce new state and re-rednder the user interface.
 
-- When the user clicks the `Rebind` button, we want to notify Wrattler about the 
+- When the user clicks the `Rebind` button, we want to notify Wrattler about the
   changes in the source code of our code block. This is done by calling
-  the `context.rebindSubsequent` operation. This takes the new source code, which 
+  the `context.rebindSubsequent` operation. This takes the new source code, which
   Wrattler uses to create a new modified `Block` object. This operation also causes
   rebinding, so any results that depend on the data frame exported from our plugin
   might be invalidated.
@@ -414,27 +414,27 @@ The most interesting part is how we handle different events:
 - Finally, when the user clicks the `Evaluate` button (after clicking `Rebind`),
   we tell Wrattler to evaluate a part of the dependency graph corresponding to our
   source code. The result of this is that Wrattler calls the `evaluate` operation
-  of our language plugin and sets the `value` property of the 
+  of our language plugin and sets the `value` property of the
   [`Node`](../api/interfaces/graph.node.html) object corresponding to the code block.
 
 
 ### Passing state in language plugin
 
-The last part of this step is to create a new implementation of the 
+The last part of this step is to create a new implementation of the
 [`LanguagePlugins`](../api/modules/main.html#languageplugins) interface which properly
 propagates data using our new `MergerBlock` and `MergerCodeNode` types. To summarize,
 the different operations we need work as follows:
 
 - `parse` turns a string containing source code into `MergerBlock`. Wrattler
   keeps one `Block` for each code block in a notebook.
-- `save` goes back and turns `MergerBlock` into string with the source code. 
+- `save` goes back and turns `MergerBlock` into string with the source code.
 - `bind` takes a parsed `MergerBlock` and produces `MergerCodeNode`. We will
   later need to create more dependency graph nodes, but for now, we just need one.
 - `evaluate` takes `MergerCodeNode` and evaluates it to a value. We will skip
   this now, but later, we will fetch data for all the data frames and merge them
   into one data frame.  
-   
-The following implementation of `mergerLanguagePlugin` adds new `parse` and `save` 
+
+The following implementation of `mergerLanguagePlugin` adds new `parse` and `save`
 functions, revises the `bind` operation and keeps the same `evaluate` method as before:
 
 ```typescript
@@ -479,16 +479,16 @@ export const mergerLanguagePlugin : Langs.LanguagePlugin = {
 }
 ```
 
-The `save` operation stores information about input and output data frame names 
+The `save` operation stores information about input and output data frame names
 as a strig in the `out=in1,...,ink` format and the `parse` operatoion splits that
 and produces `MergerBlock`. The `bind` operation now creates a new `MergerNode`.
-It sets the `output` and `input` properties to the values from the code block 
+It sets the `output` and `input` properties to the values from the code block
 object. The `hash` is calculated by turning the block to string and hashing
 the source code.
 
 One interesting thing about the `bind` method is that it uses `context.scope`.
 This is a value of the [`ScopeDictionary`](../api/interfaces/languages.scopedictionary.html)
-type, which represents all the data frames that were exported in earlier code 
+type, which represents all the data frames that were exported in earlier code
 blocks and that are in scope. The keys of the dictionary are the names of the
 data frames and the values are depedency graph nodes representing those data
 frames. We use this for two things. First, we use `Object.keys(context.scope)`
@@ -497,7 +497,7 @@ Second, we find nodes that correspond to all inputs that we want to merge,
 get their graph nodes and specify those as `antecedents` of the node that we
 are creating. This creates a dependnecy in the graph - whenever Wrattler needs
 to evaluate our new node, it will know that it first needs to evaluate all the
-graph nodes that we depend on. 
+graph nodes that we depend on.
 
 Running the current version of the code, you should be able to add a merger
 code block below some other code blocks that export data frames and you should
@@ -512,18 +512,18 @@ If you then change the selection and click "Rebind", it should appear again.
 ## Step 3: Constructing and evaluating dependency graph
 
 In the previous section, we constructed a dependency graph node for the code block.
-This is enough to get started, but if we want to export data frames, we need 
+This is enough to get started, but if we want to export data frames, we need
 one more kind of node. We add this in the present section and we also add code to
 actually merge data frames.
 
 ### Constructing the dependency graph
 
-The dependency graph we need to construct will consist of two nodes - one representing 
+The dependency graph we need to construct will consist of two nodes - one representing
 the code block and one corresponding to the newly defined variable that is exported
 from the code block and will evaluate to the merged data frame. The code block node
 is the `MergerCodeNode` that we defined earlier, but now we also add `MergerExportNode`,
 which implements the [`ExportNode`](../api/interfaces/graph.exportnode.html) interface.
-This represents an exported variable and additionally has `variableName` so that 
+This represents an exported variable and additionally has `variableName` so that
 Wrattler can add the new variable to the [`ScopeDictionary`](../api/interfaces/languages.scopedictionary.html)
 and make it available to subsequent code blocks.
 
@@ -545,7 +545,7 @@ type MergerNode = MergerCodeNode | MergerExportNode
 
 In addition to defining `MergerCodeNode` and `MergerExportNode`, we also define
 a union type `MergerNode`. When Wrattler invokes our language plugin to do some
-work on a graph node, it will always pass us only the nodes that our language 
+work on a graph node, it will always pass us only the nodes that our language
 plugin created, so we can cast them to `MergerNode` and then use `switch` to
 determine which of the two kinds of nodes are we working with.
 
@@ -584,12 +584,12 @@ bind: async (context: Langs.BindingContext, block: Langs.Block) :
 },
 ```
 
-The `BindingResult` value that we return as the result of the `bind` operation 
+The `BindingResult` value that we return as the result of the `bind` operation
 needs to include a single graph node `code` corresponding to the code block and
 an array of exported nodes `exports`. This can be an empty array. In our case,
 we return either empty array or an array with one exported node corresponding
 to the merged data frame. The `MergerExportNode` that we create has the main
-code block graph node `code` as its only antecedent (dependency) and it also 
+code block graph node `code` as its only antecedent (dependency) and it also
 stores this as `mergerNode` attribute so that we can easily access it during the
 evaluation.
 
@@ -604,7 +604,7 @@ We'll implement this function later and first look at the `evaluate` operation o
 language plugin:
 
 ```typescript
-evaluate: async (context:Langs.EvaluationContext, node:Graph.Node) 
+evaluate: async (context:Langs.EvaluationContext, node:Graph.Node)
     : Promise<Langs.EvaluationResult> => {
   let mergerNode = <MergerNode>node
   switch(mergerNode.kind) {
@@ -628,7 +628,7 @@ work because Wrattler only calls our plugin for graph nodes that we created).
 We construct two kinds of nodes, so we need to handle two cases:
 
 - The value of the first node, representing the whole code block is of type
-  [`ExportsValue`](../api/interfaces/values.exportsvalue.html). This keeps 
+  [`ExportsValue`](../api/interfaces/values.exportsvalue.html). This keeps
   values of all variables that are exported from the code block. We collect
   all imported values by looking at node's `antecedents`, call `mergeDataFrames`
   and then construct a dictionary with just one key-value pair for the single
@@ -636,24 +636,24 @@ We construct two kinds of nodes, so we need to handle two cases:
 
 - The second node represents a single exported data frame, i.e. a value of type
   [`DataFrame`](../api/interfaces/values.dataframe.html). Note that you can similarly
-  export [figures](../api/interfaces/values.figure.html), [console 
-  printouts](../api/interfaces/values.printout.html) or [JavaScript 
+  export [figures](../api/interfaces/values.figure.html), [console
+  printouts](../api/interfaces/values.printout.html) or [JavaScript
   views](../api/interfaces/values.javascriptoutputvalue.html). In our implementation,
   the "exported data frame" graph node depends on the "code block" graph node
   and so we can get the `ExportsValue` value and extract the previously evaluated
   data frame. In other plugins, the dependency graph can be more fine grained and
   using an exported variable might not require evaluating all code in the code block.
 
-The last bit of code that we need to add is the `mergeDataFrames` function. 
+The last bit of code that we need to add is the `mergeDataFrames` function.
 Wrattler stores data passed between code blocks in _data store_, which is an
 HTTP service, independent of individual language plugins. This way, the data can
 easily be shared between multiple languages including both services that run in the
 browser and services that run as independent processes.
 
-The [`DataFrame`](../api/interfaces/values.dataframe.html) type stores `url` of 
-the data stored in a data store. For convenient way of working with it in the 
-browser, it also has (always available) `preview` with first few rows and 
-`data`, which is an `AsyncLazy` value - it has a method `getValue` which 
+The [`DataFrame`](../api/interfaces/values.dataframe.html) type stores `url` of
+the data stored in a data store. For convenient way of working with it in the
+browser, it also has (always available) `preview` with first few rows and
+`data`, which is an `AsyncLazy` value - it has a method `getValue` which
 returns a JavaScript promise that will either return the data (if it is already
 available on the client) or fetch it from the data store.
 
@@ -664,7 +664,7 @@ use it in `mergeDataFrames`:
 declare var DATASTORE_URI: string;
 import axios from 'axios';
 
-async function putValue(variableName:string, hash:string, value:any[]) 
+async function putValue(variableName:string, hash:string, value:any[])
     : Promise<string> {
   let url = DATASTORE_URI.concat("/" + hash).concat("/" + variableName)
   let headers = {'Content-Type': 'application/json'}
@@ -688,36 +688,36 @@ async function mergeDataFrames(variableName:string, hash:string,
 }
 ```
 
-The `DATASTORE_URI` variable is set by WebPack and represents the URL where the 
-data store service runs. To put data into the data store, we send a `PUT` request to 
-`http://data-store/<hash>/<var>` where `<hash>` is the hash of the code block 
+The `DATASTORE_URI` variable is set by WebPack and represents the URL where the
+data store service runs. To put data into the data store, we send a `PUT` request to
+`http://data-store/<hash>/<var>` where `<hash>` is the hash of the code block
 that created the data frame and `<var>` is the variable name. You can send data
-in JSON format as array of records using `application/json` content type, or in 
-the [Apache Arrow](https://arrow.apache.org) format using `application/octet-stream` 
+in JSON format as array of records using `application/json` content type, or in
+the [Apache Arrow](https://arrow.apache.org) format using `application/octet-stream`
 content type.
 
-To merge input data frames, we create a new array `allData`, iterate over 
+To merge input data frames, we create a new array `allData`, iterate over
 all the inputs and call `getValue` on all inputs that are data frames. This returns
-a promise, so we need to use `await` to get the actual data (we could do this in 
-parallel, but that would make the sample more complicated). We then construct 
-`AsyncLazy` value that, when called, returns the full dataset and `preview` 
-containing the first 100 rows. 
+a promise, so we need to use `await` to get the actual data (we could do this in
+parallel, but that would make the sample more complicated). We then construct
+`AsyncLazy` value that, when called, returns the full dataset and `preview`
+containing the first 100 rows.
 
 If you run the code now, you should be able to use our Merger plugin and then access
-the merged data frame from another language - in the following screenshot, the 
+the merged data frame from another language - in the following screenshot, the
 Python runtime (which runs as a separate service) fetches data from the data store:
 
 <img src="plugins/step3.png" class="screenshot">
 
 ## Step 4: Using standard editor components
 
-In Step 2 of this tutorial, we implemented a fully custom editor for our language 
+In Step 2 of this tutorial, we implemented a fully custom editor for our language
 plugin. This illustrates some of the capabilities of Wrattler - if you want, you can
 extend it with rich interactive data exploration tools. However, it is also easy
 to reuse some of the standard Wrattler components.
 
 To briefly illustrate this, we can replace the earlier implementation of `render`
-with a much simpler one that uses two functions from the 
+with a much simpler one that uses two functions from the
 [`Editor`](../api/modules/editor.html) module exported by Wrattler;
 `createMonacoEditor` creates a text editor based on the [Monaco editor](https://microsoft.github.io/monaco-editor/)
 and `createOutputPreview` generates tabs that show previews of all exported
@@ -725,41 +725,41 @@ data frames, figures and console printouts.
 
 
 ```typescript
-render: (block:Langs.BlockState, state:MergerState, 
+render: (block:Langs.BlockState, state:MergerState,
     context:Langs.EditorContext<MergerEvent>) => {
   let mergerNode = <MergerCodeNode>block.code
   let source = state.newName + "=" +
     Object.keys(state.selected).filter(s => state.selected[s]).join(",")
 
-  let evalButton = h('button', 
-    { class:'preview-button', onclick:() => 
-        context.evaluate(block.editor.id) }, 
+  let evalButton = h('button',
+    { class:'preview-button', onclick:() =>
+        context.evaluate(block.editor.id) },
     ["Evaluate"])
 
   return h('div', {}, [
-    h('div', {key:'ed'}, [ 
+    h('div', {key:'ed'}, [
       Editor.createMonacoEditor("merger", source, block, context) ]),
     h('div', {key:'prev'}, [
       (block.code.value == null) ? evalButton :
-        Editor.createOutputPreview(block, (idx) => 
+        Editor.createOutputPreview(block, (idx) =>
           { }, 0, <Values.ExportsValue>block.code.value)
     ])
   ]);
 }
 ```
 
-The function creates a text editor followed by either a preview (when the block 
-has been evaluated) or a button that triggers the evaluation (if the value is 
-not set). The second and third arguments of the `createOutputPreview` function 
+The function creates a text editor followed by either a preview (when the block
+has been evaluated) or a button that triggers the evaluation (if the value is
+not set). The second and third arguments of the `createOutputPreview` function
 are needed if the block can produce multiple outputs (and hence multiple tabs).
 This is not the case for our plugin. For other plugins, you will need to keep the
-selected tab index in the editor state and define an event to update it. 
+selected tab index in the editor state and define an event to update it.
 The second argument will be a function that triggers the event and sets the selected
 tab index to `idx` and the third argument will be the selected index.
 
 As you can see in the following screenshot, we can now edit the code associated
 with the merger plugin directly in the text form `out=in1,...,ink` and when we
-evaluate it, we see a preview that looks the same as previews for standard 
+evaluate it, we see a preview that looks the same as previews for standard
 Wrattler code blocks:
 
 <img src="plugins/step4.png" class="screenshot">
