@@ -1,4 +1,4 @@
-import {h,VNode} from 'maquette';
+import {h} from 'maquette';
 import * as Langs from '../definitions/languages';
 import * as Graph from '../definitions/graph';
 import * as Values from '../definitions/values';
@@ -11,13 +11,6 @@ import {Md5} from 'ts-md5';
 import {AsyncLazy} from '../common/lazy';
 import * as Doc from '../services/documentService';
 import { Log } from '../common/log';
-
-// ------------------------------------------------------------------------------------------------
-// Markdown plugin
-// ------------------------------------------------------------------------------------------------
-
-/// A class that represents a Markdown block. All blocks need to have
-/// `language` and Markdown also keeps the Markdown source we edit and render
 
 export class JavascriptBlockKind implements Langs.Block {
   language : string;
@@ -290,7 +283,7 @@ export class JavascriptLanguagePlugin implements Langs.LanguagePlugin  {
         let importedVars = "";
         var argDictionary:{[key: string]: any} = {}
         for (var i = 0; i < jsCodeNode.antecedents.length; i++) {
-          let imported = <Graph.JsExportNode>jsCodeNode.antecedents[i]
+          let imported = <Graph.ExportNode>jsCodeNode.antecedents[i]
           if ((<Values.DataFrame>imported.value) != null) {
             argDictionary[imported.variableName] = await (<Values.DataFrame>imported.value).data.getValue();
             importedVars = importedVars.concat("\nlet "+imported.variableName + " = args[\""+imported.variableName+"\"];");

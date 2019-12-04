@@ -19,17 +19,18 @@
     "ts-loader": "^4.3.0",
     "typedoc": "^0.11.1",
     "typedoc-plugin-external-module-name": "^1.1.3",
-    "webpack": "^4.20.2",
+    "webpack": "^4.28.1",
     "webpack-cli": "^3.1.1",
     "webpack-dev-server": "^3.1.1"
   },
   "dependencies": {
+    "@rolyp/fluid": "^0.1.11",
     "axios": "^0.18.0",
     "maquette": "^3.3.0",
     "marked": "^0.4.0",
     "monaco-editor": "^0.17.0",
     "monaco-editor-webpack-plugin": "^1.7.0",
     "ts-md5": "^1.2.4",
-    "typescript": "^2.8.3"
+    "typescript": "^2.9.0"
   }
 }

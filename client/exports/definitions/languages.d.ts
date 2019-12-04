@@ -10,7 +10,7 @@
  * do some interesting work directly in the web browser.
  *
  * - [`LanguagePlugin`](../interfaces/languages.languageplugin.html) is the main
- *   type that you need to implement if you want to add new langauge to Wrattler.
+ *   type that you need to implement if you want to add new language to Wrattler.
  *   The type is responsible for parsing, binding (i.e. the construction of a
  *   dependnecy graph), evaluation and also user interface.
  *

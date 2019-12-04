@@ -187,7 +187,7 @@ function render(trigger:(evt:NotebookEvent) => void, state:NotebookState) {
     let iconsBar = h('div', {class:'icons-bar', key:"icons_"+cell.editor.id}, [icons, move])
     let contentBar = h('div', {class:'content-bar', key:"content_"+cell.editor.id}, [content])
 
-    let langIndex = Object.keys(state.languagePlugins).indexOf(cell.editor.block.language) % 5;
+    let langIndex = Object.keys(state.languagePlugins).indexOf(cell.editor.block.language)
     return h('div', {class:'cell cell-c' + langIndex, key:cell.editor.id}, [
         iconsBar, contentBar, controlsBar
       ]
@@ -402,12 +402,21 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
 
 function loadNotebook(documents:Docs.DocumentElement[], languagePlugins:Langs.LanguagePlugins) {
   let index = 0
-  let blockStates = documents.map(cell => {
-    let languagePlugin = languagePlugins[cell.language]; // TODO: Error handling
-    let block = languagePlugin.parse(cell.source);
-    let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block);
-    return editor;
-  })
+  let blockStates = documents
+    .filter(cell => {
+      // TODO: better error handling
+      const pluginFound: boolean = cell.language in languagePlugins
+      if (!pluginFound) {
+        Log.error("loadNotebook", `${cell.language} plugin not found.`)
+      }
+      return pluginFound
+    })
+    .map(cell => {
+      let languagePlugin = languagePlugins[cell.language];
+      let block = languagePlugin.parse(cell.source);
+      let editor:Langs.EditorState = languagePlugin.editor.initialize(index++, block);
+      return editor;
+    })
   return { counter: index, editors: blockStates };
 }
 

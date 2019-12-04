@@ -1,0 +1,2 @@
+let incr = fun n → n + 1 in
+(compose incr incr) 3
