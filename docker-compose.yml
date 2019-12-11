@@ -15,8 +15,8 @@ services:
     networks:
     - wrattler_nw
     volumes:
-     - ./client:/app
-     - ./client/src:/app/src
+#     - ./client:/app
+#     - ./client/src:/app/src
      - ./resources:/app/public/resources
     entrypoint: /bin/bash
     command: "./entrypoint.sh"
