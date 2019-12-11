@@ -10,6 +10,7 @@ while True:
     print("first completion\npath1")
     print("second completion\npath2")
     print("third completion\npath3")
+    print("fourth completion\npath4")
     print("")
     sys.stdout.flush()
   else:

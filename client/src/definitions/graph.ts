@@ -2,7 +2,7 @@
  * Wrattler maintains a dependency graph that is used for evaluating code.
  * The dependency graph is constructed by calling the `bind` operation of
  * [`LanguagePlugin`](../interfaces/languages.languageplugin.html)
- * for individual langauges supported in Wrattler. The graph is created once
+ * for individual languages supported in Wrattler. The graph is created once
  * Wrattler loads a notebook and it is then updated each time a cell is 
  * modified. The dependency graph is static, meaning that it is created 
  * by analysing source code, rather than by tracking dependencies at runtime.

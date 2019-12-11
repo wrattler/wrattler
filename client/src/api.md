@@ -10,7 +10,7 @@ the most important types that you need if you want to extend or use Wrattler.
 
 The [`Main` module](modules/main.html) contains types that you need to create new instances
 of Wrattler notebooks in browser using JavaScript, get notified when the contents of such
-notebooks change and also configure the langauges that are available in the notebook.
+notebooks change and also configure the languages that are available in the notebook.
 
 ### Language plugins
 

@@ -1,0 +1,127 @@
+// typedef Year = Num
+// typedef Country = Str
+// typedef EnergyType = Str
+// typedef Output = Num
+// typedef Data = List (Year, AnnualData)
+// typedef AnnualData = List (Country, CountryData)
+// typedef CountryData = List (EnergyType, Output)
+// The original dataset sometimes has '~0' instead of '0'. Including only 3 top countries here.
+[
+   // http://www.ren21.net/gsr-2016/00-Reference-Tables.php
+   (2015, [
+      ("China", [
+         ("Bio", 10.3),
+         ("Geothermal", 0),
+         ("Hydro", 296),
+         ("Ocean", 0),
+         ("Solar", 44),
+         ("CSP", 0),
+         ("Wind", 145)
+      ]),
+      ("USA", [
+         ("Bio", 16.7),
+         ("Geothermal", 3.6),
+         ("Hydro", 80),
+         ("Ocean", 0),
+         ("Solar", 26),
+         ("CSP", 1.7),
+         ("Wind", 74)
+      ]),
+      ("Germany", [
+         ("Bio", 7.1),
+         ("Geothermal", 0),
+         ("Hydro", 5.6),
+         ("Ocean", 0),
+         ("Solar", 40),
+         ("CSP", 0),
+         ("Wind", 45)
+      ]),
+      ("Japan", [
+         ("Bio", 4.8),
+         ("Geothermal", 0.5),
+         ("Hydro", 22),
+         ("Ocean", 0),
+         ("Solar", 34),
+         ("CSP", 0),
+         ("Wind", 3)
+      ])
+   ]),
+   // http://www.ren21.net/gsr-2017/pages/tables/tables/#table-R2
+   (2016, [
+      ("China", [
+         ("Bio", 12),
+         ("Geothermal", 0),
+         ("Hydro", 305),
+         ("Ocean", 0),
+         ("Solar", 77),
+         ("CSP", 0),
+         ("Wind", 169)
+      ]),
+      ("USA", [
+         ("Bio", 16.8),
+         ("Geothermal", 3.6),
+         ("Hydro", 80),
+         ("Ocean", 0),
+         ("Solar", 41),
+         ("CSP", 1.7),
+         ("Wind", 82)
+      ]),
+      ("Germany", [
+         ("Bio", 7.6),
+         ("Geothermal", 0),
+         ("Hydro", 5.6),
+         ("Ocean", 0),
+         ("Solar", 41),
+         ("CSP", 0),
+         ("Wind", 50)
+      ]),
+      ("Japan", [
+         ("Bio", 4.1),
+         ("Geothermal", 0.5),
+         ("Hydro", 23),
+         ("Ocean", 0),
+         ("Solar", 43),
+         ("CSP", 0),
+         ("Wind", 3.2)
+      ])
+   ]),
+   // http://www.ren21.net/gsr-2018/pages/tables/tables/#Table_R2
+   (2017, [
+      ("China", [
+         ("Bio", 14.9),
+         ("Geothermal", 0),
+         ("Hydro", 313),
+         ("Ocean", 0),
+         ("Solar", 131),
+         ("CSP", 0),
+         ("Wind", 188)
+      ]),
+      ("USA", [
+         ("Bio", 16.7),
+         ("Geothermal", 2.5),
+         ("Hydro", 80),
+         ("Ocean", 0),
+         ("Solar", 51),
+         ("CSP", 1.7),
+         ("Wind", 89)
+      ]),
+      ("Germany", [
+         ("Bio", 8),
+         ("Geothermal", 0),
+         ("Hydro", 5.6),
+         ("Ocean", 0),
+         ("Solar", 42),
+         ("CSP", 0),
+         ("Wind", 56)
+      ]),
+      ("Japan", [
+         ("Bio", 3.6),
+         ("Geothermal", 0.5),
+         ("Hydro", 23),
+         ("Ocean", 0),
+         ("Solar", 49),
+         ("CSP", 0),
+         ("Wind", 3.4)
+      ])
+   ])
+]

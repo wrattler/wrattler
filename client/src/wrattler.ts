@@ -26,6 +26,7 @@ import { Log } from "./common/log"
 import { loadNotebook, initializeCells } from './main'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { JavascriptLanguagePlugin } from './languages/javascript'
+import { fluidLanguagePlugin } from './languages/fluid'
 import { ExternalLanguagePlugin } from './languages/external'
 import { mergerLanguagePlugin } from './demo/merger'
 import { spreadsheetLanguagePlugin } from './languages/spreadsheet'
@@ -80,8 +81,8 @@ interface WrattlerConfig {
  */
 class Wrattler {
   /** Creates a new `LanguagePlugin` instance which delegates binding and evaluation
-   * to a specified langauge service. You can pass the returned `LanguagePlugin` to
-   * the `createNotebook` function to get a notebook supporting this langauge.  */
+   * to a specified language service. You can pass the returned `LanguagePlugin` to
+   * the `createNotebook` function to get a notebook supporting this language.  */
   // createExternalLanguagePlugin(language, serviceUrl:string, faClass?:string, defaultCode?:string) {
   //   return new ExternalLanguagePlugin(language, faClass?faClass:"fa fa-question-circle", serviceUrl, defaultCode?defaultCode:"");
   // }
@@ -111,6 +112,7 @@ class Wrattler {
     languagePlugins["javascript"] = unit(new JavascriptLanguagePlugin(datastoreUrl ? datastoreUrl : DATASTORE_URI));
     languagePlugins["python"] = unit(new ExternalLanguagePlugin("python", "fab fa-python", getServiceUrl("python", PYTHONSERVICE_URI), pyCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
     languagePlugins["r"] = unit(new ExternalLanguagePlugin("r", "fab fa-r-project", getServiceUrl("r", RSERVICE_URI), rCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
+    languagePlugins["fluid"] = unit(fluidLanguagePlugin);
     // languagePlugins["racket"] = unit(new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
     // languagePlugins["merger"] = unit(mergerLanguagePlugin);
     // languagePlugins["ai assistant"] = createAiaPlugin(getServiceUrl("ai assistant", AIASERVICE_URI), (datastoreUrl ? datastoreUrl : DATASTORE_URI));
@@ -132,7 +134,7 @@ class Wrattler {
   }
 
   /**
-   * Given initial Markdown source code and a dictionary with langauge plugins,
+   * Given initial Markdown source code and a dictionary with language plugins,
    * create a new instance of Wrattler and render it in a given HTML document element.
    * 
    * @param elementID HTML document element to be used for rendering the notebook.

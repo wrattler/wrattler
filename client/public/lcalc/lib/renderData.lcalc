@@ -1,0 +1,22 @@
+// Data must have recursive format:
+//    Data = List (Num | Str, Data)
+// Data → GraphicsElement
+letrec fun renderData {
+   [(k, v), ...rows] → 
+      stackDown 0 [
+         stackRight 0 (vtop [
+            typematch k as {
+               Num → Text(0, 0, numToStr k);
+               Str → Text(0, 0, k)
+            },
+            Text(0, 0, ": "),
+            typematch v as {
+               List → renderData v;
+               Num → Text(0, 0, numToStr v);
+               Str → Text(0, 0, v)
+            }
+         ]),
+         renderData rows
+      ];
+   [] → Graphic([])
+}

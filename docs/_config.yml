@@ -1,6 +1,6 @@
 title: Wrattler
-baseurl: /wrattler
-url: "https://tbd"
+baseurl: /
+url: "https://wrattler.org"
 
 # Build settings
 markdown: kramdown
