@@ -71,7 +71,7 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
     let spreadsheetNode = <SpreadsheetCodeNode>cell.code
  
     function renderTable(hash:string, fileName:string){
-      let url = datastoreURI.concat("/"+hash).concat("/"+fileName)
+      // let url = datastoreURI.concat("/"+hash).concat("/"+fileName)
       let rowsComponents:Array<any> = []
       let headerComponents:Array<any> = []
     
@@ -146,14 +146,25 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
       h('div', {}, [ 
         h('span', {}, [ "Input: " ]), 
         h('select', 
-          { onchange:(e) => {
-            selectedDataFrame = (<any>e.target).value
-            Log.trace('spreadsheet', "Changing selection to: %s", selectedDataFrame)
-          } }, 
+          { 
+            onchange:(e) => {
+              // Log.trace("spreadsheet", "Selected Event. %s", JSON.stringify(spreadsheetNode))
+              selectedDataFrame = (<any>e.target).value
+              Log.trace('spreadsheet', "Changing selection to: %s", selectedDataFrame)
+              let selectedFrameValue = spreadsheetNode.framesInScope[selectedDataFrame].value
+              if (selectedFrameValue != null) {
+                let selectedFrame = <Values.DataFrame>selectedFrameValue
+                Log.trace('spreadsheet', "Found selection at url %s", selectedFrame.url)
+              }
+            } 
+          }, 
           [""].concat(dataframeKeys).map(f =>
             h('option', { key:f, value:f}, [f==""?"(no frame selected)":f]) )) ])
     if (dataframeKeys.indexOf(selectedDataFrame)>-1)
+    {
+      // Log.trace("spreadsheet", "Selected Event. %s", JSON.stringify(spreadsheetNode))
       return h('div', {key: "spreadsheet"+cell.editor.id}, [frameSelector,renderTable(spreadsheetNode.framesInScope['selectedDataFrame'].hash, selectedDataFrame)])
+    }
     else 
       return h('div', {key: "spreadsheet"+cell.editor.id}, [frameSelector])
   }
@@ -163,20 +174,23 @@ export class spreadsheetLanguagePlugin implements Langs.LanguagePlugin
 {
   readonly language: string = "spreadsheet"
   readonly iconClassName: string = "fas fa-file-spreadsheet"
-  readonly editor = spreadsheetEditor
+  readonly editor: Langs.Editor<Langs.EditorState, any> = spreadsheetEditor
   readonly datastoreURI: string;
 
-  constructor (datastoreUri: string) {
+  constructor (language: string,iconClassName:string, datastoreUri: string) {
     this.datastoreURI = datastoreUri
+    this.language = language
+    this.iconClassName = iconClassName
   }
 
   getDefaultCode (id:number) {
     return ""
   }
   
-  parse (code:string) : SpreadsheetBlock {
+  parse (code:string) : Langs.Block {
     Log.trace('spreadsheet', "Spreadsheet code: %s", JSON.stringify(code))
-    return ({ language: "spreadsheet", inputs:{}})
+    let block = { language: "spreadsheet", inputs:{}}
+    return <Langs.Block> block
   }
 
   async bind (context: Langs.BindingContext, block: Langs.Block) : Promise<Langs.BindingResult> {
@@ -192,7 +206,7 @@ export class spreadsheetLanguagePlugin implements Langs.LanguagePlugin
       framesInScope: context.scope
     }
     
-    Log.trace("spreadsheet", "Context.scope: %s", JSON.stringify(context.scope))
+    // Log.trace("spreadsheet", "Context.scope: %s", JSON.stringify(context.scope))
     return { code: node, exports: [], resources: [] };
   }
 

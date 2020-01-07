@@ -138,8 +138,8 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
 
   render: (cell:Langs.BlockState, state:AiaState, ctx:Langs.EditorContext<AiaEvent>) => {
     let aiaNode = <AiaCodeNode>cell.code
-    console.log(state)
-    console.log(aiaNode.completions)
+    // console.log(state)
+    // console.log(aiaNode.completions)
 
     function triggerRemove() {
       let newCode = format(aiaNode.assistant, aiaNode.inputs, aiaNode.newFrame, aiaNode.chain.slice(0, aiaNode.chain.length-1))
@@ -311,13 +311,16 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
     for(var a of this.assistants) 
       if (a.name == parsed.assistant) 
         block = { language: "ai assistant", code: parsed.chain, assistant: a, inputs:parsed.inputs, newFrame:parsed.frame }
-    console.log("PARSED: ", code, parsed, block)
+    // console.log("PARSED: ", code, parsed, block)
+    Log.trace('spreadsheet', "Parse: Code: %s ", JSON.stringify(code))
+    Log.trace('spreadsheet', "Parse: Parsed: %s ", JSON.stringify(parsed))
+    Log.trace('spreadsheet', "Parse: Block: %s ", JSON.stringify(block))
     return <Langs.Block>block
   }
 
   async bind(context: Langs.BindingContext, block: Langs.Block) : Promise<Langs.BindingResult> {
     let aiaBlock = <AiaBlock>block    
-
+    Log.trace("spreadsheet", "Bind: block: %s", JSON.stringify(block))
     let ants : Graph.Node[] = []
     let ins : {[input:string]:Graph.Node} = {}
     for(let k of Object.keys(aiaBlock.inputs)) {
@@ -326,6 +329,7 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
       ins[k] = nd;
     }
 
+    Log.trace("spreadsheet", "Bind: inputs: %s", JSON.stringify(ins))
     let antsHash = Md5.hashStr(ants.map(a => a.hash).join("-"))
     let node:AiaCodeNode = 
       { kind: 'code',

@@ -33,18 +33,38 @@ async function getValue(blob, preview:boolean, datastoreURI:string) : Promise<an
 
 async function getCachedOrEval(serviceUrl, body, datastoreURI) : Promise<any> {
   let cacheUrl = datastoreURI.concat("/" + body.hash).concat("/.cached")
-  try {
-    let params = {headers: {'Accept': 'application/json'}}
-    Log.trace("external", "Checking cached response: %s", cacheUrl)
-    let response = await axios.get(cacheUrl, params)
-    return response.data
-  } catch(e) {
-    Log.trace("external", "Checking failed at external, calling eval (%s)", e)
+  // try {
+  //   let params = {headers: {'Accept': 'application/json'}}
+  //   Log.trace("external", "Checking cached response: %s", cacheUrl)
+  //   let response = await axios.get(cacheUrl, params)
+  //   return response.data
+  // } catch(e) {
+  //  Log.trace("external", "Checking failed at external, calling eval (%s)", e)
     let params = { headers: {'Content-Type': 'application/json'} }        
     let result = await axios.post(serviceUrl.concat("/eval"), body, params)
     await axios.put(cacheUrl, result.data, params)
     return result.data
+  //}
+}
+
+function parseScript(htmlResponse:string) {
+  let scriptHeader = "<script type=\"text/javascript\">"
+  console.log(htmlResponse.indexOf(scriptHeader))
+  if (htmlResponse.indexOf(scriptHeader) > -1) {
+    let script = htmlResponse.substring(htmlResponse.indexOf(scriptHeader)+scriptHeader.length, htmlResponse.indexOf("</script>"))
+    let html = htmlResponse.substring(0,htmlResponse.indexOf(scriptHeader))
+    html = html.concat(htmlResponse.substring(htmlResponse.indexOf("</script>")+9))
+    return {"script":script, "html":html}
   }
+  else {
+    return {"script":"", "html":htmlResponse}
+  }
+}
+
+function loadInlineScript(text:string) { 
+  var scr = document.createElement("script");
+  scr.innerHTML = text;
+  document.head.appendChild(scr);
 }
 
 async function getEval(body, serviceURI, datastoreURI) : Promise<Langs.EvaluationResult> {  
@@ -73,14 +93,21 @@ async function getEval(body, serviceURI, datastoreURI) : Promise<Langs.Evaluatio
       results.exports['figure'+figureIndex.toString()] = exp
       figureIndex++;
     }
-
+    
     if (response['html'])
       if (JSON.stringify(response.html) !=  "{}"){
+        let parsed = parseScript(response.html.toString())
+        if (parsed.script.length > 0)
+          loadInlineScript(parsed.script)
         var output : ((id:string) => void) = function(f) {
           let element:HTMLElement | null= document.getElementById(f)
-          if (element)
-            element.innerHTML = response.html.toString();
+          if (element){
+            // element.innerHTML = response.html.toString();
+            element.innerHTML = parsed.html
+            // element.onload = function() {loadInlineScript(parsed.script)}
+          }
         };
+        
         var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: output }
         results.exports["output"] = exp
       }

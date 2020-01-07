@@ -11,6 +11,17 @@ function loadScript(url) {
   }
 }
 
+function loadInlineScript(text) { 
+  if (!loaded.includes(text))
+  {
+    var scr = document.createElement("script");
+    scr.innerHTML =  text;
+    document.head.appendChild(scr);
+    loaded.push(text)
+    console.log("Styles and scripts loaded: "+JSON.stringify(text))
+  }
+}
+
 function loadStyle(url) { 
   if (!loaded.includes(url))
   {
