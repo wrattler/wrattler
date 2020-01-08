@@ -9,7 +9,7 @@ VERSION=$1
 
 echo VERSION is $VERSION
 
-if [[ ! $VERSION =~ ^v[0-9]+.[0-9]+$ ]];
+if [[ ! $VERSION =~ ^v[0-9]+.[0-9]+(.[0-9]+)?$ ]];
 then echo "Usage is 'build_release.sh <version>'  with version format vX.Y";
      exit;
 fi;
