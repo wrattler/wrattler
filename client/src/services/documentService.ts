@@ -15,12 +15,12 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
       let source = codeCell.substring(languageMarkerBegin+languageMarker.length,languageMarkerEnd).trim()
       return {language: language, source: source }
     }
-    return {language: language, 
+    return {language: language,
       source: "Unknown language: \n"+codeCell}
   }
 
   function getCellLanguage(codeCell: string) {
-    let listOfLanguages = ["javascript", "python", "racket", "r", "thegamma","ai assistant"] 
+    let listOfLanguages = ["javascript", "python", "racket", "r", "thegamma","ai assistant"]
     for (var l = 0; l < listOfLanguages.length; l++) {
       let languageMarker = "```".concat(listOfLanguages[l])
       let languageMarkerBegin = codeCell.indexOf(languageMarker)
@@ -30,12 +30,12 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
     }
     return "markdown";
   }
-  
-  let documents : DocumentElement[] = []; 
+
+  let documents : DocumentElement[] = [];
   var regex = /```[a-z]+((?!```)(\s|\S))*```/g;
-  var res; 
+  var res;
   var currentPos = 0;
-  
+
   while(res = regex.exec(paragraph)) {
     let start = res.index;
     let end = res.index+res[0].length;
@@ -48,13 +48,13 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
     documents.push(cellCode);
     currentPos = end
   }
-  
+
   if (currentPos < paragraph.length-1 && paragraph.substring(currentPos).trim() != "") {
     documents.push({language: "markdown", source: paragraph.substring(currentPos)})
   }
 
   if (documents.length == 0) {
-    documents.push({language: "markdown", source: "Wellcome to Wrattler" })
+    documents.push({language: "markdown", source: "Welcome to Wrattler" })
   }
 
 
@@ -75,7 +75,7 @@ async function getResourceContent(resourceServerUrl:string, sourceURL:string): P
   let response = await axios.get(resourceServerUrl.concat("/resources/").concat(sourceURL))
   return response.data;
 }
-  
+
 export {
   getDocument,
   getNamedDocumentContent,
