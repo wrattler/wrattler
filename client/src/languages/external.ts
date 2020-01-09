@@ -100,12 +100,9 @@ async function getEval(body, serviceURI, datastoreURI) : Promise<Langs.Evaluatio
     if (response['html'])
       if (JSON.stringify(response.html) !=  "{}"){
         let parsed = parseScript(response.html.toString())
-        console.log(parsed.html)
-        console.log(parsed.script)
         var output : ((id:string) => void) = function(f) {
           let element:HTMLElement | null= document.getElementById(f)
           if (element){
-            // element.innerHTML = response.html.toString();
             element.innerHTML = parsed.html 
             if (parsed.script.length > 0) {
               let img:HTMLImageElement = document.createElement('img')
