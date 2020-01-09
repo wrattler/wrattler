@@ -61,10 +61,11 @@ function parseScript(htmlResponse:string) {
   }
 }
 
-function loadInlineScript(text:string) { 
-  var scr = document.createElement("script");
-  scr.innerHTML = text;
-  document.head.appendChild(scr);
+function evalInlineScript(text:string) { 
+  // var scr = document.createElement("script");
+  // scr.innerHTML = text;
+  // document.head.appendChild(scr);
+  eval(text);
 }
 
 async function getEval(body, serviceURI, datastoreURI) : Promise<Langs.EvaluationResult> {  
@@ -98,13 +99,14 @@ async function getEval(body, serviceURI, datastoreURI) : Promise<Langs.Evaluatio
       if (JSON.stringify(response.html) !=  "{}"){
         let parsed = parseScript(response.html.toString())
         if (parsed.script.length > 0)
-          loadInlineScript(parsed.script)
+          evalInlineScript(parsed.script)
         var output : ((id:string) => void) = function(f) {
           let element:HTMLElement | null= document.getElementById(f)
           if (element){
             // element.innerHTML = response.html.toString();
             element.innerHTML = parsed.html
             // element.onload = function() {loadInlineScript(parsed.script)}
+            element.onload = function() {console.log("hll")}
           }
         };
         
