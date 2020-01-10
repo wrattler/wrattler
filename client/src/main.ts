@@ -202,6 +202,7 @@ async function update(trigger:(evt:NotebookEvent) => void,
     state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
 
   Log.trace("main", "Updating with event: %s", evt.kind)
+  Log.trace("spreadsheet", "Updating with event: %s", evt.kind)
   function spliceEditor (editors:Langs.EditorState[], newEditor: Langs.EditorState, idOfAboveBlock: number) {
     let newEditorState:Langs.EditorState[] = []
     if (idOfAboveBlock > -1) {
@@ -348,6 +349,7 @@ async function update(trigger:(evt:NotebookEvent) => void,
       let newState = await updateAndBindAllCells(state, evt.block, evt.newSource);
       state.contentChanged(saveDocument(newState))
       Log.trace('jupyter',"This will trigger a render in Jupyter")
+      Log.trace('spreadsheet',"Returning new state")
       return newState
   }
 }
