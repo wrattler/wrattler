@@ -55,7 +55,6 @@ async function getValue(preview:boolean, url:string) : Promise<any> {
   }
 }
 
-
 const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
   initialize: (id:number, block:Langs.Block) => {  
     let spreadsheetBlock = <SpreadsheetBlock> block
@@ -63,8 +62,8 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
       let newState = {
         id: id,
         block: spreadsheetBlock,
-        ColIndices: 'ABCDEFG'.split(''),
-        RowIndices: _.range(0,3),
+        ColIndices: [],
+        RowIndices: [],
         Cols : [],
         Rows:  [],
         Active: null,
@@ -76,30 +75,48 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
           newState.Cells.set(JSON.stringify(position), "")
         });
       });
-      Log.trace('spreadsheet', "New State initialised (default): %s", JSON.stringify(newState))
+      Log.trace('spreadsheet', "New State initialised (default)")
       return newState
     }
     else {
-      let source = [{"id": 1, "language": "javascript"}, {"id": 2, "language": "javascript"}]
+      let source = [{"id": 11, "language": "javascript"}, {"id": 12, "language": "javascript"}]
       let colNames = Object.keys(source[0])
       let newState = {
         id: id,
         block: <SpreadsheetBlock>block,
-        ColIndices: 'XABCDEFG'.substr(0, colNames.length).split(''),
-        RowIndices:  _.range(0,source.length+1),
-        Cols : 'XABCDEFG'.substr(0, colNames.length+1).split(''),
-        Rows:  _.range(0,source.length+1),
+        ColIndices: 'XABCDEFG'.substr(0, colNames.length+1).split(''),
+        RowIndices:  _.range(0,source.length+2),
+        Cols : colNames,
+        Rows:  _.range(0,source.length+2),
         Active: null,
         Cells: new Map()
       }
-      newState.Rows.forEach((row, rIndex) => {
-        newState.Cols.forEach((col, cIndex) => {
+      newState.RowIndices.forEach((row, rIndex) => {
+        newState.ColIndices.forEach((col, cIndex) => {
           // Log.trace('spreadsheet', "Row[%s] Col[%s]: %s", row, col, row.toString().concat(col.toString()))
           let position:Position = {row:row, col:col}
-          newState.Cells.set(JSON.stringify(position), row.toString().concat(col.toString()))
+          let value:string = " "
+          if ((rIndex == 0) && (col == 'X'))
+            value = ' '
+          else if (rIndex == 0)
+            value = col
+          else if (rIndex == 1) {
+            let colName: string | undefined = newState.Cols[cIndex-1]
+            if (colName)
+              value = colName
+            else 
+              value = rIndex.toString()
+          }
+          else if (col == 'X')
+            value = rIndex.toString()
+          else {
+            let colName = newState.Cols[cIndex-1]
+            value = source[rIndex-2][colName]
+          }  
+          // Log.trace('spreadsheet', "Position [%s]: %s", JSON.stringify(position), value)
+          newState.Cells.set(JSON.stringify(position), value)
         });
       });
-      Log.trace('spreadsheet', "New State initialised (state values): %s", JSON.stringify(newState))
       return newState
     }
   }, 
@@ -119,27 +136,43 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
       Log.trace('spreadsheet', "Rendering Table: %s", JSON.stringify(state))
       let rowsComponents:Array<any> = []
       let headerComponents:Array<any> = []
-      // let colComponents:Array<any> = []
+      let colComponents:Array<any> = []
     
-      for (let c = 0; c < state.Cols.length; c++) {
-        headerComponents.push(h('th',{key: "spreadsheetColumnHeader"+c, class:"spreadsheet-th"}, [state.Cols[c]]))
+      for (let c = 0; c < state.ColIndices.length; c++) {
+        let position:Position = {row:0, col:state.ColIndices[c]}
+        let headerValue:string | undefined = state.Cells.get(JSON.stringify(position))
+        if (headerValue)
+          headerComponents.push(h('th',{key: "spreadsheetColumnHeader"+c, class:"spreadsheet-th"}, [headerValue]))
       }
       rowsComponents.push(h('tr',{key: "spreadsheetColHeader"},[headerComponents]))
 
-      if (state.Rows.length > 0) {
-        state.Rows.forEach((row, rIndex) => {
-          let colComponents:Array<any> = []
-          state.Cols.forEach((col, cIndex) => {
-            Log.trace('spreadsheet', "Row[%s] Col[%s]: %s", row, col, row.toString().concat(col.toString()))
-            let position:Position = {row:row, col:col}
-            let value = state.Cells.get(JSON.stringify(position))
-            colComponents.push(h('td',{key: "spreadsheetColumnHeader"+rIndex+cIndex, class:"spreadsheet-td"}, [value]))
-          });
-          rowsComponents.push(h('tr',{key: "spreadsheetColComponents"},[colComponents]))
-        });
+      for (let r = 1; r < state.RowIndices.length; r++) {
+        colComponents = []
+        for (let c = 0; c < state.ColIndices.length; c++) {
+          let position:Position = {row:state.RowIndices[r], col:state.ColIndices[c]}
+          let cellValue:string | undefined = state.Cells.get(JSON.stringify(position))
+          if (cellValue)
+          {
+            Log.trace('spreadsheet', "Position [%s]: %s", JSON.stringify(position), cellValue)
+            let tableCell:VNode = h('td',{
+              key: "spreadsheetColumn"+r+c, 
+              class:"spreadsheet-td",
+              onclick:() => {
+                        Log.trace("spreadsheet","Cell is clicked")
+                        // context.trigger({kind:"selected", pos: position})
+                      }
+              }, 
+              [cellValue.toString()])
+            console.log(tableCell)
+            colComponents.push(tableCell)
+          }
+          else {
+            colComponents.push(h('td',{key: "spreadsheetColumn"+r+c, class:"spreadsheet-td"}, [" "]))
+          }
+        };
+        rowsComponents.push(h('tr',{key: "spreadsheetRow"+r, class:"spreadsheet-tr"},[colComponents]))
       }
-      // rowsComponents.push(h('tr',{key: "spreadsheetColComponents"},[colComponents]))
-
+      
       function renderEditor(pos:Position): VNode{
         let inputComponent:VNode =  h('input', {key:"spreadsheetInput"+pos.row.toString()+pos.col+cell.editor.id,
         type: "text"},[])
@@ -242,7 +275,7 @@ export class spreadsheetLanguagePlugin implements Langs.LanguagePlugin
   }
   
   parse (url:string) : Langs.Block {
-    Log.trace('spreadsheet', "Parse Spreadsheet for url: %s", JSON.stringify(url))
+    // Log.trace('spreadsheet', "Parse Spreadsheet for url: %s", JSON.stringify(url))
     let block:SpreadsheetBlock = { language: "spreadsheet", dataframe:{url: url}}
     return block
   }

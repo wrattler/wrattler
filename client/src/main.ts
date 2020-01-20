@@ -202,7 +202,7 @@ async function update(trigger:(evt:NotebookEvent) => void,
     state:NotebookState, evt:NotebookEvent) : Promise<NotebookState> {
 
   Log.trace("main", "Updating with event: %s", evt.kind)
-  Log.trace("spreadsheet", "Updating with event: %s", evt.kind)
+  // Log.trace("spreadsheet", "Updating with event: %s", evt.kind)
   function spliceEditor (editors:Langs.EditorState[], newEditor: Langs.EditorState, idOfAboveBlock: number) {
     let newEditorState:Langs.EditorState[] = []
     if (idOfAboveBlock > -1) {
