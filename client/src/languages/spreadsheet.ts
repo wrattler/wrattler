@@ -153,18 +153,8 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
           let cellValue:string | undefined = state.Cells.get(JSON.stringify(position))
           if (cellValue)
           {
-            Log.trace('spreadsheet', "Position [%s]: %s", JSON.stringify(position), cellValue)
-            let tableCell:VNode = h('td',{
-              key: "spreadsheetColumn"+r+c, 
-              class:"spreadsheet-td",
-              onclick:() => {
-                        Log.trace("spreadsheet","Cell is clicked")
-                        // context.trigger({kind:"selected", pos: position})
-                      }
-              }, 
-              [cellValue.toString()])
-            console.log(tableCell)
-            colComponents.push(tableCell)
+            let cell = renderCell(position, state)
+            colComponents.push(cell)
           }
           else {
             colComponents.push(h('td',{key: "spreadsheetColumn"+r+c, class:"spreadsheet-td"}, [" "]))
@@ -184,39 +174,37 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
         return editorComponent
       }
 
-      // function renderView(state: SpreadsheetState, positionKey:IteratorResult<Position>){
-      //   let viewComponent:VNode;
-      //   let pos = positionKey.value
-      //   if (pos.col == " ")
-      //     viewComponent = h('th', { key: "spreadsheetRowHeader"+pos.row.toString()+pos.col, 
-      //       class:"spreadsheet-th"}, [pos.row.toString()])
-      //   else {
-      //     let value:string|undefined = state.Cells.get(pos)
-      //     let displayComponent:VNode =  h('p', 
-      //       {key:"spreadsheetDisplay"+pos.row.toString()+pos.col+cell.editor.id},
-      //       [value==undefined? "...":value])
-      //     viewComponent = h('td', {key: "spreadsheetColumn"+pos.row.toString()+pos.col+cell.editor.id, 
-      //       class: "spreadsheet-td", 
-      //       onclick:()=>{
-      //         Log.trace("spreadsheet","Cell is clicked")
-      //         context.trigger({kind:"selected", pos: pos})
-      //       }}, [displayComponent])
-      //   }
-      //   return viewComponent
-      // }
+      function renderView(state: SpreadsheetState, pos:Position){
+        let viewComponent:VNode;
+        if (pos.col == " ")
+          viewComponent = h('th', { key: "spreadsheetRowHeader"+pos.row.toString()+pos.col, 
+            class:"spreadsheet-th"}, [pos.row.toString()])
+        else {
+          let value:string|undefined = state.Cells.get(JSON.stringify(pos))
+          let displayComponent:VNode =  h('p', 
+            {key:"spreadsheetDisplay"+pos.row.toString()+pos.col+cell.editor.id},
+            [value==undefined? "...":value.toString()])
+          viewComponent = h('td', {key: "spreadsheetColumn"+pos.row.toString()+pos.col+cell.editor.id, 
+            class: "spreadsheet-td", 
+            onclick:()=>{
+              Log.trace("spreadsheet","Cell is clicked")
+              context.trigger({kind:"selected", pos: pos})
+            }}, [displayComponent])
+        }
+        return viewComponent
+      }
 
-      // function renderCell(positionKey:IteratorResult<Position>, state: SpreadsheetState):VNode {
-      //   let pos = positionKey.value
-      //   if ((state.Active != null) && 
-      //     (state.Active.row == pos.row) && 
-      //     (state.Active.col == pos.col)) {
-      //     Log.trace("spreadsheet", "Active state position: ".concat(JSON.stringify(state.Active)))
-      //     return renderEditor(pos)
-      //   }
-      //   else {
-      //     return renderView(state, positionKey)
-      //   }
-      // }
+      function renderCell(pos:Position, state: SpreadsheetState):VNode {
+        if ((state.Active != null) && 
+          (state.Active.row == pos.row) && 
+          (state.Active.col == pos.col)) {
+          Log.trace("spreadsheet", "Active state position: ".concat(JSON.stringify(state.Active)))
+          return renderEditor(pos)
+        }
+        else {
+          return renderView(state, pos)
+        }
+      }
 
       // function getKey(pos:Position, state:SpreadsheetState):IteratorResult<Position> | undefined {
       //   let keys = state.Cells.keys()
