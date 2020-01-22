@@ -28,14 +28,43 @@ type SpreadsheetState = {
 
 interface SpreadsheetCodeNode extends Graph.Node {
   kind: 'code',
-  framesInScope: Langs.ScopeDictionary
+  framesInScope: string[]
 }
 
-type SpreadsheetInput = { url:string }
+/*
+
+  * source data frame (we can access that)
+  * list of transformations applied
+
+  TRANSFORMATION
+  *  
+
+  sourceFrame: string
+  transformations: Transformation[]
+
+  type Transformation = 
+    | SetValue of Row * Column * NewValue
+    | DeleteRow of Row
+
+
+two
+set,2,langguage,javascript
+set,1,langguage,javascript
+delete,1
+
+
+
+
+
+
+
+*/
+
+//type SpreadsheetInput = { url:string }
 
 interface SpreadsheetBlock extends Langs.Block {
   language: string
-  dataframe: SpreadsheetInput
+  dataframe: string
 }
 
 type CellSelectedEvent = { kind: 'selected', pos: Position}
@@ -58,7 +87,7 @@ async function getValue(preview:boolean, url:string) : Promise<any> {
 const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
   initialize: (id:number, block:Langs.Block) => {  
     let spreadsheetBlock = <SpreadsheetBlock> block
-    if (spreadsheetBlock.dataframe.url.length == 0){
+    if (spreadsheetBlock.dataframe.length == 0){
       let newState = {
         id: id,
         block: spreadsheetBlock,
@@ -146,6 +175,19 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
       }
       rowsComponents.push(h('tr',{key: "spreadsheetColHeader"},[headerComponents]))
 
+      let ssNode = <SpreadsheetCodeNode>cell.code
+      if (ssNode.antecedents.length > 0 && ssNode.antecedents[0].value) {
+        let knownAnt = <Values.KnownValue>ssNode.antecedents[0].value
+        switch (knownAnt.kind) {
+          case 'dataframe':
+            knownAnt.preview.forEach(row =>
+              rowsComponents.push(h('tr', {}, [h('td', {}, ["xxx"])]))
+            )
+        }
+      } else {
+        rowsComponents.push(h('tr', {}, [h('td', {}, ["no ant or no value"])]))
+      }
+/*
       for (let r = 1; r < state.RowIndices.length; r++) {
         colComponents = []
         for (let c = 0; c < state.ColIndices.length; c++) {
@@ -172,7 +214,7 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
         };
         rowsComponents.push(h('tr',{key: "spreadsheetRow"+r, class:"spreadsheet-tr"},[colComponents]))
       }
-      
+*/      
       function renderEditor(pos:Position): VNode{
         let inputComponent:VNode =  h('input', {key:"spreadsheetInput"+pos.row.toString()+pos.col+cell.editor.id,
         type: "text"},[])
@@ -232,7 +274,7 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
       return table
     }
     
-    let dataframeKeys:Array<string> = Object.keys(spreadsheetNode.framesInScope)
+    let dataframeKeys:Array<string> = spreadsheetNode.framesInScope
     let selectedDataFrame:string = "" 
     let frameSelector:VNode = 
       h('div', {}, [ 
@@ -241,14 +283,15 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
           { 
             onchange:(e) => {
               selectedDataFrame = (<any>e.target).value
-              let selectedFrameValue = spreadsheetNode.framesInScope[selectedDataFrame].value
-              if (selectedFrameValue != null) {
-                let selectedFrame = <Values.DataFrame>selectedFrameValue
-                context.rebindSubsequent(cell,selectedFrame.url)
-              }
-              else { 
-                context.rebindSubsequent(cell,"")
-              }
+              //let selectedFrameValue = spreadsheetNode.framesInScope[selectedDataFrame].value
+              //if (selectedFrameValue != null) {
+              //let selectedFrame = <Values.DataFrame>selectedFrameValue
+              context.rebindSubsequent(cell,selectedDataFrame)
+              context.evaluate(cell.editor.id)
+              //}
+              //else { 
+              //  context.rebindSubsequent(cell,"")
+              //}
             } 
           }, 
           [""].concat(dataframeKeys).map(f =>
@@ -274,23 +317,27 @@ export class spreadsheetLanguagePlugin implements Langs.LanguagePlugin
     return ""
   }
   
-  parse (url:string) : Langs.Block {
+  parse (framename:string) : Langs.Block {
     // Log.trace('spreadsheet', "Parse Spreadsheet for url: %s", JSON.stringify(url))
-    let block:SpreadsheetBlock = { language: "spreadsheet", dataframe:{url: url}}
+    let block:SpreadsheetBlock = { language: "spreadsheet", dataframe:framename}
     return block
   }
 
   async bind (context: Langs.BindingContext, block: Langs.Block) : Promise<Langs.BindingResult> {
     let ssBlock = <SpreadsheetBlock> block
+    let ants : Graph.Node[] = []
+    if (ssBlock.dataframe != "") 
+      ants.push(context.scope[ssBlock.dataframe])
+
     Log.trace("spreadsheet", "Bind spreadsheet block: %s", JSON.stringify(ssBlock))
     let node:SpreadsheetCodeNode = { 
       kind: 'code',
       language: this.language, 
       hash: <string>Md5.hashStr(JSON.stringify(this.save(block))),
-      antecedents: [],
+      antecedents: ants,
       value: null, 
       errors: [],
-      framesInScope: context.scope
+      framesInScope: Object.keys(context.scope)
     }
     
     // Log.trace("spreadsheet", "Context.scope: %s", JSON.stringify(context.scope))
