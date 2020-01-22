@@ -97,6 +97,16 @@ services:
       - ./jupyterlab_wrattler/src:/app/src
       - ./resources:/public
 
+  wrattler_language_server:
+    container_name: wrattler_wrattler_language_server_1
+    build:
+      context: server/language-server
+      dockerfile: Dockerfile
+    ports:
+    - "7110:7110"
+    networks:
+    - wrattler_nw
+
   # wrattler_aiassistants:
   #   container_name: wrattler_wrattler_aiassistants_1
   #   build:
