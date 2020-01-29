@@ -1,3 +1,24 @@
+/**
+ * Wrattler can run as a stand-alone system or as a JupyterLab extension.
+ * It is also possible to create new instance of Wrattler inside any web page
+ * (provided that you give it URLs for all the services it needs). This
+ * module is the main entry point if you want to manage Wrattler notebook
+ * instances on your own.
+ *
+ * - This module exports the [Wrattler](../classes/main.wrattler.html) class.
+ *   When loaded, it also sets `window.wrattler` to a new instance of the class
+ *   so that it is easier to use it inside web projects as a stand-alone JS file.
+ *   The class provides methods for configuring language plugins
+ *   ([`LanguagePlugins`](../modules/main.html#languageplugins) type) and
+ *   creating notebooks.
+ *
+ * - [WrattlerNotebook](../interfaces/main.wrattlernotebook.html) interface
+ *   represents a created notebook. It provides methods for accessing document
+ *   contents and lets you register handler that is triggered whenever the user
+ *   makes a change in a notebook.
+ *
+ * @module Main
+ */
 import * as Langs from './definitions/languages';
 /**
  * Represents a created Wrattler notebook. The interface provides access to the

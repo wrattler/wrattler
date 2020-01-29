@@ -48,7 +48,7 @@ interface Value {
 * understands. Those are values that should be exported by the `exports` property of
 * `ExportsValue` and represent images, console outputs, data frames, etc.
 */
-declare type KnownValue = JavaScriptOutputValue | DataFrame | ExportsValue | Printout | Figure;
+declare type KnownValue = JavaScriptOutputValue | DataFrame | Printout | Figure;
 /**
 * Represents a bit of exported JavaScript functionality that creates custom DOM output.
 * The `render` function is called by Wrattler after it creates a tab below a code editor.
