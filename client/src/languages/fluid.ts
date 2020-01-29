@@ -13,6 +13,8 @@ import { createMonacoEditor, createOutputPreview } from "../editors/editor"
 
 const fluid: string = "fluid"
 
+Editor.initialise()
+
 /**
  * Eschew the -Kind convention for now.
  */
@@ -183,8 +185,9 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Editor.Listener {
          }
          const [ρ_imports, e]: [Env, Expr] = node.block.ρ_e!
          const editor: Editor.Editor = new Editor.Editor(this, [400, 400], "top", ρ, ρ_imports, e)
+         editor.initialise()
          const exports: Values.ExportsValue = { 
-            kind: "exports", 
+            kind: "exports",
             exports: { 
                "graphics": { 
                   kind: "jsoutput", 
