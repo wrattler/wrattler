@@ -1,12 +1,12 @@
 import { VNode, h } from "maquette"
 import * as monaco from "monaco-editor"
 import { Md5 } from "ts-md5"
-import { Env, Eval, Expr, bindDataset, emptyEnv, parseWithImports } from "@rolyp/fluid"
+import { Editor, Env, Expr, bindDataset, emptyEnv, parseWithImports } from "@rolyp/fluid"
 import { assert } from "../common/log"
 import * as Graph from "../definitions/graph"
 import * as Langs from "../definitions/languages"
 import * as Values from '../definitions/values'
-import { createMonacoEditor } from "../editors/editor"
+import { createMonacoEditor, createOutputPreview } from "../editors/editor"
 
 // Plugin for Fluid, language for explorable data visualisations.
 // https://www.npmjs.com/package/@rolyp/fluid
@@ -19,16 +19,16 @@ const fluid: string = "fluid"
 class FluidBlock implements Langs.Block {
    language: string = fluid
    source: string // needed to compute the hash?
-   e: Expr | null
+   ρ_e: [Env, Expr] | null
 
    constructor (source: string) {
       this.source = source
       try {
-         this.e = parseWithImports(source, [])
+         this.ρ_e = parseWithImports(source)
       } 
       catch (ex) {
          console.log(ex)
-         this.e = null
+         this.ρ_e = null
       }
    }
 }
@@ -63,43 +63,6 @@ class FluidNode implements Graph.Node {
 function rules (rs: monaco.languages.IMonarchLanguageRule[]): monaco.languages.IMonarchLanguageRule[] {
    return rs
 }
-
-// OLD STUFF:
-   // operators = ["-", "++", "+", "**", "*", "/", "===", "==", "<==", "<=", "<", ">==", ">=", ">"]
-   // symbols = /[= ><!~?:&|+\-*\/\^%]+/
-   // C# style strings
-   // escapes = /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/
-         // identifiers and keywords
-         // [/[a-z_$][\w$]*/, { cases: { "@keywords": "keyword", "@default": "identifier" } }],
-         // [/[A-Z][\w\$]*/, "type.identifier"],
-         // [/[<>](?!@symbols)/, "@brackets"],
-         // numbers
-         // [/\d*\.\d+([eE][\-+]?\d+)?/, "number.float"],
-         // [/0[xX][0-9a-fA-F]+/, "number.hex"],
-         // [/\d+/, "number"],
-         // delimiter: after number because of .\d floats
-         // [/[;,.]/, "delimiter"],
-         // strings
-         // [/"([^"\\]|\\.)*$/, "string.invalid"], // non-terminated string
-         // [/"/, { token: "string.quote", bracket: "@open", next: "@string" }],
-         // characters
-         // [/'[^\\']'/, "string"],
-         // [/(')(@escapes)(')/, ["string", "string.escape", "string"]],
-         // [/'/, "string.invalid"]
-      // comment: rules([
-         // [/[^\/*]+/, "comment"],
-         // [/\/\*/, "comment", "@push"], // nested comment
-         // [/\*\//, "comment", "@pop"],
-         // [/[\/*]/, "comment"]
-      // ]),
-      // whitespace
-      //   [/\/\*/, "comment", "@comment"],
-      // string: rules([
-      //   [/[^\\"]+/, "string"],
-      //   [/@escapes/, "string.escape"],
-      //   [/\\./, "string.escape.invalid"],
-      //   [/"/, { token: "string.quote", bracket: "@close", next: "@pop" }]
-      // ]),
 
 // Based on example at https://microsoft.github.io/monaco-editor/monarch.html.
 class FluidTokensProvider implements monaco.languages.IMonarchLanguage {
@@ -148,40 +111,50 @@ class FluidEditor implements Langs.Editor<FluidState, FluidEvent> {
    }
 
    render (cell: Langs.BlockState, state: FluidState, context: Langs.EditorContext<FluidEvent>): VNode {
-      const code: VNode = createMonacoEditor(fluid, state.block.source, cell, context),
-            previewButton: VNode = h("button", { 
+      const previewButton: VNode = h("button", { 
                class: "preview-button", 
                onclick: () => {
                   context.evaluate(cell.editor.id) 
                } 
-            }, ["Evaluate!"]),
-            // TODO: see other plugs for additional behaviours..
-            preview: VNode = h('div', { class: "preview" }, [previewButton])
-      return h("div", {}, [code, preview])
+            }, ["Evaluate!"])
+      return h("div", {}, [
+         h("div", { key: "ed" }, [
+           createMonacoEditor(fluid, state.block.source, cell, context) ]),
+         h("div", { key: "prev" }, [
+            cell.code.value == null ? 
+               previewButton :
+               createOutputPreview(
+                  cell,
+                  (idx: number): void => {}, 
+                  0, 
+                  cell.code.value as Values.ExportsValue
+               )
+         ])
+       ]);
    }
 }
 
-export const fluidLanguagePlugin: Langs.LanguagePlugin = {
-   language: fluid,
-   iconClassName: "fa fa-chart-area",
-   editor: new FluidEditor(),
+class FluidLanguagePlugin implements Langs.LanguagePlugin, Editor.Listener {
+   language = fluid
+   iconClassName = "fa fa-chart-area"
+   editor = new FluidEditor()
 
    getDefaultCode (id: number): string {
       return ""
-   },
+   }
 
    parse (code: string): FluidBlock {
       return new FluidBlock(code)
-   },
+   }
 
    async bind (context: Langs.BindingContext, block: Langs.Block): Promise<Langs.BindingResult> {
       console.log(context.scope)
       if (block instanceof FluidBlock) {
          let antecedents: Graph.Node[]
-         if (block.e === null) {
+         if (block.ρ_e === null) {
             antecedents = []
          } else {
-            const ys: Set<string> = Expr.freeVars(block.e),
+            const ys: Set<string> = Expr.freeVars(block.ρ_e[1]),
                   xs: string[] = Object.keys(context.scope).filter(x => (ys as any).has(x)) // ES6 dynamic, ES5 static :-o
             antecedents = xs.map(x => context.scope[x])
          }
@@ -193,7 +166,7 @@ export const fluidLanguagePlugin: Langs.LanguagePlugin = {
       } else {
          return assert(false)
       }
-   },
+   }
 
    async evaluate (context: Langs.EvaluationContext, node: Graph.Node): Promise<Langs.EvaluationResult> {
       if (node instanceof FluidNode) {
@@ -208,12 +181,30 @@ export const fluidLanguagePlugin: Langs.LanguagePlugin = {
          for (let [x, { data }] of imports) {
             ρ = bindDataset(ρ, await data.getValue(), x) // data is any[] but assume Object[]
          }
-         console.log(Eval.eval_(ρ, node.block.e!))
-         return { kind: "success", value: { kind: "nothing" } }
+         const [ρ_imports, e]: [Env, Expr] = node.block.ρ_e!
+         const editor: Editor.Editor = new Editor.Editor(this, [400, 400], "top", ρ, ρ_imports, e)
+         const exports: Values.ExportsValue = { 
+            kind: "exports", 
+            exports: { 
+               "graphics": { 
+                  kind: "jsoutput", 
+                  render: (id: string): void => {
+                     document.getElementById(id)!.appendChild(editor.rootPane)
+                  } 
+               } 
+            }
+         }
+         return { 
+            kind: "success", 
+            value: exports
+         }
       } else {
          return assert(false)
       }
-   },
+   }
+
+   onBwdSlice (editor: Editor.Editor, externDeps: Set<Object> /* todo: should be Slice */): void {
+   }
 
    save (block: Langs.Block): string {
       if (block instanceof FluidBlock) {
@@ -223,6 +214,8 @@ export const fluidLanguagePlugin: Langs.LanguagePlugin = {
       }
    }
 }
+
+export const fluidLanguagePlugin: Langs.LanguagePlugin = new FluidLanguagePlugin()
 
 // Dynamic type check.
 function isExportNode (node: Graph.Node): node is Graph.ExportNode {
