@@ -111,12 +111,12 @@ class FluidEditor implements Langs.Editor<FluidState, FluidEvent> {
    }
 
    render (cell: Langs.BlockState, state: FluidState, context: Langs.EditorContext<FluidEvent>): VNode {
-      const previewButton: VNode = h("button", { 
-               class: "preview-button", 
-               onclick: () => {
-                  context.evaluate(cell.editor.id) 
-               } 
-            }, ["Evaluate!"])
+      const previewButton: VNode = h("button", {
+         class: "preview-button", 
+         onclick: () => {
+            context.evaluate(cell.editor.id) 
+         } 
+      }, ["Evaluate!"])
       return h("div", {}, [
          h("div", { key: "ed" }, [
            createMonacoEditor(fluid, state.block.source, cell, context) ]),
