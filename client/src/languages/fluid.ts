@@ -1,7 +1,7 @@
 import { VNode, h } from "maquette"
 import * as monaco from "monaco-editor"
 import { Md5 } from "ts-md5"
-import { Editor, Env, Expr, bindDataset, emptyEnv, parseWithImports } from "@rolyp/fluid"
+import { Editor, Env, Expr, bindDataset, emptyEnv, openDatasetAs, parseWithImports } from "@rolyp/fluid"
 import { assert } from "../common/log"
 import * as Graph from "../definitions/graph"
 import * as Langs from "../definitions/languages"
@@ -179,12 +179,14 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Editor.Listener {
             // exported values are known and non-null 
             .map(node => [node.variableName, node.value as Values.KnownValue])
             .filter(([x, v]: [string, Values.KnownValue]) => v.kind === "dataframe")) as [string, Values.DataFrame][]
-         let ρ: Env = emptyEnv()
+         let ρ_external: Env = emptyEnv()
          for (let [x, { data }] of imports) {
-            ρ = bindDataset(ρ, await data.getValue(), x) // data is any[] but assume Object[]
+            ρ_external = bindDataset(ρ_external, await data.getValue(), x) // data is any[] but assume Object[]
          }
+         // temporarily make specific dataset available as external data too
+         ρ_external = ρ_external.concat(openDatasetAs("renewables-restricted", "data"))
          const [ρ_imports, e]: [Env, Expr] = node.block.ρ_e!
-         const editor: Editor.Editor = new Editor.Editor(this, [400, 400], "top", ρ, ρ_imports, e)
+         const editor: Editor.Editor = new Editor.Editor(this, [400, 400], "top", ρ_external, ρ_imports, e)
          editor.initialise()
          const exports: Values.ExportsValue = { 
             kind: "exports",
