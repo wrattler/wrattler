@@ -1,7 +1,7 @@
 import { VNode, h } from "maquette"
 import * as monaco from "monaco-editor"
 import { Md5 } from "ts-md5"
-import { Editor, Env, Expr, bindDataset, emptyEnv, openDatasetAs, parseWithImports } from "@rolyp/fluid"
+import { Pane, PaneCoordinator, Env, Expr, bindDataset, emptyEnv, openDatasetAs, parseWithImports } from "@rolyp/fluid"
 import { assert } from "../common/log"
 import * as Graph from "../definitions/graph"
 import * as Langs from "../definitions/languages"
@@ -12,8 +12,16 @@ import { createMonacoEditor, createOutputPreview } from "../editors/editor"
 // https://www.npmjs.com/package/@rolyp/fluid
 
 const fluid: string = "fluid"
+let coordinator: PaneCoordinator
 
-Editor.initialise()
+Pane.initialise()
+
+function ensureInitialised (): void {
+   if (coordinator === undefined) {
+      // temporarily make specific dataset available as external data too
+      coordinator = new PaneCoordinator(openDatasetAs("renewables-restricted", "data"))
+   }
+}
 
 /**
  * Eschew the -Kind convention for now.
@@ -113,7 +121,7 @@ class FluidEditor implements Langs.Editor<FluidState, FluidEvent> {
    }
 
    render (cell: Langs.BlockState, state: FluidState, context: Langs.EditorContext<FluidEvent>): VNode {
-      const previewButton: VNode = h("button", {
+      const evaluateButton: VNode = h("button", {
          class: "preview-button", 
          onclick: () => {
             context.evaluate(cell.editor.id) 
@@ -124,7 +132,7 @@ class FluidEditor implements Langs.Editor<FluidState, FluidEvent> {
            createMonacoEditor(fluid, state.block.source, cell, context) ]),
          h("div", { key: "prev" }, [
             cell.code.value == null ? 
-               previewButton :
+               evaluateButton :
                createOutputPreview(
                   cell,
                   (idx: number): void => {}, 
@@ -136,10 +144,11 @@ class FluidEditor implements Langs.Editor<FluidState, FluidEvent> {
    }
 }
 
-class FluidLanguagePlugin implements Langs.LanguagePlugin, Editor.Listener {
+class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
    language = fluid
    iconClassName = "fa fa-chart-area"
    editor = new FluidEditor()
+   pane: Pane.Pane | null = null
 
    getDefaultCode (id: number): string {
       return ""
@@ -170,31 +179,33 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Editor.Listener {
       }
    }
 
+   // For now, linking is mediated through a fixed external dataset, not through data imported from other cells.
    async evaluate (context: Langs.EvaluationContext, node: Graph.Node): Promise<Langs.EvaluationResult> {
       if (node instanceof FluidNode) {
-         console.log(node)
+         ensureInitialised()
          const imports: [string, Values.DataFrame][] = (node.antecedents
             // invariant - only depend on exported nodes:   
             .filter(isExportNode)                          
             // exported values are known and non-null 
             .map(node => [node.variableName, node.value as Values.KnownValue])
             .filter(([x, v]: [string, Values.KnownValue]) => v.kind === "dataframe")) as [string, Values.DataFrame][]
-         let ρ_external: Env = emptyEnv()
+         let ρ_imports: Env = emptyEnv() // from other cells
          for (let [x, { data }] of imports) {
-            ρ_external = bindDataset(ρ_external, await data.getValue(), x) // data is any[] but assume Object[]
+            ρ_imports = bindDataset(ρ_imports, await data.getValue(), x) // data is any[] but assume Object[]
          }
-         // temporarily make specific dataset available as external data too
-         ρ_external = ρ_external.concat(openDatasetAs("renewables-restricted", "data"))
-         const [ρ_imports, e]: [Env, Expr] = node.block.ρ_e!
-         const editor: Editor.Editor = new Editor.Editor(this, [400, 400], "top", ρ_external, ρ_imports, e)
-         editor.initialise()
+         const [ρ_importsʹ, e]: [Env, Expr] = node.block.ρ_e! // from default modules
+         if (this.pane !== null) {
+            coordinator.removePane(this.pane)
+            this.pane = null
+         }
+         this.pane = coordinator.addPane(ρ_imports.concat(ρ_importsʹ), e)
          const exports: Values.ExportsValue = { 
             kind: "exports",
             exports: { 
                "graphics": { 
-                  kind: "jsoutput", 
+                  kind: "jsoutput",
                   render: (id: string): void => {
-                     document.getElementById(id)!.appendChild(editor.rootPane)
+                     document.getElementById(id)!.appendChild(this.pane!.rootPane)
                   } 
                } 
             }
@@ -208,7 +219,7 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Editor.Listener {
       }
    }
 
-   onBwdSlice (editor: Editor.Editor, externDeps: Set<Object> /* todo: should be Slice */): void {
+   onBwdSlice (pane: Pane.Pane, externDeps: Set<Object> /* todo: should be Slice */): void {
    }
 
    save (block: Langs.Block): string {
