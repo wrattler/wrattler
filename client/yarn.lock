@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@babel/parser/-/parser-7.6.4.tgz#cb9b36a7482110282d5cb6dd424ec9262b473d81"
   integrity sha512-D8RHPW5qd0Vbyo3qb+YjO5nvUVRTXFLQ/FsDxJU2Nqz4uB5EnUN0ZQSEYpvTIbRuttig1XbHWU5oMeQwQSAA+A==
 
-"@rolyp/fluid@^0.1.24":
-  version "0.1.24"
-  resolved "https://registry.yarnpkg.com/@rolyp/fluid/-/fluid-0.1.24.tgz#9e742df4cb3bed195d8ccf3ccc46fa7b2a39aef2"
-  integrity sha512-Z2SE/DpyGdwDOV0Lje7kPM2rd4usFgM0hhuRwtSmgtNe8t69i9NsWYMDTRJX3MuGYh/xLQfC6F8Z0uwMRtXsug==
+"@rolyp/fluid@^0.1.25":
+  version "0.1.25"
+  resolved "https://registry.yarnpkg.com/@rolyp/fluid/-/fluid-0.1.25.tgz#ab17c2648633e2f40598078dd138bdeb601fb928"
+  integrity sha512-eVEP8nORyszcjpT4zVYAnPQUswLBnNTS9YCVrb/0XIorBz3QR+T3O20/j5Bbzwmyu+VcmJ/QmwrAxwVaTd0RNg==
   dependencies:
     "@types/three" "0.93.28"
     css-loader "^3.2.0"
