@@ -101,7 +101,17 @@ img { border: 0; /* 1 */ -ms-interpolation-mode: bicubic; }
 
 /* 2 */
 /** Correct overflow displayed oddly in IE 9. */
-svg:not(:root) { overflow: hidden; }
+/* 
+WAS: svg:not(:root) { overflow: hidden; } 
+But see https://github.com/necolas/normalize.css/issues/718
+*/
+svg {
+  overflow: hidden;
+}
+
+svg:root {
+  overflow: visible;
+}
 
 /* ========================================================================== Figures ========================================================================== */
 /** Address margin not present in IE 6/7/8/9, Safari 5, and Opera 11. */
