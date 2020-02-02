@@ -1,6 +1,6 @@
 /**
  * In a Wrattler notebook, each cell is associated with one or more nodes in a 
- * [depedency graph](../modules/graph.html). Nodes in the dependency graph represent
+ * [dependency graph](../modules/graph.html). Nodes in the dependency graph represent
  * parts of code. These can be coarse grained such as the enitre Python cell or more
  * fine grained (if a language plugin can parse source code and analyse dependencies fully
  * in the browser). When evaluating cell in a notebook, Wrattler does that by recursively
@@ -66,6 +66,9 @@ interface JavaScriptOutputValue extends Value {
   render : (id:string) => void
 }
 
+/** A dictionary that stores all values exported by a code cell. */
+type Exports = { [key:string]: KnownValue }
+
 /**
 * Represents exports of code cell. When writing a [`LanguagePlugin`](../interfaces/languages.languageplugin.html),
 * the `bind` operation returns a graph node named `code` that represents the result of 
@@ -75,10 +78,8 @@ interface JavaScriptOutputValue extends Value {
 interface ExportsValue extends Value {
   /** A tag that is used for pattern matching on `KnownValue` instances. */
   kind : "exports"
-  /** A dictionary that stores all values exported by a code cell. Wrattler will display tabs
-   * with the keys from this dictionary.
-   */
-  exports : { [key:string]: KnownValue }
+  /** Wrattler will display tabs with the keys from this dictionary. */
+  exports : Exports
 }
 
 /**
@@ -122,6 +123,7 @@ interface Figure extends Value {
 export {
   Value, 
   KnownValue,
+  Exports,
   ExportsValue,
   JavaScriptOutputValue,
   Printout,
