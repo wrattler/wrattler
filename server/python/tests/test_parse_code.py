@@ -2,7 +2,7 @@
 See if we can get the input and output frames from a code snippet
 """
 
-from python_service import handle_exports, construct_func_string
+from wrattler_python_service.python_service_utils import handle_exports, construct_func_string
 
 def test_simple_exports():
     """

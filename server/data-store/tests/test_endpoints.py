@@ -9,8 +9,8 @@ import json
 import uuid
 import pyarrow as pa
 
-from app import create_app, storage_backend
-from utils import json_to_arrow, arrow_to_json
+from wrattler_data_store.data_store import create_app, storage_backend
+from wrattler_data_store.utils import json_to_arrow, arrow_to_json
 
 ## create a test flask app and a test client to send requests
 

@@ -1,5 +1,4 @@
 import * as Langs from './definitions/languages';
-import { ExternalLanguagePlugin } from './languages/external';
 /**
  * Represents a created Wrattler notebook. The interface provides access to the
  * notebook contents. You can obtain the current contents and get notified when
@@ -15,7 +14,7 @@ interface WrattlerNotebook {
  * A dictionary that associates a language plugin with a language name.
  */
 declare type LanguagePlugins = {
-    [lang: string]: Langs.LanguagePlugin;
+    [lang: string]: Promise<Langs.LanguagePlugin>;
 };
 /**
  * Wrattler notebook configuration. This currently specifies the language plugins
@@ -27,6 +26,7 @@ interface WrattlerConfig {
     resourceServerUrl: string;
     /** A dictionary with language names as keys that specifies language plugins to be used. */
     languagePlugins: LanguagePlugins;
+    datastoreURL: string;
 }
 /**
  * Main entry point that can be used for creating new Wrattler notebook instances.
@@ -37,7 +37,6 @@ declare class Wrattler {
     /** Creates a new `LanguagePlugin` instance which delegates binding and evaluation
      * to a specified langauge service. You can pass the returned `LanguagePlugin` to
      * the `createNotebook` function to get a notebook supporting this langauge.  */
-    createExternalLanguagePlugin(language: any, serviceUrl: string, faClass?: string, defaultCode?: string): ExternalLanguagePlugin;
     /**
      * Returns default language plugins for Markdown, JavaScript, R, Python and Racket.
      * The `serviceUrls` argument specifies a dictionary with URLs for the services. You can
@@ -46,7 +45,7 @@ declare class Wrattler {
      */
     getDefaultConfig(serviceUrls?: {
         [language: string]: string;
-    }): WrattlerConfig;
+    }, datastoreUrl?: string): WrattlerConfig;
     /**
      * Creates a Wrattler notebook that loads notebooks automatically by requesting the `index.md`
      * URL from the domain where it is hosted (or `another.md` when the current URl contains `?another` in the query string).
