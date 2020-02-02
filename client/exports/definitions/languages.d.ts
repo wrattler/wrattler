@@ -118,6 +118,11 @@ interface ScopeDictionary {
  * `EvaluationContext` as an argument. It stores a list of available resources.
 */
 interface EvaluationContext {
+    /** Provides access to all the language plugins taht are available. */
+    languagePlugins: LanguagePlugins;
+    /** A list of cells in the current notebook. This can be used to inspect
+     * aspects of the notebook state, other than the currently evaluated code. */
+    cells: BlockState[];
     /** A list of files that were loaded as global or local resources by any
      * language plugin for any cell appearing before the current one. */
     resources: Resource[];
@@ -270,4 +275,9 @@ interface BlockState {
     /** The dependency graph nodes representing data frames exported from the code block */
     exports: Graph.Node[];
 }
-export { Block, Editor, EditorState, EditorContext, LanguagePlugin, BlockState, BindingContext, BindingResult, Resource, ScopeDictionary, EvaluationContext, EvaluationResult, EvaluationSuccess, EvaluationFailure };
+/** A dictionary of language plugins that uses the language name as the key and
+ * returns the concrete instance of a language plugin for each language */
+declare type LanguagePlugins = {
+    [lang: string]: LanguagePlugin;
+};
+export { Block, Editor, EditorState, EditorContext, LanguagePlugin, LanguagePlugins, BlockState, BindingContext, BindingResult, Resource, ScopeDictionary, EvaluationContext, EvaluationResult, EvaluationSuccess, EvaluationFailure };

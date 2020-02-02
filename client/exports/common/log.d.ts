@@ -4,4 +4,5 @@ declare class Log {
     static exception(category: string, msg: string, ...args: any[]): void;
     static error(category: string, msg: string, ...args: any[]): void;
 }
+export declare function assert(b: boolean, msg?: string, ...xs: any[]): any;
 export { Log };
