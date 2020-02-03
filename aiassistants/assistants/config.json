@@ -11,23 +11,17 @@
     "arguments": "datadiff.R",
     "inputs": ["dirty", "clean"],
     "description": "Detects structural differences between pairs of related tabular data sets and produces a corrective transformation that can be applied to reconcile those differences. "},
-  { "name": "Test assistant modified agains",
-    "id": "test",
-    "process": "python3",
-    "arguments": "test.py",
-    "inputs": ["input"],
-    "description": "This is a test that does not do anything useful at all, but it shows how to implement AI assistants in Python!" },
   { "name": "ptype",
     "id": "ptype",
     "process": "python3",
     "arguments": "ptype_runner.py",
     "inputs": ["input"],
-    "description": "Infers data types!" },
+    "description": "Infers the most likely types of columns, accounting for missing and invalid data. You can interactively correct the inferred columns in cases where the automatic inference makes a mistake." },
   { "name": "CleverCSV",
     "id": "ccsv",
     "process": "python3",
     "arguments": "ccsv.py",
     "inputs": ["input"],
-    "description": "CleverCSV helps import data from messy CSV files"
+    "description": "CleverCSV helps import data from messy CSV files. It attempts to automatically infer the dialect of a CSV file, but makes it easy to correct mistakes if the automatic inference makes an error."
   }
 ]
