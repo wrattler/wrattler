@@ -7,3 +7,11 @@
 .jp-Wrattler div.cell {
   width:auto;
 }
+
+.jp-Wrattler  div.tabs {
+  box-sizing:border-box;
+}
+.jp-Wrattler  div.tabs button {
+  box-sizing:border-box;
+  line-height:20px;
+}

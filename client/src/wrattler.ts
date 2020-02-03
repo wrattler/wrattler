@@ -20,7 +20,8 @@
  * @module Main
  */
 
-/** This comment is needed so that TypeDoc parses the above one correctly */import * as Docs from './services/documentService'
+/** This comment is needed so that TypeDoc parses the above one correctly */
+import * as Docs from './services/documentService'
 import * as Langs from './definitions/languages'
 import { Log } from "./common/log"
 import { loadNotebook, initializeCells } from './main'
@@ -112,7 +113,7 @@ class Wrattler {
     languagePlugins["javascript"] = unit(new JavascriptLanguagePlugin(datastoreUrl ? datastoreUrl : DATASTORE_URI));
     languagePlugins["python"] = unit(new ExternalLanguagePlugin("python", "fab fa-python", getServiceUrl("python", PYTHONSERVICE_URI), pyCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
     languagePlugins["r"] = unit(new ExternalLanguagePlugin("r", "fab fa-r-project", getServiceUrl("r", RSERVICE_URI), rCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
-    // languagePlugins["fluid"] = unit(fluidLanguagePlugin);
+    languagePlugins["fluid"] = unit(fluidLanguagePlugin);
     // languagePlugins["racket"] = unit(new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
     // languagePlugins["merger"] = unit(mergerLanguagePlugin);
       languagePlugins["ai assistant"] = createAiaPlugin(getServiceUrl("ai assistant", AIASERVICE_URI), (datastoreUrl ? datastoreUrl : DATASTORE_URI));
