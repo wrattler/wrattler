@@ -1,0 +1,47 @@
+## Visualizing dependency graph
+
+In this notebook, we create three data frames (`one`, `two` and `three`), each in a different
+programming language (JavaScript, Pyhthon and R, respectively). We then append all three data
+frames - again, using all of the three supported languages. This means that each of the latter
+three cells depends on each of the former three cells.
+
+Once we write this example, we will load a tool that lets us visualize and explore dependencies 
+between individual cells of the notebook.
+
+```javascript
+var one = [{'name':'Joe', 'age':50}]
+```
+```python
+two = pd.DataFrame({"name":["Jim"], "age":[51]})
+```
+```r
+three <- data.frame(name=c("Jane"), age=c(54))
+```
+Now that we have three data frames, `one`, `two` and `three`, we can reference them from cells in three different languages:
+```javascript
+var joinJs = one.concat(two).concat(three)
+var joinJsFlip = three.concat(two).concat(one)
+```
+```python
+joinPy = one.append(two).append(three)
+joinPyFlip = three.append(two).append(one)
+```
+```r
+joinR <- rbind(rbind(one,two),three)
+joinRFlip <- rbind(rbind(three,two),one)
+```
+
+## Running the graph visualizer
+
+To run the dependency graph visualizer, all we have to do is to load two helper JavaScript files - `fullscreen.js`, 
+which makes it easy to create large data visualization and `graphviz.js`, which is the visualizer itself
+and call the `createGraphViz` function.
+
+
+
+
+```javascript
+//local fullscreen.js
+//local graphviz.js
+createGraphViz();
+```

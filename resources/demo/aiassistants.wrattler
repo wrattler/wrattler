@@ -1,0 +1,43 @@
+<div style="max-width:700px">
+
+# Semi-automatic data cleaning with AI assistants
+
+Data wrangling such as obtaining data from various data sources, joining mismatched datasets and
+correcting erroneous records constitute 80\% of typical data engineering work.
+Despite the rise of machine learning and artificial intelligence, data wrangling remains a tedious and manual task.
+
+This notebook demonstrates AI assistants, a class of semi-automatic interactive tools to streamline
+data wrangling. An AI assistant guides the analyst through a specific data wrangling task.
+It recommends a suitable data transformation, reflecting the constraints
+obtained through interaction between an AI component and the analyst.
+
+## Removing outliers with an AI assistant
+
+</div>
+
+```python
+import requests
+
+t = "https://raw.githubusercontent.com/tpetricek/histogram/"
+avia = pd.read_csv(t + "master/traffic/clean/avia.csv")
+rail = pd.read_csv(t + "master/traffic/clean/rail.csv")
+```
+
+## Joining Broadband quality datasets
+
+```python
+import requests
+w = "https://raw.githubusercontent.com/tpetricek/wrattler-workyard/"
+bb13 = pd.read_csv(w + "master/broadband/broadband2013.csv")
+bb14 = pd.read_csv(w + "master/broadband/broadband2014.csv")
+bb15 = pd.read_csv(w + "master/broadband/broadband2015.csv")
+```
+
+```r
+bb15nice <- subset(bb15, select=c("URBAN2","Nation","DL24hrmean","UL24hrmean","Latency24hr","Web24hr"))
+```
+
+```ai assistant
+Data diff:dirty=bb14,clean=bb15nice
+bb14nice
+```
