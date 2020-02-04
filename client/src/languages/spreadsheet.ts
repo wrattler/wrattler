@@ -145,7 +145,7 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
           headerComponents.push(h('th',{key: "spreadsheetColumnHeader"+c, class:"spreadsheet-th"}, [headerValue]))
       }
       rowsComponents.push(h('tr',{key: "spreadsheetColHeader"},[headerComponents]))
-
+      
       for (let r = 1; r < state.RowIndices.length; r++) {
         colComponents = []
         for (let c = 0; c < state.ColIndices.length; c++) {

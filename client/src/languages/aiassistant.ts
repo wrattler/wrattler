@@ -88,17 +88,22 @@ async function getValue(blob:string, preview:boolean, datastoreURI:string) : Pro
   let headers = {'Accept': 'application/json'}
   let url = datastoreURI.concat(pathname)
   if (preview) url = url.concat("?nrow=10")
-  Log.trace("external", "Fetching data frame: %s", url)
+  Log.trace("aiassistant", "Fetching data frame from: %s", url)
   let response = await axios.get(url, {headers: headers});
-  Log.trace("external", "Got data frame (%s rows): %s", response.data.length, pathname)
+  Log.trace("aiassistant", "Got data frame (%s rows): %s", response.data.length, pathname)
   return response.data
 }
 
 async function getResult(root:string, hash:string, name:string, inputs:AiaInputs, path:string[], datastoreURI:string) : Promise<Values.DataFrame> {
+  Log.trace("aiassistant", "getResult Datastore URL: %s", datastoreURI)
   let url = root + "/data/" + hash + "/" + name + "/" + path.join("/")
+  Log.trace("aiassistant", "Response URL: %s", url)
   let header = Object.keys(inputs).map(k => k + "=" + inputs[k]).join(",")
+  Log.trace("aiassistant", "Headers: %s", JSON.stringify(header))
   let response = await axios.get(url, {headers:{Inputs:header}});
   let frameUrl = response.data
+  
+  
   return { kind: "dataframe", url: frameUrl, 
       preview: await getValue(frameUrl, true, datastoreURI), 
       data: new AsyncLazy<any>(() => getValue(frameUrl,false, datastoreURI)) }
@@ -221,7 +226,6 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
             })
             plusBody.push(h('div', {class:'completion'}, [ h('span', {class:'item'}, [ "loading..." ]) ]));
           } else {
-            console.log("evaluating...")
             plusBody.push(h('div', {class:'completion'}, [ h('span', {class:'item'}, [ "evaluating..." ]) ]));
           }
         }        
@@ -299,6 +303,7 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
   constructor (assistants:AiAssistant[], datastoreUri: string) {
     this.assistants = assistants
     this.editor = createAiaEditor(assistants)
+    Log.trace("aiassistant", "Constructor Datastore URL: %s", this.datastoreURI)
     this.datastoreURI = datastoreUri
   }
 
@@ -311,10 +316,6 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
     for(var a of this.assistants) 
       if (a.name == parsed.assistant) 
         block = { language: "ai assistant", code: parsed.chain, assistant: a, inputs:parsed.inputs, newFrame:parsed.frame }
-    // console.log("PARSED: ", code, parsed, block)
-    Log.trace('spreadsheet', "Parse: Code: %s ", JSON.stringify(code))
-    Log.trace('spreadsheet', "Parse: Parsed: %s ", JSON.stringify(parsed))
-    Log.trace('spreadsheet', "Parse: Block: %s ", JSON.stringify(block))
     return <Langs.Block>block
   }
 
@@ -368,6 +369,7 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
           let path = aiaNode.chain.length > 0 ? aiaNode.chain[aiaNode.chain.length-1].path : []
           var inputs : AiaInputs = {}
           for(let k of Object.keys(aiaNode.inputNodes)) inputs[k] = (<Values.DataFrame>aiaNode.inputNodes[k].value).url
+          Log.trace("aiassistant", "Evaluate Datastore URL: %s", this.datastoreURI)
           let merged = await getResult(aiaNode.assistant.root, aiaNode.hash, newFrame, inputs, path, this.datastoreURI)
           res[newFrame] = merged
         }
@@ -389,5 +391,6 @@ export async function createAiaPlugin(url:string, datastoreURI:string) : Promise
   let response = await axios.get(url);
   let aia : AiAssistant[] = response.data; 
   for(var i = 0; i< aia.length; i++) aia[i].root = url + "/" + aia[i].root;
+  Log.trace("aiassistant", "Datastore URL: %s", datastoreURI)
   return new AiaLanguagePlugin(aia, datastoreURI);
 }
