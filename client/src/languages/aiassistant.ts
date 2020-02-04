@@ -96,7 +96,10 @@ async function getValue(blob:string, preview:boolean, datastoreURI:string) : Pro
 
 async function getResult(root:string, hash:string, name:string, inputs:AiaInputs, path:string[], datastoreURI:string) : Promise<Values.DataFrame> {
   let url = root + "/data/" + hash + "/" + name + "/" + path.join("/")
+  Log.trace("aiassistant","getResult DatastoreURI:%s", datastoreURI)
+  Log.trace("aiassistant","getResult url:%s", url)
   let header = Object.keys(inputs).map(k => k + "=" + inputs[k]).join(",")
+  Log.trace("aiassistant","getResult headers:%s", JSON.stringify(header))
   let response = await axios.get(url, {headers:{Inputs:header}});
   let frameUrl = response.data
   return { kind: "dataframe", url: frameUrl, 
@@ -138,8 +141,7 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
 
   render: (cell:Langs.BlockState, state:AiaState, ctx:Langs.EditorContext<AiaEvent>) => {
     let aiaNode = <AiaCodeNode>cell.code
-    console.log(state)
-    console.log(aiaNode.completions)
+  
 
     function triggerRemove() {
       let newCode = format(aiaNode.assistant, aiaNode.inputs, aiaNode.newFrame, aiaNode.chain.slice(0, aiaNode.chain.length-1))
@@ -364,6 +366,7 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
           let path = aiaNode.chain.length > 0 ? aiaNode.chain[aiaNode.chain.length-1].path : []
           var inputs : AiaInputs = {}
           for(let k of Object.keys(aiaNode.inputNodes)) inputs[k] = (<Values.DataFrame>aiaNode.inputNodes[k].value).url
+          Log.trace("aiassistant","evaluate DatastoreURI:%s", this.datastoreURI)
           let merged = await getResult(aiaNode.assistant.root, aiaNode.hash, newFrame, inputs, path, this.datastoreURI)
           res[newFrame] = merged
         }
@@ -385,5 +388,6 @@ export async function createAiaPlugin(url:string, datastoreURI:string) : Promise
   let response = await axios.get(url);
   let aia : AiAssistant[] = response.data; 
   for(var i = 0; i< aia.length; i++) aia[i].root = url + "/" + aia[i].root;
+  Log.trace("aiassistant","createAiaPlugin DatastoreURI:%s", datastoreURI)
   return new AiaLanguagePlugin(aia, datastoreURI);
 }
