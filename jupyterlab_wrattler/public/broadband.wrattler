@@ -16,6 +16,4 @@ test = pd.DataFrame({"data":[h.content]})
 ```r
 bb15nice <- subset(bb15, select=c("URBAN2","Nation","DL24hrmean","UL24hrmean","Latency24hr","Web24hr"))
 ```
-Data diff:dirty=bb14,clean=bb15nice
-Data diff:dirty=bb14,clean=bb15nice
-bb14nice
+Outlier detection:input=bb15nice
