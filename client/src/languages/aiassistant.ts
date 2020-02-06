@@ -246,7 +246,7 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
 
       let def = 
         [ h('span', {class:'text'}, ["output"]),
-          h('input', { value:aiaNode.newFrame, placeholder:'<name>', oninput: (e) => triggerFrameName((<any>e.target).value) }, []),
+          h('input', { value:aiaNode.newFrame, placeholder:'<name>', onchange: (e) => triggerFrameName((<any>e.target).value) }, []),
           h('span', {class:'text'}, [ " = " ]) ]
 
       let previewButton = h('button', 

@@ -111,7 +111,8 @@ while(TRUE) {
   }
   else {
     f <- tempfile()
-    cat(paste0(f,""))
+    write.csv(data.frame(File=character()), file=f)
+    cat(paste0(f,"\n"))
     write(paste0("[datadiff] written empty file"), stderr())
   }
 }
