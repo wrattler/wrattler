@@ -88,10 +88,8 @@ while(TRUE) {
 
   inparr = strsplit(inputs, ",")
   inputFrames =  strsplit(inputs, ",")[[1]]
-  write("[datadiff] Expected 2 inputs", stderr())
-  write(paste0("[datadiff] got '", toString(length(inputFrames))), stderr())
+  write(paste0("[datadiff] expected 2, received ", toString(length(inputFrames))), stderr())
   if (length(inputFrames) == 2) {
-    write(paste0("[datadiff] got '", toString(length(inputFrames))), stderr())
     files <- purrr::map(inparr[[1]], function(x) {
       kvp <- strsplit(x, "=")
       list(key=kvp[[1]][1], value=kvp[[1]][2]) })
@@ -108,10 +106,13 @@ while(TRUE) {
       df <- getCleanData(constraints, clean, dirty)
       write.csv(df, file=f)
       cat(paste0(f,"\n"))
+      write(paste0("[datadiff] written file"), stderr())
     }
   }
   else {
-    write(paste0("[datadiff] Expected 2, got '", toString(length(inputFrames))), stderr())
+    f <- tempfile()
+    cat(paste0(f,""))
+    write(paste0("[datadiff] written empty file"), stderr())
   }
 }
 
