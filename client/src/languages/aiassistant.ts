@@ -88,18 +88,18 @@ async function getValue(blob:string, preview:boolean, datastoreURI:string) : Pro
   let headers = {'Accept': 'application/json'}
   let url = datastoreURI.concat(pathname)
   if (preview) url = url.concat("?nrow=10")
-  Log.trace("aiassistant", "Fetching data frame from: %s", url)
+  Log.trace("aiassistant", "getValue Getting dataframe from: %s", url)
   let response = await axios.get(url, {headers: headers});
-  Log.trace("aiassistant", "Got data frame (%s rows): %s", response.data.length, pathname)
+  Log.trace("aiassistant", "getValue Got data frame (%s rows): %s", response.data.length, url)
   return response.data
 }
 
 async function getResult(root:string, hash:string, name:string, inputs:AiaInputs, path:string[], datastoreURI:string) : Promise<Values.DataFrame> {
   Log.trace("aiassistant", "getResult Datastore URL: %s", datastoreURI)
   let url = root + "/data/" + hash + "/" + name + "/" + path.join("/")
-  Log.trace("aiassistant", "Response URL: %s", url)
+  Log.trace("aiassistant", "getResult Response URL: %s", url)
   let header = Object.keys(inputs).map(k => k + "=" + inputs[k]).join(",")
-  Log.trace("aiassistant", "Headers: %s", JSON.stringify(header))
+  Log.trace("aiassistant", "getResult Use Headers: [%s] at %s", JSON.stringify(header), url)
   let response = await axios.get(url, {headers:{Inputs:header}});
   let frameUrl = response.data
   
@@ -369,7 +369,7 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
           let path = aiaNode.chain.length > 0 ? aiaNode.chain[aiaNode.chain.length-1].path : []
           var inputs : AiaInputs = {}
           for(let k of Object.keys(aiaNode.inputNodes)) inputs[k] = (<Values.DataFrame>aiaNode.inputNodes[k].value).url
-          Log.trace("aiassistant", "Evaluate Datastore URL: %s", this.datastoreURI)
+          Log.trace("aiassistant", "evaluate Evaluate Datastore URL: %s", this.datastoreURI)
           let merged = await getResult(aiaNode.assistant.root, aiaNode.hash, newFrame, inputs, path, this.datastoreURI)
           res[newFrame] = merged
         }
