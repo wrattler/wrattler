@@ -1,4 +1,4 @@
-let enabledCategories = {"*":false,"spreadsheet":false, "aiassistant":true}
+let enabledCategories = {"*":false,"main":true, "aiassistant":true}
 var colorIndex = -1
 var colorMap = {}
 function getColor(cat) {

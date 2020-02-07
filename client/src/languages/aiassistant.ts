@@ -253,7 +253,9 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
         { class:'preview-button', onclick:() => { 
             Log.trace("editor", "Evaluate button clicked in external language plugin")
             ctx.evaluate(cell.editor.id) } }, ["Evaluate!"] )    
+
       let spinner = h('i', {class: 'fas fa-spinner fa-spin' }, [])
+
       let preview = h('div', {class:'preview'}, [
         (cell.code.value == undefined) ? (cell.evaluationState == 'pending') ? spinner : previewButton :
         (createOutputPreview(cell, () => {}, 0, <Values.ExportsValue>cell.code.value))]);
@@ -363,6 +365,7 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
     let aiaNode = <AiaNode>node
     switch(aiaNode.kind) {
       case 'code':
+        Log.trace('aiassistant', "evaluate code Evaluation started")
         let res : { [key:string]: Values.KnownValue } = {}
         let newFrame = aiaNode.newFrame == "" ? "<name>" : aiaNode.newFrame; 
         if (aiaNode.assistant != null) {
@@ -374,9 +377,11 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
           res[newFrame] = merged
         }
         let exps : Values.ExportsValue = { kind:"exports", exports: res }
+        Log.trace('aiassistant', "evaluate code Evaluation success")
         return { kind: "success", value: exps }
       case 'export':
         let expsVal = <Values.ExportsValue>aiaNode.aiaNode.value
+        Log.trace('aiassistant', "evaluate export Evaluation success")
         return { kind: "success", value: expsVal.exports[aiaNode.aiaNode.newFrame] }
     }
   }

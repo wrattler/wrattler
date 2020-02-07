@@ -285,14 +285,6 @@ async function update(trigger:(evt:NotebookEvent) => void,
         }
       })
       return {...state, cells: newCells}
-      // return { cache:state.cache, 
-      //   counter: state.counter, 
-      //   cells: newCells, 
-      //   contentChanged:state.contentChanged,
-      //   expandedMenu: state.expandedMenu, 
-      //   languagePlugins: state.languagePlugins, 
-      //   resources: state.resources };
-
     case 'toggleadd':
       return {...state, expandedMenu: evt.id};
 
@@ -334,8 +326,10 @@ async function update(trigger:(evt:NotebookEvent) => void,
       return {...state, cells: removeCell(state.cells, evt.id) };
 
     case 'evaluate':
-      let triggerEvalStateEvent = (hash:string, newState:"pending"|"done") =>
+      let triggerEvalStateEvent = (hash:string, newState:"pending"|"done") => {
+        Log.trace('main', "update evaluate triggerEvalStateEvent to '%s'", newState)
         trigger({kind:'evalstate', hash:hash, newState})
+      }
       let doEvaluate = async (block:Langs.BlockState) => {
         await evaluate(block.code, state, triggerEvalStateEvent)
         for(var exp of block.exports) await evaluate(exp, state, triggerEvalStateEvent)
@@ -383,8 +377,8 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
   }
 
   function processEvents() {
-    Log.trace("main", "Processing events (%s). First of kind: %s", 
-      events.length, events.length>0?events[0].kind:"N/A")
+    // Log.trace("main", "Processing events (%s). First of kind: %s", 
+      // events.length, events.length>0?events[0].kind:"N/A")
     if (events.length > 0 && !handling) {
       handling = true;
       let event = events[0]
@@ -392,7 +386,7 @@ async function initializeCells(elementID:string, counter: number, editors:Langs.
       update(trigger, state, event).then(newState => {
         state = newState
         handling = false;
-        state.cells.map(c => Log.trace('main', "Cell: %O ", c.editor.block ))
+        // state.cells.map(c => Log.trace('main', "Cell: %O ", c.editor.block ))
         if (events.length > 0) processEvents()
         else maquetteProjector.scheduleRender()
       });
