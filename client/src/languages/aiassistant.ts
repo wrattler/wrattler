@@ -369,19 +369,29 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
         let res : { [key:string]: Values.KnownValue } = {}
         let newFrame = aiaNode.newFrame == "" ? "<name>" : aiaNode.newFrame; 
         if (aiaNode.assistant != null) {
-          let path = aiaNode.chain.length > 0 ? aiaNode.chain[aiaNode.chain.length-1].path : []
-          var inputs : AiaInputs = {}
-          for(let k of Object.keys(aiaNode.inputNodes)) inputs[k] = (<Values.DataFrame>aiaNode.inputNodes[k].value).url
-          Log.trace("aiassistant", "evaluate Evaluate Datastore URL: %s", this.datastoreURI)
-          let merged = await getResult(aiaNode.assistant.root, aiaNode.hash, newFrame, inputs, path, this.datastoreURI)
-          res[newFrame] = merged
+          if (aiaNode.assistant.inputs.length == Object.keys(aiaNode.inputNodes).length) { 
+            let path = aiaNode.chain.length > 0 ? aiaNode.chain[aiaNode.chain.length-1].path : []
+            var inputs : AiaInputs = {}
+            for(let k of Object.keys(aiaNode.inputNodes)) {
+              inputs[k] = (<Values.DataFrame>aiaNode.inputNodes[k].value).url
+              Log.trace("aiassistant", "evaluate Evaluate input [%s]: %s", k, JSON.stringify(aiaNode.inputNodes[k].value))
+            }
+            // Log.trace("aiassistant", "evaluate Evaluate root: %s", aiaNode.assistant.root)
+            // Log.trace("aiassistant", "evaluate Evaluate hash: %s", aiaNode.hash)
+            // Log.trace("aiassistant", "evaluate Evaluate newFrame: %s", newFrame)
+            // Log.trace("aiassistant", "evaluate Evaluate inputs: %s", JSON.stringify(inputs))
+            // Log.trace("aiassistant", "evaluate Evaluate path: %s", path)
+            // Log.trace("aiassistant", "evaluate Evaluate Datastore URL: %s", this.datastoreURI)
+            let merged = await getResult(aiaNode.assistant.root, aiaNode.hash, newFrame, inputs, path, this.datastoreURI)
+            res[newFrame] = merged
+          }
         }
         let exps : Values.ExportsValue = { kind:"exports", exports: res }
-        Log.trace('aiassistant', "evaluate code Evaluation success")
+        // Log.trace('aiassistant', "evaluate code Evaluation success")
         return { kind: "success", value: exps }
       case 'export':
         let expsVal = <Values.ExportsValue>aiaNode.aiaNode.value
-        Log.trace('aiassistant', "evaluate export Evaluation success")
+        // Log.trace('aiassistant', "evaluate export Evaluation success")
         return { kind: "success", value: expsVal.exports[aiaNode.aiaNode.newFrame] }
     }
   }
