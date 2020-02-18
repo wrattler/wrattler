@@ -27,7 +27,7 @@ ADD server /app/server
 RUN dotnet restore /app/server/
 RUN dotnet build /app/server/
 
-ADD assistants/config.json /app
+ADD assistants/config.json /app/assistants/config.json
 ADD assistants/outlier /app/assistants/outlier
 ADD assistants/ccsv /app/assistants/ccsv
 ADD assistants/datadiff /app/assistants/datadiff

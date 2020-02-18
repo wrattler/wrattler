@@ -115,8 +115,9 @@ class Wrattler {
     // languagePlugins["fluid"] = unit(fluidLanguagePlugin);
     // languagePlugins["racket"] = unit(new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
     // languagePlugins["merger"] = unit(mergerLanguagePlugin);
-      languagePlugins["ai assistant"] = createAiaPlugin(getServiceUrl("ai assistant", AIASERVICE_URI), (datastoreUrl ? datastoreUrl : DATASTORE_URI));
-    // languagePlugins["spreadsheet"] = unit(spreadsheetLanguagePlugin);
+    languagePlugins["ai assistant"] = createAiaPlugin(getServiceUrl("ai assistant", AIASERVICE_URI), (datastoreUrl ? datastoreUrl : DATASTORE_URI));
+    // languagePlugins["spreadsheet"] = unit(new spreadsheetLanguagePlugin("spreadsheet", "fas fa-file-spreadsheet", getServiceUrl("r", RSERVICE_URI)));
+
 
     let newConfig:WrattlerConfig = { languagePlugins:languagePlugins,
       resourceServerUrl:CLIENT_URI,
