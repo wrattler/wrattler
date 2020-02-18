@@ -84,7 +84,6 @@ let startProcess id (build:Config.Build[]) fn wd args =
             raise StopProcess
         | GetData(inputs, query, repl) ->
             printfn "Assistant type: %s" id 
-            printfn "Number of inputs: %i" inputs.Length 
             printfn "Sending 'data' command to process '%s'" id
             ps.StandardInput.WriteLine(inputs)
             ps.StandardInput.WriteLine("data")
@@ -92,6 +91,7 @@ let startProcess id (build:Config.Build[]) fn wd args =
             printfn "Waiting for CSV file..."
             let out = ps.StandardOutput.ReadLine()
             printfn "Received CSV file '%s'" out
+            printfn "File length '%d'" out.Length
             let json = serialize out
             //File.Delete(out)
             repl.Reply(json)
