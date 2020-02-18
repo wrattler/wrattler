@@ -103,7 +103,7 @@ async function getResult(root:string, hash:string, name:string, inputs:AiaInputs
   Log.trace("aiassistant","getResult headers:%s", JSON.stringify(header))
   let response = await axios.get(url, {headers:{Inputs:header}});
   let frameUrl = response.data
-  
+  Log.trace("aiassistant","getResult response urk:%s", JSON.stringify(frameUrl))
   
   return { kind: "dataframe", url: frameUrl, 
       preview: await getValue(frameUrl, true, datastoreURI), 
