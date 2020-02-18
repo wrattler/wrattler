@@ -13,7 +13,7 @@ const CSS_CLASS = 'jp-Wrattler';
 /**
  * The MIME type for Wrattler.
  */
-export const MIME_TYPE = 'text/plain';
+export const MIME_TYPE = 'application/vnd.wrattler';
 /** @hidden */
 
 export const USE_BINDER= getUseBinder();

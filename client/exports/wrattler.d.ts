@@ -1,3 +1,24 @@
+/**
+ * Wrattler can run as a stand-alone system or as a JupyterLab extension.
+ * It is also possible to create new instance of Wrattler inside any web page
+ * (provided that you give it URLs for all the services it needs). This
+ * module is the main entry point if you want to manage Wrattler notebook
+ * instances on your own.
+ *
+ * - This module exports the [Wrattler](../classes/main.wrattler.html) class.
+ *   When loaded, it also sets `window.wrattler` to a new instance of the class
+ *   so that it is easier to use it inside web projects as a stand-alone JS file.
+ *   The class provides methods for configuring language plugins
+ *   ([`LanguagePlugins`](../modules/main.html#languageplugins) type) and
+ *   creating notebooks.
+ *
+ * - [WrattlerNotebook](../interfaces/main.wrattlernotebook.html) interface
+ *   represents a created notebook. It provides methods for accessing document
+ *   contents and lets you register handler that is triggered whenever the user
+ *   makes a change in a notebook.
+ *
+ * @module Main
+ */
 import * as Langs from './definitions/languages';
 /**
  * Represents a created Wrattler notebook. The interface provides access to the
@@ -35,8 +56,8 @@ interface WrattlerConfig {
  */
 declare class Wrattler {
     /** Creates a new `LanguagePlugin` instance which delegates binding and evaluation
-     * to a specified langauge service. You can pass the returned `LanguagePlugin` to
-     * the `createNotebook` function to get a notebook supporting this langauge.  */
+     * to a specified language service. You can pass the returned `LanguagePlugin` to
+     * the `createNotebook` function to get a notebook supporting this language.  */
     /**
      * Returns default language plugins for Markdown, JavaScript, R, Python and Racket.
      * The `serviceUrls` argument specifies a dictionary with URLs for the services. You can
@@ -52,7 +73,7 @@ declare class Wrattler {
      */
     createNamedNotebook(elementID: string, config: WrattlerConfig): Promise<WrattlerNotebook>;
     /**
-     * Given initial Markdown source code and a dictionary with langauge plugins,
+     * Given initial Markdown source code and a dictionary with language plugins,
      * create a new instance of Wrattler and render it in a given HTML document element.
      *
      * @param elementID HTML document element to be used for rendering the notebook.

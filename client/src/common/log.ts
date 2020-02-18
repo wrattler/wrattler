@@ -1,4 +1,4 @@
-let enabledCategories = {"*":false,"main":true, "aiassistant":true}
+let enabledCategories = {"*":false, "aiassistant":true}
 var colorIndex = -1
 var colorMap = {}
 function getColor(cat) {
@@ -34,6 +34,19 @@ class Log {
   }
   static error(category:string, msg:string, ...args) {
     Log.message("error", category, msg, ...args);
+  }
+}
+
+// TODO: think about error-handling policy.
+export function assert (b: boolean, msg?: string, ...xs: any[]): any {
+  const msg_: string = msg || "Assertion failure"
+  if (!b) {
+     if (xs.length > 0) {
+        console.warn("Assertion data:\n")
+        xs.forEach(x => console.warn(x))
+     }
+     Log.error("assert", msg_)
+     throw new Error(msg_)
   }
 }
 

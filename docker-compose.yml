@@ -15,9 +15,9 @@ services:
     networks:
     - wrattler_nw
     volumes:
-     - ./client:/app
-     - ./client/src:/app/src
-     - ./resources:/app/public/resources
+    - ./client:/app
+    - ./client/src:/app/src
+    - ./resources:/app/public/resources
     entrypoint: /bin/bash
     command: "./entrypoint.sh"
     environment:
@@ -97,19 +97,19 @@ services:
   #     - ./jupyterlab_wrattler/src:/app/src
   #     - ./resources:/public
 
-  # wrattler_aiassistants:
-  #   container_name: wrattler_wrattler_aiassistants_1
-  #   build:
-  #     context: aiassistants
-  #     dockerfile: Dockerfile
-  #   ports:
-  #   - "5050:5050"
-  #   volumes:
-  #   - ./aiassistants/assistants:/app/assistants
-  #   environment:
-  #   - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
-  #   networks:
-  #   - wrattler_nw
+  wrattler_aiassistants:
+    container_name: wrattler_wrattler_aiassistants_1
+    build:
+      context: aiassistants
+      dockerfile: Dockerfile
+    ports:
+    - "5050:5050"
+    volumes:
+    - ./aiassistants/assistants:/app/assistants
+    environment:
+    - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
+    networks:
+    - wrattler_nw
 
 networks:
   wrattler_nw:

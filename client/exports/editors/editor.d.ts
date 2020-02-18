@@ -1,3 +1,13 @@
+/**
+ * This module contains two helper functions that you can use to create
+ * standard user interface for your custom language plugins. Those functions
+ * are used by the built-in language plugins for JavaScript, Python and R.
+ * The typical way of using those functions is to call them from the
+ * `render` operation of your implementation of the
+ * [`Editor`](../interfaces/languages.editor.html) interface.
+ *
+ * @module Editor
+ */
 import * as Langs from '../definitions/languages';
 import * as Values from '../definitions/values';
 import { VNode } from 'maquette';
@@ -21,7 +31,7 @@ import { VNode } from 'maquette';
  */
 declare function createOutputPreview(block: Langs.BlockState, triggerSelect: (selectedTab: number) => void, selectedTab: number, exportedValues: Values.ExportsValue): VNode;
 /**
- * The function creates a Monaco code editor. If the language is one of the langauges
+ * The function creates a Monaco code editor. If the language is one of the languages
  * understood by Monaco, it will automatically use correct syntax highlighting.
  * You will typically call this function from the `render` operation of your
  * [`Editor`](../interfaces/languages.editor.html) implementation. This happens each
