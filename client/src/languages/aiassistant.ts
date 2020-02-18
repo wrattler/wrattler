@@ -102,12 +102,12 @@ async function getResult(root:string, hash:string, name:string, inputs:AiaInputs
   let header = Object.keys(inputs).map(k => k + "=" + inputs[k]).join(",")
   Log.trace("aiassistant","getResult headers:%s", JSON.stringify(header))
   let response = await axios.get(url, {headers:{Inputs:header}});
-  let frameUrl = response.data
-  Log.trace("aiassistant","getResult response urk:%s", JSON.stringify(frameUrl))
+  let frameString = response.data
+  Log.trace("aiassistant","getResult to get value from url:%s", JSON.stringify(frameString))
   
-  return { kind: "dataframe", url: frameUrl, 
-      preview: await getValue(frameUrl, true, datastoreURI), 
-      data: new AsyncLazy<any>(() => getValue(frameUrl,false, datastoreURI)) }
+  return { kind: "dataframe", url: frameString, 
+      preview: await getValue(frameString, true, datastoreURI), 
+      data: new AsyncLazy<any>(() => getValue(frameString,false, datastoreURI)) }
 }
 /*
 
