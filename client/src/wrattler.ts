@@ -97,8 +97,15 @@ class Wrattler {
     var languagePlugins : LanguagePlugins = { };
 
     function getServiceUrl(language:string, def:string) {
-      if (serviceUrls && serviceUrls[language]) return serviceUrls[language];
-      else return def;
+      Log.trace("aiassistant", "getDefaultConfig getServiceUrl: language: %s options:%s", language, JSON.stringify(serviceUrls)) 
+      if (serviceUrls && serviceUrls[language]) {
+        Log.trace("aiassistant", "getDefaultConfig getServiceUrl returns: %s", serviceUrls[language])
+        return serviceUrls[language];
+      }
+      else {
+        Log.trace("aiassistant", "getDefaultConfig getServiceUrl returns: %s", def)
+        return def;
+      }
     }
     async function unit<T>(v:T) : Promise<T> {
       return v;

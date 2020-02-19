@@ -375,7 +375,7 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
             var inputs : AiaInputs = {}
             for(let k of Object.keys(aiaNode.inputNodes)) {
               inputs[k] = (<Values.DataFrame>aiaNode.inputNodes[k].value).url
-              Log.trace("aiassistant", "evaluate Evaluate input [%s]: %s", k, JSON.stringify(aiaNode.inputNodes[k].value))
+              // Log.trace("aiassistant", "evaluate Evaluate input [%s]: %s", k, JSON.stringify(aiaNode.inputNodes[k].value))
             }
             // Log.trace("aiassistant", "evaluate Evaluate root: %s", aiaNode.assistant.root)
             // Log.trace("aiassistant", "evaluate Evaluate hash: %s", aiaNode.hash)
