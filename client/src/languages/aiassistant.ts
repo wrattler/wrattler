@@ -85,6 +85,7 @@ async function getCompletions(root:string, inputs:AiaInputs, path:string[]) : Pr
 
 async function getValue(blob:string, preview:boolean, datastoreURI:string) : Promise<any> {
   var pathname = new URL(blob).pathname;
+  Log.trace("aiassistant", "getValue pathname: %s datastoreURI: %s ", pathname, datastoreURI)
   let headers = {'Accept': 'application/json'}
   let url = datastoreURI.concat(pathname)
   if (preview) url = url.concat("?nrow=10")
@@ -305,8 +306,8 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
   constructor (assistants:AiAssistant[], datastoreUri: string) {
     this.assistants = assistants
     this.editor = createAiaEditor(assistants)
-    Log.trace("aiassistant", "Constructor Datastore URL: %s", this.datastoreURI)
     this.datastoreURI = datastoreUri
+    Log.trace("aiassistant", "Constructor Datastore URL: %s", this.datastoreURI)
   }
 
   getDefaultCode(id:number) { 
