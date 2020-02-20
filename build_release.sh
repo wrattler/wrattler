@@ -61,6 +61,15 @@ fi;
 cd -
 IMAGES=("${IMAGES[@]}" "wrattler/wrattler_data_store:${VERSION}")
 
+## and finally the ai assistants
+cd aiassistants; docker build -t wrattler/wrattler_ai_assistants:$VERSION -f Dockerfile .;
+if [ ! $? -eq 0 ];
+then echo "Problem building ai-assistant docker image";
+   exit;
+fi;
+cd -
+IMAGES=("${IMAGES[@]}" "wrattler/wrattler_ai_assistants:${VERSION}")
+
 ## now try to push the images to dockerhub - this will only work
 ## if the user has done 'docker login' and has permissions for the wrattler
 ## repository on dockerhub.
