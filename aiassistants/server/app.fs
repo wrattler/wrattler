@@ -10,6 +10,23 @@ type Config = JsonProvider<"config-sample.json">
 type DataStoreAgentMessage = 
   | Get of string * AsyncReplyChannel<string>
 
+let dsurl =
+  let dsurl = Environment.GetEnvironmentVariable("DATASTORE_URI")
+  if String.IsNullOrEmpty dsurl then "http://localhost:7102" else dsurl
+
+printfn "Datastore URL: %s" dsurl
+
+let pathurl = 
+  let pathurl = dsurl
+  if dsurl.Contains("localhost") then 
+    "localhost:7102"
+  else 
+    let firstSlashIndex = pathurl.LastIndexOf("//") + 2
+    let pathurl = pathurl.Substring(firstSlashIndex)
+    pathurl
+
+printfn "Path URL: %s" pathurl
+
 let dataStore = MailboxProcessor.Start(fun inbox -> async {
   try 
     let cache = System.Collections.Generic.Dictionary<_, _>()
@@ -17,13 +34,17 @@ let dataStore = MailboxProcessor.Start(fun inbox -> async {
       use wc = new System.Net.WebClient()
       wc.Headers.Add("Accept","application/json")
       let! msg = inbox.Receive()
+      printfn "Received msg: %A" msg
       match msg with
       | Get(url, repl) when cache.ContainsKey url ->
           repl.Reply(cache.[url])
-
+          printfn "Msg containsKey: %s" url
       | Get(url, repl) ->
-          //let url = url.Replace("wrattler_wrattler_data_store_1", "localhost")
+          printfn "Cache not containsKey: %s" url
+          let url = url.Replace("localhost:7102",pathurl)
+          printfn "Looking for data here: %s" url
           let! data = wc.DownloadStringTaskAsync(System.Uri(url)) |> Async.AwaitTask
+          printfn "Got data"
           let rows = [| for row in JsonValue.Parse(data) -> row |]    
           let head = [| for p, _ in rows.[0].Properties() -> p |]
           let file = CsvFile.Parse(String.concat "," head)
@@ -33,7 +54,7 @@ let dataStore = MailboxProcessor.Start(fun inbox -> async {
           cache.[url] <- out
           repl.Reply(out)
   with e ->
-    printfn "DATASTORE FAILED: %A" e })
+    printfn "DATASTORE FAILS: %A" e })
 
 
 type Completion = { name:string; path:string }
@@ -181,10 +202,6 @@ Async.Start <| async {
       processes <- p
       printfn "Killing all old processes"
       kill |> Map.iter (fun _ p -> p.Post(Kill)) }
-
-let dsurl =
-  let dsurl = Environment.GetEnvironmentVariable("DATASTORE_URI")
-  if String.IsNullOrEmpty dsurl then "http://localhost:7102" else dsurl
 
 let aiareq handler : HttpHandler = fun f c -> Async.StartAsTask <| async {
   let inputs = c.Request.Headers.["Inputs"] |> Seq.tryHead |> Option.defaultValue ""
