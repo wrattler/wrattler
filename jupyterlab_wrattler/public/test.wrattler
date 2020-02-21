@@ -42,10 +42,13 @@ First, we create one frame in JavaScript: agai
 
 
 
+
 ```javascript
 var one = [{'name':'Joel', 'age':53}]
 var anotherWonton = [{'name':'May'}]
 ```
+Outlier detection:input=one
+
 
 
 
@@ -88,6 +91,7 @@ var anotherWonton = [{'name':'May'}]
 
 
 Second, we create one frame in Python:
+
 
 
 
@@ -173,7 +177,9 @@ two = pd.DataFrame({"name":["Jimii"], "age":[31]})
 
 
 
+
 Finally, we create one more frame in R:
+
 
 
 
@@ -259,7 +265,9 @@ three <- data.frame(name=c("Johny"), age=c(52))
 
 
 
+
 Now, test if we can access all from JavaScript:
+
 
 
 
@@ -345,7 +353,9 @@ var joinJs = one.concat(two).concat(three)
 
 
 
+
 Similarly, test if we can access all from Python:
+
 
 
 
@@ -432,7 +442,9 @@ joinPyFlip = thre.append(two).append(one)
 
 
 
+
 Finally, test if we can access all from R:
+
 
 
 

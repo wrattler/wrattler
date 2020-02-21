@@ -14,10 +14,10 @@ while True:
     print("")
     sys.stdout.flush()
   else:
-    f = open("/app/test.csv","w+")
+    f = open("test.csv","w+")
     f.write("one,two\n")
     f.write("1,2\n")
     f.write("3,4")
     f.close()
-    print("/app/test.csv")
+    print("test.csv")
     sys.stdout.flush()

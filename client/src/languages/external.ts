@@ -13,6 +13,17 @@ import * as Doc from '../services/documentService';
 // Helper functions for working with data store 
 // ------------------------------------------------------------------------------------------------
 
+interface Script {
+  src:string;
+  text: string;
+}
+
+interface HtmlElements {
+  scripts: Array<Script>,
+  html: string,
+  css: string
+}
+
 async function getValue(blob, preview:boolean, datastoreURI:string) : Promise<any> {
   var pathname = new URL(blob).pathname;
   let headers = {'Accept': 'application/json'}
@@ -20,10 +31,7 @@ async function getValue(blob, preview:boolean, datastoreURI:string) : Promise<an
   if (preview)
     url = url.concat("?nrow=10")
   try {
-    Log.trace("external", "Fetching data frame: %s", url)
     let response = await axios.get(url, {headers: headers});
-  
-    Log.trace("external", "Got data frame (%s rows): %s", response.data.length, pathname)
     return response.data
   }
   catch (error) {
@@ -39,11 +47,65 @@ async function getCachedOrEval(serviceUrl, body, datastoreURI) : Promise<any> {
     let response = await axios.get(cacheUrl, params)
     return response.data
   } catch(e) {
-    Log.trace("external", "Checking failed at external, calling eval (%s)", e)
+   Log.trace("external", "Checking failed at external, calling eval (%s)", e)
     let params = { headers: {'Content-Type': 'application/json'} }        
     let result = await axios.post(serviceUrl.concat("/eval"), body, params)
     await axios.put(cacheUrl, result.data, params)
     return result.data
+  }
+}
+
+function parseHTML(htmlResponse:string):HtmlElements {
+  
+  let inlineScriptHeader = "<script type=\"text/javascript\">"
+  let scriptEnder = "</script>"
+
+  function parseScript():Array<Script>{
+    let dom = new DOMParser()
+    let doc = dom.parseFromString(htmlResponse, 'text/html')
+    let scriptElements:HTMLCollectionOf<HTMLScriptElement> = doc.scripts
+    let scripts:Script[] = []
+    for (let s = 0; s < scriptElements.length; s++) {
+      let src:string = scriptElements[s].src==null?"":scriptElements[s].src
+      let text:string = scriptElements[s].text==null?"":scriptElements[s].text
+      scripts.push({src:src, text:text})
+    }
+    return scripts
+  }
+  
+  // function parseScript(htmlResponse:string):string {
+  //   if (htmlResponse.indexOf(inlineScriptHeader) > -1)
+  //     return htmlResponse.substring(htmlResponse.indexOf(inlineScriptHeader)+inlineScriptHeader.length, htmlResponse.indexOf(scriptEnder))
+  //   else 
+  //     return ""
+  // }
+
+  function parseElements():string {
+    if (htmlResponse.indexOf(inlineScriptHeader) > -1) {
+      let beforeInlineScript:string = htmlResponse.substring(0,htmlResponse.indexOf(inlineScriptHeader))
+      let afterInlineScript:string = htmlResponse.substring(htmlResponse.indexOf(scriptEnder)+scriptEnder.length)
+      return beforeInlineScript.concat(afterInlineScript)
+    }
+    else  
+      return htmlResponse
+  }
+
+  return {scripts:parseScript(), html: parseElements(), css:""}  
+}
+
+
+
+function evalAndLoadInlineScript(aScript:Script) { 
+  if (aScript.text.length > 0) {
+    eval(aScript.text);
+    var scr = document.createElement("script");
+    scr.innerHTML = aScript.text;
+    document.head.appendChild(scr);
+  }
+  if (aScript.src.length > 0) {
+    var scr = document.createElement("script");
+    scr.setAttribute("src", aScript.src);
+    document.head.appendChild(scr);
   }
 }
 
@@ -73,14 +135,23 @@ async function getEval(body, serviceURI, datastoreURI) : Promise<Langs.Evaluatio
       results.exports['figure'+figureIndex.toString()] = exp
       figureIndex++;
     }
-
+    
     if (response['html'])
       if (JSON.stringify(response.html) !=  "{}"){
+        let parsed:HtmlElements = parseHTML(response.html.toString())
         var output : ((id:string) => void) = function(f) {
-          let element:HTMLElement | null= document.getElementById(f)
-          if (element)
-            element.innerHTML = response.html.toString();
+          let element:HTMLElement|null= document.getElementById(f)
+          if (element){
+            element.innerHTML = parsed.html 
+            for (let s = 0; s < parsed.scripts.length; s++) {
+              let img:HTMLImageElement = document.createElement('img')
+              img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+              img.onload = function(){evalAndLoadInlineScript(parsed.scripts[s])}
+              element.appendChild(img)
+            }
+          }
         };
+        
         var exp : Values.JavaScriptOutputValue = { kind:"jsoutput", render: output }
         results.exports["output"] = exp
       }
