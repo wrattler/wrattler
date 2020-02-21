@@ -21,17 +21,9 @@ RUN pip3 install sklearn
 RUN pip3 install matplotlib
 RUN pip3 install greenery
 
-RUN mkdir /app
-
-ADD server /app/server
+ADD . /app
 RUN dotnet restore /app/server/
 RUN dotnet build /app/server/
-
-ADD assistants/config.json /app/assistants/config.json
-ADD assistants/outlier /app/assistants/outlier
-ADD assistants/ccsv /app/assistants/ccsv
-ADD assistants/datadiff /app/assistants/datadiff
-ADD assistants/test /app/assistants/test
 
 EXPOSE 5050
 WORKDIR "app/server"
