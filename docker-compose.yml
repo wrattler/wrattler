@@ -14,12 +14,12 @@ services:
     - wrattler_data_store
     networks:
     - wrattler_nw
-    volumes:
-    - ./client:/app
-    - ./client/src:/app/src
-    - ./resources:/app/public/resources
-    entrypoint: /bin/bash
-    command: "./entrypoint.sh"
+#    volumes:
+#    - ./client:/app
+#    - ./client/src:/app/src
+#    - ./resources:/app/public/resources
+#    entrypoint: /bin/bash
+#    command: "./entrypoint.sh"
     environment:
      - CLIENT_URI=http://localhost:8080
      - RACKETSERVICE_URI=http://localhost:7104
@@ -104,8 +104,8 @@ services:
       dockerfile: Dockerfile
     ports:
     - "5050:5050"
-    volumes:
-    - ./aiassistants/assistants:/app/assistants
+#    volumes:
+#    - ./aiassistants/assistants:/app/assistants
     environment:
     - DATASTORE_URI=http://wrattler_wrattler_data_store_1:7102
     networks:
