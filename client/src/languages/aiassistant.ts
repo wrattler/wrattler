@@ -259,7 +259,7 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
             Log.trace("editor", "Evaluate button clicked in external language plugin")
             ctx.evaluate(cell.editor.id) } }, ["Evaluate!"] )    
 
-      let spinner = h('i', {class: 'fas fa-spinner fa-spin' }, [])
+      let spinner = h('i', {class: 'fa fa-spinner fa-spin' }, [])
 
       let preview = h('div', {class:'preview'}, [
         (cell.code.value == undefined) ? (cell.evaluationState == 'pending') ? spinner : previewButton :
