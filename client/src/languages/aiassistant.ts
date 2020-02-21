@@ -146,7 +146,6 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
   render: (cell:Langs.BlockState, state:AiaState, ctx:Langs.EditorContext<AiaEvent>) => {
     let aiaNode = <AiaCodeNode>cell.code
   
-
     function triggerRemove() {
       let newCode = format(aiaNode.assistant, aiaNode.inputs, aiaNode.newFrame, aiaNode.chain.slice(0, aiaNode.chain.length-1))
       ctx.rebindSubsequent(cell, newCode);
@@ -158,6 +157,7 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
       ctx.evaluate(cell.editor.id)
     }
     function triggerAssistant(name:string|null, inputs:AiaInputs) {
+      Log.trace("aiaworkflow", "render: triggerAssistant")
       let ins = Object.keys(inputs).map(k => k + "=" + inputs[k]).join(",")
       ctx.rebindSubsequent(cell, name==null?"":(name + (ins != "" ? (":" + ins) : "") + "\n" + aiaNode.newFrame))
       if (name != null && Object.keys(inputs).length > 0) ctx.evaluate(cell.editor.id)
@@ -169,6 +169,7 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
     }
     
     if (aiaNode.assistant == null || Object.keys(aiaNode.inputs).length != aiaNode.assistant.inputs.length) {
+      Log.trace("aiaworkflow", "render: not enough inputs")
       return h('div', {class:'aia'}, [ h('ul', {}, state.assistants.map(as => {
         let dropdowns = as.inputs.map(inp => 
           h('div', {}, [ 
@@ -178,6 +179,7 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
                   let inps = { ...aiaNode.inputs }
                   if ((<any>e.target).value == "") delete inps[inp]
                   else inps[inp] = (<any>e.target).value
+                  Log.trace('aiaworkflow', "render New Frame Name: ", aiaNode.newFrame)
                   triggerAssistant(aiaNode.assistant == null?null:aiaNode.assistant.name, inps) 
               } }, 
               [""].concat(aiaNode.framesInScope).map(f =>
@@ -193,7 +195,9 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
         return h('li', {}, 
           [ link, " - ", as.description, h('br', {}, []) ].concat(tools))
       })) ])
-    } else {
+    } 
+    else {
+      Log.trace("aiaworkflow", "render: enough inputs")
       var i = 0;
       let chain = 
         aiaNode.chain.map(item => {
@@ -366,11 +370,10 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
     let aiaNode = <AiaNode>node
     switch(aiaNode.kind) {
       case 'code':
-        Log.trace('aiassistant', "evaluate code Evaluation started")
+        Log.trace('aiaworkflow', "evaluate code Evaluation started")
         let res : { [key:string]: Values.KnownValue } = {}
         let newFrame = aiaNode.newFrame == "" ? "<name>" : aiaNode.newFrame; 
-        if (aiaNode.assistant != null) {
-
+        if ((aiaNode.assistant != null)&&(newFrame != "<name>")) {
           if (aiaNode.assistant.inputs.length == Object.keys(aiaNode.inputNodes).length) { 
             let path = aiaNode.chain.length > 0 ? aiaNode.chain[aiaNode.chain.length-1].path : []
             var inputs : AiaInputs = {}
