@@ -87,22 +87,33 @@ while(TRUE) {
   write(paste0("[datadiff] current query '", query, "'"), stderr())
 
   inparr = strsplit(inputs, ",")
-  files <- purrr::map(inparr[[1]], function(x) {
-    kvp <- strsplit(x, "=")
-    list(key=kvp[[1]][1], value=kvp[[1]][2]) })
-  dirty <- read.csv(purrr::keep(files, function(x) { x$key == "dirty" })[[1]]$value)
-  clean <- read.csv(purrr::keep(files, function(x) { x$key == "clean" })[[1]]$value)
+  inputFrames =  strsplit(inputs, ",")[[1]]
+  write(paste0("[datadiff] expected 2, received ", toString(length(inputFrames))), stderr())
+  if (length(inputFrames) == 2) {
+    files <- purrr::map(inparr[[1]], function(x) {
+      kvp <- strsplit(x, "=")
+      list(key=kvp[[1]][1], value=kvp[[1]][2]) })
+    dirty <- read.csv(purrr::keep(files, function(x) { x$key == "dirty" })[[1]]$value)
+    clean <- read.csv(purrr::keep(files, function(x) { x$key == "clean" })[[1]]$value)
 
-  constraints = parseConstraints(query)
+    constraints = parseConstraints(query)
 
-  if (cmd == "completions") {
-    printCompletions(query, constraints, clean, dirty)
-    cat("\n")
-  } else {
+    if (cmd == "completions") {
+      printCompletions(query, constraints, clean, dirty)
+      cat("\n")
+    } else {
+      f <- tempfile()
+      df <- getCleanData(constraints, clean, dirty)
+      write.csv(df, file=f)
+      cat(paste0(f,"\n"))
+      write(paste0("[datadiff] written file"), stderr())
+    }
+  }
+  else {
     f <- tempfile()
-    df <- getCleanData(constraints, clean, dirty)
-    write.csv(df, file=f)
+    write.csv(data.frame(File=character()), file=f)
     cat(paste0(f,"\n"))
+    write(paste0("[datadiff] written empty file"), stderr())
   }
 }
 

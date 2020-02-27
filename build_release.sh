@@ -9,7 +9,7 @@ VERSION=$1
 
 echo VERSION is $VERSION
 
-if [[ ! $VERSION =~ ^v[0-9]+.[0-9]+$ ]];
+if [[ ! $VERSION =~ ^v[0-9]+.[0-9]+(.[0-9]+)?$ ]];
 then echo "Usage is 'build_release.sh <version>'  with version format vX.Y";
      exit;
 fi;
@@ -60,6 +60,15 @@ then echo "Problem building data-store docker image";
 fi;
 cd -
 IMAGES=("${IMAGES[@]}" "wrattler/wrattler_data_store:${VERSION}")
+
+## and finally the ai assistants
+cd aiassistants; docker build -t wrattler/wrattler_ai_assistants:$VERSION -f Dockerfile .;
+if [ ! $? -eq 0 ];
+then echo "Problem building ai-assistant docker image";
+   exit;
+fi;
+cd -
+IMAGES=("${IMAGES[@]}" "wrattler/wrattler_ai_assistants:${VERSION}")
 
 ## now try to push the images to dockerhub - this will only work
 ## if the user has done 'docker login' and has permissions for the wrattler
