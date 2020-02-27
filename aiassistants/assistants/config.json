@@ -3,7 +3,7 @@
     "inputs": ["input"],
     "build": [ {"process":"dotnet", "arguments":"restore"}, {"process":"dotnet", "arguments":"build" }],
     "process": "dotnet",
-    "arguments": "bin/Debug/netcoreapp2.2/outlier.dll",
+    "arguments": "bin/Debug/netcoreapp2.1/outlier.dll",
     "description": "Detects outlier rows in a dataset by looking for rows with values further from the averages. Outlier rows can then be filtered based on the values of categorical columns."},
   { "name": "Data diff",
     "id": "datadiff",

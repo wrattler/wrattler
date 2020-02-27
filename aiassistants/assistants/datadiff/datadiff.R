@@ -107,14 +107,14 @@ while(TRUE) {
     } else {
       f <- tempfile()
       df <- getCleanData(constraints, clean, dirty)
-      write.csv(df, file=f)
+      write.csv(df, file=f, row.names=FALSE)
       cat(paste0(f,"\n"))
       write(paste0("[datadiff] written file"), stderr())
     }
   }
   else {
     f <- tempfile()
-    write.csv(data.frame(File=character()), file=f)
+    write.csv(data.frame(File=character()), file=f, row.names=FALSE)
     cat(paste0(f,"\n"))
     write(paste0("[datadiff] written empty file"), stderr())
   }
