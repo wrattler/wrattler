@@ -96,8 +96,8 @@ while(TRUE) {
     dirtyOrig <- read.csv(purrr::keep(files, function(x) { x$key == "dirty" })[[1]]$value)
     cleanOrig <- read.csv(purrr::keep(files, function(x) { x$key == "clean" })[[1]]$value)
     set.seed(1)
-    dirty <- sample(nrow(dirtyOrig),min(nrow(dirtyOrig),100))
-    clean <- sample(nrow(cleanOrig),min(nrow(cleanOrig),100))
+    dirty <- dirtyOrig[sample(nrow(dirtyOrig),min(nrow(dirtyOrig),100)),]
+    clean <- cleanOrig[sample(nrow(cleanOrig),min(nrow(cleanOrig),100)),]
 
     constraints = parseConstraints(query)
 

@@ -1,4 +1,4 @@
-let enabledCategories = {"*":false, "aiaworkflow":true}
+let enabledCategories = {"*":true, "aiaworkflow":true}
 var colorIndex = -1
 var colorMap = {}
 function getColor(cat) {
