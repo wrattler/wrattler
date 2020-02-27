@@ -27,7 +27,7 @@ import { Log } from "./common/log"
 import { loadNotebook, initializeCells } from './main'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { JavascriptLanguagePlugin } from './languages/javascript'
-import { fluidLanguagePlugin } from './languages/fluid'
+//import { fluidLanguagePlugin } from './languages/fluid'
 import { ExternalLanguagePlugin } from './languages/external'
 import { mergerLanguagePlugin } from './demo/merger'
 import { spreadsheetLanguagePlugin } from './languages/spreadsheet'
@@ -113,7 +113,7 @@ class Wrattler {
     languagePlugins["javascript"] = unit(new JavascriptLanguagePlugin(datastoreUrl ? datastoreUrl : DATASTORE_URI));
     languagePlugins["python"] = unit(new ExternalLanguagePlugin("python", "fab fa-python", getServiceUrl("python", PYTHONSERVICE_URI), pyCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
     languagePlugins["r"] = unit(new ExternalLanguagePlugin("r", "fab fa-r-project", getServiceUrl("r", RSERVICE_URI), rCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
-    languagePlugins["fluid"] = unit(fluidLanguagePlugin);
+    // languagePlugins["fluid"] = unit(fluidLanguagePlugin);
     // languagePlugins["racket"] = unit(new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
     // languagePlugins["merger"] = unit(mergerLanguagePlugin);
       languagePlugins["ai assistant"] = createAiaPlugin(getServiceUrl("ai assistant", AIASERVICE_URI), (datastoreUrl ? datastoreUrl : DATASTORE_URI));
