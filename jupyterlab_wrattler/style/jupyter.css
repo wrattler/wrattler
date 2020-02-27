@@ -15,3 +15,11 @@
   box-sizing:border-box;
   line-height:20px;
 }
+
+.jp-Wrattler a {
+  color:#007bff;
+}
+
+.jp-Wrattler a:hover {
+  color:#b13628;  
+}
