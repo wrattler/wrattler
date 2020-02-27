@@ -14,7 +14,7 @@ import { createMonacoEditor, createOutputPreview } from "../editors/editor"
 const fluid: string = "fluid"
 let coordinator: PaneCoordinator
 
-Pane.initialise()
+//Pane.initialise()
 
 function ensureInitialised (): void {
    if (coordinator === undefined) {
@@ -35,7 +35,7 @@ class FluidBlock implements Langs.Block {
       this.source = source
       try {
          this.ρ_e = parseWithImports(source)
-      } 
+      }
       catch (ex) {
          console.log(ex)
          this.ρ_e = null
@@ -48,7 +48,7 @@ class FluidState implements Langs.EditorState {
    block: FluidBlock
 }
 
-class FluidEvent { 
+class FluidEvent {
 }
 
 class FluidNode implements Graph.Node {
@@ -110,7 +110,7 @@ monaco.languages.setMonarchTokensProvider(fluid, new FluidTokensProvider())
 class FluidEditor implements Langs.Editor<FluidState, FluidEvent> {
    initialize (id:number, block: Langs.Block): FluidState {
       if (block instanceof FluidBlock) {
-         return { id, block } 
+         return { id, block }
       } else {
          return assert(false)
       }
@@ -122,21 +122,21 @@ class FluidEditor implements Langs.Editor<FluidState, FluidEvent> {
 
    render (cell: Langs.BlockState, state: FluidState, context: Langs.EditorContext<FluidEvent>): VNode {
       const evaluateButton: VNode = h("button", {
-         class: "preview-button", 
+         class: "preview-button",
          onclick: () => {
-            context.evaluate(cell.editor.id) 
-         } 
+            context.evaluate(cell.editor.id)
+         }
       }, ["Evaluate!"])
       return h("div", {}, [
          h("div", { key: "ed" }, [
            createMonacoEditor(fluid, state.block.source, cell, context) ]),
          h("div", { key: "prev" }, [
-            cell.code.value == null ? 
+            cell.code.value == null ?
                evaluateButton :
                createOutputPreview(
                   cell,
-                  (idx: number): void => {}, 
-                  0, 
+                  (idx: number): void => {},
+                  0,
                   cell.code.value as Values.ExportsValue
                )
          ])
@@ -184,9 +184,9 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
       if (node instanceof FluidNode) {
          ensureInitialised()
          const imports: [string, Values.DataFrame][] = (node.antecedents
-            // invariant - only depend on exported nodes:   
-            .filter(isExportNode)                          
-            // exported values are known and non-null 
+            // invariant - only depend on exported nodes:
+            .filter(isExportNode)
+            // exported values are known and non-null
             .map(node => [node.variableName, node.value as Values.KnownValue])
             .filter(([x, v]: [string, Values.KnownValue]) => v.kind === "dataframe")) as [string, Values.DataFrame][]
          let ρ_imports: Env = emptyEnv() // from other cells
@@ -199,19 +199,19 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
             this.pane = null
          }
          this.pane = coordinator.addPane(ρ_imports.concat(ρ_importsʹ), e)
-         const exports: Values.ExportsValue = { 
+         const exports: Values.ExportsValue = {
             kind: "exports",
-            exports: { 
-               "graphics": { 
+            exports: {
+               "graphics": {
                   kind: "jsoutput",
                   render: (id: string): void => {
                      document.getElementById(id)!.appendChild(this.pane!.rootPane)
-                  } 
-               } 
+                  }
+               }
             }
          }
-         return { 
-            kind: "success", 
+         return {
+            kind: "success",
             value: exports
          }
       } else {

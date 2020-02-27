@@ -20,13 +20,14 @@
  * @module Main
  */
 
-/** This comment is needed so that TypeDoc parses the above one correctly */import * as Docs from './services/documentService'
+/** This comment is needed so that TypeDoc parses the above one correctly */
+import * as Docs from './services/documentService'
 import * as Langs from './definitions/languages'
 import { Log } from "./common/log"
 import { loadNotebook, initializeCells } from './main'
 import { markdownLanguagePlugin } from './languages/markdown'
 import { JavascriptLanguagePlugin } from './languages/javascript'
-import { fluidLanguagePlugin } from './languages/fluid'
+//import { fluidLanguagePlugin } from './languages/fluid'
 import { ExternalLanguagePlugin } from './languages/external'
 import { mergerLanguagePlugin } from './demo/merger'
 import { spreadsheetLanguagePlugin } from './languages/spreadsheet'
