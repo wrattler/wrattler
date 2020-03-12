@@ -14,7 +14,7 @@ import { createMonacoEditor, createOutputPreview } from "../editors/editor"
 const fluid: string = "fluid"
 let coordinator: PaneCoordinator
 
-//Pane.initialise()
+Pane.initialise()
 
 function ensureInitialised (): void {
    if (coordinator === undefined) {
