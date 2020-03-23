@@ -14,7 +14,7 @@ import { createMonacoEditor, createOutputPreview } from "../editors/editor"
 const fluid: string = "fluid"
 let coordinator: PaneCoordinator
 
-function ensureInitialised (resourceServerUrl:string): void {
+function ensureInitialised (resourceServerUrl: string): void {
    Pane.initialise(resourceServerUrl)
    if (coordinator === undefined) {
       // temporarily make specific dataset available as external data too
