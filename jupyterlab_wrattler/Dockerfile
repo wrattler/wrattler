@@ -14,7 +14,8 @@ RUN apt-get update; apt-get -y install yarn
 RUN apt-get update; apt-get install -y python3
 RUN apt-get update; apt-get install -y python3-pip
 
-RUN pip3 install jupyterlab
+# RUN pip3 install jupyterlab
+RUN pip3 install 'jupyterlab==1.2.3'
 
 RUN mkdir app
 ADD . /app

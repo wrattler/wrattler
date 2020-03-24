@@ -14,9 +14,8 @@ import { createMonacoEditor, createOutputPreview } from "../editors/editor"
 const fluid: string = "fluid"
 let coordinator: PaneCoordinator
 
-//Pane.initialise()
-
-function ensureInitialised (): void {
+function ensureInitialised (resourceServerUrl: string): void {
+   Pane.initialise(resourceServerUrl)
    if (coordinator === undefined) {
       // temporarily make specific dataset available as external data too
       coordinator = new PaneCoordinator(openDatasetAs("renewables-restricted", "data"))
@@ -159,6 +158,7 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
    }
 
    async bind (context: Langs.BindingContext, block: Langs.Block): Promise<Langs.BindingResult> {
+      ensureInitialised(context.resourceServerUrl)
       console.log(context.scope)
       if (block instanceof FluidBlock) {
          let antecedents: Graph.Node[]
@@ -182,7 +182,7 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
    // For now, linking is mediated through a fixed external dataset, not through data imported from other cells.
    async evaluate (context: Langs.EvaluationContext, node: Graph.Node): Promise<Langs.EvaluationResult> {
       if (node instanceof FluidNode) {
-         ensureInitialised()
+         ensureInitialised(context.resourceServerUrl)
          const imports: [string, Values.DataFrame][] = (node.antecedents
             // invariant - only depend on exported nodes:
             .filter(isExportNode)
