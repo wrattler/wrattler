@@ -50,10 +50,10 @@ monitoring trace across the neonatals.
 
 ```python
 import os
-nInstall = os.system("python3 -m pip install --upgrade --user numpy")
-mInstall = os.system("python3 -m pip install --upgrade --user matplotlib")
-sInstall = os.system("python3 -m pip install seaborn")
-print("Installation exit statuses:", nInstall, mInstall, sInstall)
+n = os.system("python3 -m pip install --upgrade --user numpy")
+m = os.system("python3 -m pip install --upgrade --user matplotlib")
+s = os.system("python3 -m pip install seaborn")
+print("Installation exit statuses:{},{},{}".format(n, m, s))
 
 import requests
 import scipy.io
@@ -64,13 +64,14 @@ import seaborn as sns
 
 MISSING_VAL = -1
 
-def getNeonatalData():
+def get_neonatal_data():
     """
     Download local copy of neonatal matlab data file and return data partitions
     :returns: data and intervals partitions
     """
     if not os.path.isfile("15days.mat"):
-        response = requests.get("https://tadap.blob.core.windows.net/icuneonatal/15days.mat")
+        # response = requests.get("https://tadap.blob.core.windows.net/icuneonatal/15days.mat")
+        response = requests.get('https://www.doc.ic.ac.uk/~nuric/15days.mat')
         f = open("15days.mat", 'wb')
         f.write(response.content)
         f.close()
@@ -78,7 +79,7 @@ def getNeonatalData():
     mat = scipy.io.loadmat("15days.mat")
     return mat['data'], mat['intervals']
 
-def unravelValueFromArray(arr):
+def unravel_value_from_array(arr):
     """
     Recursively unravel nested array (with arbitrary nests)
     :returns: first inner int or string value found in array
@@ -87,98 +88,98 @@ def unravelValueFromArray(arr):
         return arr
     elif (isinstance(arr, float) and np.isnan(arr)) or len(arr) == 0:
         return MISSING_VAL # [] or nan
-    return unravelValueFromArray(arr[0])
+    return unravel_value_from_array(arr[0])
 
-def buildMetadata(dat):
+def build_metadata(dat):
     """
     Builds neonatal metadata from given raw data
     :returns: pandas dataframe (maps gestation, sex and day of life to baby id)
     """
-    babyIds = list(range(15))
-    metadataDict = {}
-    for bId in babyIds:
-        metadata = dat['preprocessed'][0][0][0][bId][0]
-        metadataDict[bId] = {}
-        metadataDict[bId]['gestation'] = unravelValueFromArray(metadata['gestation'])
-        metadataDict[bId]['sex'] = unravelValueFromArray(metadata['sex'])
-        metadataDict[bId]['dayoflife'] = unravelValueFromArray(metadata['dayoflife'])
-    return pd.DataFrame.from_dict(metadataDict, orient="index")
+    baby_ids = list(range(15))
+    metadata_dict = {}
+    for b_id in baby_ids:
+        metadata = dat['preprocessed'][0][0][0][b_id][0]
+        metadata_dict[b_id] = {}
+        metadata_dict[b_id]['gestation'] = unravel_value_from_array(metadata['gestation'])
+        metadata_dict[b_id]['sex'] = unravel_value_from_array(metadata['sex'])
+        metadata_dict[b_id]['dayoflife'] = unravel_value_from_array(metadata['dayoflife'])
+    return pd.DataFrame.from_dict(metadata_dict, orient="index")
 
-def getListOfEventNames(intervals):
+def get_event_names(intervals):
     """
     :returns: labels of annotations/events present in dataset
     """
     return intervals[0].dtype.names
 
-def buildAnnotations(eNames, intervals):
+def build_annotations(e_names, intervals):
     """
     Build intervals of annotations/events for each baby
     :returns: pandas dataframe with outer index of baby id where each row is
     tuple containing start and end times (intervals) of events
     """
     annotations = {}
-    for conditionName in eNames:
-        conditionIntervals = intervals[0][conditionName]
-        babyData = {}
-        for babyId in range (0, 15):
-            intervalsForBaby = conditionIntervals[0][babyId][0]
-            for i, v in enumerate(intervalsForBaby):
-                if len(intervalsForBaby[i]) == 2:
-                    babyData[(babyId, i)] = (v[0], v[1])
-        annotations[conditionName] = babyData
-    multiIndDf = pd.DataFrame(annotations).fillna(-1)
-    unravelledDf = multiIndDf.reset_index().rename(columns={"level_0": "BabyId",
-                                                            "level_1": "Instance"})
-    return unravelledDf
+    for event in e_names:
+        event_intervals = intervals[0][event]
+        baby_data = {}
+        for b_id in range(0, 15):
+            intervals_for_baby = event_intervals[0][b_id][0]
+            for i, v in enumerate(intervals_for_baby):
+                if len(intervals_for_baby[i]) == 2:
+                    baby_data[(b_id, i)] = (v[0], v[1])
+        annotations[event] = baby_data
+    multi_index_df = pd.DataFrame(annotations).fillna(-1)
+    unravelled_df = multi_index_df.reset_index().drop(columns=["level_1"])
+    return unravelled_df.rename(columns={"level_0": "baby_id"})
 
-def getChannelNames(dat, babyId):
+def get_channel_names(dat, baby_id):
     """
     :returns: list of labels of channels present for a given baby
     """
-    return np.concatenate(dat['preprocessed'][0][0][0][babyId][0]['labels'][0][0]).ravel().tolist()
+    return np.concatenate(dat['preprocessed'][0][0][0][baby_id][0]['labels'][0][0]).ravel().tolist()
 
-def buildTimeseries(dat, babyId):
+def build_timeseries(dat, baby_id):
     """
     Builds channel timeseries from given data for a given baby (nans replaced with -1)
     :returns: pandas dataframe with columns time (seconds), and channel readings
     """
-    channelsForBaby = getChannelNames(dat, babyId)
-    readingsForBaby = dat['preprocessed'][0][0][0][babyId][0]['channels'][0]
-    df = pd.DataFrame(readingsForBaby, columns=channelsForBaby)
-    return df.reset_index().rename(columns={"index": "tSeconds"})
+    channels_for_baby = get_channel_names(dat, baby_id)
+    readings_for_baby = dat['preprocessed'][0][0][0][baby_id][0]['channels'][0]
+    df = pd.DataFrame(readings_for_baby, columns=channels_for_baby)
+    return df.reset_index().rename(columns={"index": "time_s"})
 
-def dfPlotAllBabies(dat, babies = range(0, 15), rowsToPlot = ['HR', 'SO']):
+def plot_all_babies(dat, babies=range(0, 15), plot_features=['HR','SO']):
     """
     Plot the raw traces of the given channels, including the given number of babies on each plot
     :param babies: list/range of babies to include in each plot
-    :param rowsToPlot: channels to plot
+    :param plot_features: channels to plot
     """
-    fig, axes = plt.subplots(len(rowsToPlot), 1, figsize = (16, 10 * len(rowsToPlot)))
-    colours = sns.color_palette('husl', n_colors = len(range(0, 15)))
-    for i, rowName in enumerate(rowsToPlot):
-        for babyId in babies:
-            if len(rowsToPlot) == 1:
+    fig, axes = plt.subplots(len(plot_features), 1, figsize = (16, 10*len(plot_features)))
+    colours = sns.color_palette('husl', n_colors=len(range(0, 15)))
+    for i, feature in enumerate(plot_features):
+        for b_id in babies:
+            if len(plot_features) == 1:
                 ax = axes
             else:
                 ax = axes[i]
-            babyDf = buildTimeseries(dat, babyId)
-            ax.scatter(babyDf['tSeconds'], babyDf[rowName], label = babyId, s = 0.1, color = colours[babyId])
-            ax.set_ylabel(rowName, fontsize = 18)
-            ax.set_xlabel("Time (seconds)", fontsize = 18)
-        ax.legend(title = "Baby", markerscale = 25, ncol = 3)
+            baby_df = build_timeseries(dat, b_id)
+            if baby_df.get(feature) is not None:
+                ax.scatter(baby_df['time_s'], baby_df[feature], label=b_id, s=0.1, color=colours[b_id])
+                ax.set_ylabel(feature, fontsize=18)
+                ax.set_xlabel("Time (seconds)", fontsize=18)
+        ax.legend(title="Baby", markerscale=25, ncol=3)
     plt.tight_layout()
 
 #-----------------------------------
 # load, build metadata, and annotations of corresponding events
-data, intervals = getNeonatalData()
-metadataDf = buildMetadata(data)
-eventNames = getListOfEventNames(intervals)
-annotationsDf = buildAnnotations(eventNames, intervals)
+data, intervals = get_neonatal_data()
+metadata_df = build_metadata(data)
+event_names = get_event_names(intervals)
+annotations_df = build_annotations(event_names, intervals)
 
 #-----------------------------------
 # plot raw traces for each channel across neonatals
 plt.clf() # remove previous plots
-dfPlotAllBabies(data)
+plot_all_babies(data)
 ```
 
 ## Event conditions
@@ -193,56 +194,227 @@ import pandas as pd
 import seaborn as sns
 import numpy as np                                                            
 
-def expandEventData(eventAnnotations):
+def expand_event_data(event_annotations):
     """
     Flatten a list of intervals of events for a baby, and expand it so that
     consecutive times are returned.
-    :param eventAnnotations: intervals of annotations of events for the baby
-                             (list of lists of start and end times for an event)
+    :param event_annotations: intervals of annotations of events for the baby
+                              (list of lists of start and end times for an event)
     """
-    consecutive_periods = [list(range(start, end)) for start, end in eventAnnotations]
-    flatten = lambda l: [item for sublist in l for item in sublist]
-    return flatten(consecutive_periods)
+    consecutive_data = [np.arange(start, end) for start, end in event_annotations]
+    return np.concatenate(consecutive_data).ravel().tolist()
 
-def dfPlotEventsForBaby(dat, annotateDf, eNames, babies = range(0, 15), overlayChannel = None):
+def plot_events_for_baby(dat, annotate_df, e_names, babies=range(0, 15), overlay_channel=None):
     """
-    Plot the presence/absence of events for a baby over time and overlay an accompanying channel
-    trace.
+    Plot the presence/absence of events for a baby over time and overlay an accompanying channel trace.
     """
-    fig, axes = plt.subplots(len(babies), 1, figsize = (16, 8 * len(babies)))
-    colours = sns.color_palette('husl', n_colors=len(eNames))
-    for i, babyId in enumerate(babies):
+    fig, axes = plt.subplots(len(babies), 1, figsize=(20, 8*len(babies)))
+    colours = sns.color_palette('husl', n_colors=len(e_names))
+    for i, b_id in enumerate(babies):
         if len(babies) == 1:
             ax = axes
         else:
             ax = axes[i]
-        babyAnnot = annotateDf[annotateDf['BabyId'] == babyId]
-        eventsForBaby = []
-        for eNum, e in enumerate(eNames):
-            j = len(eventsForBaby)
-            annotations = babyAnnot[babyAnnot[e] != -1][e].values
+        annotations_for_baby = annotate_df[annotate_df['baby_id'] == b_id]
+        events_for_baby = []
+        for e_num, e in enumerate(e_names):
+            j = len(events_for_baby)
+            annotations = annotations_for_baby[annotations_for_baby[e] != -1][e].values
             if len(annotations) > 0:
-                eventsForBaby.append(e)
-                expandedEventData = expandEventData(annotations)
-                ax.scatter(x = expandedEventData, y = [j]*len(expandedEventData), c = [colours[eNum]])
-
-        ax.set_title("Baby {}".format(babyId), fontsize=18)
-        ax.set_xlabel("Time (seconds)", fontsize=18)
-        ax.set_yticks(list(range(len(eventsForBaby))))
-        ax.set_yticklabels(eventsForBaby, fontsize=18)
+                events_for_baby.append(e)
+                expanded_e_data = expand_event_data(annotations)
+                ax.scatter(x = expanded_e_data, y = [j]*len(expanded_e_data), c = [colours[e_num]])
         
-        if overlayChannel:
-            channels = np.concatenate(dat['preprocessed'][0][0][0][babyId][0]['labels'][0][0]).ravel().tolist()                                                                          
-            readings = dat['preprocessed'][0][0][0][babyId][0]['channels'][0]                                                   
-            babyDf = pd.DataFrame(readings, columns=channels).reset_index().rename(columns={"index": "tSeconds"})
+        ax.set_title("Baby {}".format(b_id), fontsize=18)
+        ax.set_xlabel('Time (seconds)', fontsize=18)
+        ax.set_yticks(list(range(len(events_for_baby))))
+        ax.set_yticklabels(events_for_baby, fontsize=18)
 
-            ax2 = ax.twinx()
-            ax2.scatter(babyDf['tSeconds'], babyDf[overlayChannel], label = overlayChannel, s = 0.1, color = "lightgrey")
-            ax2.legend(title = "Channel", markerscale = 25, ncol = 3)
-            ax2.set_ylabel(overlayChannel, fontsize = 18)  
+        if overlay_channel:
+            channels = np.concatenate(dat['preprocessed'][0][0][0][b_id][0]['labels'][0][0]).ravel().tolist()
+            readings = dat['preprocessed'][0][0][0][b_id][0]['channels'][0]
+            baby_df = pd.DataFrame(readings, columns = channels).reset_index().rename(columns={"index": "time_s"})
+            
+            if baby_df.get(overlay_channel) is not None:
+                ax2 = ax.twinx()
+                ax2.scatter(baby_df['time_s'], baby_df[overlay_channel], label=overlay_channel, s=0.1, color='lightgrey')
+                ax2.legend(title="Channel", markerscale=25, ncol=3)
+                ax2.set_ylabel(overlay_channel, fontsize=18)
     plt.tight_layout()
 
 mat = scipy.io.loadmat("15days.mat")['data']
 plt.clf()
-dfPlotEventsForBaby(mat, annotationsDf, eventNames['0'].values, babies=[1,2,3,4], overlayChannel='HR')
+plot_events_for_baby(mat, annotations_df, event_names['0'].values, babies=[1,2,3,4], overlay_channel='HR')
+```
+
+## Windowing the data and deriving features
+
+```python
+import numpy as np
+
+def get_average_interval_len(event_intervals):
+    """
+
+    """
+    diffs = [end-start for start, end in event_intervals.values]
+    return round(np.mean(diffs), 2), round(np.std(diffs), 2)
+
+for e in event_names['0'].values:
+    intervls = annotations_df[e][annotations_df[e] != -1]
+    avg_len, sd_len = get_average_interval_len(intervls)
+    print("Event {}: {} mean (s), {} std\n".format(e, avg_len, sd_len))
+```
+
+```python
+import numpy as np
+import pandas as pd
+import sklearn.tree
+
+def build_timeseries1(dat, baby_id):
+    """
+    Builds channel timeseries from given data for a given baby (nans replaced with -1)
+    :returns: pandas dataframe with columns time (seconds), and channel readings
+    """
+    channels_for_baby = get_channel_names(dat, baby_id)
+    readings_for_baby = dat['preprocessed'][0][0][0][baby_id][0]['channels'][0]
+    df = pd.DataFrame(readings_for_baby, columns=channels_for_baby)
+    return df.reset_index().rename(columns={"index": "time_s"})
+
+def compute_window_features(win, compute_differences=True):
+    # shape = (wSize, len(channels))
+    if compute_differences:
+        # now compute the differences in value per timestep
+        win = np.diff(win, n=1, axis=0)
+
+    funcs = [np.mean, np.std, np.min, np.max]
+    feats = [f(win, axis=0) for f in funcs]
+    feats = np.stack(feats, axis=1) # shape= (len(channels), len(funcs))
+    slope = win[-1] - win[0] # len(channels)
+    feats = np.concatenate([feats, slope[:,None]], axis=1)
+    return feats
+
+def build_dataset_for_baby(dat, baby_id, annotate_df, events, channels_to_use, window_size, raw_signal):
+    """
+    
+    """
+    ts = build_timeseries1(dat, baby_id)
+    filtered_ts = ts[channels_to_use]
+    baby_annotations = annotate_df[annotate_df["baby_id"] == baby_id].drop(columns=["baby_id"])
+    
+    event_labels = np.zeros((filtered_ts.shape[0], len(events)), dtype=bool)
+    for i, e in enumerate(events):
+        def fill_label(time_tup):
+            if time_tup is -1:
+                return time_tup
+            start, end = time_tup
+            event_labels[start:end, i] = True
+            return time_tup
+        baby_annotations[e].apply(fill_label)
+    
+    # randomly sample indices from event labels
+    indices_pos = np.where(event_labels)[0]
+    num_pos = indices_pos.size # take all of the positive points
+
+    indices_neg = np.where(event_labels == False)[0]
+    sampled_indices = np.concatenate((indices_pos, np.random.choice(indices_neg, size=num_pos, replace=False)))
+    sampled_indices = sampled_indices[sampled_indices > window_size]
+    y = event_labels[sampled_indices]
+
+    # windowing - for each t, go back in window_size
+    if raw_signal:
+        num_features = window_size*len(channels_to_use)
+    else:
+        num_features = len(channels_to_use) * 5 # mean, sd, min, max, slope
+        
+    x = np.zeros((sampled_indices.size, num_features))
+    for i, p in enumerate(sampled_indices):
+        window = filtered_ts.values[max(p-window_size, 0):p]      
+        
+        if raw_signal:
+            window = np.pad(window, ((window_size - window.shape[0],0),(0,0)))
+            x[i] = window.flatten()
+        else:
+            x[i] = compute_window_features(window).flatten()
+    
+    return {"input": x, "output": y}
+        
+def build_dataset(dat, annotate_df, e_names, channels, window_size=30, raw_signal=False, num_train=11, num_val=2):
+    """
+    
+    """
+    babies = np.arange(15)
+    np.random.shuffle(babies)
+
+    datasets = {"train": babies[:num_train],
+                "val": babies[num_train: num_train + num_val],
+                "test": babies[-num_val:]}
+    
+    def collect_baby_data(babies):
+        da = [build_dataset_for_baby(dat, b_id, annotate_df, e_names, channels, window_size, raw_signal)
+                 for b_id in babies] # list of dicts
+        
+        concatenated_data = {} # concat list into dict
+        for key in da[0].keys():
+            concatenated_data[key] = np.concatenate([d[key] for d in da], axis=0)
+        return concatenated_data
+    
+    return {k: collect_baby_data(v) for k, v in datasets.items()}
+
+def per_class_accuracy(mod, dset):
+    """
+    
+    """
+    pred = mod.predict(dset["input"])
+    groundTruth = dset["output"]
+    
+    if pred.shape == groundTruth.shape:
+        correct = (pred == groundTruth).astype(float)
+    else:
+        correct = (pred[:,None] == groundTruth).astype(float)
+    return correct.mean(axis=0), pred
+
+def train(mod, datasets):
+    """
+    
+    """
+    mod = mod.fit(datasets["train"]["input"], datasets["train"]["output"])
+    
+    trainAcc, trainPred = per_class_accuracy(mod, datasets["train"])
+    valAcc, valPred = per_class_accuracy(mod, datasets["val"])
+    testAcc, testPred = per_class_accuracy(mod, datasets["test"])
+    
+    return {"train": {"acc": trainAcc, "predictions": trainPred},
+            "val": {"acc": valAcc, "predictions": valPred},
+            "test": {"acc": testAcc, "predictions": testPred}}
+
+wind_size = 30
+print("WINDOW SIZE ", wind_size)
+
+raw_sig = False
+print("RAW SIGNAL ", raw_sig)
+
+# features = ['HR']
+features = [ 'HR', 'SO', 'Incu.Air Temp', 'HS', 'TP', 'TC']
+print("FEATURES ", features)
+
+predict_events = ["Bradycardia"]
+# predict_events = ['BloodSample','Bradycardia','CoreTempProbeDisconnect', 'IncubatorOpen', 'Abnormal'] # 'Normal', 'TCP'
+print("PREDICT EVENTS ", predict_events)
+
+iterations = 2
+reports = {}
+for it in range(iterations):
+    print("\nITERATION", it)
+    for e in predict_events:
+        dataset = build_dataset(data, annotations_df, [e], features, window_size=wind_size, raw_signal=raw_sig)
+        for d, v in dataset.items():
+            print(d, v['input'].shape)
+            if v['input'].shape[0] == 0:
+                raise Exception("No data found")
+
+        model = sklearn.tree.DecisionTreeClassifier()
+        reports[e] = {}
+        reports[e][it] = train(model, dataset)
+        print(e, it, "Train ", reports[e][it]['train']['acc'], "Val ", reports[e][it]['val']['acc'], "Test ", reports[e][it]['test']['acc'], "\n")
+
 ```
