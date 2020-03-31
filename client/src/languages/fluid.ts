@@ -15,8 +15,8 @@ const fluid: string = "fluid"
 let coordinator: PaneCoordinator
 
 function ensureInitialised (resourceServerUrl: string): void {
-   Pane.initialise(resourceServerUrl)
    if (coordinator === undefined) {
+      Pane.initialisePane(resourceServerUrl)
       // temporarily make specific dataset available as external data too
       coordinator = new PaneCoordinator(openDatasetAs("renewables-restricted", "data"))
    }
