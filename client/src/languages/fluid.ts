@@ -28,16 +28,17 @@ function ensureInitialised (resourceServerUrl: string): void {
 class FluidBlock implements Langs.Block {
    language: string = fluid
    source: string // needed to compute the hash?
-   ρ_e: [Env, Expr] | null
+   ρ_e: [Env, Expr] | null = null
 
    constructor (source: string) {
       this.source = source
-      try {
-         this.ρ_e = parseWithImports(source)
-      }
-      catch (ex) {
-         console.log(ex)
-         this.ρ_e = null
+      if (coordinator === undefined) { // can't parse until Fluid initialised
+         try {
+            this.ρ_e = parseWithImports(source)
+         }
+         catch (ex) {
+            console.log(ex)
+         }
       }
    }
 }
