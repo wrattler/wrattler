@@ -32,7 +32,7 @@ class FluidBlock implements Langs.Block {
 
    constructor (source: string) {
       this.source = source
-      if (coordinator === undefined) { // can't parse until Fluid initialised
+      if (coordinator !== undefined) { // can't parse until Fluid initialised
          try {
             this.ρ_e = parseWithImports(source)
          }
