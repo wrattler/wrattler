@@ -13,7 +13,7 @@ const CSS_CLASS = 'jp-Wrattler';
 /**
  * The MIME type for Wrattler.
  */
-export const MIME_TYPE = 'text/plain';
+export const MIME_TYPE = 'application/vnd.wrattler';
 /** @hidden */
 
 export const USE_BINDER= getUseBinder();
@@ -152,6 +152,7 @@ class PrivateWrattler {
     let pythonPort: string = "7101"
     let racketPort: string = "7104"
     let rPort: string = "7103"
+    let aiPort:string = "5050"
 
     let baseURL:string = window.location.protocol+"//"+window.location.hostname
     console.log("Using Binder flag set to: ".concat(JSON.stringify(USE_BINDER)))
@@ -166,11 +167,13 @@ class PrivateWrattler {
     console.log("Will look for r here:" +baseURL.concat(rPort))
     console.log("Will look for python here:" +baseURL.concat(pythonPort))
     console.log("Will look for racket here:" +baseURL.concat(racketPort))
+    console.log("Will look for AI assistant here: "+baseURL.concat(aiPort))
 
     return {
       "r": baseURL.concat(rPort),
       "python": baseURL.concat(pythonPort),
-      "racket": baseURL.concat(racketPort)
+      "racket": baseURL.concat(racketPort),
+      "ai assistant":baseURL.concat(aiPort)
     }
   }
 

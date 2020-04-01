@@ -1,3 +1,13 @@
+/**
+ * This module contains two helper functions that you can use to create
+ * standard user interface for your custom language plugins. Those functions
+ * are used by the built-in language plugins for JavaScript, Python and R.
+ * The typical way of using those functions is to call them from the
+ * `render` operation of your implementation of the
+ * [`Editor`](../interfaces/languages.editor.html) interface.
+ *
+ * @module Editor
+ */
 import * as Langs from '../definitions/languages';
 import * as Values from '../definitions/values';
 import { VNode } from 'maquette';

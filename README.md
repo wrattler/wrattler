@@ -2,7 +2,7 @@
 
 # Wrattler
 
-Wrattler is an polyglot notebook environment for exploratory data science. Wrattler
+Wrattler is a polyglot notebook environment for exploratory data science. Wrattler
 uses provenance tracking to guarantee reproducibility of your data analyses. Its
 architecture makes it possible to mix multiple programming languages in a single notebook
 and also to create interactive tools that run fully in the web browser. Wrattler

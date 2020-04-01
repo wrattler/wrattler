@@ -20,7 +20,8 @@
  * @module Main
  */
 
-/** This comment is needed so that TypeDoc parses the above one correctly */import * as Docs from './services/documentService'
+/** This comment is needed so that TypeDoc parses the above one correctly */
+import * as Docs from './services/documentService'
 import * as Langs from './definitions/languages'
 import { Log } from "./common/log"
 import { loadNotebook, initializeCells } from './main'
@@ -97,8 +98,15 @@ class Wrattler {
     var languagePlugins : LanguagePlugins = { };
 
     function getServiceUrl(language:string, def:string) {
-      if (serviceUrls && serviceUrls[language]) return serviceUrls[language];
-      else return def;
+      Log.trace("aiassistant", "getDefaultConfig getServiceUrl: language: %s options:%s", language, JSON.stringify(serviceUrls))
+      if (serviceUrls && serviceUrls[language]) {
+        Log.trace("aiassistant", "getDefaultConfig getServiceUrl returns: %s", serviceUrls[language])
+        return serviceUrls[language];
+      }
+      else {
+        Log.trace("aiassistant", "getDefaultConfig getServiceUrl returns: %s", def)
+        return def;
+      }
     }
     async function unit<T>(v:T) : Promise<T> {
       return v;
@@ -115,8 +123,9 @@ class Wrattler {
 //    languagePlugins["fluid"] = unit(fluidLanguagePlugin);
     // languagePlugins["racket"] = unit(new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
     // languagePlugins["merger"] = unit(mergerLanguagePlugin);
-    // languagePlugins["ai assistant"] = createAiaPlugin(getServiceUrl("ai assistant", AIASERVICE_URI), (datastoreUrl ? datastoreUrl : DATASTORE_URI));
-    // languagePlugins["spreadsheet"] = unit(spreadsheetLanguagePlugin);
+    languagePlugins["ai assistant"] = createAiaPlugin(getServiceUrl("ai assistant", AIASERVICE_URI), (datastoreUrl ? datastoreUrl : DATASTORE_URI));
+    // languagePlugins["spreadsheet"] = unit(new spreadsheetLanguagePlugin("spreadsheet", "fas fa-file-spreadsheet", getServiceUrl("r", RSERVICE_URI)));
+
 
     let newConfig:WrattlerConfig = { languagePlugins:languagePlugins,
       resourceServerUrl:CLIENT_URI,

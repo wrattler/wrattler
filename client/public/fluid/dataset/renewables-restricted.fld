@@ -1,0 +1,145 @@
+// typedef Year = Num
+// typedef Country = Str
+// typedef EnergyType = Str
+// typedef Output = Num
+// typedef CountryData = List (EnergyType, Output)
+// typedef AnnualData = List (Country, CountryData)
+// typedef Data = List (Year, AnnualData)
+// The original dataset sometimes has '~0' instead of '0'. 
+
+// Including only 3 countries here. Also, have reduced the Hydro value for China 2015 from 296 to 96 (ouch)
+// to make the charts fit nicely into my grant proposal. Fix this once proposal submitted!
+[
+   // https://www.ren21.net/wp-content/uploads/2019/05/GSR2014_Full-Report_English.pdf
+   (2013, [
+      ("China", [
+         ("Bio", 6.2),
+         ("Hydro", 260),
+         ("Solar", 19.9),
+         ("Wind", 91)
+      ]),
+      ("USA", [
+         ("Bio", 15.8),
+         ("Hydro", 78),
+         ("Solar", 12.1),
+         ("Wind", 61)
+      ]),
+      ("Germany", [
+         ("Bio", 8.1),
+         ("Hydro", 5.6),
+         ("Solar", 36),
+         ("Wind", 34)
+      ])
+   ]),
+   // https://www.ren21.net/wp-content/uploads/2019/05/GSR2015_Full-Report_English.pdf
+   (2014, [
+      ("China", [
+         ("Bio", 10),
+         ("Hydro", 280),
+         ("Solar", 28),
+         ("Wind", 115)
+      ]),
+      ("USA", [
+         ("Bio", 16.1),
+         ("Hydro", 79),
+         ("Solar", 18),
+         ("Wind", 66)
+      ]),
+      ("Germany", [
+         ("Bio", 8.8),
+         ("Hydro", 5.6),
+         ("Solar", 38),
+         ("Wind", 39)
+      ])
+   ]),
+   // http://www.ren21.net/gsr-2016/00-Reference-Tables.php
+   (2015, [
+      ("China", [
+         ("Bio", 10.3),
+         ("Hydro", 96),
+         ("Solar", 44),
+         ("Wind", 145)
+      ]),
+      ("USA", [
+         ("Bio", 16.7),
+         ("Hydro", 80),
+         ("Solar", 26),
+         ("Wind", 74)
+      ]),
+      ("Germany", [
+         ("Bio", 7.1),
+         ("Hydro", 5.6),
+         ("Solar", 40),
+         ("Wind", 45)
+      ])
+   ]),
+   // http://www.ren21.net/gsr-2017/pages/tables/tables/#table-R2
+   (2016, [
+      ("China", [
+         ("Bio", 12),
+         ("Hydro", 305),
+         ("Solar", 77),
+         ("Wind", 169)
+      ]),
+      ("USA", [
+         ("Bio", 16.8),
+         ("Hydro", 80),
+         ("Solar", 41),
+         ("Wind", 82)
+      ]),
+      ("Germany", [
+         ("Bio", 7.6),
+         ("Hydro", 5.6),
+         ("Solar", 41),
+         ("Wind", 50)
+      ]),
+      ("India", [
+         ("Bio", 8.3),
+         ("Hydro", 47),
+         ("Solar", 9.1),
+         ("Wind", 29)
+      ])
+   ]),
+   // http://www.ren21.net/gsr-2018/pages/tables/tables/#Table_R2
+   (2017, [
+      ("China", [
+         ("Bio", 14.9),
+         ("Hydro", 313),
+         ("Solar", 131),
+         ("Wind", 188)
+      ]),
+      ("USA", [
+         ("Bio", 16.7),
+         ("Hydro", 80),
+         ("Solar", 51),
+         ("Wind", 89)
+      ]),
+      ("Germany", [
+         ("Bio", 8),
+         ("Hydro", 5.6),
+         ("Solar", 42),
+         ("Wind", 56)
+      ])
+   ]),
+   // https://www.ren21.net/gsr-2019/tables/table_02/table_02/
+   (2018, [
+      ("China", [
+         ("Bio", 17.8),
+         ("Hydro", 322),
+         ("Solar", 176),
+         ("Wind", 210)
+      ]),
+      ("USA", [
+         ("Bio", 16.2),
+         ("Hydro", 80),
+         ("Solar", 62),
+         ("Wind", 96)
+      ]),
+      ("Germany", [
+         ("Bio", 8.4),
+         ("Hydro", 5.6),
+         ("Solar", 45),
+         ("Wind", 59)
+      ])
+   ])
+]

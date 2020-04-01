@@ -3,6 +3,7 @@ client/paket-files
 client/src/obj
 client/tools/obj
 client/build
+client/public/wrattler-app.js
 client/docs
 # Python - ignore byte-compiled / optimized / DLL files
 __pycache__/

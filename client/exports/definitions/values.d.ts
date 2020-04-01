@@ -1,6 +1,6 @@
 /**
  * In a Wrattler notebook, each cell is associated with one or more nodes in a
- * [depedency graph](../modules/graph.html). Nodes in the dependency graph represent
+ * [dependency graph](../modules/graph.html). Nodes in the dependency graph represent
  * parts of code. These can be coarse grained such as the enitre Python cell or more
  * fine grained (if a language plugin can parse source code and analyse dependencies fully
  * in the browser). When evaluating cell in a notebook, Wrattler does that by recursively
@@ -48,7 +48,7 @@ interface Value {
 * understands. Those are values that should be exported by the `exports` property of
 * `ExportsValue` and represent images, console outputs, data frames, etc.
 */
-declare type KnownValue = JavaScriptOutputValue | DataFrame | ExportsValue | Printout | Figure;
+declare type KnownValue = JavaScriptOutputValue | DataFrame | Printout | Figure;
 /**
 * Represents a bit of exported JavaScript functionality that creates custom DOM output.
 * The `render` function is called by Wrattler after it creates a tab below a code editor.
@@ -61,6 +61,10 @@ interface JavaScriptOutputValue extends Value {
      * ID and then pass the ID to this function to render whatever it needs. */
     render: (id: string) => void;
 }
+/** A dictionary that stores all values exported by a code cell. */
+declare type Exports = {
+    [key: string]: KnownValue;
+};
 /**
 * Represents exports of code cell. When writing a [`LanguagePlugin`](../interfaces/languages.languageplugin.html),
 * the `bind` operation returns a graph node named `code` that represents the result of
@@ -70,12 +74,8 @@ interface JavaScriptOutputValue extends Value {
 interface ExportsValue extends Value {
     /** A tag that is used for pattern matching on `KnownValue` instances. */
     kind: "exports";
-    /** A dictionary that stores all values exported by a code cell. Wrattler will display tabs
-     * with the keys from this dictionary.
-     */
-    exports: {
-        [key: string]: KnownValue;
-    };
+    /** Wrattler will display tabs with the keys from this dictionary. */
+    exports: Exports;
 }
 /**
 * Represents a data frame. A data frame is always stored in the data store and represented
@@ -112,4 +112,4 @@ interface Figure extends Value {
     /** Base64 encoded data of a PNG image representing the figure */
     data: string;
 }
-export { Value, KnownValue, ExportsValue, JavaScriptOutputValue, Printout, DataFrame, Figure };
+export { Value, KnownValue, Exports, ExportsValue, JavaScriptOutputValue, Printout, DataFrame, Figure };
