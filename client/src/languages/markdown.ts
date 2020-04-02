@@ -138,7 +138,7 @@ class MarkdownBlockKind implements Langs.Block {
     language: "markdown",
     iconClassName: "fa fa-arrow-down",
     editor: markdownEditor,
-    getDefaultCode: (id:number) => " ",
+    getDefaultCode: (id:number) => "This is a markdown cell.",
     parse: (code:string) => {
       return new MarkdownBlockKind(code);
     },
