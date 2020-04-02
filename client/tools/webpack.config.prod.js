@@ -2,7 +2,7 @@ var webpack = require("webpack");
 var common = require("./webpack.config.common");
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
-console.log("Bundling Wrattler for production...");
+console.log("Bundling for production...");
 
 module.exports = {
   devtool: "source-map",
