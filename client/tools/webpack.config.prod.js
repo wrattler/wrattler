@@ -5,6 +5,7 @@ var CopyWebpackPlugin = require('copy-webpack-plugin');
 console.log("Bundling for production...");
 
 module.exports = {
+  devtool: "source-map",
   entry: common.config.entry,
   output: {
 		library: "MyLibrary",
@@ -18,7 +19,7 @@ module.exports = {
   module: {
     rules: common.getModuleRules()
   },
-  plugins: 
+  plugins:
     common.getPlugins().concat([new CopyWebpackPlugin([ { from: common.config.publicDir } ]),new webpack.optimize.LimitChunkCountPlugin({maxChunks: 1})])
     // new webpack.optimize.LimitChunkCountPlugin({maxChunks: 1})
   ,
