@@ -487,7 +487,7 @@ data_matrix = scipy.io.loadmat("15days.mat")['data']
 iterations = 3
 reports = {}
 for it in range(iterations):
-    print("\nITERATION\n---------", it)
+    print("\nITERATION {}\n---------".format(it))
     for e in predict_events:
         dataset = build_dataset(data_matrix, annotations_df, [e], features, window_size=wind_size, raw_signal=raw_sig)
         for d, v in dataset.items():
@@ -592,7 +592,7 @@ addOutput(function(id) {
     "<div style='height: 500px; margin: 10px;' class='graph'></div>";
 
   function unpack(key) {
-    return js_df.map(function(row) {
+    return subset_df.map(function(row) {
       return row[key];
     });
   }
@@ -666,7 +666,6 @@ addOutput(function(id) {
 
   let line = d3.svg
     .line()
-    .interpolate("basis")
     .x(function(d, i) {
       return x(i - (limit - 1) + dataIndex);
     })
