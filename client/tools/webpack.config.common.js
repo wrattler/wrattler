@@ -8,9 +8,12 @@ var packageJson = JSON.parse(fs.readFileSync(resolve('../package.json')).toStrin
 var errorMsg = "{0} missing in package.json";
 
 var config = {
-  entry: { 
+  entry: {
     "app": "../src/wrattler.ts",
     // "editor.worker": 'monaco-editor/esm/vs/editor/editor.worker.js',
+  },
+  optimization: {
+    minimize: false
   },
   publicDir: resolve("../public"),
   buildDir: resolve("../build"),
@@ -42,9 +45,9 @@ function getModuleRules(isProduction) {
   };
 
   return [
-    { 
-      test: /\.ts|\.tsx?$/, 
-      loader: "ts-loader" 
+    {
+      test: /\.ts|\.tsx?$/,
+      loader: "ts-loader"
     },
     {
       test: /\.js$/,
