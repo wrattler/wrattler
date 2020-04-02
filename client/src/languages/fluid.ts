@@ -16,7 +16,7 @@ let coordinator: PaneCoordinator
 
 function ensureInitialised (resourceServerUrl: string): void {
    if (coordinator === undefined) {
-      Pane.initialisePane(resourceServerUrl)
+      Pane.initialise(resourceServerUrl)
       // temporarily make specific dataset available as external data too
       coordinator = new PaneCoordinator(openDatasetAs("renewables-restricted", "data"))
    }
