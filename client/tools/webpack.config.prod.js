@@ -2,7 +2,7 @@ var webpack = require("webpack");
 var common = require("./webpack.config.common");
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
-console.log("Bundling for production...");
+console.log("Bundling Wrattler for production...");
 
 module.exports = {
   devtool: "source-map",
@@ -12,6 +12,9 @@ module.exports = {
     libraryTarget: "umd",
     filename: 'wrattler-[name].js',
     path: common.config.buildDir
+  },
+  optimization: {
+    minimize: false
   },
   node: {
     fs: 'empty'

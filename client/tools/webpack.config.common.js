@@ -12,9 +12,6 @@ var config = {
     "app": "../src/wrattler.ts",
     // "editor.worker": 'monaco-editor/esm/vs/editor/editor.worker.js',
   },
-  optimization: {
-    minimize: false
-  },
   publicDir: resolve("../public"),
   buildDir: resolve("../build"),
   nodeModulesDir: resolve("../node_modules"),
