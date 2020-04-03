@@ -20,6 +20,7 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
   }
 
   function getCellLanguage(codeCell: string) {
+
     let listOfLanguages = ["javascript", "python", "racket", "r", "thegamma","ai assistant","fluid"] 
     for (var l = 0; l < listOfLanguages.length; l++) {
       let languageMarker = "```".concat(listOfLanguages[l])
@@ -54,7 +55,7 @@ async function getDocument(paragraph:string): Promise<DocumentElement[]> {
   }
 
   if (documents.length == 0) {
-    documents.push({language: "markdown", source: "Wellcome to Wrattler" })
+    documents.push({language: "markdown", source: "Welcome to Wrattler" })
   }
 
 

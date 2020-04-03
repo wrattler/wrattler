@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import pandas as pd
+import tempfile
 
 sys.path.insert(0, '../src/')
 from src.Ptype import Ptype
