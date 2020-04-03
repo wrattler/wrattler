@@ -4,13 +4,6 @@ import * as Values from '../definitions/values';
 import * as Editor from '../editors/editor'; 
 import { h } from 'maquette';
 import { Md5 } from 'ts-md5';
-/*
-import * as monaco from 'monaco-editor';
-import marked from 'marked';
-import { Value } from '../definitions/values';
-import { Statement } from 'typescript';
-import { Log } from '../common/log';
-*/
 
 interface MergerBlock extends Langs.Block {
   language : string
@@ -32,7 +25,7 @@ type MergerState = {
 const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
   initialize: (id:number, block:Langs.Block) => {  
     let mergerBlock = <MergerBlock>block
-    var selected = {}
+    var selected : { [key:string] : boolean }= {}
     for (let s of mergerBlock.inputs) selected[s] = true;
     return { id: id, block: <MergerBlock>block, selected:selected, newName:mergerBlock.output }
   },
@@ -47,7 +40,6 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
     }
   },
 
-  /*
   render: (cell:Langs.BlockState, state:MergerState, context:Langs.EditorContext<MergerEvent>) => {
     let source = state.newName + "=" + 
       Object.keys(state.selected).filter(s => state.selected[s]).join(",")
@@ -60,8 +52,8 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
       ])
     ]);
   }
-  */
 
+  /*
   render: (cell:Langs.BlockState, state:MergerState, context:Langs.EditorContext<MergerEvent>) => {
     let mergerNode = <MergerCodeNode>cell.code
     let source = state.newName + "=" + 
@@ -86,7 +78,7 @@ const mergerEditor : Langs.Editor<MergerState, MergerEvent> = {
             context.evaluate(cell.editor.id) }, []) )            
       ])
     ])
-  }
+  }*/
 }
 
 interface MergerCodeNode extends Graph.Node {
@@ -108,6 +100,7 @@ export const mergerLanguagePlugin : Langs.LanguagePlugin = {
   iconClassName: "fa fa-object-group",
   editor: mergerEditor,
   getDefaultCode: (id:number) => "",
+  
   parse: (code:string) : MergerBlock => {
     console.log("PARSE", code)
     let [outName, inputs] = code.split('=')

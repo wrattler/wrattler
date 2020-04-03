@@ -6,7 +6,7 @@ import * as Langs from '../definitions/languages';
 import {h, VNode} from 'maquette';
 import { Log } from '../common/log';
 
-function createMonaco(el, lang, source, rebindAndEvaluate) {
+function createMonaco(el:HTMLElement, lang:string, source:string, rebindAndEvaluate:any) {
   let ed = monaco.editor.create(el, {
     value: source,
     language: lang,
@@ -39,7 +39,7 @@ function createMonaco(el, lang, source, rebindAndEvaluate) {
 
 function createEditor(lang:string, source:string, cell:Langs.BlockState, context:Langs.EditorContext<any>) {
   
-  let afterCreateHandler = (el) => { 
+  let afterCreateHandler = (el:HTMLElement) => { 
     Log.trace("editor", "Created Monaco editor for id: %s (code: %s)", el.id, source.replace(/[\n\r]/g," ").substr(0,100))
     let rebindAndEvaluate = (code:string) => { 
       Log.trace("editor", "Rebind + Evaluation triggered by Shift+Enter")
@@ -82,7 +82,7 @@ function createEditor(lang:string, source:string, cell:Langs.BlockState, context
     setTimeout(resizeEditor, 1)
   }
 
-  let afterUpdateHandler = (el) => { 
+  let afterUpdateHandler = (el:HTMLElement) => { 
     // Log.trace("editor", "Updating Monaco editor for id: %s (code: %s)", el.id, source.replace(/[\n\r]/g," ").substr(0,100))
   }
 

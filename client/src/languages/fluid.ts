@@ -44,8 +44,8 @@ class FluidBlock implements Langs.Block {
 }
 
 class FluidState implements Langs.EditorState {
-   id: number
-   block: FluidBlock
+   id: number = -1
+   block: FluidBlock = <any>null
 }
 
 class FluidEvent {
@@ -183,15 +183,15 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
    async evaluate (context: Langs.EvaluationContext, node: Graph.Node): Promise<Langs.EvaluationResult> {
       if (node instanceof FluidNode) {
          ensureInitialised()
-         const imports: [string, Values.DataFrame][] = (node.antecedents
+         const imports = (node.antecedents
             // invariant - only depend on exported nodes:
             .filter(isExportNode)
             // exported values are known and non-null
-            .map(node => [node.variableName, node.value as Values.KnownValue])
-            .filter(([x, v]: [string, Values.KnownValue]) => v.kind === "dataframe")) as [string, Values.DataFrame][]
+            .map(node => ({"v": node.variableName, "k":(node.value as Values.DataFrame) }))
+            .filter(xv => xv.k.kind === "dataframe")) 
          let ρ_imports: Env = emptyEnv() // from other cells
-         for (let [x, { data }] of imports) {
-            ρ_imports = bindDataset(ρ_imports, await data.getValue(), x) // data is any[] but assume Object[]
+         for (let xv of imports) {
+            ρ_imports = bindDataset(ρ_imports, await xv.k.data.getValue(), xv.v) // data is any[] but assume Object[]
          }
          const [ρ_importsʹ, e]: [Env, Expr] = node.block.ρ_e! // from default modules
          if (this.pane !== null) {

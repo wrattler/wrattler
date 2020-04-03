@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@rolyp/fluid": "^0.1.29",
+    "@types/marked": "^0.7.3",
     "axios": "^0.18.0",
     "maquette": "^3.3.0",
     "marked": "^0.4.0",

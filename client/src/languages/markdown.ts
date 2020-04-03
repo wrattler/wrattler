@@ -21,7 +21,7 @@ class MarkdownBlockKind implements Langs.Block {
     }
   }
   
-  function createMonaco(el, source, context) {
+  function createMonaco(el:HTMLElement, source:string, context:any) {
     let ed = monaco.editor.create(el, {
       value: source,
       language: 'markdown',
@@ -106,7 +106,7 @@ class MarkdownBlockKind implements Langs.Block {
       } else {
         let lastHeight = 100;
         let lastWidth = 0
-        let afterCreateHandler = (el) => { 
+        let afterCreateHandler = (el:HTMLElement) => { 
           // Log.trace("editor", "Creating Monaco editor for id: %s (code: %s)", el.id, state.block.source.replace(/[\n\r]/g," ").substr(0,100))
           let ed = createMonaco(el, state.block.source, context)
           let resizeEditor = () => {
