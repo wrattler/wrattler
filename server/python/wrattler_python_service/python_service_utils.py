@@ -148,7 +148,7 @@ def convert_from_pandas(dataframe, max_size_json=0):
     if not isinstance(dataframe, pd.DataFrame):
         try:
             dataframe = pd.DataFrame(dataframe)
-        except(ValueError):
+        except(ValueError,TypeError):
             return None
     if dataframe.size > max_size_json:
         try:

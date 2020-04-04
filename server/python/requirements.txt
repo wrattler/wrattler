@@ -4,6 +4,7 @@ requests
 flask
 flask_cors
 matplotlib
+pycairo
 scipy
 pip
 pyarrow

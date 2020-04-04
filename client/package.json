@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "build": "rm -f build/wrattler-app.js public/wrattler-app.js && cd tools && webpack -p --config webpack.config.prod.js && cd .. && cp build/wrattler-app.js public/wrattler-app.js",
+    "build": "rm -f build/wrattler-app.js build/wrattler-app.js.map public/wrattler-app.js public/wrattler-app.js.map && cd tools && webpack -p --config webpack.config.prod.js && cd .. && cp build/wrattler-app.js public/wrattler-app.js && cp build/wrattler-app.js.map public/wrattler-app.js.map",
     "start": "cd tools && webpack-dev-server --config webpack.config.dev.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "docs": "node node_modules/typedoc/bin/typedoc --name \"Wrattler API documentation\" --readme src/api.md --out ../docs/api --exclude \"**/+(languages|common|services|demo)/**/*\" --module \"commonjs\" --excludeExternals src"
@@ -24,7 +24,7 @@
     "webpack-dev-server": "^3.1.1"
   },
   "dependencies": {
-    "@rolyp/fluid": "^0.1.29",
+    "@rolyp/fluid": "^0.2.8",
     "axios": "^0.18.0",
     "maquette": "^3.3.0",
     "marked": "^0.4.0",

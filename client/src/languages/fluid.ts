@@ -14,10 +14,9 @@ import { createMonacoEditor, createOutputPreview } from "../editors/editor"
 const fluid: string = "fluid"
 let coordinator: PaneCoordinator
 
-//Pane.initialise()
-
-function ensureInitialised (): void {
+function ensureInitialised (resourceServerUrl: string): void {
    if (coordinator === undefined) {
+      Pane.initialise(resourceServerUrl)
       // temporarily make specific dataset available as external data too
       coordinator = new PaneCoordinator(openDatasetAs("renewables-restricted", "data"))
    }
@@ -29,16 +28,17 @@ function ensureInitialised (): void {
 class FluidBlock implements Langs.Block {
    language: string = fluid
    source: string // needed to compute the hash?
-   ρ_e: [Env, Expr] | null
+   ρ_e: [Env, Expr] | null = null
 
    constructor (source: string) {
       this.source = source
-      try {
-         this.ρ_e = parseWithImports(source)
-      }
-      catch (ex) {
-         console.log(ex)
-         this.ρ_e = null
+      if (coordinator !== undefined) { // can't parse until Fluid initialised
+         try {
+            this.ρ_e = parseWithImports(source)
+         }
+         catch (ex) {
+            console.log(ex)
+         }
       }
    }
 }
@@ -159,6 +159,7 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
    }
 
    async bind (context: Langs.BindingContext, block: Langs.Block): Promise<Langs.BindingResult> {
+      ensureInitialised(context.resourceServerUrl)
       console.log(context.scope)
       if (block instanceof FluidBlock) {
          let antecedents: Graph.Node[]
@@ -182,7 +183,7 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
    // For now, linking is mediated through a fixed external dataset, not through data imported from other cells.
    async evaluate (context: Langs.EvaluationContext, node: Graph.Node): Promise<Langs.EvaluationResult> {
       if (node instanceof FluidNode) {
-         ensureInitialised()
+         ensureInitialised(context.resourceServerUrl)
          const imports: [string, Values.DataFrame][] = (node.antecedents
             // invariant - only depend on exported nodes:
             .filter(isExportNode)

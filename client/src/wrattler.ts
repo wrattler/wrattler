@@ -98,7 +98,7 @@ class Wrattler {
     var languagePlugins : LanguagePlugins = { };
 
     function getServiceUrl(language:string, def:string) {
-      Log.trace("aiassistant", "getDefaultConfig getServiceUrl: language: %s options:%s", language, JSON.stringify(serviceUrls)) 
+      Log.trace("aiassistant", "getDefaultConfig getServiceUrl: language: %s options:%s", language, JSON.stringify(serviceUrls))
       if (serviceUrls && serviceUrls[language]) {
         Log.trace("aiassistant", "getDefaultConfig getServiceUrl returns: %s", serviceUrls[language])
         return serviceUrls[language];
@@ -112,15 +112,15 @@ class Wrattler {
       return v;
     }
 
-    let pyCode =  "# This is a python cell \n# py[ID] = pd.DataFrame({\"id\":[\"[ID]\"], \"language\":[\"python\"]})";
-    let rCode = "# This is an R cell \n r[ID] <- data.frame(id = [ID], language =\"r\")";
-    let rcCode = ";; This is a Racket cell [ID]\n";
+    let pyCode =  "";
+      let rCode = "";
+      let rcCode = "";
 
     languagePlugins["markdown"] = unit(markdownLanguagePlugin);
     languagePlugins["javascript"] = unit(new JavascriptLanguagePlugin(datastoreUrl ? datastoreUrl : DATASTORE_URI));
     languagePlugins["python"] = unit(new ExternalLanguagePlugin("python", "fab fa-python", getServiceUrl("python", PYTHONSERVICE_URI), pyCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
     languagePlugins["r"] = unit(new ExternalLanguagePlugin("r", "fab fa-r-project", getServiceUrl("r", RSERVICE_URI), rCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
-    // languagePlugins["fluid"] = unit(fluidLanguagePlugin);
+//    languagePlugins["fluid"] = unit(fluidLanguagePlugin);
     // languagePlugins["racket"] = unit(new ExternalLanguagePlugin("racket", "fa fa-question-circle", getServiceUrl("racket", RACKETSERVICE_URI), rcCode, (datastoreUrl ? datastoreUrl : DATASTORE_URI)));
     // languagePlugins["merger"] = unit(mergerLanguagePlugin);
     languagePlugins["ai assistant"] = createAiaPlugin(getServiceUrl("ai assistant", AIASERVICE_URI), (datastoreUrl ? datastoreUrl : DATASTORE_URI));
