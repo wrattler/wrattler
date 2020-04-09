@@ -15,7 +15,7 @@ with open("requirements.txt", "r") as f:
 
 setup(
     name="wrattler-data-store",
-    version="0.5.1",
+    version="0.5.2",
     description="Flask app providing datastore for the Wrattler notebook project",
     url="https://github.com/wrattler/wrattler",
     author="Nick Barlow, Tomas Petricek, May Yong",
