@@ -22,7 +22,7 @@ docs/_site
 # emacs autosave files
 *~
 *.ipynb
-resources/.ipynb_checkpoints/
+.ipynb_checkpoints
 .cache
 server/python/.cache
 .#*

@@ -28,18 +28,25 @@ function ensureInitialised (resourceServerUrl: string): void {
 class FluidBlock implements Langs.Block {
    language: string = fluid
    source: string // needed to compute the hash?
-   ρ_e: [Env, Expr] | null = null
+   private ρ_e: [Env, Expr] | null // null iff fails to parse
 
    constructor (source: string) {
       this.source = source
-      if (coordinator !== undefined) { // can't parse until Fluid initialised
+   }
+
+   // No accessors until we target ES 6.
+   get_ρ_e (): [Env, Expr] | null {
+      assert(coordinator !== undefined)
+      if (this.ρ_e === undefined) {
          try {
-            this.ρ_e = parseWithImports(source)
+            this.ρ_e = parseWithImports(this.source)
          }
          catch (ex) {
             console.log(ex)
+            this.ρ_e = null
          }
       }
+      return this.ρ_e
    }
 }
 
@@ -154,6 +161,7 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
       return ""
    }
 
+   // Note: parsing not possible until we have Langs.BindingContext.
    parse (code: string): FluidBlock {
       return new FluidBlock(code)
    }
@@ -163,10 +171,10 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
       console.log(context.scope)
       if (block instanceof FluidBlock) {
          let antecedents: Graph.Node[]
-         if (block.ρ_e === null) {
+         if (block.get_ρ_e() === null) {
             antecedents = []
          } else {
-            const ys: Set<string> = Expr.freeVars(block.ρ_e[1]),
+            const ys: Set<string> = Expr.freeVars(block.get_ρ_e()![1]),
                   xs: string[] = Object.keys(context.scope).filter(x => (ys as any).has(x)) // ES6 dynamic, ES5 static :-o
             antecedents = xs.map(x => context.scope[x])
          }
@@ -194,7 +202,7 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
          for (let [x, { data }] of imports) {
             ρ_imports = bindDataset(ρ_imports, await data.getValue(), x) // data is any[] but assume Object[]
          }
-         const [ρ_importsʹ, e]: [Env, Expr] = node.block.ρ_e! // from default modules
+         const [ρ_importsʹ, e]: [Env, Expr] = node.block.get_ρ_e()! // from default modules
          if (this.pane !== null) {
             coordinator.removePane(this.pane)
             this.pane = null
