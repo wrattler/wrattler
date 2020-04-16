@@ -1,0 +1,246 @@
+// typedef Colour = Str
+// typedef Colours = List Colour
+// typedef Cat = Str
+
+// Simplistic but something more general may require primitives which take data values for input.
+// Application module GraphicsRenderer must be loaded for these definitions to work.
+// Str → Num
+primitive textWidth;
+
+// Str → Num
+primitive textHeight;
+
+// Group has location (0, 0) because it doesn't interfere with positioning of its children.
+// GraphicsElement → Point
+letrec fun coords {
+   Group(gs) → Point(0, 0);
+   Rect(x, y, _, _, _) → Point(x, y);
+   Text(x, y, _, _, _) → Point(x, y);
+   Viewport(x, y, _, _, _, _, _, _, _) → Point(x, y)
+};
+
+// GraphicsElement → Num
+let get_x = fun g → match coords g as Point(x, _) → x;
+
+// GraphicsElement → Num
+let get_y = fun g → match coords g as Point(_, y) → x;
+
+// Want some kind of typeclass mechanism plus record accessors/updaters.
+// Num → GraphicsElement → GraphicsElement
+letrec fun set_x x {
+   Group(gs) → error "Group has immutable coordinates";
+   Rect(_, y, w, h, fill) → Rect(x, y, w, h, fill);
+   Text(_, y, str, anchor, baseline) → Text(x, y, str, anchor, baseline);
+   Viewport(_, y, w, h, fill, margin, scale, translate, g) → 
+      Viewport(x, y, w, h, fill, margin, scale, translate, g)
+};
+
+// (Point, Point) → Point
+let dimensions2 = fun (Point(x1, y1), Point(x2, y2)) →
+   Point(max2 (x1, x2), max2 (y1, y2));
+
+// For Group, dimensions are relative to implicit coords of (0, 0), since a Group's children are effectively
+// positioned relative to parent of Group. For Polymarker, will probably have to ignore the markers themselves, 
+// since they are scale-invariant.
+// GraphicsElement → Point
+letrec 
+   fun dimensions {
+      Group(gs) → foldl dimensions2 Point(0, 0) (map (coords_op) gs);
+      Polyline(ps, _, _) → foldl dimensions2 Point(0, 0) ps;
+      Rect(_, _, w, h, _) → Point(w, h);
+      Text(_, _, _, _, _) → Point(0, 0); // treat text like markers; scale-invariant
+      Viewport(_, _, w, h, _, _, _, _, _) → Point(w, h)
+   };
+
+   fun coords_op g → 
+      match prod coords dimensions g as 
+      (Point(x, y), Point(w, h)) → Point(x + w, y + h);
+
+// GraphicsElement → Num
+let width = fun g → match dimensions g as Point(w, _) → w;
+
+// GraphicsElement → Num
+let height = fun g → match dimensions g as Point(_, h) → h;
+
+// Num → Num → List GraphicsElement → List GraphicsElement
+let spaceRight = fun z sep gs →
+   zipWith (uncurry set_x) (iterate (length gs) (fun x → x + sep) z) gs;
+
+// Bake colour decisions into the library for the time being. Provide two palettes, so we can have two
+// different sets of categorical values (e.g. countries and energy types). Palettes from colorbrewer2.org.
+let colours1 = ["#66c2a5", "#a6d854", "#ffd92f", "#e5c494", "#fc8d62", "#b3b3b3", "#8da0cb", "#e78ac3"];
+let colours2 = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf"];
+
+// Compositionality principle: child coords/dimensions are always expressed directly using parent reference 
+// frame, to avoid depending on content of child, and so are not themselves scaled. Polyline can't be scaled
+// directly because it inherits its frame of reference from its parent. For Viewport, margin will shrink the
+// available area, possibly to zero, at which point nothing will be rendered.
+// Num → GraphicsElement → GraphicsElement
+letrec fun scaleToWidth w {
+   Rect(x, y, _, h, fill) → Rect(x, y, w, h, fill);
+   Viewport(x, y, w0, h, fill, margin, Scale(x_scale, y_scale), translate, g) → 
+      let scale = Scale(x_scale * w / w0, y_scale) in Viewport(x, y, w, h, fill, margin, scale, translate, g)
+};
+
+// Num → List GraphicsElement → List GraphicsElement
+let stackRight = fun sep gs →
+   map (scaleToWidth (1 - sep)) (spaceRight (sep / 2) 1 gs);
+
+// Num → List GraphicsElement → GraphicsElement
+let groupRight = fun sep gs →
+   Viewport(0, 0, length gs, max (map height gs), "none", 0, Scale(1, 1), Translate(0, 0), Group(stackRight sep gs));
+
+// Heuristic saying how often to place a tick on an axis of length n.
+// Num → Num
+let tickEvery = fun n →
+   let m = floor (logBase 10 n) in
+   match n <= 2 * 10 ** m as {
+      True → 2 * 10 ** (m - 1);
+      False → 10 ** m
+   };
+
+let axisStrokeWidth = 0.5;
+let axisColour = "black";
+let backgroundColour = "white";
+let defaultMargin = 24;
+let markerRadius = 3.5;
+let tickLength = 4;
+
+// Helpers for axis functions.
+// Orient → Colour → Num → GraphicsElement
+let tick = fun {
+   Horiz colour len →
+      Line(Point(0, 0), Point(0, 0 - len), colour, axisStrokeWidth);
+   Vert colour len →
+      Line(Point(0, 0), Point(0 - len, 0), colour, axisStrokeWidth)
+   };
+
+// Orient → Num → Num → Str → GraphicsElement
+let label = fun {
+   Horiz x distance str → Text(x, (0 - 4) - distance, str, "middle", "hanging"); // -4 , ugh
+   Vert x distance str → Text(0 - distance, x, str, "end", "central")
+};
+
+// Orient → Colour → Num → Str → GraphicsElement
+let labelledTick = fun orient colour len str →
+   Group([tick orient colour len, label orient 0 len str]);
+
+// Orient → Num → Num → Point
+let mkPoint = fun {
+   Horiz x y → Point(y, x);
+   Vert x y → Point(x, y)
+};
+
+// x is position of this axis on the other axis. Returns axis and position of last tick.
+// Orient → Num → Num → GraphicsElement 
+let axis = fun orient x start end →
+   let tickSp = tickEvery (end - start);
+   let firstTick = ceilingToNearest start tickSp;
+   let lastTick = ceilingToNearest end tickSp;
+   let n = floor ((end - firstTick) / tickSp) + 1;
+   let ys = iterate n (fun y → y + tickSp) firstTick;
+   // avoid redundant start and end points
+   let ys = match firstTick > start as {
+      True → [start, ...ys];
+      False → ys
+   };
+   let ys = match lastTick > end as {
+      True → concat ys [lastTick];
+      False → ys
+   };
+   let ps = map (mkPoint orient x) ys;
+   let ax = Group([
+      Line(head ps, last ps, axisColour, axisStrokeWidth),
+      Polymarkers(ps, flip map ys (compose (labelledTick orient axisColour tickLength) numToStr))
+   ])
+   in (ax, lastTick);
+
+// x is position of this axis on the other axis.
+// Orient → Num → Num → List Cat → GraphicsElement 
+let catAxis = fun orient x catValues →
+   let ys = iterate (length catValues + 1) (fun y → y + 1) 0;
+   let ps = map (mkPoint orient x) ys
+   in Group([
+      Line(head ps, last ps, axisColour, axisStrokeWidth),
+      Polymarkers(tail ps, map (const (tick orient axisColour tickLength)) catValues),
+      Polymarkers(flip map (tail ps) (fun Point(x, y) → Point(x - 0.5, y)), map (label orient -0.5 0) catValues)
+   ]);
+
+// Num → Num → Num → Num → List GraphicsElement → GraphicsElement
+let viewport = fun x_start x_finish y_finish margin gs →
+   Viewport(0, 0, x_finish - x_start, y_finish, backgroundColour, margin, Scale(1, 1), Translate(0 - x_start, 0), Group(gs));
+
+// Plot a map of x values to lists of (categorical value, y value) pairs. Importantly, assume all data is uniform 
+// (categorical keys are the same for each x value and are ordered the same each time).
+// Bool → Colours → Num → List (Num, List (Cat, Num)) → GraphicsElement
+let lineChart = fun withAxes colours x_start data →
+   let xs = map fst data;
+   let nCat = length (snd (head data));
+   // (Num, Colour) → GraphicsElement
+   let plot = fun (n, colour) →
+      let ps = map (fun (x, kvs) → Point(x, snd (nth n kvs))) data
+      in Group([
+         Polyline(ps, colour, 1),
+         Polymarkers(ps, repeat (length ps) Circle(0, 0, markerRadius, colour))
+      ]);
+   // List GraphicsElement
+   let lines = zipWith plot (iterate nCat (fun n → n + 1) 0) colours;
+   let x_finish = last xs;
+   let y_finish = max (flip map data (fun (_, kvs) → max (map snd kvs)))
+   in match withAxes as {
+      True →
+         match axis Horiz 0 x_start x_finish as
+         (x_axis, x_finish) → match axis Vert x_start 0 y_finish as 
+         (y_axis, y_finish') → viewport x_start x_finish y_finish' defaultMargin [x_axis, y_axis, ...lines];
+      False → viewport x_start x_finish y_finish 0 lines
+   };
+
+// Plot a chart of categorical values on the x-axis and renderings of the corresponding a-value on the y-axis.
+// (Colours → List a → GraphicsElement) → Bool → Colours → Num → List (Cat, a) → GraphicsElement
+let categoricalChart = fun plotValue withAxes colours sep data →
+   let gs = stackRight sep (plotValue colours (map snd data));
+   let w = length gs;
+   let h = max (map height gs)
+   in match withAxes as {
+      True → 
+         match catAxis Horiz 0 (map fst data) as 
+         x_axis → match axis Vert 0 0 h as
+         (y_axis, h') → viewport 0 w h' defaultMargin (concat gs [x_axis, y_axis]); // axes on top
+      False → viewport 0 w h 0 gs
+   };
+
+// Colours → List a → GraphicsElement
+let rects = fun colours ns →
+   zipWith (fun (colour, n) → Rect(0, 0, 1, n, colour)) colours ns;
+
+// First component of data (categorical value) currently ignored; values just mapped positionally to colors.
+// Can we use Group instead of Viewport here?
+// Colours → List (a, Num) → GraphicsElement
+let stackedBar = fun colours ns →
+   let heights = (map snd ns);
+   let subtotals = scanl1 (fun (x, y) → x + y) 0 heights;
+   let dims = zip [0, ...subtotals] heights;
+   let rects = map 
+      (fun ((y, height), colour) → Rect(0, y, 1, height, colour))
+      (zip dims colours)
+   in Viewport(0, 0, 1, last subtotals, "none", 0, Scale(1, 1), Translate(0, 0), Group(rects));
+
+// Bool → Colours → Num → List (a, Num) → GraphicsElement
+let barChart = categoricalChart rects;
+
+// For each categorical value of type a, plot a bar chart for the corresponding b-indexed data.
+// Bool → Colours → Num → List (a, List (b, Num)) → GraphicsElement
+let groupedBarChart = categoricalChart (compose map (flip (barChart False) 0));
+
+// See stackedBar for strong (unjustified) assumption about uniformity of data.
+// Bool → Colours → Num → List (a, List (b, Num)) → GraphicsElement
+let stackedBarChart = categoricalChart (compose map stackedBar);
+
+// Bit of a hack, but how text fits into our model is a bit unclear at the moment.
+// Str → GraphicsElement → GraphicsElement
+let caption = fun str Viewport(x, y, w, h, fill, margin, scale, translate, g) →
+   let g' = Group([
+      Text(x + w / 2, -2, str, "middle", "hanging"), // -3, ugh
+      Viewport(0, 0, w, h, fill, margin, scale, translate, g)
+   ])
+   in Viewport(x, y, w, h, backgroundColour, defaultMargin / 2 + 4, Scale(1, 1), Translate(0, 0), g')

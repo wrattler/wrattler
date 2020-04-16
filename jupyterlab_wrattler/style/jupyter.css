@@ -7,3 +7,19 @@
 .jp-Wrattler div.cell {
   width:auto;
 }
+
+.jp-Wrattler  div.tabs {
+  box-sizing:border-box;
+}
+.jp-Wrattler  div.tabs button {
+  box-sizing:border-box;
+  line-height:20px;
+}
+
+.jp-Wrattler a {
+  color:#007bff;
+}
+
+.jp-Wrattler a:hover {
+  color:#b13628;  
+}

@@ -5,4 +5,4 @@ flask
 flask_cors
 pip
 pyarrow
-azure
+azure==4.0.0

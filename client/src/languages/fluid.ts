@@ -14,10 +14,9 @@ import { createMonacoEditor, createOutputPreview } from "../editors/editor"
 const fluid: string = "fluid"
 let coordinator: PaneCoordinator
 
-Pane.initialise()
-
-function ensureInitialised (): void {
+function ensureInitialised (resourceServerUrl: string): void {
    if (coordinator === undefined) {
+      Pane.initialise(resourceServerUrl)
       // temporarily make specific dataset available as external data too
       coordinator = new PaneCoordinator(openDatasetAs("renewables-restricted", "data"))
    }
@@ -29,17 +28,25 @@ function ensureInitialised (): void {
 class FluidBlock implements Langs.Block {
    language: string = fluid
    source: string // needed to compute the hash?
-   ρ_e: [Env, Expr] | null
+   private ρ_e: [Env, Expr] | null // null iff fails to parse
 
    constructor (source: string) {
       this.source = source
-      try {
-         this.ρ_e = parseWithImports(source)
-      } 
-      catch (ex) {
-         console.log(ex)
-         this.ρ_e = null
+   }
+
+   // No accessors until we target ES 6.
+   get_ρ_e (): [Env, Expr] | null {
+      assert(coordinator !== undefined)
+      if (this.ρ_e === undefined) {
+         try {
+            this.ρ_e = parseWithImports(this.source)
+         }
+         catch (ex) {
+            console.log(ex)
+            this.ρ_e = null
+         }
       }
+      return this.ρ_e
    }
 }
 
@@ -48,7 +55,7 @@ class FluidState implements Langs.EditorState {
    block: FluidBlock
 }
 
-class FluidEvent { 
+class FluidEvent {
 }
 
 class FluidNode implements Graph.Node {
@@ -110,7 +117,7 @@ monaco.languages.setMonarchTokensProvider(fluid, new FluidTokensProvider())
 class FluidEditor implements Langs.Editor<FluidState, FluidEvent> {
    initialize (id:number, block: Langs.Block): FluidState {
       if (block instanceof FluidBlock) {
-         return { id, block } 
+         return { id, block }
       } else {
          return assert(false)
       }
@@ -122,21 +129,21 @@ class FluidEditor implements Langs.Editor<FluidState, FluidEvent> {
 
    render (cell: Langs.BlockState, state: FluidState, context: Langs.EditorContext<FluidEvent>): VNode {
       const evaluateButton: VNode = h("button", {
-         class: "preview-button", 
+         class: "preview-button",
          onclick: () => {
-            context.evaluate(cell.editor.id) 
-         } 
+            context.evaluate(cell.editor.id)
+         }
       }, ["Evaluate!"])
       return h("div", {}, [
          h("div", { key: "ed" }, [
            createMonacoEditor(fluid, state.block.source, cell, context) ]),
          h("div", { key: "prev" }, [
-            cell.code.value == null ? 
+            cell.code.value == null ?
                evaluateButton :
                createOutputPreview(
                   cell,
-                  (idx: number): void => {}, 
-                  0, 
+                  (idx: number): void => {},
+                  0,
                   cell.code.value as Values.ExportsValue
                )
          ])
@@ -154,18 +161,20 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
       return ""
    }
 
+   // Note: parsing not possible until we have Langs.BindingContext.
    parse (code: string): FluidBlock {
       return new FluidBlock(code)
    }
 
    async bind (context: Langs.BindingContext, block: Langs.Block): Promise<Langs.BindingResult> {
+      ensureInitialised(context.resourceServerUrl)
       console.log(context.scope)
       if (block instanceof FluidBlock) {
          let antecedents: Graph.Node[]
-         if (block.ρ_e === null) {
+         if (block.get_ρ_e() === null) {
             antecedents = []
          } else {
-            const ys: Set<string> = Expr.freeVars(block.ρ_e[1]),
+            const ys: Set<string> = Expr.freeVars(block.get_ρ_e()![1]),
                   xs: string[] = Object.keys(context.scope).filter(x => (ys as any).has(x)) // ES6 dynamic, ES5 static :-o
             antecedents = xs.map(x => context.scope[x])
          }
@@ -182,36 +191,36 @@ class FluidLanguagePlugin implements Langs.LanguagePlugin, Pane.Listener {
    // For now, linking is mediated through a fixed external dataset, not through data imported from other cells.
    async evaluate (context: Langs.EvaluationContext, node: Graph.Node): Promise<Langs.EvaluationResult> {
       if (node instanceof FluidNode) {
-         ensureInitialised()
+         ensureInitialised(context.resourceServerUrl)
          const imports: [string, Values.DataFrame][] = (node.antecedents
-            // invariant - only depend on exported nodes:   
-            .filter(isExportNode)                          
-            // exported values are known and non-null 
+            // invariant - only depend on exported nodes:
+            .filter(isExportNode)
+            // exported values are known and non-null
             .map(node => [node.variableName, node.value as Values.KnownValue])
             .filter(([x, v]: [string, Values.KnownValue]) => v.kind === "dataframe")) as [string, Values.DataFrame][]
          let ρ_imports: Env = emptyEnv() // from other cells
          for (let [x, { data }] of imports) {
             ρ_imports = bindDataset(ρ_imports, await data.getValue(), x) // data is any[] but assume Object[]
          }
-         const [ρ_importsʹ, e]: [Env, Expr] = node.block.ρ_e! // from default modules
+         const [ρ_importsʹ, e]: [Env, Expr] = node.block.get_ρ_e()! // from default modules
          if (this.pane !== null) {
             coordinator.removePane(this.pane)
             this.pane = null
          }
          this.pane = coordinator.addPane(ρ_imports.concat(ρ_importsʹ), e)
-         const exports: Values.ExportsValue = { 
+         const exports: Values.ExportsValue = {
             kind: "exports",
-            exports: { 
-               "graphics": { 
+            exports: {
+               "graphics": {
                   kind: "jsoutput",
                   render: (id: string): void => {
                      document.getElementById(id)!.appendChild(this.pane!.rootPane)
-                  } 
-               } 
+                  }
+               }
             }
          }
-         return { 
-            kind: "success", 
+         return {
+            kind: "success",
             value: exports
          }
       } else {

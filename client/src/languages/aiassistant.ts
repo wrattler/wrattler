@@ -85,23 +85,30 @@ async function getCompletions(root:string, inputs:AiaInputs, path:string[]) : Pr
 
 async function getValue(blob:string, preview:boolean, datastoreURI:string) : Promise<any> {
   var pathname = new URL(blob).pathname;
+  Log.trace("aiassistant", "getValue pathname: %s datastoreURI: %s ", pathname, datastoreURI)
   let headers = {'Accept': 'application/json'}
   let url = datastoreURI.concat(pathname)
   if (preview) url = url.concat("?nrow=10")
-  Log.trace("external", "Fetching data frame: %s", url)
+  Log.trace("aiassistant", "getValue Getting dataframe from: %s", url)
   let response = await axios.get(url, {headers: headers});
-  Log.trace("external", "Got data frame (%s rows): %s", response.data.length, pathname)
+  Log.trace("aiassistant", "getValue Got data frame (%s rows): %s", response.data.length, url)
   return response.data
 }
 
 async function getResult(root:string, hash:string, name:string, inputs:AiaInputs, path:string[], datastoreURI:string) : Promise<Values.DataFrame> {
+  Log.trace("aiassistant", "getResult Datastore URL: %s", datastoreURI)
   let url = root + "/data/" + hash + "/" + name + "/" + path.join("/")
+  Log.trace("aiassistant","getResult DatastoreURI:%s", datastoreURI)
+  Log.trace("aiassistant","getResult url:%s", url)
   let header = Object.keys(inputs).map(k => k + "=" + inputs[k]).join(",")
+  Log.trace("aiassistant","getResult headers:%s", JSON.stringify(header))
   let response = await axios.get(url, {headers:{Inputs:header}});
-  let frameUrl = response.data
-  return { kind: "dataframe", url: frameUrl, 
-      preview: await getValue(frameUrl, true, datastoreURI), 
-      data: new AsyncLazy<any>(() => getValue(frameUrl,false, datastoreURI)) }
+  let frameString = response.data
+  Log.trace("aiassistant","getResult to get value from url:%s", JSON.stringify(frameString))
+  
+  return { kind: "dataframe", url: frameString, 
+      preview: await getValue(frameString, true, datastoreURI), 
+      data: new AsyncLazy<any>(() => getValue(frameString,false, datastoreURI)) }
 }
 /*
 
@@ -125,7 +132,7 @@ async function mergeDataFrames(variableName:string, hash:string,
 let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEvent> => ({
   initialize: (id:number, block:Langs.Block) => {  
     let aiaBlock = <AiaBlock>block
-    return { id: id, block: <AiaBlock>block, chain: [], expanded: false, assistants: assistants, inputs: {}, frame: "" }
+    return { id: id, block: aiaBlock, chain: [], expanded: false, assistants: assistants, inputs: {}, frame: "" }
   },
   update: (state:AiaState, event:AiaEvent) => {
     switch(event.kind) {
@@ -138,22 +145,21 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
 
   render: (cell:Langs.BlockState, state:AiaState, ctx:Langs.EditorContext<AiaEvent>) => {
     let aiaNode = <AiaCodeNode>cell.code
-    console.log(state)
-    console.log(aiaNode.completions)
-
+  
     function triggerRemove() {
-      let newCode = format(aiaNode.assistant, aiaNode.inputs, aiaNode.newFrame, aiaNode.chain.slice(0, aiaNode.chain.length-1))
+      let newCode = format(aiaNode.assistant, aiaNode.inputs, state.block.newFrame, aiaNode.chain.slice(0, aiaNode.chain.length-1))
       ctx.rebindSubsequent(cell, newCode);
       ctx.evaluate(cell.editor.id)
     }
     function triggerComplete(completion:Completion) {
-      let newCode = format(aiaNode.assistant, aiaNode.inputs, aiaNode.newFrame, aiaNode.chain.concat(completion))
+      let newCode = format(aiaNode.assistant, aiaNode.inputs, state.block.newFrame, aiaNode.chain.concat(completion))
       ctx.rebindSubsequent(cell, newCode);
       ctx.evaluate(cell.editor.id)
     }
     function triggerAssistant(name:string|null, inputs:AiaInputs) {
+      Log.trace("aiaworkflow", "render: triggerAssistant")
       let ins = Object.keys(inputs).map(k => k + "=" + inputs[k]).join(",")
-      ctx.rebindSubsequent(cell, name==null?"":(name + (ins != "" ? (":" + ins) : "") + "\n" + aiaNode.newFrame))
+      ctx.rebindSubsequent(cell, name==null?"":(name + (ins != "" ? (":" + ins) : "") + "\n" + state.block.newFrame))
       if (name != null && Object.keys(inputs).length > 0) ctx.evaluate(cell.editor.id)
     }
     function triggerFrameName(name:string) {
@@ -163,6 +169,7 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
     }
     
     if (aiaNode.assistant == null || Object.keys(aiaNode.inputs).length != aiaNode.assistant.inputs.length) {
+      Log.trace("aiaworkflow", "render: not enough inputs")
       return h('div', {class:'aia'}, [ h('ul', {}, state.assistants.map(as => {
         let dropdowns = as.inputs.map(inp => 
           h('div', {}, [ 
@@ -172,6 +179,7 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
                   let inps = { ...aiaNode.inputs }
                   if ((<any>e.target).value == "") delete inps[inp]
                   else inps[inp] = (<any>e.target).value
+                  Log.trace('aiaworkflow', "render New Frame Name: ", state.block.newFrame)
                   triggerAssistant(aiaNode.assistant == null?null:aiaNode.assistant.name, inps) 
               } }, 
               [""].concat(aiaNode.framesInScope).map(f =>
@@ -187,7 +195,9 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
         return h('li', {}, 
           [ link, " - ", as.description, h('br', {}, []) ].concat(tools))
       })) ])
-    } else {
+    } 
+    else {
+      Log.trace("aiaworkflow", "render: enough inputs")
       var i = 0;
       let chain = 
         aiaNode.chain.map(item => {
@@ -221,7 +231,6 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
             })
             plusBody.push(h('div', {class:'completion'}, [ h('span', {class:'item'}, [ "loading..." ]) ]));
           } else {
-            console.log("evaluating...")
             plusBody.push(h('div', {class:'completion'}, [ h('span', {class:'item'}, [ "evaluating..." ]) ]));
           }
         }        
@@ -242,14 +251,16 @@ let createAiaEditor = (assistants:AiAssistant[]) : Langs.Editor<AiaState, AiaEve
 
       let def = 
         [ h('span', {class:'text'}, ["output"]),
-          h('input', { value:aiaNode.newFrame, placeholder:'<name>', oninput: (e) => triggerFrameName((<any>e.target).value) }, []),
+          h('input', { value:state.block.newFrame, placeholder:'<name>', onchange: (e) => triggerFrameName((<any>e.target).value) }, []),
           h('span', {class:'text'}, [ " = " ]) ]
 
       let previewButton = h('button', 
         { class:'preview-button', onclick:() => { 
             Log.trace("editor", "Evaluate button clicked in external language plugin")
             ctx.evaluate(cell.editor.id) } }, ["Evaluate!"] )    
-      let spinner = h('i', {class: 'fas fa-spinner fa-spin' }, [])
+
+      let spinner = h('i', {class: 'fa fa-spinner fa-spin' }, [])
+
       let preview = h('div', {class:'preview'}, [
         (cell.code.value == undefined) ? (cell.evaluationState == 'pending') ? spinner : previewButton :
         (createOutputPreview(cell, () => {}, 0, <Values.ExportsValue>cell.code.value))]);
@@ -270,7 +281,7 @@ interface AiaCodeNode extends Graph.Node {
   completions: Completion[] | null
   framesInScope: string[]
   inputNodes: { [input:string]:Graph.Node }
-  newFrame: string
+  //newFrame: string
   inputs: AiaInputs
 }
 
@@ -300,6 +311,7 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
     this.assistants = assistants
     this.editor = createAiaEditor(assistants)
     this.datastoreURI = datastoreUri
+    Log.trace("aiassistant", "Constructor Datastore URL: %s", this.datastoreURI)
   }
 
   getDefaultCode(id:number) { 
@@ -311,13 +323,12 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
     for(var a of this.assistants) 
       if (a.name == parsed.assistant) 
         block = { language: "ai assistant", code: parsed.chain, assistant: a, inputs:parsed.inputs, newFrame:parsed.frame }
-    console.log("PARSED: ", code, parsed, block)
     return <Langs.Block>block
   }
 
   async bind(context: Langs.BindingContext, block: Langs.Block) : Promise<Langs.BindingResult> {
     let aiaBlock = <AiaBlock>block    
-
+    Log.trace("aiaworkflow", "Bind: block: %O", block)
     let ants : Graph.Node[] = []
     let ins : {[input:string]:Graph.Node} = {}
     for(let k of Object.keys(aiaBlock.inputs)) {
@@ -326,28 +337,33 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
       ins[k] = nd;
     }
 
+    Log.trace("aiaworkflow", "Bind: inputs: %O", ins)
     let antsHash = Md5.hashStr(ants.map(a => a.hash).join("-"))
-    let node:AiaCodeNode = 
+    let anonBlock:AiaBlock = { ...aiaBlock, newFrame:"" }
+    let initialNode:AiaCodeNode = 
       { kind: 'code',
         language: this.language, antecedents: ants,
-        hash: <string>Md5.hashStr(antsHash + this.save(block)),
+        hash: <string>Md5.hashStr(antsHash + this.save(anonBlock)),
         chain: aiaBlock.code,
         assistant: aiaBlock.assistant,
         completions: null,
         inputs: aiaBlock.inputs,
         inputNodes: ins,
         framesInScope: Object.keys(context.scope),
-        newFrame: aiaBlock.newFrame,
+        //newFrame: aiaBlock.newFrame,
         value: null, errors: [] }
+    let node = <AiaCodeNode>context.cache.tryFindNode(initialNode)
+    Log.trace("aiaworkflow", "Bind: hash: %s (ant hash: %s), block:", node.hash, antsHash, this.save(anonBlock))
     
     var exps : AiaExportNode[] = []
     if (aiaBlock.newFrame != "") {
-      let exp: AiaExportNode = 
+      let initialExpNode: AiaExportNode = 
         { kind: 'export',
           language: this.language, antecedents: [node],
           hash: <string>Md5.hashStr(antsHash + aiaBlock.newFrame + this.save(block)),
           aiaNode: node, variableName: aiaBlock.newFrame,
           value: null, errors: [] }
+      let exp = <AiaExportNode>context.cache.tryFindNode(initialExpNode)
       exps.push(exp);
     }
 
@@ -358,20 +374,34 @@ export class AiaLanguagePlugin implements Langs.LanguagePlugin
     let aiaNode = <AiaNode>node
     switch(aiaNode.kind) {
       case 'code':
+        Log.trace('aiaworkflow', "evaluate code Evaluation started")
         let res : { [key:string]: Values.KnownValue } = {}
-        let newFrame = aiaNode.newFrame == "" ? "<name>" : aiaNode.newFrame; 
-        if (aiaNode.assistant != null) {
-          let path = aiaNode.chain.length > 0 ? aiaNode.chain[aiaNode.chain.length-1].path : []
-          var inputs : AiaInputs = {}
-          for(let k of Object.keys(aiaNode.inputNodes)) inputs[k] = (<Values.DataFrame>aiaNode.inputNodes[k].value).url
-          let merged = await getResult(aiaNode.assistant.root, aiaNode.hash, newFrame, inputs, path, this.datastoreURI)
-          res[newFrame] = merged
+        //let newFrame = aiaNode.newFrame == "" ? "<name>" : aiaNode.newFrame; 
+        if (aiaNode.assistant != null) { //&&(newFrame != "<name>")) {
+          if (aiaNode.assistant.inputs.length == Object.keys(aiaNode.inputNodes).length) { 
+            let path = aiaNode.chain.length > 0 ? aiaNode.chain[aiaNode.chain.length-1].path : []
+            var inputs : AiaInputs = {}
+            for(let k of Object.keys(aiaNode.inputNodes)) {
+              inputs[k] = (<Values.DataFrame>aiaNode.inputNodes[k].value).url
+              // Log.trace("aiassistant", "evaluate Evaluate input [%s]: %s", k, JSON.stringify(aiaNode.inputNodes[k].value))
+            }
+            // Log.trace("aiassistant", "evaluate Evaluate root: %s", aiaNode.assistant.root)
+            // Log.trace("aiassistant", "evaluate Evaluate hash: %s", aiaNode.hash)
+            // Log.trace("aiassistant", "evaluate Evaluate newFrame: %s", newFrame)
+            // Log.trace("aiassistant", "evaluate Evaluate inputs: %s", JSON.stringify(inputs))
+            // Log.trace("aiassistant", "evaluate Evaluate path: %s", path)
+            // Log.trace("aiassistant", "evaluate Evaluate Datastore URL: %s", this.datastoreURI)
+            let merged = await getResult(aiaNode.assistant.root, aiaNode.hash, "result", inputs, path, this.datastoreURI)
+            res["result"] = merged
+          }
         }
         let exps : Values.ExportsValue = { kind:"exports", exports: res }
+        // Log.trace('aiassistant', "evaluate code Evaluation success")
         return { kind: "success", value: exps }
       case 'export':
         let expsVal = <Values.ExportsValue>aiaNode.aiaNode.value
-        return { kind: "success", value: expsVal.exports[aiaNode.aiaNode.newFrame] }
+        // Log.trace('aiassistant', "evaluate export Evaluation success")
+        return { kind: "success", value: expsVal.exports["result"] } //aiaNode.aiaNode.newFrame] }
     }
   }
 
@@ -385,5 +415,6 @@ export async function createAiaPlugin(url:string, datastoreURI:string) : Promise
   let response = await axios.get(url);
   let aia : AiAssistant[] = response.data; 
   for(var i = 0; i< aia.length; i++) aia[i].root = url + "/" + aia[i].root;
+  Log.trace("aiassistant","createAiaPlugin DatastoreURI:%s", datastoreURI)
   return new AiaLanguagePlugin(aia, datastoreURI);
 }
