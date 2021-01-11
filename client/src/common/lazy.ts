@@ -2,10 +2,11 @@ class AsyncLazy<T> {
   
   func: () => Promise<T>
   evaluated: boolean
-  value: T
+  value: T | null
 
   constructor(f:() => Promise<T>) {
     this.func = f;
+    this.value = null;
     this.evaluated = false;
   }
   
@@ -14,7 +15,7 @@ class AsyncLazy<T> {
       this.value = await this.func();
       this.evaluated = true;
     }
-    return this.value;
+    return <T>this.value;
   }
 }
 

@@ -24,7 +24,7 @@ interface HtmlElements {
   css: string
 }
 
-async function getValue(blob, preview:boolean, datastoreURI:string) : Promise<any> {
+async function getValue(blob:string, preview:boolean, datastoreURI:string) : Promise<any> {
   var pathname = new URL(blob).pathname;
   let headers = {'Accept': 'application/json'}
   let url = datastoreURI.concat(pathname)
@@ -39,7 +39,7 @@ async function getValue(blob, preview:boolean, datastoreURI:string) : Promise<an
   }
 }
 
-async function getCachedOrEval(serviceUrl, body, datastoreURI) : Promise<any> {
+async function getCachedOrEval(serviceUrl:string, body:any, datastoreURI:string) : Promise<any> {
   let cacheUrl = datastoreURI.concat("/" + body.hash).concat("/.cached")
   try {
     let params = {headers: {'Accept': 'application/json'}}
@@ -109,7 +109,7 @@ function evalAndLoadInlineScript(aScript:Script) {
   }
 }
 
-async function getEval(body, serviceURI, datastoreURI) : Promise<Langs.EvaluationResult> {  
+async function getEval(body:any, serviceURI:string, datastoreURI:string) : Promise<Langs.EvaluationResult> {  
   try {
     let response = await getCachedOrEval(serviceURI, body, datastoreURI);        
     var results : Values.ExportsValue = { kind:"exports", exports:{} }
@@ -261,7 +261,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
   async evaluate(context:Langs.EvaluationContext, node:Graph.Node) : Promise<Langs.EvaluationResult> {
     let externalNode = <Graph.ExternalNode>node
 
-    function findResourceURL(fileName): string {
+    function findResourceURL(fileName:string): string {
       for (let f = 0; f < context.resources.length; f++) {
         if (context.resources[f].fileName==fileName) {
           return  context.resources[f].url
@@ -339,7 +339,7 @@ export class ExternalLanguagePlugin implements Langs.LanguagePlugin {
     let initialHash = Md5.hashStr(exBlock.source)
     let antecedents : Graph.Node[] = []
     let newResources : Array<Langs.Resource> = []
-    function resourceExists(fileName):boolean{
+    function resourceExists(fileName:string):boolean{
       for (let r = 0; r < context.resources.length; r++) {
         if (context.resources[r].fileName == fileName)
           return true

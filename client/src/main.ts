@@ -428,7 +428,7 @@ function saveDocument(state:NotebookState): string {
 }
 
 function createNodeCache() : Graph.NodeCache {
-  let nodeCache = { }
+  let nodeCache : { [key:string]:any } = { }
   return {
     tryFindNode : (node:Graph.Node) => {
       let key = [ node.language, node.hash ].concat(node.antecedents.map(a => a.hash)).join(",")
