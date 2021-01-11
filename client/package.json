@@ -24,6 +24,7 @@
     "webpack-dev-server": "^3.1.1"
   },
   "dependencies": {
+    "@types/marked": "^0.7.3",
     "@rolyp/fluid": "^0.2.8",
     "axios": "^0.18.0",
     "maquette": "^3.3.0",

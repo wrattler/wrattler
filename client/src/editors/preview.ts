@@ -4,7 +4,7 @@
 import {h, VNode} from 'maquette';
 import * as Values from '../definitions/values';
 
-function printPreview(cellId:number, triggerSelect:(number) => void, selectedTable:number, cellValues:Values.ExportsValue) {
+function printPreview(cellId:number, triggerSelect:(number:number) => void, selectedTable:number, cellValues:Values.ExportsValue) {
   let tableNames:Array<string> = Object.keys(cellValues.exports)
   if (tableNames.length > 0) {
     let tabComponents = printTabs(triggerSelect, selectedTable, tableNames);
@@ -23,7 +23,7 @@ function printCurrentValue(cellId:number, value:Values.KnownValue, tableName:str
     case "printout":
       return h('div', {key: "printout"+componentRootId}, [h('pre', {}, [value.data])])
     case "jsoutput":
-      let callRender = (el) => {
+      let callRender = (el:HTMLElement) => {
         value.render(el.id)
       };
       return h('div', {key: "jsoutputs"+componentRootId}, [
@@ -36,7 +36,7 @@ function printCurrentValue(cellId:number, value:Values.KnownValue, tableName:str
   }
 }
 
-function printTabs(triggerSelect:(number) => void, selectedTable:number, tableNames:Array<string>) {
+function printTabs(triggerSelect:(number:number) => void, selectedTable:number, tableNames:Array<string>) {
   let buttonComponents: Array<any> = []
   for (let t = 0; t< tableNames.length; t++) {
     let buttonComponent = h('button', { class: t==selectedTable?"selected":"normal", onclick:()=> triggerSelect(t)}, [tableNames[t]])
@@ -77,14 +77,14 @@ function printCurrentTable(aTable: any, tableName:string) {
   return h('table', {style: "width:100%", key:tableName},[]);
 }
 
-function getCurrentHeaders(firstDataFrameRow) {
+function getCurrentHeaders(firstDataFrameRow:any) {
   let tableHeaders:Array<string> = []
   if (Object.keys(firstDataFrameRow).length > 0)
     tableHeaders = Object.keys(firstDataFrameRow)
   return tableHeaders;
 }
 
-function getCurrentRow(dfRow, keys) {
+function getCurrentRow(dfRow:any, keys:any) {
   let row: Array<string> = [];
   for (let k in keys) {
     row.push(dfRow[keys[k]]);
