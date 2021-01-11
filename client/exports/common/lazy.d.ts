@@ -1,7 +1,7 @@
 declare class AsyncLazy<T> {
     func: () => Promise<T>;
     evaluated: boolean;
-    value: T;
+    value: T | null;
     constructor(f: () => Promise<T>);
     getValue(): Promise<T>;
 }
