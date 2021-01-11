@@ -2,6 +2,7 @@
   "compilerOptions": {
     "strictNullChecks": true,
     "sourceMap": true,
+    "strict": true,
     "esModuleInterop": true,
     "declaration": true,
     "declarationDir": "exports",

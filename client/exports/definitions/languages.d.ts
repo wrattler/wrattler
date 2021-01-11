@@ -246,7 +246,7 @@ interface EditorContext<TEvent> {
     evaluate(blockId: number): void;
     /** Set the source of a given code block to the `newSource` and trigger rebinding
      * of all subsequent code blocks in a notebook. */
-    rebindSubsequent(block: BlockState, newSource: string): any;
+    rebindSubsequent(block: BlockState, newSource: string): void;
 }
 /**
  * An interface that captures shared things that editor state needs to keep. This

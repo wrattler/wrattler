@@ -97,4 +97,4 @@ let main _ =
       if not cfg.Deleted then
         printfn "removed rows\n%s" (query + "/deleted")       
       printfn ""
-  0
+  0 

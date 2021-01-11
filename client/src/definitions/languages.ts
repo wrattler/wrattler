@@ -274,7 +274,7 @@ interface EditorContext<TEvent> {
 
   /** Set the source of a given code block to the `newSource` and trigger rebinding
    * of all subsequent code blocks in a notebook. */
-  rebindSubsequent(block: BlockState, newSource: string)
+  rebindSubsequent(block: BlockState, newSource: string) : void
 }
 
 

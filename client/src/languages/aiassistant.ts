@@ -79,7 +79,8 @@ async function getCompletions(root:string, inputs:AiaInputs, path:string[]) : Pr
   let url = root + "/completions/" + path.join("/")
   let header = Object.keys(inputs).map(k => k + "=" + inputs[k]).join(",")
   let response = await axios.get(url, {headers:{Inputs:header}});
-  return response.data.map((r:any) =>
+  let data = response.data;
+  return data.map((r:any) =>
     ({ name: r.name, path:r.path.split("/").filter((p:string) => p != "") }));
 }
 
