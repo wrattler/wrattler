@@ -2,7 +2,6 @@
 import { h, VNode, createProjector } from 'maquette';
 import * as Langs from '../definitions/languages'; 
 import * as Graph from '../definitions/graph'; 
-import _ from 'lodash';
 import { Md5 } from 'ts-md5';
 import * as Values from '../definitions/values'; 
 import { Log } from '../common/log';
@@ -85,9 +84,9 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
         id: id,
         block: <SpreadsheetBlock>block,
         ColIndices: 'XABCDEFG'.substr(0, colNames.length+1).split(''),
-        RowIndices:  _.range(0,source.length+2),
+        RowIndices: Array.from(Array(source.length+2).keys()),
         Cols : colNames,
-        Rows:  _.range(0,source.length+2),
+        Rows:  Array.from(Array(source.length+2).keys()),
         Active: null,
         Cells: new Map()
       }
@@ -111,7 +110,7 @@ const spreadsheetEditor : Langs.Editor<SpreadsheetState, SpreadsheetEvent> = {
             value = rIndex.toString()
           else {
             let colName = newState.Cols[cIndex-1]
-            value = source[rIndex-2][colName]
+            value = (<any>source)[rIndex-2][colName]
           }  
           // Log.trace('spreadsheet', "Position [%s]: %s", JSON.stringify(position), value)
           newState.Cells.set(JSON.stringify(position), value)
