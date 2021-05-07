@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@babel/parser/-/parser-7.6.4.tgz#cb9b36a7482110282d5cb6dd424ec9262b473d81"
   integrity sha512-D8RHPW5qd0Vbyo3qb+YjO5nvUVRTXFLQ/FsDxJU2Nqz4uB5EnUN0ZQSEYpvTIbRuttig1XbHWU5oMeQwQSAA+A==
 
-"@rolyp/fluid@^0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@rolyp/fluid/-/fluid-0.2.2.tgz#a5d028988e30f4cac88c5035dd101a39fd8dfe0d"
-  integrity sha512-tp6v0D7KAq37LMwOZaa0xrp8sZqXdubzs0VlWBZtdD/uoX0bmZRv01dzUSnzqS4QK8hoy6Khdj6YAXDc6iLZ0w==
+"@rolyp/fluid@^0.2.8":
+  version "0.2.10"
+  resolved "https://registry.yarnpkg.com/@rolyp/fluid/-/fluid-0.2.10.tgz#1ade96ebcc1f690da81d7d8a8d354ce8aec1c50a"
+  integrity sha512-F1J1yYBxFj58AG6Cuur6+nB6Pb6IqkVsAC6cCfXtKy1UYJy5xww7W9PWePgcSUC07BNjtCAFA5WXG9wh5WkwmA==
   dependencies:
     "@types/three" "0.93.28"
     css-loader "^3.2.0"
@@ -6419,9 +6419,9 @@ uglify-js@3.4.x, uglify-js@^3.1.4:
     source-map "~0.6.1"
 
 underscore@>=1.8.3, underscore@^1.9.1:
-  version "1.9.2"
-  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.9.2.tgz#0c8d6f536d6f378a5af264a72f7bec50feb7cf2f"
-  integrity sha512-D39qtimx0c1fI3ya1Lnhk3E9nONswSKhnffBI0gME9C99fYOkNi04xs8K6pePLhvl1frbDemkaBQ5ikWllR2HQ==
+  version "1.13.1"
+  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.13.1.tgz#0c1c6bd2df54b6b69f2314066d65b6cde6fcf9d1"
+  integrity sha512-hzSoAVtJF+3ZtiFX0VgfFPHEDRm7Y/QPjGyNo4TVdnDTdft3tr8hEkD25a1jC+TjTuE7tkHGKkhwCgs9dgBB2g==
 
 union-value@^1.0.0:
   version "1.0.0"
