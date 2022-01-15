@@ -27,7 +27,7 @@
     "@rolyp/fluid": "^0.2.8",
     "axios": "^0.18.0",
     "maquette": "^3.3.0",
-    "marked": "^0.4.0",
+    "marked": "^4.0.10",
     "monaco-editor": "^0.17.0",
     "monaco-editor-webpack-plugin": "^1.7.0",
     "ts-md5": "^1.2.4",
