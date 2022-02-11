@@ -7,7 +7,7 @@
     "docs": "node node_modules/typedoc/bin/typedoc --name \"Wrattler API documentation\" --readme src/api.md --out ../docs/api --exclude \"**/+(languages|common|services|demo)/**/*\" --module \"commonjs\" --excludeExternals src"
   },
   "devDependencies": {
-    "ajv": "^5.0.0",
+    "ajv": "^6.12.3",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.2",
     "babel-preset-env": "^1.6.1",
