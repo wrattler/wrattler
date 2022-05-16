@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@rolyp/fluid": "^0.2.8",
-    "axios": "^0.18.0",
+    "axios": "^0.21.2",
     "maquette": "^3.3.0",
     "marked": "^0.4.0",
     "monaco-editor": "^0.17.0",
